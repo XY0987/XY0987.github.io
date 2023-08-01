@@ -1,0 +1,398 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>node+websocket实现直播(弱鸡版) | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="心血历程这部分主要是写在写这些的时候遇到的问题以及换思路的过程，可以之间看正文在之前我也写过直播功能，并且与 websocket 相结合实现了直播弹幕。只不过直播是使用的腾讯云的，而不是手写的直播推流拉流，这次又有一个新的项目，和直播息息相关(直播自习平台)，所以就想着使用原生的写直播推流、拉流，搞了两天，实现了一个基础版本的直播。这两天搞直播也挺难受的，原本我和后端想的和之前写项目一样，一个拉流">
+<meta property="og:type" content="website">
+<meta property="og:title" content="node+websocket实现直播(弱鸡版)">
+<meta property="og:url" content="http://example.com/project/live/liveCreat.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="心血历程这部分主要是写在写这些的时候遇到的问题以及换思路的过程，可以之间看正文在之前我也写过直播功能，并且与 websocket 相结合实现了直播弹幕。只不过直播是使用的腾讯云的，而不是手写的直播推流拉流，这次又有一个新的项目，和直播息息相关(直播自习平台)，所以就想着使用原生的写直播推流、拉流，搞了两天，实现了一个基础版本的直播。这两天搞直播也挺难受的，原本我和后端想的和之前写项目一样，一个拉流">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-07-31T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-01T08:48:48.802Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/live/liveCreat.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'node+websocket实现直播(弱鸡版)',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-08-01 16:48:48'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">node+websocket实现直播(弱鸡版)</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h4 id="心血历程"><a href="#心血历程" class="headerlink" title="心血历程"></a>心血历程</h4><p>这部分主要是写在写这些的时候遇到的问题以及换思路的过程，可以之间看正文<br>在之前我也写过直播功能，并且与 websocket 相结合实现了直播弹幕。只不过直播是使用的腾讯云的，而不是手写的直播推流拉流，这次又有一个新的项目，和直播息息相关(直播自习平台)，所以就想着使用原生的写直播推流、拉流，搞了两天，实现了一个基础版本的直播。<br>这两天搞直播也挺难受的，原本我和后端想的和之前写项目一样，一个拉流地址，一个推流地址，不过后端写好之后也用软件测试了一下可行，兴高采烈的给我说写好了，既然后端接口写好了，剩下的就是前端去交互了，经过一段时间的交互，拉流报错，推流也报错，经过一番百度原来是浏览器不支持 rtmp 协议，只能另寻它法，最后想到使用 websocket 去连接，我把采集到的音视频流数据传输给后端，后端在传输给我，我再统一处理，写好之后发现了一个小问题就是每次推流与拉流之间都会闪一下，原本想着使用 mediaSource 视频流去搞一下，不过最后发现视频格式对于不同浏览器的要求是不一样的，而且浏览器对于视频格式要求也比较严，最后就不搞了。经过与后端的商量，最终决定项目中写两版直播，一版是原生写的，一版是使用腾讯云直播写的。下面就进入正文吧。</p>
+<h4 id="直播常见协议"><a href="#直播常见协议" class="headerlink" title="直播常见协议"></a>直播常见协议</h4><ol>
+<li><p>RTMP</p>
+<blockquote>
+<p>RTMP（Real-Time Messaging Protocol）是一种用于音频、视频和数据传输的协议。它最初由 Adobe 开发，用于在 Flash 播放器和媒体服务器之间进行实时通信。RTMP 通过建立持久的连接来传输流媒体数据，支持实时的流媒体传输和即时通信。</p>
+</blockquote>
+</li>
+<li><p>HTTP-FLV</p>
+<blockquote>
+<p>HTTP-FLV（HTTP-Flash Video）是一种基于 HTTP 协议的流媒体传输协议。它是由阿里巴巴开发的，用于在 Web 浏览器中播放 Flash 视频。HTTP-FLV 通过 HTTP 协议传输 FLV（Flash Video）格式的视频，可以实现低延迟的视频直播和点播。</p>
+</blockquote>
+</li>
+<li><p>HLS</p>
+<blockquote>
+<p>HLS（HTTP Live Streaming）是一种由苹果公司开发的流媒体传输协议。它通过将视频和音频切片成小的 TS（Transport Stream）文件，并使用 HTTP 协议传输这些文件，实现了在不同网络环境下的自适应流媒体传输。HLS 支持多种编码格式和分辨率的视频，可以在 iOS 设备和 Web 浏览器上播放。</p>
+</blockquote>
+</li>
+</ol>
+<p>总的来说 RTMP 是一种实时的流媒体传输协议，适用于实时通信和互动性较高的应用；HTTP-FLV 是一种基于 HTTP 协议的低延迟流媒体传输协议，适用于 Web 浏览器中的 Flash 视频播放；HLS 是一种适用于不同网络环境下的自适应流媒体传输协议，适用于 iOS 设备和 Web 浏览器的播放。</p>
+<h4 id="直播基本流程"><a href="#直播基本流程" class="headerlink" title="直播基本流程"></a>直播基本流程</h4><p><img src="/img/loading.gif" data-original="/img/liveCreat01.png" alt="基本流程" title="基本流程图"><br>看上图可知直播分为以下三个步骤：</p>
+<ol>
+<li>视频&#x2F;音频采集(推流)</li>
+<li>流媒体服务器(用于推流&#x2F;拉流的中转服务器)</li>
+<li>播放(拉流)</li>
+</ol>
+<p>对于前端来说推流以及拉流都是我们所要操心的事，而后端要做的是中转服务器作用</p>
+<h4 id="直播代码"><a href="#直播代码" class="headerlink" title="直播代码"></a>直播代码</h4><p>经过以上的说明，大家对直播有了一个简单的了解，那么我们之间上代码<br>node 端(需要下载 ws 第三方库)</p>
+<pre><code class="javascript">const WebSocket = require(&quot;ws&quot;);
+
+const wss = new WebSocket.Server(&#123;
+  port: 3000,
+&#125;);
+
+wss.on(&quot;connection&quot;, (ws) =&gt; &#123;
+  ws.on(&quot;message&quot;, (msg) =&gt; &#123;
+    wss.clients.forEach((ws) =&gt; &#123;
+      ws.send(msg);
+    &#125;);
+  &#125;);
+&#125;);
+</code></pre>
+<p>node 端我们做的很简洁，就是把前端发给我们的数据再发给前端<br>那么就显得数据很重要了，既然是直播那么我们的数据就是我们直播的数据（及视频，音频），另外需要补充两点就是我们传输的数据一般比较大，websocket 的传输虽然理论上是无限，但是为了不明显的卡顿，我们前端传输数据采用分段上传。另外就是为了保证数据的准确，我们传输的是二进制数据，这样就能保证了观看与直播的相对无误差。<br>在写前端代码之前，我来解释一下为什么这个直播是弱鸡版，我们实现的是推流是前端录视频一段时间之后发给后端，后端再转接给前端，循环往复，由此就实现了直播功能，这也是推流拉流时屏幕闪的原因。不过更多的是让大家了解一下大致的流程，及一个可行的方法。<br>前端推流代码</p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta
+      name=&quot;viewport&quot;
+      content=&quot;width=device-width, initial-scale=1.0&quot;
+    /&gt;
+    &lt;title&gt;录制视频测试&lt;/title&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;!--用以预览--&gt;
+    &lt;video&gt;&lt;/video&gt;
+
+    &lt;button onclick=&quot;onStartRecord()&quot;&gt;开始共享&lt;/button&gt;
+    &lt;button onclick=&quot;onDownload()&quot;&gt;手动推流&lt;/button&gt;
+    &lt;button onclick=&quot;close()&quot;&gt;关闭&lt;/button&gt;
+    &lt;script&gt;
+      var socket = new WebSocket(&quot;ws://127.0.0.1:3000&quot;);
+      socket.onopen = () =&gt; &#123;
+        console.log(&quot;WebSocket 连接成功&quot;);
+      &#125;;
+      socket.onclose = (event) =&gt; &#123;
+        console.log(&quot;WebSocket 连接关闭&quot;, event);
+      &#125;;
+      socket.onerror = (error) =&gt; &#123;
+        console.error(&quot;发生错误&quot;, error);
+      &#125;;
+      socket.onmessage = (event) =&gt; &#123;
+        console.log(&quot;收到信息&quot;, event.data);
+      &#125;;
+      // 想要获取一个最接近 1280x720 的相机分辨率
+      var recordedChunks = [];
+      var stream;
+
+      var onStartRecord = function () &#123;
+        navigator.mediaDevices
+          .getDisplayMedia(&#123;
+            video: &#123;
+              mediaSource: &quot;screen&quot;,
+            &#125;,
+            audio: true,
+          &#125;)
+          .then(async function (mediaStream) &#123;
+            const audioTrack = await navigator.mediaDevices.getUserMedia(&#123;
+              audio: true,
+            &#125;);
+            // 添加声音轨道
+            await mediaStream.addTrack(audioTrack.getAudioTracks()[0]);
+            var video = document.querySelector(&quot;video&quot;);
+            //本地预览视频
+            video.srcObject = mediaStream;
+            stream = mediaStream;
+            video.onloadedmetadata = function (e) &#123;
+              video.play();
+            &#125;;
+            //采集视频
+            startRecord(mediaStream);
+          &#125;)
+          .catch(function (err) &#123;
+            console.log(err.name + &quot;: &quot; + err.message);
+          &#125;); // 总是在最后检查错误
+      &#125;;
+
+      var timer = null;
+
+      function startRecord(stream) &#123;
+        recordedChunks = [];
+        var options = &#123; mimeType: &quot;video/webm; codecs=vp9&quot; &#125;;
+        mediaRecorder = new MediaRecorder(stream, options);
+
+        mediaRecorder.ondataavailable = handleDataAvailable;
+        mediaRecorder.start();
+        clearInterval(timer);
+        //每隔5秒自动推流
+        timer = setInterval(async () =&gt; &#123;
+          await onDownload();
+          await startRecord(stream);
+        &#125;, 5000);
+      &#125;
+
+      //onDownloadClick，调用stop会停止并会触发ondataavailable，相应下载逻辑在回调中完成
+      var onDownload = function () &#123;
+        mediaRecorder.stop();
+      &#125;;
+
+      function handleDataAvailable(event) &#123;
+        if (event.data.size &gt; 0) &#123;
+          recordedChunks.push(event.data);
+          download();
+        &#125; else &#123;
+          // ...
+        &#125;
+      &#125;
+
+      const CHUNK_SIZE = 1024 * 5; // 每个数据块的大小为 16KB
+      //分片上传
+      function sliceBlob(blob) &#123;
+        const chunks = [];
+        let offset = 0;
+        while (offset &lt; blob.size) &#123;
+          const chunk = blob.slice(offset, offset + CHUNK_SIZE);
+          chunks.push(chunk);
+          offset += CHUNK_SIZE;
+        &#125;
+        return chunks;
+      &#125;
+
+      async function download() &#123;
+        var blob = new Blob(recordedChunks, &#123;
+          type: &quot;video/webm&quot;,
+        &#125;);
+        console.log(blob);
+        const binaryChunks = sliceBlob(blob);
+        for (const chunk of binaryChunks) &#123;
+          console.log(chunk);
+          await socket.send(chunk);
+        &#125;
+      &#125;
+      //关闭直播
+      function close() &#123;
+        stream.getTracks().map((track) =&gt; track.stop());
+      &#125;
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>前端拉流代码</p>
+<pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta
+      name=&quot;viewport&quot;
+      content=&quot;width=device-width, initial-scale=1.0&quot;
+    /&gt;
+    &lt;title&gt;直播拉流&lt;/title&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;video
+      src=&quot;&quot;
+      id=&quot;mv&quot;
+      controls
+    &gt;&lt;/video&gt;
+    &lt;script&gt;
+      const mv = document.getElementById(&quot;mv&quot;);
+      var socket = new WebSocket(&quot;ws://127.0.0.1:3000&quot;);
+      socket.onopen = () =&gt; &#123;
+        console.log(&quot;WebSocket 连接成功&quot;);
+      &#125;;
+
+      socket.onclose = (event) =&gt; &#123;
+        console.log(&quot;WebSocket 连接关闭&quot;, event);
+      &#125;;
+
+      socket.onerror = (error) =&gt; &#123;
+        console.error(&quot;WebSocket Error:&quot;, error);
+      &#125;;
+      let videoData = [];
+      socket.onmessage = async (event) =&gt; &#123;
+        if (event.data.size &lt; 1024 * 5) &#123;
+          //合并数据进行渲染
+          const blob = new Blob(videoData, &#123; type: &quot;video/webm&quot; &#125;);
+          mv.src = URL.createObjectURL(blob);
+          videoData = [];
+          mv.play();
+        &#125; else &#123;
+          // 接收数据
+          videoData.push(event.data);
+        &#125;
+      &#125;;
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>注意事项:<br>我们使用 blob 时要指定格式，以此方便我们播放的时候浏览器解码</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>之后遇到项目的问题再继续分享吧。之后也正式开始写项目了。我们一同进步。</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/31/test2/" title="test2">test2</a><time datetime="2023-07-30T16:00:00.000Z" title="发表于 2023-07-31 00:00:00">2023-07-31</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/30/test1/" title="test1">test1</a><time datetime="2023-07-29T16:00:00.000Z" title="发表于 2023-07-30 00:00:00">2023-07-30</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="日常博客">日常博客</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">3</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">20</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-08-01T08:49:07.831Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
