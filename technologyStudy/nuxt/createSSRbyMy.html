@@ -1,0 +1,680 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>从零搭建SSR及Nxut配置和踩坑记录 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="学习 SSR 的原因学习 nuxt 的一个根本原因就是为了 SEO，要了解 SEO，我们要知道，浏览器爬虫的工作流程以及 SPA、SSG、SSR 这些概念只有这样我们才能了解到为什么学习 Nuxt 以及为什么学习 Nuxt 主要解决了什么问题 SPA单页面程序（SPA）全称是：Single-page-application，SPA 应用是在客户端（即浏览器端渲染）术语称 CSR SPA 特点 SP">
+<meta property="og:type" content="website">
+<meta property="og:title" content="从零搭建SSR及Nxut配置和踩坑记录">
+<meta property="og:url" content="http://example.com/technologyStudy/nuxt/createSSRbyMy.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="学习 SSR 的原因学习 nuxt 的一个根本原因就是为了 SEO，要了解 SEO，我们要知道，浏览器爬虫的工作流程以及 SPA、SSG、SSR 这些概念只有这样我们才能了解到为什么学习 Nuxt 以及为什么学习 Nuxt 主要解决了什么问题 SPA单页面程序（SPA）全称是：Single-page-application，SPA 应用是在客户端（即浏览器端渲染）术语称 CSR SPA 特点 SP">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-08-21T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-08-22T13:48:18.874Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/technologyStudy/nuxt/createSSRbyMy.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '从零搭建SSR及Nxut配置和踩坑记录',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-08-22 21:48:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">从零搭建SSR及Nxut配置和踩坑记录</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h3 id="学习-SSR-的原因"><a href="#学习-SSR-的原因" class="headerlink" title="学习 SSR 的原因"></a>学习 SSR 的原因</h3><p>学习 nuxt 的一个根本原因就是为了 SEO，要了解 SEO，我们要知道，浏览器爬虫的工作流程以及 SPA、SSG、SSR 这些概念只有这样我们才能了解到为什么学习 Nuxt 以及为什么学习 Nuxt 主要解决了什么问题</p>
+<h4 id="SPA"><a href="#SPA" class="headerlink" title="SPA"></a>SPA</h4><p>单页面程序（SPA）全称是：Single-page-application，SPA 应用是在客户端（即浏览器端渲染）术语称 CSR</p>
+<h5 id="SPA-特点"><a href="#SPA-特点" class="headerlink" title="SPA 特点"></a>SPA 特点</h5><ol>
+<li>SPA 默认只返回一个空白 HTML 页面，并没有具体的内容</li>
+<li>整个应用程序的内容是通过 JS 动态加载</li>
+<li>常见框架：React、Vue、Angular</li>
+</ol>
+<h5 id="SPA-优缺点"><a href="#SPA-优缺点" class="headerlink" title="SPA 优缺点"></a>SPA 优缺点</h5><ol>
+<li>优点<ol>
+<li>只需加载一次，页面切换等都不需要重新加载，</li>
+<li>更好的用户体验，相比于传统的 Web 应用程序，SPA 更快，而且更加流畅</li>
+</ol>
+</li>
+<li>缺点<ol>
+<li>由于 SPA 应用程序只返回一个空白 HTML 页面，不利于 SEO（原因详情看爬虫工作流程）</li>
+<li>首屏加载资源过大</li>
+<li>不利于构建复杂项目</li>
+</ol>
+</li>
+</ol>
+<h4 id="SSG"><a href="#SSG" class="headerlink" title="SSG"></a>SSG</h4><p>静态站点生成（SSG）全称是：Static site Generate，即预先生成好的静态网站，一般用于官方文档或者博客网站比较多</p>
+<h5 id="SSG-特点"><a href="#SSG-特点" class="headerlink" title="SSG 特点"></a>SSG 特点</h5><ol>
+<li>SSG 应用一般在构建阶段就确定了网站的内容（页面内容是静态的而并非是请求服务器出来的）</li>
+<li>如果网站内容需要更新，就必须重新构建和部署</li>
+</ol>
+<h5 id="SSG-优缺点"><a href="#SSG-优缺点" class="headerlink" title="SSG 优缺点"></a>SSG 优缺点</h5><ol>
+<li>优点<ol>
+<li>访问速度比较快，每个 HTML 页面都是提前生成好的</li>
+<li>有利于 SEO</li>
+<li>保留了 SPA 应用特性</li>
+</ol>
+</li>
+<li>缺点<ol>
+<li>页面是静态的，不利于展示实时性的内容</li>
+<li>站点更新就必须重新构建部署</li>
+</ol>
+</li>
+</ol>
+<h4 id="SSR"><a href="#SSR" class="headerlink" title="SSR"></a>SSR</h4><p>服务器端渲染（SSR）全称是：Server Side Render，即在服务器端渲染页面，将渲染好的 HTML 返回给浏览器呈现</p>
+<h5 id="SSR-特点"><a href="#SSR-特点" class="headerlink" title="SSR 特点"></a>SSR 特点</h5><ol>
+<li>SSR 应用的页面是在服务器端渲染的，用户每次请求都会将渲染好的页面给浏览器进行呈现</li>
+</ol>
+<h5 id="SSR-优缺点"><a href="#SSR-优缺点" class="headerlink" title="SSR 优缺点"></a>SSR 优缺点</h5><ol>
+<li>优点<ol>
+<li>更快的渲染速度，由于服务器返回的是渲染好的页面而并非是 JS 动态生成的内容，而且不需要加载完整个应用才能访问</li>
+<li>更好的 SEO</li>
+<li>保留了 SPA 应用特性</li>
+</ol>
+</li>
+<li>缺点<ol>
+<li>SSR 由于是在服务器端渲染的，所以需要更多的服务器资源，成本高</li>
+<li>增加了一定的开发成本</li>
+</ol>
+</li>
+</ol>
+<h4 id="爬虫工作流程"><a href="#爬虫工作流程" class="headerlink" title="爬虫工作流程"></a>爬虫工作流程</h4><p>学习 SSR 的一大目的就是利于 SEO，要搞清楚这些就要知道爬虫的基本工作流程</p>
+<h5 id="爬虫工作流程-1"><a href="#爬虫工作流程-1" class="headerlink" title="爬虫工作流程"></a>爬虫工作流程</h5><p>我们在使用浏览器搜索时，浏览器给我们呈现的内容就是爬虫爬取结果后根据一定的算法呈现出来的，简单来说浏览器整个就是爬虫爬取出来的，那么它的工作流程到底是什么样呢</p>
+<ol>
+<li>抓取</li>
+</ol>
+<p>爬虫会在网络中发现各种网页，将网页中的爬取的内容存放到临时库中，网页中如果遇到其他网站，就重复该过程</p>
+<ol start="2">
+<li>索引编制</li>
+</ol>
+<p>爬取完结果后，爬虫会对爬取的数据进行分析（例如 title 元素、图片、视频等），将爬取的网页进行归档分类，并且会对临时库中的信息进行筛选不符合规则的会被清理，最后会把爬虫的结果符合规则的存放到索引区供用户搜索时呈现</p>
+<ol start="3">
+<li>呈现搜索结果</li>
+</ol>
+<p>用户搜索时，搜索引擎会根据内容的类型，选择一组更加符合规则的呈现给用户</p>
+<h5 id="什么是-SEO"><a href="#什么是-SEO" class="headerlink" title="什么是 SEO"></a>什么是 SEO</h5><blockquote>
+<p>SEO 是搜索引擎优化（Search Engine Optimization）的缩写，是一种通过优化网站的内容、结构和技术等方面，以提高网站在搜索引擎中的排名和曝光度的方法和策略。</p>
+</blockquote>
+<h5 id="为什么-SPA-不利于-SEO"><a href="#为什么-SPA-不利于-SEO" class="headerlink" title="为什么 SPA 不利于 SEO"></a>为什么 SPA 不利于 SEO</h5><p>SEO 是为了提高网站在搜索引擎中的排名和曝光度，了解了爬虫的工作流程，我们就知道排序中最重要的是索引编制阶段，而该阶段又借助于我们的页面内容，SPA 返回的又是空白页面，所以不利于 SEO</p>
+<h3 id="从零搭建-SSR"><a href="#从零搭建-SSR" class="headerlink" title="从零搭建 SSR"></a>从零搭建 SSR</h3><p>我们采用 Node 和 webpack 来搭建 vue 的 SSR 项目，这个只是一个简单的项目，主要目的是为了了解一下搭建 SSR 的流程，后面我也会使用 Nuxt 进行搭建 Vue SSR 项目</p>
+<h4 id="前期准备"><a href="#前期准备" class="headerlink" title="前期准备"></a>前期准备</h4><p>安装依赖</p>
+<pre><code class="shell">npm i express
+npm i -D nodemon
+npm i -D webpack webpack-cli webpack-node-externals
+npm i vue
+npm i -D vue-loader
+npm i -D babel-loader @babel/preset-env
+npm i -D webpack-merge webpack-node-externals
+npm i vue-router -D
+npm i pinia
+</code></pre>
+<h4 id="项目基本文件夹目录"><a href="#项目基本文件夹目录" class="headerlink" title="项目基本文件夹目录"></a>项目基本文件夹目录</h4><pre><code>project
+|
+└───build 打包后的代码
+│   │
+│   └───client
+│   └───server
+│
+└───config 打包配置文件
+|   └───  base.config.js
+|   └───  client.config.js
+|   └───  server.config.js
+│
+└── src 源代码
+|   └───client 客户端
+|   |   └─── index.js 入口文件
+|   └───router 路由
+|   |   └─── index.js 入口文件
+|	  └───server 服务器端
+|   |   └─── index.js 入口文件
+|   └───store pinia
+|   |   └─── index.js 入口文件
+|   └───views 视图
+|   |    └─── about.vue
+|   |   └─── home.vue
+|   └───app.js
+|   └───App.vue
+|   └───package-lock.josn
+|   └───package.json
+</code></pre>
+<h4 id="package-json-文件脚本命令配置"><a href="#package-json-文件脚本命令配置" class="headerlink" title="package.json 文件脚本命令配置"></a>package.json 文件脚本命令配置</h4><pre><code class="json">&quot;scripts&quot;: &#123;
+  &quot;test&quot;: &quot;echo \&quot;Error: no test specified\&quot; &amp;&amp; exit 1&quot;,
+  &quot;dev&quot;: &quot;nodemon ./src/server/index&quot;,
+  &quot;start&quot;: &quot;nodemon ./build/server/server_bundle.js&quot;,
+  &quot;build:server&quot;: &quot;webpack --config ./config/server.config.js --watch&quot;,
+  &quot;build:client&quot;: &quot;webpack --config ./config/client.config.js --watch&quot;
+&#125;,
+</code></pre>
+<p>命令详情：</p>
+<ol>
+<li>npm run dev 启动服务器端代码</li>
+<li>npm run start 启动服务</li>
+<li>npm run build:server 打包服务器端代码</li>
+<li>npm ruin build:client 打包客户端代码</li>
+</ol>
+<p>需要注意的是我们在运行时是要有顺序的，要先把客户端和服务端代码打包后再启动服务</p>
+<h4 id="配置文件内容"><a href="#配置文件内容" class="headerlink" title="配置文件内容"></a>配置文件内容</h4><p>配置文件是 webpack 打包配置，我们需要打包服务器端代码和客户端代码，由于两者打包配置有重复点所以新建一个基础的配置文件，并使用 webpack-merge 去合并配置</p>
+<ol>
+<li>base.config.js</li>
+</ol>
+<pre><code class="json">let &#123; VueLoaderPlugin &#125; = require(&quot;vue-loader/dist/index&quot;);
+module.exports = &#123;
+  mode: &quot;development&quot;,
+  module: &#123;
+    rules: [
+    &#123;
+    test: /\.js$/,
+  loader: &quot;babel-loader&quot;,
+  options: &#123;
+    presets: [&quot;@babel/preset-env&quot;],
+  &#125;,
+&#125;,
+&#123;
+  test: /\.vue$/,
+  loader: &quot;vue-loader&quot;,
+&#125;,
+  ],
+&#125;,
+plugins: [new VueLoaderPlugin()],
+resolve: &#123;
+  // 添加的后缀，项目中导包就不需要编写文件后缀
+  extensions: [&quot;.js&quot;, &quot;.json&quot;, &quot;.wasm&quot;, &quot;.jsx&quot;, &quot;.vue&quot;],
+&#125;,
+&#125;;
+</code></pre>
+<ol start="2">
+<li>client.config.js</li>
+</ol>
+<pre><code class="json">let path = require(&quot;path&quot;);
+let &#123; DefinePlugin &#125; = require(&quot;webpack&quot;);
+let &#123; merge &#125; = require(&quot;webpack-merge&quot;);
+let baseConfig = require(&quot;./base.config&quot;);
+module.exports = merge(baseConfig, &#123;
+  target: &quot;web&quot;, //fs path
+  entry: &quot;./src/client/index.js&quot;,
+  output: &#123;
+    filename: &quot;client_bundle.js&quot;,
+    path: path.resolve(__dirname, &quot;../build/client&quot;),
+  &#125;,
+  plugins: [
+  new DefinePlugin(&#123;
+  __VUE_OPTIONS_API__: false,
+  __VUE_PROD_DEVTOOLS__: false,
+&#125;),
+],
+&#125;);
+</code></pre>
+<ol start="3">
+<li>server.config.js</li>
+</ol>
+<pre><code class="json">let path = require(&quot;path&quot;);
+let nodeExternals = require(&quot;webpack-node-externals&quot;);
+let &#123; VueLoaderPlugin &#125; = require(&quot;vue-loader/dist/index&quot;);
+let &#123; merge &#125; = require(&quot;webpack-merge&quot;);
+let baseConfig = require(&quot;./base.config&quot;);
+module.exports = merge(baseConfig, &#123;
+  target: &quot;node&quot;, //fs path
+  entry: &quot;./src/server/index.js&quot;,
+  output: &#123;
+    filename: &quot;server_bundle.js&quot;,
+    path: path.resolve(__dirname, &quot;../build/server&quot;),
+  &#125;,
+  externals: [nodeExternals()], //排除node_module中的包
+&#125;);
+</code></pre>
+<h4 id="src-源代码"><a href="#src-源代码" class="headerlink" title="src 源代码"></a>src 源代码</h4><ol>
+<li>client&#x2F;index.js</li>
+</ol>
+<pre><code class="javascript">import &#123; createApp &#125; from &quot;vue&quot;;
+import App from &quot;../App.vue&quot;;
+
+import createRouter from &quot;../router&quot;;
+import &#123; createWebHashHistory &#125; from &quot;vue-router&quot;;
+import &#123; createPinia &#125; from &quot;pinia&quot;;
+
+let app = createApp(App);
+
+let router = createRouter(createWebHashHistory());
+app.use(router);
+
+let pinia = createPinia();
+app.use(pinia);
+
+router.isReady().then(() =&gt; &#123;
+  //等待路由加载完成之后再挂载
+  app.mount(&quot;#app&quot;);
+&#125;);
+</code></pre>
+<ol start="2">
+<li>router&#x2F;index.js</li>
+</ol>
+<pre><code class="javascript">import &#123; createRouter &#125; from &quot;vue-router&quot;;
+
+const routes = [
+  &#123;
+    path: &quot;/&quot;,
+    component: () =&gt; import(&quot;../views/home.vue&quot;),
+  &#125;,
+  &#123;
+    path: &quot;/about&quot;,
+    component: () =&gt; import(&quot;../views/about.vue&quot;),
+  &#125;,
+];
+
+export default function (history) &#123;
+  return new createRouter(&#123;
+    history,
+    routes,
+  &#125;);
+&#125;
+</code></pre>
+<ol start="3">
+<li>server&#x2F;index.js</li>
+</ol>
+<pre><code class="javascript">let express = require(&quot;express&quot;);
+
+let server = express();
+import createApp from &quot;../app&quot;;
+import &#123; renderToString &#125; from &quot;@vue/server-renderer&quot;;
+// 部署静态资源
+server.use(express.static(&quot;build&quot;));
+
+import createRouter from &quot;../router&quot;;
+// 内存路由=&gt;node用
+import &#123; createMemoryHistory &#125; from &quot;vue-router&quot;;
+import &#123; createPinia &#125; from &quot;pinia&quot;;
+
+server.get(&quot;/*&quot;, async (req, res) =&gt; &#123;
+  let app = createApp();
+  let router = createRouter(createMemoryHistory());
+  /* 
+  服务器端和客户端都注册路由的原因是为了实现路由同步
+  用户进入页面时将渲染好的字符串返回(服务器端返回正确的html字符串)
+  在页面跳转可以无刷新跳转(客户端可以继续跳转)
+  */
+  app.use(router);
+  // 跳转页面(路由跳转完成之后再渲染)
+  await router.push(req.url || &quot;/&quot;);
+  await router.isReady(); //等待(异步)路由加载完成,再渲染页面
+  // 创建pinia
+  const pinpa = createPinia();
+  app.use(pinpa);
+  // 注册路由
+  let appStringHtml = await renderToString(app);
+  res.send(`
+  &lt;!DOCTYPE html&gt;
+  &lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+  &lt;div id=&quot;app&quot;&gt;    
+    $&#123;appStringHtml&#125;
+  &lt;/div&gt;
+  &lt;script src=&quot;/client/client_bundle.js&quot;&gt;&lt;/script&gt;
+  &lt;/body&gt;
+  &lt;/html&gt;
+  `);
+&#125;);
+
+server.listen(3000, () =&gt; &#123;
+  console.log(&quot;服务器启动成功&quot;);
+&#125;);
+</code></pre>
+<ol start="4">
+<li>store&#x2F;index</li>
+</ol>
+<pre><code class="javascript">import &#123; defineStore &#125; from &quot;pinia&quot;;
+
+export const useHomeStore = defineStore(&quot;home&quot;, &#123;
+  state() &#123;
+    return &#123;
+      count: 1,
+    &#125;;
+  &#125;,
+  actions: &#123;
+    increment() &#123;
+      this.count++;
+    &#125;,
+    decrement() &#123;
+      this.count--;
+    &#125;,
+  &#125;,
+&#125;);
+</code></pre>
+<ol start="5">
+<li>views&#x2F;about.vue</li>
+</ol>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div
+    class=&quot;app&quot;
+    style=&quot;border: 1px solid blue&quot;
+  &gt;
+    &lt;h2&gt;About&lt;/h2&gt;
+    &lt;div&gt;&#123;&#123; count &#125;&#125;&lt;/div&gt;
+    &lt;button @click=&quot;addCounter&quot;&gt;+1&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import &#123; storeToRefs &#125; from &quot;pinia&quot;;
+import &#123; useHomeStore &#125; from &quot;../store/home&quot;;
+const store = useHomeStore();
+// storeToRefs使用该方法解构的值是双向绑定
+const &#123; count &#125; = storeToRefs(store);
+const addCounter = () =&gt; &#123;
+  count.value++;
+&#125;;
+&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<ol start="6">
+<li>views&#x2F;home.vue</li>
+</ol>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div
+    class=&quot;app&quot;
+    style=&quot;border: 1px solid green&quot;
+  &gt;
+    &lt;h2&gt;Home&lt;/h2&gt;
+    &lt;div&gt;&#123;&#123; count &#125;&#125;&lt;/div&gt;
+    &lt;button @click=&quot;addCounter&quot;&gt;+1&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import &#123; ref &#125; from &quot;vue&quot;;
+import &#123; storeToRefs &#125; from &quot;pinia&quot;;
+import &#123; useHomeStore &#125; from &quot;../store/home&quot;;
+const store = useHomeStore();
+const &#123; count &#125; = storeToRefs(store);
+
+const addCounter = () =&gt; &#123;
+  count.value++;
+&#125;;
+&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<ol start="7">
+<li>app.js</li>
+</ol>
+<pre><code class="javascript">import &#123; createSSRApp &#125; from &quot;vue&quot;;
+
+import App from &quot;./App.vue&quot;;
+// 写函数返回app实例，作用是避免跨请求状态的污染
+// 通过函数来返回app实例,可以保证每个请求都会返回一个新的app实例
+export default function createApp() &#123;
+  return createSSRApp(App);
+&#125;
+</code></pre>
+<ol start="8">
+<li>App.vue</li>
+</ol>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div
+    class=&quot;app&quot;
+    style=&quot;border: 1px solid red&quot;
+  &gt;
+    &lt;h2&gt;Vue App&lt;/h2&gt;
+    &lt;div&gt;&#123;&#123; count &#125;&#125;&lt;/div&gt;
+    &lt;button @click=&quot;addCounter&quot;&gt;+1&lt;/button&gt;
+    &lt;hr /&gt;
+    &lt;div&gt;
+      &lt;router-link to=&quot;/&quot;&gt;首页&lt;/router-link&gt;
+      &lt;router-link to=&quot;/about&quot;&gt;关于&lt;/router-link&gt;
+    &lt;/div&gt;
+    &lt;router-view&gt;&lt;/router-view&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script setup&gt;
+import &#123; ref &#125; from &quot;vue&quot;;
+
+const count = ref(0);
+const addCounter = () =&gt; &#123;
+  count.value++;
+&#125;;
+&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<p>为了方便大家查看，我这里附上源代码的仓库连接<br><a target="_blank" rel="noopener" href="https://github.com/XY0987/blog_vue3_ssr">https://github.com/XY0987/blog_vue3_ssr</a></p>
+<h3 id="Nuxt-介绍"><a href="#Nuxt-介绍" class="headerlink" title="Nuxt 介绍"></a>Nuxt 介绍</h3><blockquote>
+<p>Nuxt.js 是一个基于 Vue.js 的通用应用框架，它可以帮助开发者快速构建高性能的单页应用（SPA）和静态网站。Nuxt.js 基于 Vue.js 的生态系统，提供了许多有用的功能和约定，使得开发过程更加简单和高效。</p>
+</blockquote>
+<h3 id="Nuxt-项目初始化"><a href="#Nuxt-项目初始化" class="headerlink" title="Nuxt 项目初始化"></a>Nuxt 项目初始化</h3><h4 id="创建项目"><a href="#创建项目" class="headerlink" title="创建项目"></a>创建项目</h4><ol>
+<li>方式一</li>
+</ol>
+<pre><code class="shell">mpx nuxi init 项目名
+</code></pre>
+<ol start="2">
+<li>方式二</li>
+</ol>
+<pre><code class="shell">pnpm dix nuxi init 项目名
+</code></pre>
+<ol start="3">
+<li>方式三</li>
+</ol>
+<pre><code class="shell">npm i -g nuxi
+nuxi init 项目名
+</code></pre>
+<h4 id="项目报错"><a href="#项目报错" class="headerlink" title="项目报错"></a>项目报错</h4><p>由于墙的原因，我们再构建项目时大概率会报错，这是我们有两种解决方法</p>
+<ol>
+<li>方法一</li>
+</ol>
+<p>配置 host，本地 dns 解析<br>Mac 电脑 host 配置路径： &#x2F;stc&#x2F;hosts<br>Window 电脑 host 配置路径: c&#x2F;Windows&#x2F;System32&#x2F;drivers&#x2F;etc&#x2F;hosts<br>新增配置</p>
+<pre><code class="json">185.199.110.133 raw.githubusercontent.com
+</code></pre>
+<ol start="2">
+<li>方法二</li>
+</ol>
+<p>手动克隆项目（有时候我们配置上述方法也不行，比如我的电脑就不行，挂 vpn 也不行，只能开加速器手动克隆了）</p>
+<pre><code class="shell">git clone -b v3 https://github.com/nuxt/starter.git 文件夹名
+</code></pre>
+<pre><code class="shell">npm i
+</code></pre>
+<h4 id="命令详解"><a href="#命令详解" class="headerlink" title="命令详解"></a>命令详解</h4><ol>
+<li>打包</li>
+</ol>
+<pre><code class="shell">npm run build
+</code></pre>
+<ol start="2">
+<li>运行</li>
+</ol>
+<pre><code class="shell">npm run dev
+</code></pre>
+<ol start="3">
+<li>生成静态站点</li>
+</ol>
+<pre><code class="shell">npm run generate
+</code></pre>
+<ol start="4">
+<li>预览打包文件</li>
+</ol>
+<pre><code class="shell">npm run preview
+</code></pre>
+<ol start="5">
+<li>生成类型文件</li>
+</ol>
+<pre><code class="shell">npm run postinstall
+</code></pre>
+<h4 id="项目目录结构详解"><a href="#项目目录结构详解" class="headerlink" title="项目目录结构详解"></a>项目目录结构详解</h4><pre><code class="shell">project
+|
+└───assets 静态资源
+│
+└───components 组件
+│
+└── composables 组合API
+|
+└── layout 自定义布局
+|
+└── pages 页面，nuxt会根据页面目录结构和文件名自动注册路由
+|
+└── plugins 插件
+|
+└── app.vue 入口文件
+|
+└── app.config.ts 配置文件
+|
+└── nuxt.config.ts nuxt配置文件
+|
+└── package-lock.json
+|
+└── package.json
+|
+└── tsconfig.json ts配置
+</code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在学习过程中遇到比较难受点就是下载依赖比较卡顿，还有就是有时候即使跟着网上的教程但是还是不行，chargpt 给答案也是模棱两可，还是得去看文档或者去 github 中的 issues 去找答案</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">3</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">444</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-08-22T13:55:48.067Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
