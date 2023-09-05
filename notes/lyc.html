@@ -1,0 +1,423 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>XY·夜星 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言虽然现在有很多现成的库去实现音乐播放器功能，但是总感觉只会使用人家的第三方库缺点啥，于是就想着自己使用原生 JS 写一个，也不是特别难。 完整代码html&lt;!DOCTYPE html&gt; &lt;html lang&#x3D;&quot;en&quot;&gt;   &lt;head&gt;     &lt;meta charset&#x3D;&quot;UTF-8&quot; &#x2F;&gt;     &amp;l">
+<meta property="og:type" content="website">
+<meta property="og:title" content="XY·夜星">
+<meta property="og:url" content="http://example.com/notes/lyc.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="前言虽然现在有很多现成的库去实现音乐播放器功能，但是总感觉只会使用人家的第三方库缺点啥，于是就想着自己使用原生 JS 写一个，也不是特别难。 完整代码html&lt;!DOCTYPE html&gt; &lt;html lang&#x3D;&quot;en&quot;&gt;   &lt;head&gt;     &lt;meta charset&#x3D;&quot;UTF-8&quot; &#x2F;&gt;     &amp;l">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-09-05T08:06:08.396Z">
+<meta property="article:modified_time" content="2023-09-05T08:06:08.396Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/notes/lyc.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'XY·夜星',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-09-05 16:06:08'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">XY·夜星</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>虽然现在有很多现成的库去实现音乐播放器功能，但是总感觉只会使用人家的第三方库缺点啥，于是就想着自己使用原生 JS 写一个，也不是特别难。</p>
+<h2 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h2><h3 id="html"><a href="#html" class="headerlink" title="html"></a>html</h3><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta
+      name=&quot;viewport&quot;
+      content=&quot;width=device-width, initial-scale=1.0&quot;
+    /&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+    &lt;link
+      rel=&quot;shortcut icon&quot;
+      href=&quot;./assets/favicon.ico&quot;
+      type=&quot;image/x-icon&quot;
+    /&gt;
+    &lt;link
+      rel=&quot;stylesheet&quot;
+      href=&quot;./css/index.css&quot;
+    /&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;audio
+      controls
+      src=&quot;./assets/春娇与志明.mp3&quot;
+    &gt;&lt;/audio&gt;
+    &lt;div class=&quot;container&quot;&gt;
+      &lt;ul class=&quot;lrc-list&quot;&gt;&lt;/ul&gt;
+      &lt;script src=&quot;./js/data.js&quot;&gt;&lt;/script&gt;
+      &lt;script src=&quot;./js/index.js&quot;&gt;&lt;/script&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<h3 id="css"><a href="#css" class="headerlink" title="css"></a>css</h3><pre><code class="css">* &#123;
+  margin: 0;
+  padding: 0;
+&#125;
+
+body &#123;
+  background-color: #000;
+  color: #666;
+  /* 对行盒元素进行居中 */
+  text-align: center;
+&#125;
+
+audio &#123;
+  width: 450px;
+  margin: 30px 0;
+&#125;
+
+.container &#123;
+  height: 420px;
+  overflow: hidden;
+  /* border: 2px solid #fff; */
+&#125;
+
+.container ul &#123;
+  /* border: 2px solid #fff; */
+  /* 只针对数值类的有效 */
+  transition: 0.3s;
+  list-style: none;
+&#125;
+
+.container li &#123;
+  height: 30px;
+  line-height: 30px;
+  /* 过渡在进去还有离开时都要有 */
+  transition: 0.3s;
+&#125;
+
+.active &#123;
+  color: #fff;
+  transform: scale(1.2);
+&#125;
+</code></pre>
+<h3 id="js"><a href="#js" class="headerlink" title="js"></a>js</h3><p>滚动歌词的效果的实现其实就是监听 audio 标签，时间改变的同时会显示对应的歌词</p>
+<pre><code class="javascript">var lrc = `[00:00.527]Jcool：
+[00:23.027]有个女仔令我思想变得大个
+[00:25.495]当初
+[00:26.120]我幼稚行为对你犯下大错
+[00:28.617]你话我唔识谂 用钱买无用饰品
+[00:31.381]你慢慢心淡觉得我对感情唔认真
+[00:34.260]要知道男人系天生嘅小朋友
+[00:37.176]小朋友弱点会忽略另一半感受
+[00:39.799]要改正好简单我只系欠调教
+[00:42.503]经历得多反而可以令到爱意浓厚
+[00:44.723]Vai：
+[00:45.255]志明嘅世界永远好动带着可爱
+[00:47.944]佢冇时间迷茫 爱情错过却唔可再
+[00:50.696]从开始走到结尾哪个不会变大个
+[00:53.505]但春娇想要那个你又有谁可以劝阻
+[00:56.241]等待 UFO 纵有变数
+[00:58.999]最普通嘅佢哋世上遍布
+[01:01.803]爱漫春天散落每个季节嘅消耗
+[01:04.706]看着花瓣跌落过程撑得过衰老
+[01:07.205]欧阳：
+[01:09.059]重新出发吗 huh 更渴望未来
+[01:13.869]以往这少年懂爱吗
+[01:17.438]仿佛不够
+[01:20.203]成长会进化吗 也信念自由
+[01:25.058]我爱这少年讽刺吗
+[01:28.625]这花开吗
+[01:30.327]留：
+[01:30.972]我爱你 你是唱将我做配合
+[01:33.418]但你予我这过程细致给我培训
+[01:36.390]情与爱 太过复杂 我要太多喘息
+[01:39.072]但你爱我嘅以后不会太过忐忑
+[01:41.945]当拥有嘅时候 又接近放手
+[01:44.718]循环播放剧情有多少个然后
+[01:47.085]如果系现实我会选择打破现实
+[01:49.633]喺你嘅世界里面我会选择慢慢渐入
+[01:52.312]Vai：
+[01:52.972]志明嘅世界永远好动带着可爱
+[01:55.656]佢冇时间迷茫 爱情错过却唔可再
+[01:58.497]从开始走到结尾哪个不会变大个
+[02:01.286]但春娇想要那个你又有谁可以劝阻
+[02:04.039]等待 UFO 纵有变数
+[02:06.725]最普通嘅佢哋世上遍布
+[02:09.529]爱漫春天散落每个季节嘅消耗
+[02:12.452]看着花瓣跌落过程撑得过衰老
+[02:15.606]欧阳：
+[02:16.709]重新出发吗 huh 更渴望未来
+[02:21.541]以往这少年懂爱吗
+[02:25.092]仿佛不够
+[02:27.965]成长会进化吗 也信念自由
+[02:32.853]我爱这少年讽刺吗
+[02:36.415]这花开吗
+[02:37.912]Garyu：
+[02:37.981]破碎婚姻里出身逼出佢嘅硬净
+[02:40.640]佢再牺牲佢嘅率真改变佢嘅硬颈
+[02:43.493]戴眼镜嘅佢明白波珠解决唔到逃避
+[02:46.318]要长大要负责任缩短两个人嘅距离
+[02:48.998]美梦里学会感嘅
+[02:51.559]你亦放肆你的爱
+[02:54.109]用力转载 越过比赛
+[02:56.845]为我掩盖 都因为爱
+[03:00.770]欧阳：
+[03:01.883]重新出发吗 huh 更渴望未来
+[03:06.757]以往这少年懂爱吗
+[03:10.215]仿佛不够
+[03:13.077]成长会进化吗 也信念自由
+[03:18.048]我爱这少年讽刺吗
+[03:21.629]这花开吗`;
+</code></pre>
+<p>实现具体内容</p>
+<pre><code class="javascript">/* 
+解析歌词字符串，得到一个歌词对象的数组
+每个歌词对象:
+&#123;time:开始时间,words:歌词内容&#125;
+*/
+function parseLrc() &#123;
+  const lines = lrc.split(&quot;\n&quot;);
+  const result = [];
+  for (let i = 0; i &lt; lines.length; i++) &#123;
+    const str = lines[i];
+    const parts = str.split(&quot;]&quot;);
+    const timeStr = parts[0].substring(1);
+    const obj = &#123;
+      time: parseTime(timeStr),
+      words: parts[1] || &quot;&quot;,
+    &#125;;
+    result.push(obj);
+  &#125;
+  return result;
+&#125;
+
+function parseTime(timeStr) &#123;
+  const parts = timeStr.split(&quot;:&quot;);
+  // +转换为数字
+  return +parts[0] * 60 + +parts[1];
+&#125;
+
+const lrcData = parseLrc();
+// console.log(lrcData);
+
+// 获取需要的dom
+var doms = &#123;
+  audio: document.querySelector(&quot;audio&quot;),
+  ul: document.querySelector(&quot;.lrc-list&quot;),
+  container: document.querySelector(&quot;.container&quot;),
+&#125;;
+
+/* 
+计算出当前情况下,lrcData数组中应该高亮显示的歌词下标
+找到的是第一个大于当前时间的上一句
+*/
+function findIndex() &#123;
+  const curTime = doms.audio.currentTime; //播放器当前时间
+  for (let i = 0; i &lt; lrcData.length; i++) &#123;
+    if (curTime &lt; lrcData[i].time) &#123;
+      return i - 1;
+    &#125;
+  &#125;
+  // 播放到最后一句了
+  return lrcData.length - 1;
+&#125;
+
+// 创建歌词元素
+function createLrcEle() &#123;
+  // 创建文档片段
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i &lt; lrcData.length; i++) &#123;
+    const li = document.createElement(&quot;li&quot;);
+    li.textContent = lrcData[i].words;
+    frag.appendChild(li);
+  &#125;
+  doms.ul.appendChild(frag);
+&#125;
+
+createLrcEle();
+
+// 容器高度
+const containerHeight = doms.container.clientHeight;
+// 每个li的高度
+const liHeight = doms.ul.children[0].clientHeight;
+// 最大偏移量
+const maxOffset = doms.ul.clientHeight - containerHeight;
+
+/* 
+设置ul元素的偏移量
+*/
+function setOffset() &#123;
+  const index = findIndex();
+  let offset = liHeight * index + liHeight / 2 - containerHeight / 2;
+  if (offset &lt; 0) &#123;
+    offset = 0;
+  &#125;
+  if (offset &gt; maxOffset) &#123;
+    offset = maxOffset;
+  &#125;
+  doms.ul.style.transform = `translateY(-$&#123;offset&#125;px)`;
+  // 去除之前样式
+  const oriStyLi = doms.ul.querySelector(&quot;.active&quot;);
+  if (oriStyLi) &#123;
+    oriStyLi.classList.remove(&quot;active&quot;);
+  &#125;
+  //   console.log(index);
+  const li = doms.ul.children[index];
+  if (li) &#123;
+    doms.ul.children[index].classList.add(&quot;active&quot;);
+  &#125;
+&#125;
+
+doms.audio.addEventListener(&quot;timeupdate&quot;, setOffset);
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">3</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">444</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-09-05T08:31:21.564Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
