@@ -1,0 +1,524 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>nuxt | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="代码仓库 nuxt 基础内置组件nuxt 为我们提供了一些内置组件，可以直接使用不用导入，其中常用的如下 SEO 组件 Html Body Head Title Meta Style Link NoScript Base  SEO 组件可以更加方便的让我们再页面中添加利于 seo 的元素 NuxtWelcome欢迎页面组件，该组件是 nuxt&#x2F;ui 的一部分 NuxtPage该组件时 N">
+<meta property="og:type" content="website">
+<meta property="og:title" content="nuxt">
+<meta property="og:url" content="http://example.com/technologyStudy/nuxt/nuxt.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="代码仓库 nuxt 基础内置组件nuxt 为我们提供了一些内置组件，可以直接使用不用导入，其中常用的如下 SEO 组件 Html Body Head Title Meta Style Link NoScript Base  SEO 组件可以更加方便的让我们再页面中添加利于 seo 的元素 NuxtWelcome欢迎页面组件，该组件是 nuxt&#x2F;ui 的一部分 NuxtPage该组件时 N">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-09-08T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-09T09:11:22.233Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/technologyStudy/nuxt/nuxt.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'nuxt',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-09-09 17:11:22'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">nuxt</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p><a target="_blank" rel="noopener" href="https://github.com/XY0987/nuxt_blog_demo">代码仓库</a></p>
+<h2 id="nuxt-基础"><a href="#nuxt-基础" class="headerlink" title="nuxt 基础"></a>nuxt 基础</h2><h3 id="内置组件"><a href="#内置组件" class="headerlink" title="内置组件"></a>内置组件</h3><p>nuxt 为我们提供了一些内置组件，可以直接使用不用导入，其中常用的如下</p>
+<h4 id="SEO-组件"><a href="#SEO-组件" class="headerlink" title="SEO 组件"></a>SEO 组件</h4><ul>
+<li>Html</li>
+<li>Body</li>
+<li>Head</li>
+<li>Title</li>
+<li>Meta</li>
+<li>Style</li>
+<li>Link</li>
+<li>NoScript</li>
+<li>Base</li>
+</ul>
+<p>SEO 组件可以更加方便的让我们再页面中添加利于 seo 的元素</p>
+<h4 id="NuxtWelcome"><a href="#NuxtWelcome" class="headerlink" title="NuxtWelcome"></a>NuxtWelcome</h4><p>欢迎页面组件，该组件是 nuxt&#x2F;ui 的一部分</p>
+<h4 id="NuxtPage"><a href="#NuxtPage" class="headerlink" title="NuxtPage"></a>NuxtPage</h4><p>该组件时 Nxut 自带的页面的占位组件,是对 router-view 的封装，另外 nuxt 采用的是约定式路由，即不需要我们手动配置路由，nuxt 会根据我们在 pages 文件夹中的文件以及 app 文件夹(开发中)，具体的我们会在下边介绍。</p>
+<h4 id="NuxtLink"><a href="#NuxtLink" class="headerlink" title="NuxtLink"></a>NuxtLink</h4><p>该组件相当于 vue-router 中的 router-link 组件，用于页面跳转<br>组件属性</p>
+<ul>
+<li>to: 表示要跳转的路径</li>
+<li>href: to 的别名</li>
+<li>replace: boolean 默认为 false，是否替换当前路由</li>
+<li>activeClass: 激活连接时的生效的类名</li>
+<li>target: 和 a 标签的 target 一样</li>
+</ul>
+<h4 id="ClientOnly"><a href="#ClientOnly" class="headerlink" title="ClientOnly"></a>ClientOnly</h4><p>该组件的默认插槽的内容只会再客户端渲染，而 fallback 插槽的内容只在服务器端渲染<br>在服务端渲染期间，fallback 内容会被渲染,一般会显示加载信息</p>
+<pre><code class="vue">&lt;template&gt;
+  &lt;div&gt;home&lt;/div&gt;
+  &lt;NuxtLink to=&quot;/&quot;&gt;home&lt;/NuxtLink&gt;
+  &lt;div&gt;
+    &lt;ClientOnly&gt;
+      &lt;!-- 
+        在服务端渲染期间，fallback内容会被渲染,一般会显示加载信息
+       --&gt;
+      &lt;template #fallback&gt;
+        &lt;p&gt;该内容只会再服务器端渲染&lt;/p&gt;
+      &lt;/template&gt;
+    &lt;/ClientOnly&gt;
+    &lt;ClientOnly&gt;
+      &lt;template #default&gt;
+        &lt;p&gt;该内容会再客户端渲染&lt;/p&gt;
+      &lt;/template&gt;
+    &lt;/ClientOnly&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script setup lang=&quot;ts&quot;&gt;&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<p>(&#x2F;pages&#x2F;home&#x2F;index.vue)</p>
+<h3 id="全局样式"><a href="#全局样式" class="headerlink" title="全局样式"></a>全局样式</h3><p>安装 sass</p>
+<pre><code class="shell">yarn add sass -D
+</code></pre>
+<p>新建 assets 文件夹，并在该文件夹中新建 css 文件夹，新建 global.scss 文件用于写一些全局样式,新建 value.scss 用于保存全局变量<br>在 nuxt.config.ts 中配置</p>
+<pre><code class="typescript">// https://nuxt.com/docs/api/configuration/nuxt-config
+export default defineNuxtConfig(&#123;
+  devtools: &#123; enabled: true &#125;,
+  //全局引入样式
+  css: [&quot;@/assets/css/global.scss&quot;],
+  vite: &#123;
+    css: &#123;
+      preprocessorOptions: &#123;
+        scss: &#123;
+          // 每个文件中都会加上这句话
+          additionalData: &quot;@use &#39;@/assets/css/value.scss&#39; as *;&quot;,
+        &#125;,
+      &#125;,
+    &#125;,
+  &#125;,
+&#125;);
+</code></pre>
+<p>之后我们在&#x2F;pages&#x2F;index.vue 中使用，就可以看到效果了</p>
+<h3 id="静态资源"><a href="#静态资源" class="headerlink" title="静态资源"></a>静态资源</h3><p>nuxt 中提供两个目录用于存放静态资源，比如：stylesheets、fonts 或 img</p>
+<ul>
+<li>public<ul>
+<li>可以通过**&#x2F;**来获取到 public 目录中的文件</li>
+</ul>
+</li>
+</ul>
+<p>例如:</p>
+<pre><code class="html">&lt;img
+  class=&quot;imgSty&quot;
+  src=&quot;/01.jpg&quot;
+  alt=&quot;&quot;
+/&gt;
+</code></pre>
+<ul>
+<li>asstes<ul>
+<li>可以通过**~&#x2F;assets&#x2F;<strong>或者</strong>@&#x2F;assets&#x2F;**路径径引用 assets 目录中的文件</li>
+</ul>
+</li>
+</ul>
+<p>例如:</p>
+<pre><code class="javascript">&lt;img
+  src=&quot;@/assets/img/01.jpg&quot;
+  class=&quot;imgSty&quot;
+  alt=&quot;&quot;
+/&gt;
+</code></pre>
+<p>&#x2F;pages&#x2F;index.vue</p>
+<h2 id="pages"><a href="#pages" class="headerlink" title="pages"></a>pages</h2><h3 id="新建页面"><a href="#新建页面" class="headerlink" title="新建页面"></a>新建页面</h3><ul>
+<li>nuxt 项目的页面一般是在 pages 目录下创建的，不过我们在新初始化的项目中官方默认给的是 app 目录，这两个目录使用方法差不多，并且 app 目录在最新版官方文档中并没有出现，表示正在实验阶段，后续语法可能会改变，所以就不过多赘述</li>
+<li>nuxt 的页面路由也称为文件系统路由，我们不需要额外配置，直接根据&#x2F;文件名的方式就可以访问，如果是文件夹，文件夹中的 index.vue 可以通过&#x2F;文件夹名的方式访问，其他文件通过&#x2F;文件夹名&#x2F;文件名的方式访问</li>
+</ul>
+<p>nuxt 为我们提供了命令的方式去创建页面</p>
+<pre><code class="powershell"># 创建home页面
+npx nuxi add page home
+</code></pre>
+<h3 id="NuxtLink-1"><a href="#NuxtLink-1" class="headerlink" title="NuxtLink"></a>NuxtLink</h3><pre><code class="vue">&lt;NuxtLink to=&quot;/&quot;&gt;home&lt;/NuxtLink&gt;
+</code></pre>
+<h3 id="编程式路由导航"><a href="#编程式路由导航" class="headerlink" title="编程式路由导航"></a>编程式路由导航</h3><p>nuxt3 除了可以通过 NuxtLink 内置组件进行导航，也支持编程导航：navigateTo、useRouter<br>不过使用编程导航不利于 SEO</p>
+<h4 id="navigateTo"><a href="#navigateTo" class="headerlink" title="navigateTo"></a>navigateTo</h4><h5 id="基本使用"><a href="#基本使用" class="headerlink" title="基本使用"></a>基本使用</h5><p>navigateTo(url,options?);</p>
+<ul>
+<li>url 表示姚导航的连接，可以是字符串也可以是路由对象<ul>
+<li>路由对象：<ul>
+<li>path：导航的连接</li>
+<li>query：query 参数</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>options 导航配置，可选<ul>
+<li>replace：默认是 false，是否替换当前页面</li>
+<li>external：默认是 false，是否允许导航到外部连接</li>
+<li>…</li>
+</ul>
+</li>
+</ul>
+<pre><code class="javascript">// 无参
+navigateTo(&quot;/about&quot;, &#123;
+  replace: false,
+  external: false,
+&#125;);
+
+// 有参(可以传递query参数或者params参数)
+navigateTo(&#123;
+  path: &quot;/home&quot;,
+  query: &#123;
+    type: &quot;phone&quot;,
+  &#125;,
+&#125;);
+</code></pre>
+<p>&#x2F;pages&#x2F;index.vue</p>
+<h5 id="获取参数"><a href="#获取参数" class="headerlink" title="获取参数"></a>获取参数</h5><pre><code class="javascript">const route = useRoute();
+console.log(route.query);
+//console.log(route.params);
+</code></pre>
+<p>&#x2F;pages&#x2F;home&#x2F;index.vue</p>
+<h4 id="useRouter"><a href="#useRouter" class="headerlink" title="useRouter"></a>useRouter</h4><h5 id="常用-API"><a href="#常用-API" class="headerlink" title="常用 API"></a>常用 API</h5><pre><code class="javascript">const router = useRouter();
+// 页面返回,类似于router.go(-1);
+router.back();
+// 页面前进,类似于router.go(1)
+router.forward();
+// 页面前进或者返回(接收一个数字)
+router.go(1);
+// 以push方式导航到新页面
+router.push(&#123; path: &quot;/home&quot; &#125;); //建议使用navigateTo代替
+// 以replace方式导航到新页面
+router.replace(&#123; path: &quot;/home&quot; &#125;); //建议使用navigateTo代替
+// 路由全局守卫，每次导航前执行，用于全局监听，接收一个回调函数
+router.beforeEach();
+// 路由守卫，每次导航后执行，用于全局监听，接收一个回调函数
+router.afterEach();
+</code></pre>
+<h5 id="获取参数-1"><a href="#获取参数-1" class="headerlink" title="获取参数"></a>获取参数</h5><p>获取参数和 navigateTo 获取参数类似</p>
+<h3 id="动态路由"><a href="#动态路由" class="headerlink" title="动态路由"></a>动态路由</h3><p>我们可以使用[]方括号的形式来编写动态路由，方括号里边存放是动态路由的参数</p>
+<h4 id="基本使用-1"><a href="#基本使用-1" class="headerlink" title="基本使用"></a>基本使用</h4><pre><code class="javascript">pages/detail/[id].vue	=&gt; /detail/:id
+pages/detail/user-[id].vue =&gt; /detail/user-:id
+pages/detail/[role]/[id].vue =&gt; /detail/:role/:id
+</code></pre>
+<h4 id="获取参数-2"><a href="#获取参数-2" class="headerlink" title="获取参数"></a>获取参数</h4><p>通过 route.params 获取传递的参数</p>
+<pre><code class="javascript">const route = useRoute();
+const id = route.params.id;
+</code></pre>
+<h3 id="404-页面"><a href="#404-页面" class="headerlink" title="404 页面"></a>404 页面</h3><p>nuxt 为我们提供了 404 页面，但是并不适用于页面展示，我们可以自己定义 404 页面，通过方括号内添加三个点即表示捕获所有不匹配路由<br>例如：[…not].vue(not 是一个名字，这个可以自定义)<br>pages 目录中新建[…not].vue</p>
+<h3 id="嵌套路由"><a href="#嵌套路由" class="headerlink" title="嵌套路由"></a>嵌套路由</h3><p>再文件夹中创建一个与一级路由同名的文件夹就可以使用嵌套二级路由</p>
+<pre><code class="javascript">- pages
+---| parent/
+  ----| index.vue
+---| parent.vue
+</code></pre>
+<p>访问路径&#x2F;parent&#x2F;parent</p>
+<h3 id="页面布局"><a href="#页面布局" class="headerlink" title="页面布局"></a>页面布局</h3><p>我们的网站中经常会遇到每个页面中都包含一样的页头以及页脚<br>我们就可以使用 layout 来进行布局<br>再跟目录新建 layouts 文件夹<br>页面布局可以使用两种布局方式一种是默认布局，一种是自定义布局</p>
+<h4 id="默认布局"><a href="#默认布局" class="headerlink" title="默认布局"></a>默认布局</h4><p>在 layouts 目录下 default.vue<br>然后再 app.vue 中通过 NuxtLayout 包裹</p>
+<pre><code class="vue">&lt;!-- default.vue --&gt;
+&lt;template&gt;
+  &lt;div class=&quot;layout&quot;&gt;
+    &lt;div&gt;页头&lt;/div&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+    &lt;div&gt;页脚&lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script setup lang=&quot;ts&quot;&gt;&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<pre><code class="vue">&lt;!-- app.vue --&gt;
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;NuxtLayout&gt;
+      &lt;!-- 默认欢迎页 --&gt;
+      &lt;!-- &lt;NuxtWelcome /&gt; --&gt;
+      &lt;!-- 占位组件 --&gt;
+      &lt;NuxtPage&gt;&lt;/NuxtPage&gt;
+    &lt;/NuxtLayout&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<h4 id="自定义布局"><a href="#自定义布局" class="headerlink" title="自定义布局"></a>自定义布局</h4><p>在 layouts 中新建 my-layout.vue,然后通过 name 属性指定布局类型(命名格式不能使用大驼峰)</p>
+<pre><code class="vue">&lt;!-- my-layout.vue --&gt;
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;div&gt;我是自定义页头&lt;/div&gt;
+    &lt;slot&gt;&lt;/slot&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+&lt;script setup lang=&quot;ts&quot;&gt;&lt;/script&gt;
+
+&lt;style scoped&gt;&lt;/style&gt;
+</code></pre>
+<pre><code class="vue">&lt;!-- app.vue --&gt;
+&lt;template&gt;
+  &lt;div&gt;
+    &lt;NuxtLayout name=&quot;my-layout&quot;&gt;
+      &lt;!-- 默认欢迎页 --&gt;
+      &lt;!-- &lt;NuxtWelcome /&gt; --&gt;
+      &lt;!-- 占位组件 --&gt;
+      &lt;NuxtPage&gt;&lt;/NuxtPage&gt;
+    &lt;/NuxtLayout&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+</code></pre>
+<h4 id="页面中指定布局方式"><a href="#页面中指定布局方式" class="headerlink" title="页面中指定布局方式"></a>页面中指定布局方式</h4><p>我们也可以使用 definePageMeta 来指定当前页面布局模板，<br>使用时 NuxtLayout 不能指定布局方式否则不生效</p>
+<pre><code class="javascript">definePageMeta(&#123;
+  layout: &quot;my-layout&quot;,
+&#125;);
+</code></pre>
+<p>&#x2F;pages&#x2F;about&#x2F;index.vue</p>
+<h2 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h2><p><img src="/img/loading.gif" data-original="https://cdn.nlark.com/yuque/0/2023/png/35490004/1694248473966-96fee84b-e255-4cb3-8439-8e40e6ec363c.png#averageHue=%23fefefe&clientId=u263f7a9d-db99-4&from=paste&height=978&id=u63933c68&originHeight=1223&originWidth=1210&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=146618&status=done&style=none&taskId=u3a402c27-2c08-4494-a41b-5ea68f2a518&title=&width=968" alt="image.png"></p>
+<h2 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h2><p>我们在之前项目中，我们一般使用 axios 去请求数据，但是在 nuxt 中，官方更加推荐我们使用 useFetch 而不是 axios</p>
+<h4 id="封装"><a href="#封装" class="headerlink" title="封装"></a>封装</h4><pre><code class="typescript">import type &#123; AsyncData, UseFetchOptions &#125; from &quot;nuxt/dist/app/composables&quot;;
+
+const BASE_URL = &quot;&quot;;
+type Methods = &quot;GET&quot; | &quot;POST&quot;;
+
+class MyRequest &#123;
+  request&lt;T = any&gt;(
+    url: string,
+    method: Methods,
+    data?: any,
+    options?: UseFetchOptions&lt;T&gt;
+  ): Promise&lt;AsyncData&lt;T, Error&gt;&gt; &#123;
+    return new Promise((resolve, reject) =&gt; &#123;
+      const newOptions: UseFetchOptions&lt;T&gt; = &#123;
+        baseURL: BASE_URL,
+        method: method,
+        ...options,
+      &#125;;
+
+      if (method === &quot;GET&quot;) &#123;
+        newOptions.query = data;
+      &#125;
+      if (method === &quot;POST&quot;) &#123;
+        newOptions.body = data;
+      &#125;
+      useFetch&lt;T&gt;(url, newOptions as any)
+        .then((res) =&gt; &#123;
+          resolve(res as AsyncData&lt;T, Error&gt;);
+        &#125;)
+        .catch((error) =&gt; &#123;
+          reject(error);
+        &#125;);
+    &#125;);
+  &#125;
+
+  get&lt;T = any&gt;(url: string, params?: any, options?: UseFetchOptions&lt;T&gt;) &#123;
+    return this.request&lt;T&gt;(url, &quot;GET&quot;, params, options);
+  &#125;
+
+  post&lt;T = any&gt;(url: string, data?: any, options?: UseFetchOptions&lt;T&gt;) &#123;
+    return this.request&lt;T&gt;(url, &quot;POST&quot;, data, options);
+  &#125;
+&#125;
+
+export default new HYRequest();
+</code></pre>
+<h2 id="全局状态数据共享"><a href="#全局状态数据共享" class="headerlink" title="全局状态数据共享"></a>全局状态数据共享</h2><p>使用 pinia 去实现全局状态管理<br>具体使用 pinia 的方式我会在下一个博客中详细说明</p>
+<pre><code class="shell">yarn add pinia @pinia/nuxt
+</code></pre>
+<h3 id="配置"><a href="#配置" class="headerlink" title="配置"></a>配置</h3><p>在 nuxt.config.ts 中添加配置</p>
+<pre><code class="json">modules: [&quot;@pinia/nuxt&quot;]
+</code></pre>
+<h2 id="使用-element-plus"><a href="#使用-element-plus" class="headerlink" title="使用 element plus"></a>使用 element plus</h2><p>安装</p>
+<pre><code class="shell">yarn add element-plus
+</code></pre>
+<p>自动导入</p>
+<pre><code class="shell">yarn add unplugin-element-plus -D
+</code></pre>
+<p>babel 转义</p>
+<pre><code class="shell">yarn add unplugin-element-plus -D
+</code></pre>
+<h2 id="nuxt-config-ts-配置"><a href="#nuxt-config-ts-配置" class="headerlink" title="nuxt.config.ts 配置"></a>nuxt.config.ts 配置</h2><pre><code class="typescript">// https://nuxt.com/docs/api/configuration/nuxt-config
+import ElementPlus from &quot;unplugin-element-plus/vite&quot;;
+
+export default defineNuxtConfig(&#123;
+  devtools: &#123; enabled: true &#125;,
+  css: [
+    &quot;normalize.css&quot;,
+    &quot;@/assets/css/global.scss&quot;,
+    &quot;@/assets/cus-font/iconfont.css&quot;,
+  ],
+  modules: [&quot;@pinia/nuxt&quot;],
+  // 配置自动导入样式
+  vite: &#123;
+    css: &#123;
+      preprocessorOptions: &#123;
+        scss: &#123;
+          additionalData: &quot;@use &#39;@/assets/css/variables.scss&#39; as *;&quot;,
+        &#125;,
+      &#125;,
+    &#125;,
+    plugins: [ElementPlus(&#123;&#125;)],
+  &#125;,
+  app: &#123;
+    // 可以给所有的页面的head添加一下SEO的信息
+    head: &#123;
+      title: &quot;&quot;,
+      meta: [
+        &#123;
+          name: &quot;description&quot;,
+          content: &quot;&quot;,
+        &#125;,
+        &#123;
+          name: &quot;keywords&quot;,
+          content: &quot;&quot;,
+        &#125;,
+        &#123; name: &quot;viewport&quot;, content: &quot;width=device-width, initial-scale=1&quot; &#125;,
+      ],
+      link: [&#123; rel: &quot;icon&quot;, type: &quot;image/x-icon&quot;, href: &quot;/favicon.ico&quot; &#125;],
+      noscript: [&#123; children: &quot;Javascript is required&quot; &#125;],
+    &#125;,
+  &#125;,
+  build: &#123;
+    // 该文件需要进行Babel转义
+    transpile: [&quot;element-plus/es&quot;],
+  &#125;,
+&#125;);
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">3</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">484</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-09-09T09:27:46.113Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
