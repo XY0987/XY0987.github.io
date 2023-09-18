@@ -21,7 +21,7 @@
       <link href="/2023/09/10/algorithm/"/>
       <url>/2023/09/10/algorithm/</url>
       
-        <content type="html"><![CDATA[ <div class="recent-posts category_ui" id="recent-posts">        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/algorithm/first" title="标题" data-pjax-state="">第一周算法日记</a>                <div class="content">这周周赛只写出来一道，有点太菜了，感觉这周算法考深度优先搜索和广度优先搜索比较多，这方面有点欠缺，之后要加强这方面的练习</div>            </div>        </div></div>]]></content>
+        <content type="html"><![CDATA[ <div class="recent-posts category_ui" id="recent-posts">        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/algorithm/first" title="标题" data-pjax-state="">第一周算法日记</a>                <div class="content">这周周赛只写出来一道，有点太菜了，感觉这周算法考深度优先搜索和广度优先搜索比较多，这方面有点欠缺，之后要加强这方面的练习</div>            </div>        </div>        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/algorithm/second" title="标题" data-pjax-state="">第二周算法日记</a>                <div class="content">这周周赛就提交过了一道，但是第二道用回溯法做的，过了一部分案例，因为开会的原因，等开完会周赛就剩40分钟了，就没有完全过，之后继续努力吧</div>            </div>        </div></div>]]></content>
       
       
       
