@@ -1,0 +1,859 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>react Hook +antd实现弹窗改进版 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="之前写过一个 react Hook+antd 弹窗，虽然功能实现了，但是再使用的时候仍然会有报错，虽然这个报错不影响使用的，但是，作为一个合格的前端切图仔，要再使用中发现问题，改正问题。 问题 多次调用 hook 会创建多个相同 id 的盒子加入页面，并且未初始化就已经有盛放弹窗的盒子 使用不够简便，一些文件的格式判断以及大小判断没有做 在热更新时如果弹窗处于打开状态，会报错节点容器已经被创建">
+<meta property="og:type" content="website">
+<meta property="og:title" content="react Hook +antd实现弹窗改进版">
+<meta property="og:url" content="http://example.com/project/ape/reactHokModalPlus.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="之前写过一个 react Hook+antd 弹窗，虽然功能实现了，但是再使用的时候仍然会有报错，虽然这个报错不影响使用的，但是，作为一个合格的前端切图仔，要再使用中发现问题，改正问题。 问题 多次调用 hook 会创建多个相同 id 的盒子加入页面，并且未初始化就已经有盛放弹窗的盒子 使用不够简便，一些文件的格式判断以及大小判断没有做 在热更新时如果弹窗处于打开状态，会报错节点容器已经被创建">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-09-21T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-22T09:42:11.065Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/ape/reactHokModalPlus.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'react Hook +antd实现弹窗改进版',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-09-22 17:42:11'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">react Hook +antd实现弹窗改进版</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>之前写过一个 react Hook+antd 弹窗，虽然功能实现了，但是再使用的时候仍然会有报错，虽然这个报错不影响使用的，但是，作为一个合格的前端切图仔，要再使用中发现问题，改正问题。</p>
+<h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ol>
+<li>多次调用 hook 会创建多个相同 id 的盒子加入页面，并且未初始化就已经有盛放弹窗的盒子</li>
+<li>使用不够简便，一些文件的格式判断以及大小判断没有做</li>
+<li>在热更新时如果弹窗处于打开状态，会报错节点容器已经被创建</li>
+</ol>
+<h2 id="问题出现原因及修改办法"><a href="#问题出现原因及修改办法" class="headerlink" title="问题出现原因及修改办法"></a>问题出现原因及修改办法</h2><p>针对第一个问题和第三个我呢提主要是因为在调用 hook 时，就创建了弹窗盛放的容器，这个是不对的，因为虽然调用 hook 但是并不代表就一定要弹窗，虽然这样说有点牵强，不使用为啥调用弹窗 hook。但是主要目的在于我们不应该在调用 hook 的时候创建容器，而是在调用初始化的时候调用，具体的修改代码，可以直接看完整版的代码<br>针对于第二个问题，我的解决办法是给定默认大小以及文件格式，如果传递参数就使用传递参数的来判断</p>
+<h2 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h2><ul>
+<li>弹窗 hook</li>
+</ul>
+<pre><code class="tsx">import React, &#123; useCallback, useEffect &#125; from &quot;react&quot;;
+import ReactDOM from &quot;react-dom/client&quot;;
+import &#123; Button, ConfigProvider, Modal, message &#125; from &quot;antd&quot;;
+import &#123; useState &#125; from &quot;react&quot;;
+import &#123; useForm &#125; from &quot;./form&quot;;
+import &#123; formType &#125; from &quot;../types/hooksTypes/form&quot;;
+import zhCN from &quot;antd/locale/zh_CN&quot;;
+import &quot;dayjs/locale/zh-cn&quot;;
+type PromiseType = &#123;
+  resolve?: any;
+  reject?: any;
+&#125;;
+/* 
+modal类型(分为普通或者表单形式)
+由于行内布局传入配置过多暂不支持布局
+*/
+type modalType = &quot;nomal&quot; | &quot;form&quot;;
+/* 
+按钮类型
+txt: 显示的文本内容
+type：按钮类型
+isDanger：是否危险
+*/
+export type buttonType = &#123;
+  txt?: string;
+  type?: &quot;default&quot; | &quot;primary&quot; | &quot;dashed&quot; | &quot;text&quot; | &quot;link&quot;;
+  isDanger?: boolean;
+&#125;;
+/* 
+type: 弹窗类型
+title: 弹窗头部显示文本
+infoTxt:弹窗为普通类型时，提示文本信息
+okBtn:确定按钮配置
+cancelBtn:取消按钮配置
+formOptions:form表单配置
+isEdit:是否显示富文本
+isUpload:是否上传图片
+sendFn:点击确定，成功后发送数据
+successCallback发送数据之后调用的函数
+fileRules文件匹配规则
+maxSize：文件上传大小限制(单位为m)
+*/
+type modalPropsType = &#123;
+  type?: modalType;
+  title?: string;
+  infoTxt?: string;
+  okBtn?: buttonType;
+  cancelBtn?: buttonType;
+  formOptions?: formType[];
+  isEdit?: boolean; //是否需要显示富文本
+  isUpload?: boolean; //是否上传图片
+  sendFn?: (data: any) =&gt; Promise&lt;any&gt;;
+  successCallback?: (values?: any) =&gt; void;
+  editorName?: string;
+  fileRules?: string[];
+  maxSize?: number;
+&#125;;
+
+export const useModal = (props: modalPropsType = &#123;&#125;) =&gt; &#123;
+  const &#123;
+    type = &quot;nomal&quot;,
+    title = &quot;提示&quot;,
+    infoTxt = &quot;这是一段提示&quot;,
+    okBtn = &#123;
+      txt: &quot;确定&quot;,
+      type: &quot;primary&quot;,
+      isDanger: false,
+    &#125;,
+    cancelBtn = &#123;
+      txt: &quot;取消&quot;,
+      type: &quot;default&quot;,
+      isDanger: false,
+    &#125;,
+    successCallback = () =&gt; &#123;&#125;,
+    formOptions = [],
+    isEdit = false,
+    isUpload = false,
+    sendFn, //发送数据函数(记得数据处理)
+    editorName,
+    fileRules,
+    maxSize,
+  &#125; = props;
+  const [show, setShow] = useState&lt;boolean&gt;(false);
+  const [promiseRes, setPromiseRes] = useState&lt;PromiseType&gt;();
+  const [containerEle, setContainerEle] = useState&lt;HTMLElement | null&gt;(null);
+  const [messageApi, contextHolder] = message.useMessage();
+  // 原本默认值时数组导致输入有问题
+  const [defaultValue, setDefaultValue] = useState&lt;any&gt;(&#123;&#125;);
+  const [root, setRoot] = useState&lt;any&gt;(null);
+  // 卸载节点
+  const unMounted = useCallback(() =&gt; &#123;
+    if (containerEle) &#123;
+      document.body.removeChild(containerEle);
+      setContainerEle(null);
+      root?.unmount();
+    &#125;
+  &#125;, [containerEle, root]);
+  // 点击确定按钮的回调函数
+  const success = useCallback(
+    async (values: any) =&gt; &#123;
+      promiseRes?.resolve(type === &quot;nomal&quot; ? &quot;确定&quot; : values);
+      setShow(false);
+      unMounted();
+      if (sendFn) &#123;
+        await sendFn(values);
+        // 可进行数据更新
+        successCallback &amp;&amp; successCallback();
+        messageApi.open(&#123;
+          type: &quot;warning&quot;,
+          content: &quot;This is a warning message&quot;,
+        &#125;);
+      &#125;
+    &#125;,
+    [promiseRes, unMounted, successCallback, type, sendFn, messageApi]
+  );
+  // 取消
+  const cancel = useCallback(() =&gt; &#123;
+    promiseRes?.reject(&quot;取消&quot;);
+    setShow(false);
+    messageApi.open(&#123;
+      type: &quot;warning&quot;,
+      content: &quot;已取消&quot;,
+    &#125;);
+    unMounted();
+  &#125;, [unMounted, promiseRes, messageApi]);
+  // 获取form表单结果
+  const &#123; MyForm &#125; = useForm(&#123;
+    cancel,
+    success,
+    okBtn,
+    cancelBtn,
+    options: formOptions,
+    isEdit,
+    isUpload,
+    editorName,
+    fileRules,
+    maxSize,
+  &#125;);
+  // 挂载节点
+  useEffect(() =&gt; &#123;
+    if (!show || !containerEle) &#123;
+      return;
+    &#125;
+    // 根据类型，去判断是简单的弹窗还是form表单
+    root.render(
+      &lt;ConfigProvider locale=&#123;zhCN&#125;&gt;
+        &#123;contextHolder&#125;
+        &lt;Modal
+          onCancel=&#123;cancel&#125;
+          open=&#123;show&#125;
+          onOk=&#123;success&#125;
+          destroyOnClose=&#123;true&#125;
+          title=&#123;title&#125;
+          wrapClassName=&quot;modal-wrap&quot;
+          cancelButtonProps=&#123;&#123; shape: "round" &#125;&#125;
+          okButtonProps=&#123;&#123; shape: "round" &#125;&#125;
+          width=&#123;900&#125;
+          footer=&#123;
+            type === &quot;form&quot;
+              ? null
+              : [
+                  &lt;Button
+                    key=&quot;success&quot;
+                    type=&#123;okBtn.type&#125;
+                    onClick=&#123;success&#125;
+                    danger=&#123;okBtn.isDanger&#125;
+                  &gt;
+                    &#123;okBtn.txt&#125;
+                  &lt;/Button&gt;,
+                  &lt;Button
+                    key=&quot;cancel&quot;
+                    onClick=&#123;cancel&#125;
+                    danger=&#123;cancelBtn.isDanger&#125;
+                    type=&#123;cancelBtn.type&#125;
+                  &gt;
+                    &#123;cancelBtn.txt&#125;
+                  &lt;/Button&gt;,
+                ]
+          &#125;
+          getContainer=&#123;containerEle as HTMLElement&#125;
+        &gt;
+          &#123;type === &quot;form&quot; &amp;&amp; (
+            &lt;MyForm defaultValue=&#123;defaultValue || &#123;&#125;&#125;&gt;&lt;/MyForm&gt;
+          )&#125;
+          &#123;type === &quot;nomal&quot; &amp;&amp; &lt;p&gt;&#123;infoTxt&#125;&lt;/p&gt;&#125;
+        &lt;/Modal&gt;
+      &lt;/ConfigProvider&gt;
+    );
+  &#125;, [
+    show,
+    MyForm,
+    root,
+    cancel,
+    containerEle,
+    title,
+    infoTxt,
+    okBtn,
+    cancelBtn,
+    success,
+    type,
+    contextHolder,
+    defaultValue,
+  ]);
+  // 初始化
+  const init = (defaultValue?: any) =&gt; &#123;
+    defaultValue &amp;&amp; setDefaultValue(defaultValue);
+    setShow(true);
+    // 创建挂载节点
+    const div = document.createElement(&quot;div&quot;);
+    div.id = &quot;myContainer&quot;;
+    document.body.append(div);
+    setContainerEle(div);
+    setRoot(ReactDOM.createRoot(div as HTMLElement));
+    return new Promise((resolve, reject) =&gt; &#123;
+      setPromiseRes(&#123; resolve, reject &#125;);
+    &#125;);
+  &#125;;
+  return &#123; init, messageApi &#125;;
+&#125;;
+</code></pre>
+<ul>
+<li>form 表单生成 hook</li>
+</ul>
+<pre><code class="tsx">import &#123;
+  Button,
+  Form,
+  FormInstance,
+  Input,
+  Space,
+  DatePicker,
+  Select,
+  Switch,
+  Radio,
+  InputNumber,
+  TimePicker,
+&#125; from &quot;antd&quot;;
+import React, &#123; useEffect, useState &#125; from &quot;react&quot;;
+import &#123; useCallback &#125; from &quot;react&quot;;
+import &#123; buttonType &#125; from &quot;./modal&quot;;
+import &#123; formType &#125; from &quot;../types/hooksTypes/form&quot;;
+import &#123; MyEditor &#125; from &quot;../components/utils/MyEditor&quot;;
+import &#123; MyUpload &#125; from &quot;../components/utils/MyUpload&quot;;
+
+const &#123; RangePicker &#125; = DatePicker;
+/*
+  传递配置对象()
+  1. 成功回调
+  2.失败回调
+  3.配置对象（自动生成form表单）
+  4.类型是否使用自定义控件
+  */
+type formProp = &#123;
+  success: (values: any) =&gt; void;
+  cancel: () =&gt; void;
+  okBtn: buttonType;
+  cancelBtn: buttonType;
+  options?: formType[]; //普通组件配置对象
+  isEdit?: boolean; //是否需要显示富文本
+  isUpload?: boolean; //是否上传图片
+  editorName?: string;
+  fileRules?: string[];
+  maxSize?: number;
+&#125;;
+
+type MyformProp = &#123;
+  defaultValue: any;
+&#125;;
+// 使用富文本字段是comment,上传文件是file
+export const useForm = (formProp: formProp) =&gt; &#123;
+  const &#123;
+    success,
+    cancel,
+    okBtn,
+    cancelBtn,
+    options = [],
+    isEdit,
+    isUpload,
+    editorName,
+    fileRules = [&quot;image/png&quot;, &quot;image/jpg&quot;, &quot;image/jpeg&quot;, &quot;image/webp&quot;],
+    maxSize = 5,
+  &#125; = formProp;
+  const MyForm = (&#123; defaultValue = &#123;&#125; &#125;: MyformProp) =&gt; &#123;
+    const formRef = React.useRef&lt;FormInstance&gt;(null);
+    const [html, setHtml] = useState&lt;string&gt;(&quot;&quot;);
+    const [txt, setTxt] = useState&lt;string&gt;(&quot;&quot;);
+    const [fileList, setFileList] = useState&lt;any&gt;([]);
+    // 初始化
+    useEffect(() =&gt; &#123;
+      formRef.current?.setFieldsValue(defaultValue);
+    &#125;, [defaultValue]);
+    const onFinish = useCallback(
+      (values: any) =&gt; &#123;
+        if (isEdit) &#123;
+          if (txt.replace(/(^\s*)|(\s*$)/g, &quot;&quot;) === &quot;&quot;) &#123;
+            formRef.current?.setFields([
+              &#123; name: editorName!, errors: [&quot;请输入内容&quot;] &#125;,
+            ]);
+            return;
+          &#125;
+          values[editorName!] = html;
+        &#125;
+        if (isUpload) &#123;
+          if (fileList.length === 0) &#123;
+            formRef.current?.setFields([
+              &#123; name: &quot;file&quot;, errors: [&quot;请上传图片&quot;] &#125;,
+            ]);
+            return;
+          &#125;
+          const notTrueFile = fileList.filter((item: any) =&gt; &#123;
+            return !fileRules.includes(item.type);
+          &#125;);
+          if (notTrueFile.length &gt; 0) &#123;
+            formRef.current?.setFields([
+              &#123; name: &quot;file&quot;, errors: [&quot;请上传指定格式文件&quot;] &#125;,
+            ]);
+            return;
+          &#125;
+          // 判断文件大小
+          const notTrueSizeFile = fileList.filter((item: any) =&gt; &#123;
+            return item.size &gt; maxSize * 1024 * 1024;
+          &#125;);
+          if (notTrueSizeFile.length &gt; 0) &#123;
+            formRef.current?.setFields([
+              &#123; name: &quot;file&quot;, errors: [&quot;文件过大&quot;] &#125;,
+            ]);
+            return;
+          &#125;
+          values.file = fileList;
+        &#125;
+        success(values);
+      &#125;,
+      [html, fileList, txt]
+    );
+    const fileChange = useCallback((fileList: any) =&gt; &#123;
+      if (fileList.length &gt;= 0) &#123;
+        formRef.current?.setFields([&#123; name: &quot;file&quot;, errors: [&quot;&quot;] &#125;]);
+      &#125;
+      setFileList(fileList);
+    &#125;, []);
+    const onFinishFailed = useCallback((values: any) =&gt; &#123;&#125;, []);
+    const onReset = useCallback(() =&gt; &#123;
+      formRef.current?.resetFields();
+    &#125;, []);
+    const htmlOnChange = useCallback((values: string, txt: string) =&gt; &#123;
+      if (txt.replace(/(^\s*)|(\s*$)/g, &quot;&quot;) !== &quot;&quot;) &#123;
+        formRef.current?.setFields([&#123; name: editorName!, errors: [&quot;&quot;] &#125;]);
+      &#125;
+      setTxt(txt);
+      setHtml(values);
+    &#125;, []);
+    return (
+      &lt;Form
+        ref=&#123;formRef&#125;
+        labelCol=&#123;&#123; span: 3 &#125;&#125;
+        wrapperCol=&#123;&#123; span: 20 &#125;&#125;
+        initialValues=&#123;&#123; remember: true &#125;&#125;
+        autoComplete=&quot;off&quot;
+        onFinish=&#123;onFinish&#125;
+        onFinishFailed=&#123;onFinishFailed&#125;
+      &gt;
+        &#123;options.map((item: formType, index: number) =&gt; &#123;
+          let attr = &#123;&#125;;
+          if (item.isMultiple) &#123;
+            attr = &#123;
+              mode: &quot;multiple&quot;,
+            &#125;;
+          &#125;
+          return item.Custom ? (
+            // 存放自定义组件
+            &lt;Form.Item
+              name=&#123;item.name&#125;
+              label=&#123;item.label&#125;
+            &gt;
+              &lt;item.Custom&gt;&lt;/item.Custom&gt;
+            &lt;/Form.Item&gt;
+          ) : item.type === &quot;switch&quot; ? (
+            &lt;Form.Item
+              key=&#123;`$&#123;index&#125;-$&#123;item.name&#125;`&#125;
+              label=&#123;item.label&#125;
+              name=&#123;item.name&#125;
+              rules=&#123;item.rules&#125;
+              valuePropName=&quot;checked&quot;
+            &gt;
+              &#123;/* 开关 */&#125;
+              &#123;item.type === &quot;switch&quot; ? (
+                &lt;Switch
+                  checkedChildren=&#123;item.openTxt&#125;
+                  unCheckedChildren=&#123;item.closeTxt&#125;
+                /&gt;
+              ) : null&#125;
+            &lt;/Form.Item&gt;
+          ) : (
+            &lt;Form.Item
+              key=&#123;`$&#123;index&#125;-$&#123;item.name&#125;`&#125;
+              label=&#123;item.label&#125;
+              name=&#123;item.name&#125;
+              rules=&#123;item.rules&#125;
+            &gt;
+              &#123;/* 普通输入框 */&#125;
+              &#123;item.type === &quot;input&quot; ? (
+                &lt;Input placeholder=&#123;item.placeholder&#125;&gt;&lt;/Input&gt;
+              ) : null&#125;
+              &#123;/* 时间 */&#125;
+              &#123;item.type === &quot;timeDefault&quot; ? (
+                &lt;TimePicker format=&#123;item.format&#125;&gt;&lt;/TimePicker&gt;
+              ) : null&#125;
+              &#123;/* 日期范围 */&#125;
+              &#123;item.type === &quot;timeRange&quot; ? (
+                &lt;RangePicker
+                  format=&#123;item.format&#125;
+                  showTime
+                /&gt;
+              ) : null&#125;
+              &#123;/* 多选框 */&#125;
+              &#123;item.type === &quot;select&quot; ? (
+                &lt;Select
+                  &#123;...attr&#125;
+                  style=&#123;&#123; width: 300 &#125;&#125;
+                  placeholder=&#123;item.placeholder&#125;
+                &gt;
+                  &#123;item.data?.map((data: any) =&gt; &#123;
+                    return (
+                      &lt;Select.Option
+                        value=&#123;data[item.dataValue!]&#125;
+                        key=&#123;data.id&#125;
+                      &gt;
+                        &#123;data[item.dataName!]&#125;
+                      &lt;/Select.Option&gt;
+                    );
+                  &#125;)&#125;
+                &lt;/Select&gt;
+              ) : null&#125;
+              &#123;/* 富文本 */&#125;
+              &#123;item.type === &quot;editor&quot; ? (
+                &lt;MyEditor handelChange=&#123;htmlOnChange&#125;&gt;&lt;/MyEditor&gt;
+              ) : null&#125;
+              &#123;/* 文本框 */&#125;
+              &#123;item.type === &quot;textArea&quot; ? (
+                &lt;Input.TextArea
+                  showCount=&#123;item.isShowTxtCount&#125;
+                  placeholder=&#123;item.placeholder&#125;
+                  maxLength=&#123;item.limit&#125;
+                &gt;&lt;/Input.TextArea&gt;
+              ) : null&#125;
+              &#123;/* 文件 */&#125;
+              &#123;item.type === &quot;file&quot; ? (
+                &lt;MyUpload
+                  fileList=&#123;defaultValue?.file&#125;
+                  onChangeFn=&#123;fileChange&#125;
+                  limit=&#123;item.limit ? item.limit : 1&#125;
+                &gt;&lt;/MyUpload&gt;
+              ) : null&#125;
+              &#123;/* 单选框(主要是性别) */&#125;
+              &#123;item.type === &quot;radio&quot; ? (
+                &lt;Radio.Group&gt;
+                  &#123;item.data?.map((data: any) =&gt; &#123;
+                    return (
+                      &lt;Radio
+                        value=&#123;data[item.dataValue!]&#125;
+                        key=&#123;data.id&#125;
+                      &gt;
+                        &#123;data[item.dataName!]&#125;
+                      &lt;/Radio&gt;
+                    );
+                  &#125;)&#125;
+                &lt;/Radio.Group&gt;
+              ) : null&#125;
+              &#123;/* 数字框 */&#125;
+              &#123;item.type === &quot;inputNumber&quot; ? (
+                &lt;InputNumber
+                  min=&#123;item.minNumber&#125;
+                  max=&#123;item.maxNumber&#125;
+                  defaultValue=&#123;item.minNumber&#125;
+                  step=&#123;item.step&#125;
+                /&gt;
+              ) : null&#125;
+            &lt;/Form.Item&gt;
+          );
+        &#125;)&#125;
+        &lt;Form.Item wrapperCol=&#123;&#123; offset: 8, span: 16 &#125;&#125;&gt;
+          &lt;Space wrap&gt;
+            &lt;Button
+              type=&#123;okBtn.type&#125;
+              danger=&#123;okBtn.isDanger&#125;
+              htmlType=&quot;submit&quot;
+            &gt;
+              &#123;okBtn.txt&#125;
+            &lt;/Button&gt;
+            &lt;Button
+              danger
+              htmlType=&quot;button&quot;
+              onClick=&#123;onReset&#125;
+            &gt;
+              重置
+            &lt;/Button&gt;
+            &lt;Button
+              onClick=&#123;cancel&#125;
+              type=&#123;cancelBtn.type&#125;
+              danger=&#123;cancelBtn.isDanger&#125;
+            &gt;
+              &#123;cancelBtn.txt&#125;
+            &lt;/Button&gt;
+          &lt;/Space&gt;
+        &lt;/Form.Item&gt;
+      &lt;/Form&gt;
+    );
+  &#125;;
+
+  return &#123;
+    MyForm,
+  &#125;;
+&#125;;
+</code></pre>
+<p>针对于上边的 form 表单类型，我还自定义了两种自己封装的类型，一个是富文本类型，一种是文件类型<br>富文本类型</p>
+<pre><code class="tsx">import React, &#123; useState, useEffect &#125; from &quot;react&quot;;
+import &quot;@wangeditor/editor/dist/css/style.css&quot;;
+import &#123; Editor, Toolbar &#125; from &quot;@wangeditor/editor-for-react&quot;;
+
+type editorType = &#123;
+  handelChange: (value: any, txt: any) =&gt; void;
+&#125;;
+
+export const MyEditor = (&#123; handelChange &#125;: editorType) =&gt; &#123;
+  const [editor, setEditor] = useState&lt;any&gt;(null); // 存储 editor 实例
+  const [html, setHtml] = useState&lt;string&gt;(&quot;&quot;);
+
+  const toolbarConfig = &#123;&#125;;
+  const editorConfig = &#123;
+    placeholder: &quot;请输入内容...&quot;,
+    autoFocus: false,
+    //插入图片
+    MENU_CONF: &#123;
+      uploadImage: &#123;
+        // 单个文件的最大体积限制，默认为 2M
+        maxFileSize: 4 * 1024 * 1024, // 4M
+        // 最多可上传几个文件，默认为 100
+        maxNumberOfFiles: 10,
+        // 超时时间，默认为 10 秒
+        timeout: 5 * 1000, // 5 秒
+        // 用户自定义上传图片
+        async customUpload(file: any, insertFn: any) &#123;
+          const formdata = new FormData();
+          formdata.append(&quot;file&quot;, file);
+        &#125;,
+      &#125;,
+    &#125;,
+  &#125;;
+
+  // 及时销毁 editor
+  useEffect(() =&gt; &#123;
+    return () =&gt; &#123;
+      if (editor == null) return;
+      editor.destroy();
+      setEditor(null);
+    &#125;;
+  &#125;, [editor]);
+
+  return (
+    &lt;&gt;
+      &lt;div style=&#123;&#123; border: "1px solid #ccc", zIndex: 100 &#125;&#125;&gt;
+        &lt;Toolbar
+          editor=&#123;editor&#125;
+          defaultConfig=&#123;toolbarConfig&#125;
+          mode=&quot;default&quot;
+          style=&#123;&#123; borderBottom: "1px solid #ccc" &#125;&#125;
+        /&gt;
+        &lt;Editor
+          defaultConfig=&#123;editorConfig&#125;
+          value=&#123;html&#125;
+          onCreated=&#123;setEditor&#125;
+          onChange=&#123;(editor) =&gt; &#123;
+            setHtml(editor.getHtml().replace(/(^\s*)|(\s*$)/g, &quot;&quot;));
+            handelChange(
+              editor.getHtml().replace(/(^\s*)|(\s*$)/g, &quot;&quot;),
+              editor.getText()
+            );
+          &#125;&#125;
+          mode=&quot;default&quot;
+          style=&#123;&#123; height: "300px" &#125;&#125;
+        /&gt;
+      &lt;/div&gt;
+    &lt;/&gt;
+  );
+&#125;;
+</code></pre>
+<p>文件类型</p>
+<pre><code class="tsx">import React, &#123; useEffect, useState &#125; from &quot;react&quot;;
+import &#123; PlusOutlined &#125; from &quot;@ant-design/icons&quot;;
+import &#123; Modal, Upload &#125; from &quot;antd&quot;;
+import type &#123; RcFile, UploadProps &#125; from &quot;antd/es/upload&quot;;
+import type &#123; UploadFile &#125; from &quot;antd/es/upload/interface&quot;;
+
+// 传递改变函数，限制图片个数，是否裁剪
+export function MyUpload(&#123;
+  onChangeFn,
+  fileList,
+  limit,
+&#125;: &#123;
+  onChangeFn: (file: any) =&gt; void;
+  fileList: any;
+  limit: number;
+&#125;) &#123;
+  const getBase64 = (file: RcFile): Promise&lt;string&gt; =&gt;
+    new Promise((resolve, reject) =&gt; &#123;
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () =&gt; resolve(reader.result as string);
+      reader.onerror = (error) =&gt; reject(error);
+    &#125;);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(&quot;&quot;);
+  const [previewTitle, setPreviewTitle] = useState(&quot;&quot;);
+  const [uploadFileList, setUploadFileList] = useState&lt;any&gt;([]);
+
+  const handleCancel = () =&gt; setPreviewOpen(false);
+
+  const handlePreview = async (file: UploadFile) =&gt; &#123;
+    if (!file.url &amp;&amp; !file.preview) &#123;
+      file.preview = await getBase64(file.originFileObj as RcFile);
+    &#125;
+
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+    setPreviewTitle(
+      file.name || file.url!.substring(file.url!.lastIndexOf(&quot;/&quot;) + 1)
+    );
+  &#125;;
+  useEffect(() =&gt; &#123;
+    if (fileList) &#123;
+      setUploadFileList(fileList);
+      onChangeFn(fileList);
+    &#125;
+  &#125;, [fileList, onChangeFn]);
+
+  const handleChange: UploadProps[&quot;onChange&quot;] = (&#123; fileList: newFileList &#125;) =&gt; &#123;
+    setUploadFileList(newFileList);
+    onChangeFn(newFileList);
+  &#125;;
+  return (
+    &lt;&gt;
+      &lt;Upload
+        listType=&quot;picture-card&quot;
+        fileList=&#123;uploadFileList&#125;
+        onPreview=&#123;handlePreview&#125;
+        onChange=&#123;handleChange&#125;
+        beforeUpload=&#123;() =&gt; false&#125;
+      &gt;
+        &#123;uploadFileList.length &gt;= limit ? null : (
+          &lt;div&gt;
+            &lt;PlusOutlined /&gt;
+            &lt;div style=&#123;&#123; marginTop: 8 &#125;&#125;&gt;上传&lt;/div&gt;
+          &lt;/div&gt;
+        )&#125;
+      &lt;/Upload&gt;
+      &lt;Modal
+        open=&#123;previewOpen&#125;
+        title=&#123;previewTitle&#125;
+        footer=&#123;null&#125;
+        onCancel=&#123;handleCancel&#125;
+      &gt;
+        &lt;img
+          alt=&quot;example&quot;
+          style=&#123;&#123; width: "100%" &#125;&#125;
+          src=&#123;previewImage&#125;
+        /&gt;
+      &lt;/Modal&gt;
+    &lt;/&gt;
+  );
+&#125;
+</code></pre>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>以上就是完整的代码以及解决的一些问题，随后遇到什么问题再修改吧</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">5</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">701</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-09-22T09:45:49.147Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
