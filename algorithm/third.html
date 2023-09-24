@@ -1,0 +1,755 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>第三周算法日记 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="二叉树对称二叉树只能使用后序遍历（左右中）需要比对孩子节点的信息是否相等，返回给上一个节点 &#x2F;**  * Definition for a binary tree node.  * function TreeNode(val, left, right) &amp;#123;  *     this.val &#x3D; (val&#x3D;&#x3D;&#x3D;undefined ? 0 : val)  *     this.left &#x3D; (">
+<meta property="og:type" content="website">
+<meta property="og:title" content="第三周算法日记">
+<meta property="og:url" content="http://example.com/algorithm/third.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="二叉树对称二叉树只能使用后序遍历（左右中）需要比对孩子节点的信息是否相等，返回给上一个节点 &#x2F;**  * Definition for a binary tree node.  * function TreeNode(val, left, right) &amp;#123;  *     this.val &#x3D; (val&#x3D;&#x3D;&#x3D;undefined ? 0 : val)  *     this.left &#x3D; (">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-09-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-09-24T03:07:37.708Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/algorithm/third.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '第三周算法日记',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-09-24 11:07:37'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">第三周算法日记</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h2 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h2><h3 id="对称二叉树"><a href="#对称二叉树" class="headerlink" title="对称二叉树"></a>对称二叉树</h3><p>只能使用后序遍历（左右中）<br>需要比对孩子节点的信息是否相等，返回给上一个节点</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;boolean&#125;
+ */
+var isSymmetric = function (root) &#123;
+  // 定义函数判断是否相等，传入根节点的左右节点
+  function getRes(left, right) &#123;
+    // 左边节点为空，右边不为空
+    if (!left &amp;&amp; right) &#123;
+      return false;
+    &#125;
+    // 左边不为空，右边为空
+    if (left &amp;&amp; !right) &#123;
+      return false;
+    &#125;
+    // 左右节点都为空
+    if (!left &amp;&amp; !right) &#123;
+      return true;
+    &#125;
+    // 左右节点都不为空，但是值不相等
+    if (left &amp;&amp; right &amp;&amp; left.val !== right.val) &#123;
+      return false;
+    &#125;
+    // 先比对外侧节点（左节点的左孩子和右节点的右孩子）
+    const yn1 = getRes(left.left, right.right);
+    // 比对内侧节点（左节点的右孩子，右节点的左孩子）
+    const yn2 = getRes(left.right, right.left);
+    return yn1 &amp;&amp; yn2;
+  &#125;
+  return getRes(root.left, root.right);
+&#125;;
+</code></pre>
+<h3 id="二叉树的最大深度"><a href="#二叉树的最大深度" class="headerlink" title="二叉树的最大深度"></a>二叉树的最大深度</h3><p>深度：二叉树任意一个节点到跟节点的距离<br>高度：二叉树种任意一个节点到叶子节点的距离<br><img src="/img/loading.gif" data-original="https://cdn.nlark.com/yuque/0/2023/png/35490004/1695013104967-3a371294-c3f6-489e-8c16-f22f999117f2.png#averageHue=%23b5aba6&clientId=u99273c2a-3502-4&from=paste&height=350&id=u81887d49&originHeight=437&originWidth=466&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=120958&status=done&style=none&taskId=uda2c1ee3-11d6-47b8-be2a-5f9a79293c6&title=&width=372.8" alt="image.png"><br>根节点的高度就是二叉树的最大深度</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number&#125;
+ */
+var maxDepth = function (root) &#123;
+  function getHeight(node) &#123;
+    if (!node) &#123;
+      return 0;
+    &#125;
+    // 左节点
+    const leftHeight = getHeight(node.left);
+    // 右节点
+    const rightHeight = getHeight(node.right);
+    // 中节点(处理逻辑,1加上左右节点的最大值)
+    const height = 1 + Math.max(leftHeight, rightHeight);
+    return height;
+  &#125;
+  return getHeight(root);
+&#125;;
+</code></pre>
+<h3 id="二叉树的最小深度"><a href="#二叉树的最小深度" class="headerlink" title="二叉树的最小深度"></a>二叉树的最小深度</h3><p>根节点到最近的叶子节点的距离<br>后续遍历</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number&#125;
+ */
+var minDepth = function (root) &#123;
+  function getRes(node) &#123;
+    if (!node) &#123;
+      return 0;
+    &#125;
+    const leftRes = getRes(node.left);
+    const rightRes = getRes(node.right);
+    // 如果左子树为空，但是右子树不为空(排除掉左边为空的错误情况)
+    if (!node.left &amp;&amp; node.right) &#123;
+      return 1 + rightRes;
+    &#125;
+    if (!node.right &amp;&amp; node.left) &#123;
+      return 1 + leftRes;
+    &#125;
+    // 两边的子树都不为空，取最小值
+    return 1 + Math.min(leftRes, rightRes);
+  &#125;
+  return getRes(root);
+&#125;;
+</code></pre>
+<h3 id="完全二叉树节点的数量"><a href="#完全二叉树节点的数量" class="headerlink" title="完全二叉树节点的数量"></a>完全二叉树节点的数量</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number&#125;
+ */
+// 普通二叉树的方式写(后序遍历)
+var countNodes = function (root) &#123;
+  function getRes(node) &#123;
+    if (!node) &#123;
+      return 0;
+    &#125;
+    const leftNum = getRes(node.left);
+    const rightNum = getRes(node.right);
+    // 左子树的数量加上右子树的数量加上本身节点的数量
+    return leftNum + rightNum + 1;
+  &#125;
+  return getRes(root);
+&#125;;
+</code></pre>
+<p>完全二叉树：<br>除了底层节点，上面的节点都是满的</p>
+<p>利用完全二叉树的性质写</p>
+<h3 id="判断平衡二叉树"><a href="#判断平衡二叉树" class="headerlink" title="判断平衡二叉树"></a>判断平衡二叉树</h3><p>任意节点它的左右子树的高度差不超过 1(后序遍历)</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;boolean&#125;
+ */
+var isBalanced = function (root) &#123;
+  function getRes(node) &#123;
+    if (!node) &#123;
+      return 0;
+    &#125;
+    // 后续遍历，如果不是一个平衡二叉树，就返回-1
+    const leftHeight = getRes(node.left);
+    if (leftHeight === -1) &#123;
+      return -1;
+    &#125;
+    const rightHeight = getRes(node.right);
+    if (rightHeight === -1) &#123;
+      return -1;
+    &#125;
+    if (Math.abs(leftHeight - rightHeight) &gt; 1) &#123;
+      return -1;
+    &#125;
+    // 获取本层的高度(高度差不超过1)(左子树和右子树的高度的最大值+1)
+    return Math.max(leftHeight, rightHeight) + 1;
+  &#125;
+  return getRes(root) === -1 ? false : true;
+&#125;;
+</code></pre>
+<h3 id="二叉树的所有路径"><a href="#二叉树的所有路径" class="headerlink" title="二叉树的所有路径"></a>二叉树的所有路径</h3><p>前序遍历，中左右，前序遍历才有将父节点指向子节点<br>回溯</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;string[]&#125;
+ */
+var binaryTreePaths = function (root) &#123;
+  // 用于存放结果
+  const res = [];
+  function getRes(node, path, res) &#123;
+    // 添加操作再这里的原因是遍历到叶子节点就结束了
+    path.push(node.val);
+    // 左右孩子都为空，遍历到叶子节点
+    if (!node.left &amp;&amp; !node.right) &#123;
+      res.push(path.join(&quot;-&gt;&quot;).toString());
+      return;
+    &#125;
+    if (node.left) &#123;
+      getRes(node.left, path, res);
+      // 回溯过程
+      path.pop();
+    &#125;
+    if (node.right) &#123;
+      getRes(node.right, path, res);
+      path.pop();
+    &#125;
+  &#125;
+  getRes(root, [], res);
+  return res;
+&#125;;
+</code></pre>
+<h3 id="左叶子之和"><a href="#左叶子之和" class="headerlink" title="左叶子之和"></a>左叶子之和</h3><p>叶子节点（左右节点都为空）</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number&#125;
+ */
+var sumOfLeftLeaves = function (root) &#123;
+  function getRes(node) &#123;
+    /**
+        遍历到叶子节点的上一层节点，获取到值，叶子节点以及当前节点为空的都返回0
+        叶子节点的上一层节点的左节点，就是要求的值
+         */
+    if (!node) &#123;
+      return 0;
+    &#125;
+    if (!node.left &amp;&amp; !node.right) &#123;
+      return 0;
+    &#125;
+    let leftNum = getRes(node.left);
+    // 叶子节点
+    if (node.left &amp;&amp; !node.left.left &amp;&amp; !node.left.right) &#123;
+      leftNum = node.left.val;
+    &#125;
+    let rightNum = getRes(node.right);
+    return leftNum + rightNum;
+  &#125;
+  return getRes(root);
+&#125;;
+</code></pre>
+<h3 id="找二叉树左下角的值"><a href="#找二叉树左下角的值" class="headerlink" title="找二叉树左下角的值"></a>找二叉树左下角的值</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number&#125;
+ */
+// 用层序遍历
+var findBottomLeftValue = function (root) &#123;
+  // 使用队列去辅助，弹出原生
+  const queue = [];
+  const res = [];
+  if (!root) &#123;
+    return res;
+  &#125;
+  queue.push(root);
+  // 遍历对列
+  while (queue.length &gt; 0) &#123;
+    // 保存本层节点的数量(因为之后遍历的时候会添加下一层的数据)
+    let len = queue.length;
+    const resItem = [];
+    // 将本层数据弹出，并保存进数组
+    while (len &gt; 0) &#123;
+      const node = queue.shift();
+      resItem.push(node.val);
+      // 将下一层的左右节点压入
+      if (node.left) &#123;
+        queue.push(node.left);
+      &#125;
+      if (node.right) &#123;
+        queue.push(node.right);
+      &#125;
+      len--;
+    &#125;
+    res.push(resItem);
+  &#125;
+  return res[res.length - 1][0];
+&#125;;
+</code></pre>
+<h3 id="路径总和"><a href="#路径总和" class="headerlink" title="路径总和"></a>路径总和</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;number&#125; targetSum
+ * @return &#123;boolean&#125;
+ */
+var hasPathSum = function (root, targetSum) &#123;
+  const res = [];
+  // 遍历所有路径
+  function getPath(node, path) &#123;
+    path.push(node.val);
+    if (!node.left &amp;&amp; !node.right) &#123;
+      res.push(
+        path.reduce((a, b) =&gt; &#123;
+          return a + b;
+        &#125;, 0)
+      );
+    &#125;
+    // 去遍历左节点
+    if (node.left) &#123;
+      getPath(node.left, path);
+      path.pop();
+    &#125;
+    if (node.right) &#123;
+      getPath(node.right, path);
+      path.pop();
+    &#125;
+  &#125;
+  if (!root) &#123;
+    return false;
+  &#125;
+  getPath(root, []);
+  return res.includes(targetSum);
+&#125;;
+</code></pre>
+<h3 id="从中序和后序遍历中构造二叉树"><a href="#从中序和后序遍历中构造二叉树" class="headerlink" title="从中序和后序遍历中构造二叉树"></a>从中序和后序遍历中构造二叉树</h3><p>中序是左中右<br>后序是左右中<br>先从后序中找到中间节点(后序的最后一位就是二叉树的根节点)，然后再根据前序遍历中确定左子树和右子树<br><img src="/img/loading.gif" data-original="https://cdn.nlark.com/yuque/0/2023/png/35490004/1695357420468-b51b87be-6396-4eda-8ca7-ea89eadcfe19.png#averageHue=%239b9e9f&clientId=uc5ea3bea-3d7d-4&from=paste&height=655&id=uee13540e&originHeight=819&originWidth=639&originalType=binary&ratio=1.25&rotation=0&showTitle=false&size=415738&status=done&style=none&taskId=u1d9e5691-848c-4cce-9f15-c53619ba780&title=&width=511.2" alt="image.png"></p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;number[]&#125; inorder
+ * @param &#123;number[]&#125; postorder
+ * @return &#123;TreeNode&#125;
+ */
+var buildTree = function (inorder, postorder) &#123;
+  if (!inorder.length) return null;
+  const rootVal = postorder.pop(); // 从后序遍历的数组中获取中间节点的值， 即数组最后一个值
+  let rootIndex = inorder.indexOf(rootVal); // 获取中间节点在中序遍历中的下标
+  const root = new TreeNode(rootVal); // 创建中间节点
+  root.left = buildTree(
+    inorder.slice(0, rootIndex),
+    postorder.slice(0, rootIndex)
+  ); // 创建左节点
+  root.right = buildTree(
+    inorder.slice(rootIndex + 1),
+    postorder.slice(rootIndex)
+  ); // 创建右节点
+  return root;
+&#125;;
+</code></pre>
+<h3 id="最大二叉树"><a href="#最大二叉树" class="headerlink" title="最大二叉树"></a>最大二叉树</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;number[]&#125; nums
+ * @return &#123;TreeNode&#125;
+ */
+var constructMaximumBinaryTree = function (nums) &#123;
+  // 没有元素之间返回null
+  if (nums.length === 0) &#123;
+    return null;
+  &#125;
+  // 找到数组中的最大值
+  const maxValue = Math.max(...nums);
+  // 找到最大值的下标
+  const index = nums.indexOf(maxValue);
+  const root = new TreeNode(maxValue);
+  // 递归处理左节点
+  root.left = constructMaximumBinaryTree(nums.slice(0, index));
+  // 递归处理右节点
+  root.right = constructMaximumBinaryTree(nums.slice(index + 1));
+  return root;
+&#125;;
+</code></pre>
+<h3 id="合并二叉树"><a href="#合并二叉树" class="headerlink" title="合并二叉树"></a>合并二叉树</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root1
+ * @param &#123;TreeNode&#125; root2
+ * @return &#123;TreeNode&#125;
+ */
+var mergeTrees = function (root1, root2) &#123;
+  // 遇到空节点返回另一个树的节点
+  if (!root1) &#123;
+    return root2;
+  &#125;
+  if (!root2) &#123;
+    return root1;
+  &#125;
+  // 两个节点的值都不为空，合并(直接修改root1的值)
+  root1.val += root2.val;
+  root1.left = mergeTrees(root1.left, root2.left);
+  root1.right = mergeTrees(root1.right, root2.right);
+  return root1;
+&#125;;
+</code></pre>
+<h3 id="二叉搜索树的搜索"><a href="#二叉搜索树的搜索" class="headerlink" title="二叉搜索树的搜索"></a>二叉搜索树的搜索</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;number&#125; val
+ * @return &#123;TreeNode&#125;
+ */
+var searchBST = function (root, val) &#123;
+  // 二叉搜索树的左子树都要比根节点小，右子树都要比根节点大
+  if (root.val === val) &#123;
+    return root;
+  &#125;
+  if (root.left &amp;&amp; root.val &gt; val) &#123;
+    return searchBST(root.left, val);
+  &#125;
+  if (root.right &amp;&amp; root.val &lt; val) &#123;
+    return searchBST(root.right, val);
+  &#125;
+  return null;
+&#125;;
+</code></pre>
+<h3 id="验证二叉搜索树"><a href="#验证二叉搜索树" class="headerlink" title="验证二叉搜索树"></a>验证二叉搜索树</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;boolean&#125;
+ */
+var isValidBST = function (root) &#123;
+  /** 
+    中序遍历，先遍历左节点，再遍历中节点，最后遍历右节点
+    如果中序遍历出来的结果是单调递增的，就表示是二叉搜索树
+    (同时需要验证是否有重复元素)
+    */
+  const res = [];
+  function getVal(node) &#123;
+    if (!node) &#123;
+      return;
+    &#125;
+    getVal(node.left);
+    res.push(node.val);
+    getVal(node.right);
+  &#125;
+  getVal(root);
+  // 重复元素返回false
+  const temArr = Array.from(new Set(res));
+  if (temArr.length !== res.length) &#123;
+    return false;
+  &#125;
+  const resStrOri = res.join(&quot;&quot;);
+  const resStrSort = res
+    .sort((a, b) =&gt; &#123;
+      return a - b;
+    &#125;)
+    .join(&quot;&quot;);
+  return resStrOri === resStrSort;
+&#125;;
+</code></pre>
+<h3 id="二叉搜索树的最小绝对差"><a href="#二叉搜索树的最小绝对差" class="headerlink" title="二叉搜索树的最小绝对差"></a>二叉搜索树的最小绝对差</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number&#125;
+ */
+var getMinimumDifference = function (root) &#123;
+  const res = [];
+  function getVal(node) &#123;
+    if (!node) &#123;
+      return;
+    &#125;
+    res.push(node.val);
+    getVal(node.left);
+    getVal(node.right);
+  &#125;
+  getVal(root);
+  res.sort((a, b) =&gt; &#123;
+    return a - b;
+  &#125;);
+  let min = 0;
+  let left = 1;
+  for (let i = 0; i &lt; res.length - 1; i++) &#123;
+    if (min === 0) &#123;
+      min = res[left] - res[i];
+    &#125; else &#123;
+      min = Math.min(min, res[left] - res[i]);
+    &#125;
+    left++;
+  &#125;
+  return min;
+&#125;;
+</code></pre>
+<h3 id="二叉搜索树中的众数"><a href="#二叉搜索树中的众数" class="headerlink" title="二叉搜索树中的众数"></a>二叉搜索树中的众数</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;number[]&#125;
+ */
+var findMode = function (root) &#123;
+  const res = [];
+  function getVal(node) &#123;
+    if (!node) &#123;
+      return;
+    &#125;
+    getVal(node.left);
+    res.push(node.val);
+    getVal(node.right);
+  &#125;
+  getVal(root);
+  if (res.length === 1) &#123;
+    return res;
+  &#125;
+  const map = new Map();
+  res.forEach((item) =&gt; &#123;
+    map.set(item, (map.get(item) | 0) + 1);
+  &#125;);
+  const arr = Array.from(map).sort((a, b) =&gt; &#123;
+    return b[1] - a[1];
+  &#125;);
+  const result = [];
+  arr.forEach((value) =&gt; &#123;
+    if (value[1] === arr[0][1]) &#123;
+      result.push(value[0]);
+    &#125;
+  &#125;);
+  return result;
+&#125;;
+</code></pre>
+<h2 id="周赛"><a href="#周赛" class="headerlink" title="周赛"></a>周赛</h2><ol start="8048">
+<li>最大二进制奇数 给你一个 二进制 字符串 s ，其中至少包含一个 ‘1’ 。</li>
+</ol>
+<p>你必须按某种方式 重新排列 字符串中的位，使得到的二进制数字是可以由该组合生成的 最大二进制奇数 。<br>以字符串形式，表示并返回可以由给定组合生成的最大二进制奇数。<br>注意 返回的结果字符串 可以 含前导零。</p>
+<pre><code class="javascript">const s = &quot;010&quot;;
+const sArr = s.split(&quot;&quot;);
+sArr.sort((a, b) =&gt; &#123;
+  return parseInt(b) - parseInt(a);
+&#125;);
+// 找到最后一个1
+sArr[sArr.lastIndexOf(&quot;1&quot;)] = 0;
+sArr[sArr.length - 1] = 1;
+console.log(sArr.join(&quot;&quot;));
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">5</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">761</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-09-24T03:10:37.742Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
