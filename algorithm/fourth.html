@@ -1,0 +1,825 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>第四周算法日记 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="第四周二叉树二叉树的最近公共祖先&#x2F;**  * Definition for a binary tree node.  * function TreeNode(val) &amp;#123;  *     this.val &#x3D; val;  *     this.left &#x3D; this.right &#x3D; null;  * &amp;#125;  *&#x2F; &#x2F;**  * @param &amp;#123;TreeNode&amp;#125;">
+<meta property="og:type" content="website">
+<meta property="og:title" content="第四周算法日记">
+<meta property="og:url" content="http://example.com/algorithm/fourth.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="第四周二叉树二叉树的最近公共祖先&#x2F;**  * Definition for a binary tree node.  * function TreeNode(val) &amp;#123;  *     this.val &#x3D; val;  *     this.left &#x3D; this.right &#x3D; null;  * &amp;#125;  *&#x2F; &#x2F;**  * @param &amp;#123;TreeNode&amp;#125;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-09-30T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-01T06:43:57.553Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/algorithm/fourth.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '第四周算法日记',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-10-01 14:43:57'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">第四周算法日记</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h1 id="第四周"><a href="#第四周" class="headerlink" title="第四周"></a>第四周</h1><h2 id="二叉树"><a href="#二叉树" class="headerlink" title="二叉树"></a>二叉树</h2><h3 id="二叉树的最近公共祖先"><a href="#二叉树的最近公共祖先" class="headerlink" title="二叉树的最近公共祖先"></a>二叉树的最近公共祖先</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) &#123;
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;TreeNode&#125; p
+ * @param &#123;TreeNode&#125; q
+ * @return &#123;TreeNode&#125;
+ */
+var lowestCommonAncestor = function (root, p, q) &#123;
+  // 遍历到空节点，直接返回
+  if (!root) &#123;
+    return null
+  &#125;
+  // 遇到节点等于p或者等于q往上返回
+  if (root === p || root === q) &#123;
+    return root
+  &#125;
+  // 获取左树是否有满足条件的值
+  let left = lowestCommonAncestor(root.left, p, q)
+  // 获取右树是否有满足条件的值
+  let right = lowestCommonAncestor(root.right, p, q)
+  if (left &amp;&amp; right) &#123;
+    return root
+  &#125;
+  // 如果左为空，右不为空，表示答案在右子树里边
+  if (!left &amp;&amp; right) &#123;
+    return right
+  &#125;
+  if (!right &amp;&amp; left) &#123;
+    return left
+  &#125;
+&#125;;
+</code></pre>
+<h3 id="二叉搜索树的最近公共祖先"><a href="#二叉搜索树的最近公共祖先" class="headerlink" title="二叉搜索树的最近公共祖先"></a>二叉搜索树的最近公共祖先</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val) &#123;
+ *     this.val = val;
+ *     this.left = this.right = null;
+ * &#125;
+ */
+
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;TreeNode&#125; p
+ * @param &#123;TreeNode&#125; q
+ * @return &#123;TreeNode&#125;
+ */
+var lowestCommonAncestor = function (root, p, q) &#123;
+  /**
+    // 默认方法
+    if (!root) &#123;
+        return null
+    &#125;
+    if (root === p || root === q) &#123;
+        return root
+    &#125;
+    const left = lowestCommonAncestor(root.left, p, q)
+    const right = lowestCommonAncestor(root.right, p, q)
+    if (left &amp;&amp; right) &#123;
+        return root
+    &#125;
+    if (!left &amp;&amp; right) &#123;
+        return right
+    &#125;
+    if (!right &amp;&amp; left) &#123;
+        return left
+    &#125;
+    */
+  // 利用二叉树特性，找到一个节点的值在两个节点值之间,就是最近的公共祖先
+  if (!root) &#123;
+    return null
+  &#125;
+  // 向左去遍历(答案在左子树中)
+  if (root.val &gt; p.val &amp;&amp; root.val &gt; q.val) &#123;
+    const left = lowestCommonAncestor(root.left, p, q)
+    if (left) &#123;
+      return left
+    &#125;
+  &#125;
+  // 向右去遍历(答案在右子树中)
+  if (root.val &lt; p.val &amp;&amp; root.val &lt; q.val) &#123;
+    const right = lowestCommonAncestor(root.right, p, q)
+    if (right) &#123;
+      return right
+    &#125;
+  &#125;
+  // 获取到结果了
+  return root
+&#125;;
+</code></pre>
+<h3 id="二叉搜索树的插入操作"><a href="#二叉搜索树的插入操作" class="headerlink" title="二叉搜索树的插入操作"></a>二叉搜索树的插入操作</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;number&#125; val
+ * @return &#123;TreeNode&#125;
+ */
+var insertIntoBST = function (root, val) &#123;
+  function insert(node) &#123;
+    if (!node) &#123;
+      // 找到插入位置了
+      return new TreeNode(val)
+    &#125;
+    if (node.val &gt; val) &#123;
+      // 应该插入左子树
+      const left = insert(node.left)
+      if (left) &#123;
+        node.left = left
+      &#125;
+    &#125;
+    if (node.val &lt; val) &#123;
+      // 应该插入右子树
+      const right = insert(node.right)
+      if (right) &#123;
+        node.right = right
+      &#125;
+    &#125;
+  &#125;
+  if (!root) &#123;
+    return new TreeNode(val)
+  &#125;
+  insert(root)
+  return root
+&#125;;
+</code></pre>
+<h3 id="删除二叉搜索树的节点"><a href="#删除二叉搜索树的节点" class="headerlink" title="删除二叉搜索树的节点"></a>删除二叉搜索树的节点</h3><ol>
+<li>没找到要删除的节点</li>
+<li>删除的是叶子节点（左右都为空，不用改变二叉树的结构）</li>
+<li>要删除的节点右为空，左不为空（直接让父节点指向节点的左孩子）</li>
+<li>左空，右不空</li>
+<li>左右都不为空（直接把左子树放到右子树中最小的数（右子树最左侧的位置）中）</li>
+</ol>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;number&#125; key
+ * @return &#123;TreeNode&#125;
+ */
+var deleteNode = function (root, key) &#123;
+  // 没有遍历到要删除的节点,返回空节点
+  if (!root) &#123;
+    return null
+  &#125;
+  // 找到要删除的节点了
+  if (root.val === key) &#123;
+    // 情况一,删除叶子节点(左子树为空，右子树也为空)
+    if (!root.left &amp;&amp; !root.right) &#123;
+      return null
+    &#125; else if (!root.left &amp;&amp; root.right) &#123;
+      // 情况二,节点左为空，右不为空
+      return root.right
+    &#125; else if (root.left &amp;&amp; !root.right) &#123;
+      // 情况三,节点左不为空，右为空
+      return root.left
+    &#125; else &#123;
+      // 左右节点都不为空
+      // 找到右子树的最小的节点(将左子树放到右子树的最小值哪里)
+      let cur = root.right
+      while (cur.left) &#123;
+        cur = cur.left
+      &#125;
+      cur.left = root.left
+      return root.right
+    &#125;
+  &#125;
+  // 
+  if (key &lt; root.val) &#123;
+    // 向左去遍历
+    root.left = deleteNode(root.left, key)
+  &#125;
+  if (key &gt; root.val) &#123;
+    // 向右去遍历
+    root.right = deleteNode(root.right, key)
+  &#125;
+  return root
+&#125;;
+</code></pre>
+<h3 id="修剪二叉搜索树"><a href="#修剪二叉搜索树" class="headerlink" title="修剪二叉搜索树"></a>修剪二叉搜索树</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @param &#123;number&#125; low
+ * @param &#123;number&#125; high
+ * @return &#123;TreeNode&#125;
+ */
+var trimBST = function (root, low, high) &#123;
+  if (!root) &#123;
+    return null
+  &#125;
+  if (root.val &lt; low) &#123;
+    // 当前节点小于给定的最小值，应该往右遍历是否有符合结果的节点
+    let right = trimBST(root.right, low, high)
+    return right
+  &#125;
+  if (root.val &gt; high) &#123;
+    // 当前节点值大于给定的最大值，遍历右节点
+    let left = trimBST(root.left, low, high)
+    return left
+  &#125;
+  // 处理左子树
+  root.left = trimBST(root.left, low, high)
+  // 处理右子树
+  root.right = trimBST(root.right, low, high)
+  return root
+&#125;;
+</code></pre>
+<h3 id="将有序数组转换为二叉搜索树"><a href="#将有序数组转换为二叉搜索树" class="headerlink" title="将有序数组转换为二叉搜索树"></a>将有序数组转换为二叉搜索树</h3><p>平衡二叉搜索树，选取中间节点开始构造，这样才能保证两边的节点数量相同，便于构造平衡二叉搜索树</p>
+<pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;number[]&#125; nums
+ * @return &#123;TreeNode&#125;
+ */
+var sortedArrayToBST = function (nums) &#123;
+  // nums表示数组,left和right表示左右区间，左闭右闭
+  function getRes(nums, left, right) &#123;
+    if (left &gt; right) &#123;
+      return null
+    &#125;
+    const mid = (left + right) &gt;&gt; 1
+    const root = new TreeNode(nums[mid])
+    // 左闭右闭，所以传mid-1
+    root.left = getRes(nums, left, mid - 1)
+    root.right = getRes(nums, mid + 1, right)
+    return root
+  &#125;
+  return getRes(nums, 0, nums.length - 1)
+&#125;;
+</code></pre>
+<h3 id="把二叉搜索树转化为累加树"><a href="#把二叉搜索树转化为累加树" class="headerlink" title="把二叉搜索树转化为累加树"></a>把二叉搜索树转化为累加树</h3><pre><code class="javascript">/**
+ * Definition for a binary tree node.
+ * function TreeNode(val, left, right) &#123;
+ *     this.val = (val===undefined ? 0 : val)
+ *     this.left = (left===undefined ? null : left)
+ *     this.right = (right===undefined ? null : right)
+ * &#125;
+ */
+/**
+ * @param &#123;TreeNode&#125; root
+ * @return &#123;TreeNode&#125;
+ */
+var convertBST = function (root) &#123;
+  // 定义一个变量，用于记录之前节点的相加的结果
+  let prev = 0
+  function getRes(node) &#123;
+    if (!node) &#123;
+      return
+    &#125;
+    // 因为要加上一个结果的值，所以倒序遍历(右中左)
+    getRes(node.right)
+    node.val += prev
+    // 记录上一个节点的数值
+    prev = node.val
+    getRes(node.left)
+  &#125;
+  getRes(root)
+  return root
+&#125;;
+</code></pre>
+<h2 id="回溯法"><a href="#回溯法" class="headerlink" title="回溯法"></a>回溯法</h2><p>回溯与递归相辅相成，递归函数的下面<br>纯暴力的搜索算法<br>解决：</p>
+<ol>
+<li>组合问题（强调没有顺序）</li>
+<li>切割问题</li>
+<li>子集问题</li>
+<li>排列问题（强调元素的顺序比如1，2；2，1两种排列）</li>
+<li>棋盘问题</li>
+</ol>
+<p>模板：一般是无返回值，函数名一般叫做backtracking</p>
+<pre><code class="javascript">void backtracking()&#123;
+  if(终止条件)&#123;
+    收集结果
+    return;
+  &#125;
+  for(集合的元素集)&#123;
+    处理节点
+    递归函数
+    回溯
+  &#125;
+&#125;
+</code></pre>
+<h3 id="组合"><a href="#组合" class="headerlink" title="组合"></a>组合</h3><pre><code class="javascript">/**
+ * @param &#123;number&#125; n
+ * @param &#123;number&#125; k
+ * @return &#123;number[][]&#125;
+ */
+// 无剪枝
+var combine = function (n, k) &#123;
+  // 不强调顺序,1,2与2,1是一个组合
+  const res = [];
+  const path = [];
+  // startIndex用于记录开始的取值范围，避免重复取值
+  function backtracking(n, k, startIndex) &#123;
+    if (path.length === k) &#123;
+      // 拷贝数组，否则是值引用，最后还是空数组
+      res.push([...path]);
+      return;
+    &#125;
+    for (let i = startIndex; i &lt;= n; i++) &#123;
+      path.push(i);
+      // 从之后位置开始搜索
+      backtracking(n, k, i + 1);
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(n, k, 1);
+  return res
+&#125;;
+</code></pre>
+<p>剪枝：判断剩余长度，如果小于，则直接返回</p>
+<h3 id="组合总和三"><a href="#组合总和三" class="headerlink" title="组合总和三"></a>组合总和三</h3><pre><code class="javascript">/**
+ * @param &#123;number&#125; k
+ * @param &#123;number&#125; n
+ * @return &#123;number[][]&#125;
+ */
+var combinationSum3 = function (k, n) &#123;
+  const res = [];
+  const path = [];
+  let sum = 0;
+  function backtracking(n, k, startIndex) &#123;
+    if (sum === n &amp;&amp; path.length === k) &#123;
+      res.push([...path]);
+      return;
+    &#125;
+    for (let i = startIndex; i &lt;= 9; i++) &#123;
+      if (path.length &gt; k) &#123;
+        return;
+      &#125;
+      sum += i;
+      path.push(i);
+      backtracking(n, k, i + 1);
+      sum -= i;
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(n, k, 1);
+  return res
+&#125;;
+</code></pre>
+<h3 id="电话号码的字母组合"><a href="#电话号码的字母组合" class="headerlink" title="电话号码的字母组合"></a>电话号码的字母组合</h3><pre><code class="javascript">/**
+ * @param &#123;string&#125; digits
+ * @return &#123;string[]&#125;
+ */
+var letterCombinations = function (digits) &#123;
+  if (digits === &#39;&#39;) &#123;
+    return []
+  &#125;
+  const map = new Map();
+  map.set(&quot;1&quot;, &quot;&quot;);
+  map.set(&quot;2&quot;, &quot;abc&quot;);
+  map.set(&quot;3&quot;, &quot;def&quot;);
+  map.set(&quot;4&quot;, &quot;ghi&quot;);
+  map.set(&quot;5&quot;, &quot;jkl&quot;);
+  map.set(&quot;6&quot;, &quot;mno&quot;);
+  map.set(&quot;7&quot;, &quot;pqrs&quot;);
+  map.set(&quot;8&quot;, &quot;tuv&quot;);
+  map.set(&quot;9&quot;, &quot;wxyz&quot;);
+  const strArr = digits.split(&quot;&quot;);
+  const res = [];
+  const path = [];
+  function backtracking(startIndex) &#123;
+    if (path.length === strArr.length) &#123;
+      res.push(path.join(&quot;&quot;));
+      return;
+    &#125;
+    const str = map.get(strArr[startIndex]);
+    for (let i = 0; i &lt; str.length; i++) &#123;
+      path.push(str[i]);
+      backtracking(startIndex + 1);
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(0);
+  return res
+&#125;;
+</code></pre>
+<h3 id="组合总和"><a href="#组合总和" class="headerlink" title="组合总和"></a>组合总和</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; candidates
+ * @param &#123;number&#125; target
+ * @return &#123;number[][]&#125;
+ */
+var combinationSum = function (candidates, target) &#123;
+  // 遍历之后的数组不能带前面的   2,5与5,2是同一个,所以后面的不用再选取前面的
+  const res = [];
+  const path = [];
+  let sum = 0;
+  /* 
+    2,5和5,2是同一个，所以再之后的选取中，不能再选取该元素前面的元素了
+    */
+  function backtracking(startIndex) &#123;
+    if (sum &gt; target) &#123;
+      return;
+    &#125;
+    if (sum === target) &#123;
+      res.push([...path]);
+      return;
+    &#125;
+    for (let i = startIndex; i &lt; candidates.length; i++) &#123;
+      sum += candidates[i];
+      path.push(candidates[i]);
+      // 可以重复选取，所以从id开始
+      backtracking(i);
+      sum -= candidates[i];
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(0);
+  return res
+&#125;;
+</code></pre>
+<h3 id="组合总和二"><a href="#组合总和二" class="headerlink" title="组合总和二"></a>组合总和二</h3><p>去重做的是树层去重</p>
+<pre><code class="javascript">/**
+ * @param &#123;number[]&#125; candidates
+ * @param &#123;number&#125; target
+ * @return &#123;number[][]&#125;
+ */
+var combinationSum2 = function (candidates, target) &#123;
+  candidates.sort((a, b) =&gt; a - b);
+  const path = [];
+  const res = new Set();
+  let sum = 0;
+  function backtracking(startIndex) &#123;
+    if (sum &gt; target) &#123;
+      return;
+    &#125;
+    if (sum === target) &#123;
+      const temPath = [...path];
+      // 对原数组排序的话，回溯时会导致顺序错乱
+      res.add(
+        temPath
+        .sort((a, b) =&gt; &#123;
+          return a - b;
+        &#125;)
+        .join(&quot;,&quot;)
+      );
+      return;
+    &#125;
+    for (let i = startIndex; i &lt; candidates.length; i++) &#123;
+      /* 
+      数组已经排过序，再进入第二次搜索时，以该元素开头的结果已经搜索过了
+      就不用再次搜索了
+      */
+      if (i &gt; startIndex &amp;&amp; candidates[i] === candidates[i - 1]) &#123;
+        continue;
+      &#125;
+      sum += candidates[i];
+      path.push(candidates[i]);
+      backtracking(i + 1);
+      sum -= candidates[i];
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(0);
+  const ans = Array.from(res).map((item) =&gt; &#123;
+    return item.split(&quot;,&quot;);
+  &#125;);
+  return ans
+&#125;;
+</code></pre>
+<h3 id="分割回文串"><a href="#分割回文串" class="headerlink" title="分割回文串"></a>分割回文串</h3><p>字符串回溯放的是一段，之前回溯放的是一个，其本质都是以不同起点开头，遍历到终点的一个过程，只不过字符串表示的是以这个为起点为分割线，前面的是一体的</p>
+<pre><code class="javascript">/**
+ * @param &#123;string&#125; s
+ * @return &#123;string[][]&#125;
+ */
+var partition = function (s) &#123;
+  const path = [];
+  const res = [];
+  // 判断是否是回文串
+  const isPalindrome = (s, l, r) =&gt; &#123;
+    for (let i = l, j = r; i &lt; j; i++, j--) &#123;
+      if (s[i] !== s[j]) return false;
+    &#125;
+    return true;
+  &#125;;
+  function backtracking(startIndex) &#123;
+    // path收集的是同一起点到终点之间的所有回文子串
+    if (startIndex &gt;= s.length) &#123;
+      res.push([...path]);
+      return;
+    &#125;
+    // 开始的for循环都是第一层，之后递归是之后的层
+    // 每次遍历都是不同的起点，遍历到最后(0 到最后之间的回文串，1到最后之间的回文串.......)
+    for (let i = startIndex; i &lt; s.length; i++) &#123;
+      // 判断startIndex到i之间是否是回文串
+      if (!isPalindrome(s, startIndex, i)) &#123;
+        continue;
+      &#125;
+      // 放的是一段字符串
+      path.push(s.slice(startIndex, i + 1));
+      backtracking(i + 1);
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(0);
+  return res;
+&#125;;
+</code></pre>
+<h3 id="复原IP地址"><a href="#复原IP地址" class="headerlink" title="复原IP地址"></a>复原IP地址</h3><pre><code class="javascript">/**
+ * @param &#123;string&#125; s
+ * @return &#123;string[]&#125;
+ */
+var restoreIpAddresses = function (s) &#123;
+  const path = [];
+  const res = [];
+  function backtracking(startIndex) &#123;
+    // 终止条件
+    if (path.length &gt; 4) &#123;
+      return;
+    &#125;
+    if (path.length === 4 &amp;&amp; startIndex === s.length) &#123;
+      res.push(path.join(&quot;.&quot;));
+      return;
+    &#125;
+    // 单层递归逻辑
+    for (let i = startIndex; i &lt; s.length; i++) &#123;
+      // 判断截取的字符串是否满足
+      const str = s.slice(startIndex, i + 1);
+      // 分割的字符串大于255（长度大于4的原因是避免有0）
+      if (str.length &gt; 4 || parseInt(str) &gt; 255) &#123;
+        break;
+      &#125;
+      // 不是一个数字，开头是以0开头的，也不行
+      if (str.length &gt; 1 &amp;&amp; str[0] === &quot;0&quot;) &#123;
+        break;
+      &#125;
+      path.push(str);
+      backtracking(i + 1);
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(0);
+  return res
+&#125;;
+</code></pre>
+<h3 id="子集"><a href="#子集" class="headerlink" title="子集"></a>子集</h3><p>与组合问题不同的是收集结果的位置</p>
+<pre><code class="javascript">/**
+ * @param &#123;number[]&#125; nums
+ * @return &#123;number[][]&#125;
+ */
+var subsets = function (nums) &#123;
+  const path = [];
+  const res = [];
+  function backtracking(startIndex) &#123;
+    if (startIndex &gt;= nums.length) &#123;
+      return;
+    &#125;
+    for (let i = startIndex; i &lt; nums.length; i++) &#123;
+      path.push(nums[i]);
+      res.push([...path]);
+      backtracking(i + 1);
+      path.pop();
+    &#125;
+  &#125;
+
+  backtracking(0);
+  res.push([]);
+  return res
+&#125;;
+</code></pre>
+<h3 id="子集二"><a href="#子集二" class="headerlink" title="子集二"></a>子集二</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; nums
+ * @return &#123;number[][]&#125;
+ */
+var subsetsWithDup = function (nums) &#123;
+  const path = [];
+  const res = [];
+  nums.sort((a, b) =&gt; &#123;
+    return a - b;
+  &#125;);
+  function backtracking(startIndex) &#123;
+    if (startIndex &gt;= nums.length) &#123;
+      return;
+    &#125;
+    for (let i = startIndex; i &lt; nums.length; i++) &#123;
+      // 前面的元素已经收集过了，就不用再收集相同元素了(大于startIndex表示单层),树层去重
+      if (i &gt; startIndex &amp;&amp; nums[i] === nums[i - 1]) &#123;
+        continue;
+      &#125;
+      path.push(nums[i]);
+      res.push([...path]);
+      backtracking(i + 1);
+      path.pop();
+    &#125;
+  &#125;
+  backtracking(0);
+  res.push([]);
+  return res
+&#125;;
+</code></pre>
+<h2 id="周赛"><a href="#周赛" class="headerlink" title="周赛"></a>周赛</h2><h3 id="有序三元数组中的最大值一"><a href="#有序三元数组中的最大值一" class="headerlink" title="有序三元数组中的最大值一"></a>有序三元数组中的最大值一</h3><pre><code class="javascript">const nums = [1, 2, 3];
+let max = 0;
+for (let i = 0; i &lt; nums.length; i++) &#123;
+  for (let j = i + 1; j &lt; nums.length; j++) &#123;
+    for (let k = j + 1; k &lt; nums.length; k++) &#123;
+      max = Math.max((nums[i] - nums[j]) * nums[k], max);
+    &#125;
+  &#125;
+&#125;
+console.log(max);
+</code></pre>
+<h3 id="有序三元数组中的最大值二"><a href="#有序三元数组中的最大值二" class="headerlink" title="有序三元数组中的最大值二"></a>有序三元数组中的最大值二</h3><p>时间复杂度过高，最后8个案例过不去</p>
+<pre><code class="javascript">const nums = [12, 6, 1, 2, 7];
+let poorValue = 0;
+const map = new Map();
+for (let i = 0; i &lt; nums.length; i++) &#123;
+  for (let j = i + 1; j &lt; nums.length; j++) &#123;
+    map.set(j, Math.max(map.get(j) || 0, nums[i] - nums[j], poorValue));
+  &#125;
+&#125;
+const arr = Array.from(map);
+let max = 0;
+for (let i = 0; i &lt; arr.length; i++) &#123;
+  let left = arr[i][0];
+  let poor = arr[i][1];
+  for (let j = left + 1; j &lt; nums.length; j++) &#123;
+    max = Math.max(max, nums[j] * poor);
+  &#125;
+&#125;
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">5</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">791</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-10-01T06:46:14.485Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
