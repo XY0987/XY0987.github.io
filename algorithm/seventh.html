@@ -1,0 +1,562 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>第七周算法日记 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="第三周动态规划整数拆分&#x2F;**  * @param &amp;#123;number&amp;#125; n  * @return &amp;#123;number&amp;#125;  *&#x2F; var integerBreak &#x3D; function (n) &amp;#123;   &#x2F;*      数值近似相等，最终乘积才会尽可能的大          dp[i] i拆的乘积最大的数          乘积最大分 i*n-i或i*dp[n">
+<meta property="og:type" content="website">
+<meta property="og:title" content="第七周算法日记">
+<meta property="og:url" content="http://example.com/algorithm/seventh.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="第三周动态规划整数拆分&#x2F;**  * @param &amp;#123;number&amp;#125; n  * @return &amp;#123;number&amp;#125;  *&#x2F; var integerBreak &#x3D; function (n) &amp;#123;   &#x2F;*      数值近似相等，最终乘积才会尽可能的大          dp[i] i拆的乘积最大的数          乘积最大分 i*n-i或i*dp[n">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-10-21T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-10-22T06:39:09.882Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/algorithm/seventh.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '第七周算法日记',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-10-22 14:39:09'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">第七周算法日记</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h1 id="第三周"><a href="#第三周" class="headerlink" title="第三周"></a>第三周</h1><h2 id="动态规划"><a href="#动态规划" class="headerlink" title="动态规划"></a>动态规划</h2><h3 id="整数拆分"><a href="#整数拆分" class="headerlink" title="整数拆分"></a>整数拆分</h3><pre><code class="javascript">/**
+ * @param &#123;number&#125; n
+ * @return &#123;number&#125;
+ */
+var integerBreak = function (n) &#123;
+  /* 
+    数值近似相等，最终乘积才会尽可能的大
+    
+    dp[i] i拆的乘积最大的数
+    
+    乘积最大分 i*n-i或i*dp[n-i] 或者dp[i]
+    */
+
+  let dp = new Array(n + 1).fill(0);
+  dp[2] = 1;
+
+  for (let i = 3; i &lt;= n; i++) &#123;
+    for (let j = 1; j &lt;= i / 2; j++) &#123;
+      // 求最大值(和为i)
+      dp[i] = Math.max(dp[i], dp[i - j] * j, (i - j) * j);
+    &#125;
+  &#125;
+  return dp[n];
+&#125;;
+</code></pre>
+<h3 id="不同的二叉搜索树"><a href="#不同的二叉搜索树" class="headerlink" title="不同的二叉搜索树"></a>不同的二叉搜索树</h3><p>n 为 3 的节点，可以从 n 为 2 和 n 为 1 推导出来，分别以 1 为根节点（与），2 为跟根节点和 3 为根节点</p>
+<pre><code class="javascript">/**
+ * @param &#123;number&#125; n
+ * @return &#123;number&#125;
+ */
+var numTrees = function (n) &#123;
+  const dp = new Array(n + 1).fill(0);
+  dp[0] = 1;
+  dp[1] = 1;
+  // i表示节点总数
+  for (let i = 2; i &lt;= n; i++) &#123;
+    /*
+    j-1（根节点）表示左子树有多少个也表示以不同值为头节点的情况，剩余的是右子树的数量
+    */
+    for (let j = 1; j &lt;= i; j++) &#123;
+      /*
+      以j为头节点左子树有j-1个节点
+      右子树有i-j个节点
+      dp[3]需要以1为头节点加上2为头节点加上3为头节点，j就等于这1为头节点
+      */
+      dp[i] += dp[j - 1] * dp[i - j];
+    &#125;
+  &#125;
+  return dp[n];
+&#125;;
+</code></pre>
+<h3 id="背包问题（二维数组）"><a href="#背包问题（二维数组）" class="headerlink" title="背包问题（二维数组）"></a>背包问题（二维数组）</h3><p>dp[i][j] 表示[0,i]物品，任取放入容量为 j 的背包中的最大价值<br>第 i 个物品有两种状态，放入物品 i 以及不放入物品 i</p>
+<p>不放物品 i 最大价值为：dp[i-1][j] （最大值就是上一个的最大值，物品重量不变）<br>放物品 i 的最大价值为: dp[i-1]j-weight[i]]+value[i]（j-weight[i]减去当前重量剩余的重量）（上一个最大值，物品重量为减去当前重量）</p>
+<p>二维数组双重 for 循环是可以颠倒顺序的，先遍历背包或先遍历物品都是可以的，只要保证上方和左上方有值就可以推出当前的价值</p>
+<h3 id="背包问题（一维数组）"><a href="#背包问题（一维数组）" class="headerlink" title="背包问题（一维数组）"></a>背包问题（一维数组）</h3><p>把二维数组降为一维数组<br>dp[j] 表示容量为 j 的背包所有装的最大价值<br>不能颠倒遍历顺序<br>另外遍历背包需要倒叙遍历，否则会出现重复添加一个物品的情况</p>
+<h3 id="分割等和子集"><a href="#分割等和子集" class="headerlink" title="分割等和子集"></a>分割等和子集</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; nums
+ * @return &#123;boolean&#125;
+ */
+var canPartition = function (nums) &#123;
+  /* 
+    物品的价值和重量是相同的
+    能凑成一半值，就返回true
+    相当于一个背包问题，容量是11，价值也是11
+    
+    dp[j] 表示容量为j最大价值为dp[j]
+    
+    dp[j]=Math.max(dp[j],dp[j-nums[i]]+nums[i])
+    */
+  const sum = nums.reduce((prev, next) =&gt; &#123;
+    return prev + next;
+  &#125;, 0);
+  if (sum % 2 === 1) &#123;
+    return false;
+  &#125;
+  const target = sum / 2;
+  const dp = new Array(target + 1).fill(0);
+
+  // 第一层遍历物品
+  for (let i = 0; i &lt; nums.length; i++) &#123;
+    // 倒叙遍历,遍历背包
+    for (let j = target; j &gt;= nums[i]; j--) &#123;
+      dp[j] = Math.max(dp[j], dp[j - nums[i]] + nums[i]);
+      if (dp[j] === target) &#123;
+        return true;
+      &#125;
+    &#125;
+  &#125;
+  return false;
+&#125;;
+</code></pre>
+<h3 id="最后一块石头的重量二"><a href="#最后一块石头的重量二" class="headerlink" title="最后一块石头的重量二"></a>最后一块石头的重量二</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; stones
+ * @return &#123;number&#125;
+ */
+var lastStoneWeightII = function (stones) &#123;
+  /* 
+    重量为stones[i]价值也为stones[i]
+    
+    尽量把重量总和相近的分在一起
+    
+    dp[j] 表示装满容量为j的最大重量为dp[j]
+    
+    dp[j]=Math.max(dp[j],dp[j-stones[i]]+stones[i])
+    */
+
+  // 石头重量最多为3000，初始化为1510，多出来的10是边界情况
+  const dp = new Array(1510).fill(0);
+  // 凑sum/2,尽量凑总重量的一半,这样的话才能使剩的石头重量最小
+  const sum = stones.reduce((prev, next) =&gt; &#123;
+    return prev + next;
+  &#125;, 0);
+  const target = parseInt(sum / 2);
+  for (let i = 0; i &lt; stones.length; i++) &#123;
+    //物品
+    // 如果背包容量比石头重量还小，就没有意义了
+    for (let j = target; j &gt;= stones[i]; j--) &#123;
+      //背包
+      dp[j] = Math.max(dp[j], dp[j - stones[i]] + stones[i]);
+    &#125;
+  &#125;
+  return sum - dp[target] - dp[target];
+&#125;;
+</code></pre>
+<h3 id="目标和（-）"><a href="#目标和（-）" class="headerlink" title="目标和（?）"></a>目标和（?）</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; nums
+ * @param &#123;number&#125; target
+ * @return &#123;number&#125;
+ */
+var findTargetSumWays = function (nums, target) &#123;
+  /* 
+构造出两种集合，一个是正数集合，一种四负数集合
+left表示正数集合
+right表示负数集合
+left+right=sum
+left-right=target
+
+right=sum-left
+left-(sum-left)=target
+left=(target+sum)/2 不能整除，就表示没有对应组合
+
+dp[j] 表示装满背包容量为j有dp[j]种方法
+*/
+
+  const sum = nums.reduce((prev, next) =&gt; &#123;
+    return prev + next;
+  &#125;, 0);
+
+  // 绝对值大于sum无法凑出来
+  if (Math.abs(target) &gt; sum) &#123;
+    return 0;
+  &#125;
+
+  // 无法组成结果的情况
+  if ((target + sum) % 2 !== 0) &#123;
+    return 0;
+  &#125;
+  let left = (target + sum) / 2;
+
+  const dp = new Array(left + 1).fill(0);
+  dp[0] = 1;
+  for (let i = 0; i &lt; nums.length; i++) &#123;
+    for (let j = left; j &gt;= nums[i]; j--) &#123;
+      dp[j] += dp[j - nums[i]];
+    &#125;
+  &#125;
+
+  return dp[left];
+&#125;;
+</code></pre>
+<h3 id="一和零（-）"><a href="#一和零（-）" class="headerlink" title="一和零（?）"></a>一和零（?）</h3><pre><code class="javascript">/**
+ * @param &#123;string[]&#125; strs
+ * @param &#123;number&#125; m
+ * @param &#123;number&#125; n
+ * @return &#123;number&#125;
+ */
+var findMaxForm = function (strs, m, n) &#123;
+  /* 
+    dp[i][j] 表示 i个0 j个1 最大装dp[i][j]个物品
+  */
+  const dp = Array.from(Array(m + 1), () =&gt; Array(n + 1).fill(0));
+  let numOfZeros, numOfOnes;
+
+  for (let str of strs) &#123;
+    numOfZeros = 0;
+    numOfOnes = 0;
+
+    for (let c of str) &#123;
+      if (c === &quot;0&quot;) &#123;
+        numOfZeros++;
+      &#125; else &#123;
+        numOfOnes++;
+      &#125;
+    &#125;
+
+    for (let i = m; i &gt;= numOfZeros; i--) &#123;
+      for (let j = n; j &gt;= numOfOnes; j--) &#123;
+        dp[i][j] = Math.max(dp[i][j], dp[i - numOfZeros][j - numOfOnes] + 1);
+      &#125;
+    &#125;
+  &#125;
+  return dp[m][n];
+&#125;;
+</code></pre>
+<h3 id="完全背包理论基础"><a href="#完全背包理论基础" class="headerlink" title="完全背包理论基础"></a>完全背包理论基础</h3><p>01 背包一个物品只能使用一次，完全背包一个物品可以使用无数次<br>把第二层循环中的遍历倒叙改为正序<br>第一层遍历物品，第二层遍历背包，两层 for 循环可以颠倒</p>
+<h3 id="零钱兑换二"><a href="#零钱兑换二" class="headerlink" title="零钱兑换二"></a>零钱兑换二</h3><pre><code class="javascript">/**
+ * @param &#123;number&#125; amount
+ * @param &#123;number[]&#125; coins
+ * @return &#123;number&#125;
+ */
+var change = function (amount, coins) &#123;
+  /* 
+    dp[j]表示装满容量为j的背包有dp[j]种方法
+
+    本题不能颠倒遍历顺序，因为要组合数（元素的顺序无关）
+    颠倒顺序的话是排列数
+    */
+
+  const dp = new Array(amount + 1).fill(0);
+  dp[0] = 1;
+  for (let i = 0; i &lt; coins.length; i++) &#123;
+    for (let j = coins[i]; j &lt;= amount; j++) &#123;
+      dp[j] += dp[j - coins[i]];
+    &#125;
+  &#125;
+  return dp[amount];
+&#125;;
+</code></pre>
+<h3 id="组合总和四"><a href="#组合总和四" class="headerlink" title="组合总和四"></a>组合总和四</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; nums
+ * @param &#123;number&#125; target
+ * @return &#123;number&#125;
+ */
+var combinationSum4 = function (nums, target) &#123;
+  /* 
+    强调元素顺序
+    
+    dp[j] 表示装满容量为j的背包有dp[j]种方法
+    
+    先遍历背包在遍历物品
+    */
+
+  const dp = new Array(target + 1).fill(0);
+  dp[0] = 1;
+  for (let i = 0; i &lt;= target; i++) &#123;
+    for (let j = 0; j &lt; nums.length; j++) &#123;
+      if (i &gt;= nums[j]) &#123;
+        dp[i] += dp[i - nums[j]];
+      &#125;
+    &#125;
+  &#125;
+
+  return dp[target];
+&#125;;
+</code></pre>
+<h3 id="零钱兑换"><a href="#零钱兑换" class="headerlink" title="零钱兑换"></a>零钱兑换</h3><pre><code class="javascript">/**
+ * @param &#123;number[]&#125; coins
+ * @param &#123;number&#125; amount
+ * @return &#123;number&#125;
+ */
+var coinChange = function (coins, amount) &#123;
+  /* 
+    dp[j] 表示装满容量为j的背包所需要的最少钱币数
+    */
+
+  const dp = new Array(amount + 1).fill(Number.MAX_SAFE_INTEGER);
+  dp[0] = 0;
+
+  for (let i = 0; i &lt; coins.length; i++) &#123;
+    for (let j = coins[i]; j &lt;= amount; j++) &#123;
+      // 减去当前钱币值之后去最小值
+      dp[j] = Math.min(dp[j - coins[i]] + 1, dp[j]);
+    &#125;
+  &#125;
+  return dp[amount] === Number.MAX_SAFE_INTEGER ? -1 : dp[amount];
+&#125;;
+</code></pre>
+<h3 id="完全平方数"><a href="#完全平方数" class="headerlink" title="完全平方数"></a>完全平方数</h3><pre><code class="javascript">/**
+ * @param &#123;number&#125; n
+ * @return &#123;number&#125;
+ */
+var numSquares = function (n) &#123;
+  /* 
+    dp[j] 表示装满容量为j的最少完全平方数为dp[j]
+    */
+  const dp = new Array(n + 1).fill(Number.MAX_SAFE_INTEGER);
+  dp[0] = 0;
+  for (let i = 1; i * i &lt;= n; i++) &#123;
+    const num = i * i;
+    for (let j = num; j &lt;= n; j++) &#123;
+      dp[j] = Math.min(dp[j - num] + 1, dp[j]);
+    &#125;
+  &#125;
+  return dp[n];
+&#125;;
+</code></pre>
+<h3 id="单词拆分"><a href="#单词拆分" class="headerlink" title="单词拆分"></a>单词拆分</h3><pre><code class="javascript">/**
+ * @param &#123;string&#125; s
+ * @param &#123;string[]&#125; wordDict
+ * @return &#123;boolean&#125;
+ */
+var wordBreak = function (s, wordDict) &#123;
+  /* 
+    字符串是一个背包，单词是一个物品，单词能否装满背包
+    
+    dp[j] 表示长度为j的字符串能否被字典组成
+    
+    讲究排列数
+    */
+
+  let dp = Array(s.length + 1).fill(false);
+  dp[0] = true;
+  for (let i = 0; i &lt;= s.length; i++) &#123;
+    for (let j = 0; j &lt; wordDict.length; j++) &#123;
+      if (i &gt;= wordDict[j].length) &#123;
+        if (
+          s.slice(i - wordDict[j].length, i) === wordDict[j] &amp;&amp;
+          dp[i - wordDict[j].length]
+        ) &#123;
+          dp[i] = true;
+        &#125;
+      &#125;
+    &#125;
+  &#125;
+  return dp[s.length];
+&#125;;
+</code></pre>
+<h2 id="周赛"><a href="#周赛" class="headerlink" title="周赛"></a>周赛</h2><h3 id="100114-元素和最小的山形三元组-II"><a href="#100114-元素和最小的山形三元组-II" class="headerlink" title="100114. 元素和最小的山形三元组 II"></a>100114. 元素和最小的山形三元组 II</h3><pre><code class="js">// const nums = [8, 6, 1, 5, 3];
+
+// let res = Infinity;
+// for (let i = 0; i &lt; nums.length - 2; i++) &#123;
+//   for (let j = i + 1; j &lt; nums.length - 1; j++) &#123;
+//     for (let k = j + 1; k &lt; nums.length; k++) &#123;
+//       if (nums[i] &lt; nums[j] &amp;&amp; nums[k] &lt; nums[j]) &#123;
+//         res = Math.min(res, nums[i] + nums[j] + nums[k]);
+//       &#125;
+//     &#125;
+//   &#125;
+// &#125;
+// return res === Infinity ? -1 : res;
+
+const nums = [1, 3, 2, 2];
+
+// let res = Infinity;
+// for (let i = 0; i &lt; nums.length - 2; i++) &#123;
+//   let minK = Infinity;
+//   for (let j = i + 1; j &lt; nums.length - 1; j++) &#123;
+//     if (nums[i] &lt; nums[j]) &#123;
+//       minK = Math.min(...nums.slice(j + 1).filter((num) =&gt; num &lt; nums[j]));
+//       res = Math.min(res, nums[i] + nums[j] + minK);
+//     &#125;
+//   &#125;
+// &#125;
+// return res === Infinity ? -1 : res;
+
+/* 
+dl数组用于存储小于该下标的最小值，左边的值
+dr数组用于存储大于该下标的最小值，右边的值
+*/
+
+const dl = new Array(nums.length).fill(0);
+const dr = new Array(nums.length).fill(0);
+dl[0] = nums[0];
+dr[nums.length - 1] = nums[nums.length - 1];
+
+for (let i = 1; i &lt; nums.length; i++) &#123;
+  dl[i] = Math.min(dl[i - 1], nums[i]);
+&#125;
+
+for (let i = nums.length - 2; i &gt;= 0; i--) &#123;
+  dr[i] = Math.min(dr[i + 1], nums[i]);
+&#125;
+
+let res = Infinity;
+for (let j = 1; j &lt; nums.length - 1; j++) &#123;
+  if (dl[j - 1] &lt; nums[j] &amp;&amp; nums[j] &gt; dr[j + 1]) &#123;
+    res = Math.min(res, nums[j] + dl[j - 1] + dr[j + 1]);
+  &#125;
+&#125;
+return res === Infinity ? -1 : res;
+/* 
+dl数组保存从左到右的最小值
+dr数组保存从右到左的最小值
+*/
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">5</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">970</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-10-22T06:41:05.998Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
