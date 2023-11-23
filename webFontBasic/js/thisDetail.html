@@ -1,0 +1,536 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>this详解 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="this不管是在我们的日常开发中还是在我们的面试中，用的都比较多。可以说对一个前端来讲还是非常重要的。下面我们就从以下两个方面来说一下this的指向问题：  非严格模式 严格模式  this概念this表示当前对象的一个引用，在js中this并不是固定不变的，它会随着执行环境的改变而改变，简单来说this永远指向最后调用它的哪个对象 非严格模式下的this指向调用绑定&#x2F;&#x2F;函数直接调用和匿名函数的调">
+<meta property="og:type" content="website">
+<meta property="og:title" content="this详解">
+<meta property="og:url" content="http://example.com/webFontBasic/js/thisDetail.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="this不管是在我们的日常开发中还是在我们的面试中，用的都比较多。可以说对一个前端来讲还是非常重要的。下面我们就从以下两个方面来说一下this的指向问题：  非严格模式 严格模式  this概念this表示当前对象的一个引用，在js中this并不是固定不变的，它会随着执行环境的改变而改变，简单来说this永远指向最后调用它的哪个对象 非严格模式下的this指向调用绑定&#x2F;&#x2F;函数直接调用和匿名函数的调">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-11-22T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-11-23T13:03:06.564Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/webFontBasic/js/thisDetail.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'this详解',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-11-23 21:03:06'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">this详解</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>this不管是在我们的日常开发中还是在我们的面试中，用的都比较多。可以说对一个前端来讲还是非常重要的。<br>下面我们就从以下两个方面来说一下this的指向问题：</p>
+<ul>
+<li>非严格模式</li>
+<li>严格模式</li>
+</ul>
+<h2 id="this概念"><a href="#this概念" class="headerlink" title="this概念"></a>this概念</h2><p>this表示当前对象的一个引用，在js中this并不是固定不变的，它会随着执行环境的改变而改变，简单来说this永远指向最后调用它的哪个对象</p>
+<h2 id="非严格模式下的this指向"><a href="#非严格模式下的this指向" class="headerlink" title="非严格模式下的this指向"></a>非严格模式下的this指向</h2><h3 id="调用绑定"><a href="#调用绑定" class="headerlink" title="调用绑定"></a>调用绑定</h3><pre><code class="javascript">//函数直接调用和匿名函数的调用this指向window
+console.log(this)//window
+
+
+function foo()&#123;
+    console.log(this)
+&#125;
+foo()//window
+
+
+(function ()&#123;
+   console.log(this) //window
+&#125;)()
+
+
+//嵌套函数调用
+let obj=&#123;
+    a:function()&#123;
+        console.log(this)
+    &#125;
+&#125;
+obj.a()//obj
+</code></pre>
+<h3 id="隐式绑定"><a href="#隐式绑定" class="headerlink" title="隐式绑定"></a>隐式绑定</h3><pre><code class="javascript">//隐式丢失
+
+//方法一
+function foo()&#123;
+    console.log(this)
+&#125;
+let obj=&#123;
+    foo:foo
+&#125;
+let bar=obj.foo
+obj.foo()//obj
+bar()//window
+
+
+//方法二
+function foo(fn)&#123;
+    fn()
+&#125;
+function bar()&#123;
+    console.log(this)
+&#125;
+let obj=&#123;
+    bar:bar
+&#125;
+foo(obj.bar)//window
+
+
+//间接改变
+function foo()&#123;
+    console.log(this)
+&#125;
+let obj1=&#123;
+    foo:foo
+&#125;
+let obj2=&#123;
+    
+&#125;
+obj2.foo=obj1.foo
+obj2.foo()//obj2
+</code></pre>
+<h3 id="new-关键字绑定"><a href="#new-关键字绑定" class="headerlink" title="new 关键字绑定"></a>new 关键字绑定</h3><pre><code class="javascript">let that=null
+function Foo()&#123;
+    that=this
+    console.log(this)
+&#125;
+let foo=new Foo()
+console.log(that===foo)
+</code></pre>
+<h3 id="显示绑定"><a href="#显示绑定" class="headerlink" title="显示绑定"></a>显示绑定</h3><pre><code class="javascript">//使用call函数、apply函数和bind函数
+let obj1=&#123;
+    foo:function()&#123;
+        console.log(this)
+    &#125;
+&#125;
+let obj2=&#123;
+    bar:function()&#123;
+        console.log(this)
+    &#125;
+&#125;
+obj1.foo.call(obj2)//obj2
+obj1.foo.apply(obj2)//obj2
+obj1.foo.bind(obj2)()//obj2
+</code></pre>
+<h4 id="call、apply、bind三种方法的区别"><a href="#call、apply、bind三种方法的区别" class="headerlink" title="call、apply、bind三种方法的区别"></a>call、apply、bind三种方法的区别</h4><p>三个方法都是改变this的一个方法，但是三种方法又略有不同，首先call方法和apply方法的区别是传参方面不同<br>call接受多个参数，例如</p>
+<pre><code class="javascript">call(thisArg)
+call(thisArg, arg1)
+call(thisArg, arg1, arg2)
+call(thisArg, arg1, arg2, /* …, */ argN)
+</code></pre>
+<p>apply接受两个参数，第一个参数是this值，第二个参数是一个带下标的集合，这个集合可以是数组，也可以是类数组，apply方法把这个集合中的元素作为参数传递给被调用的函数<br>bind方法是返回一个绑定好this的函数，之后无论如何调用都不会改变，其传参与call一样</p>
+<h4 id="手写call、apply、bind"><a href="#手写call、apply、bind" class="headerlink" title="手写call、apply、bind"></a>手写call、apply、bind</h4><pre><code class="javascript">/* 
+call 第一个参数是this(在非严格模式下，null和undefined将会被替换为全局对象)
+arg1, arg2,…, argN 之后的多个参数都会传入函数中
+*/
+function myCall(context, ...arg) &#123;
+  // 判断是否函数，避免其他数据类型调用call，this表示的是当前执行的函数
+  if (typeof this !== &quot;function&quot;) &#123;
+    console.log(&quot;类型错误&quot;);
+    return;
+  &#125;
+  let res = null;
+  // 判断传入的context是否是null或undefined
+  context = context || window;
+  // 这里fn可能会与context重名
+  context.fn = this;
+  // 调用函数
+  res = context.fn(...arg);
+  // 删除添加的属性
+  delete context.fn;
+  // 返回结果
+  return res;
+&#125;
+Function.prototype.myCall = myCall;
+
+function Car(price, color) &#123;
+  console.log(this.name, price, color);
+&#125;
+Car.myCall(&#123; name: &quot;123&quot; &#125;, 111, &quot;red&quot;);
+</code></pre>
+<pre><code class="javascript">/* 
+apply 接受两个参数，第一个参数是this，在非严格模式下，则null和undefined会被
+替换为window，原始值会被转换为对象
+
+第二个参数是可选，一个类数组对象，用于指定调用func时的参数，或者如果不需要向函数提供参数则为null或undefined
+*/
+function myApply(context, arr) &#123;
+  // 判断调用对象是否为函数，避免原始值调用
+  if (typeof this !== &quot;function&quot;) &#123;
+    console.log(&quot;类型错误&quot;);
+    return;
+  &#125;
+  // 函数执行结果
+  let res = null;
+  // 判断context是否为null或undefined，如果是则赋值为window
+  context = context || window;
+  context.fn = this;
+  // 调用函数(arr可能传入undefined或null)
+  if (arr) &#123;
+    res = context.fn(...arr);
+  &#125; else &#123;
+    res = context.fn();
+  &#125;
+  delete context.fn;
+  return res;
+&#125;
+Function.prototype.myApply = myApply;
+function Car(price, color) &#123;
+  console.log(this.name, price, color);
+&#125;
+Car.myApply(&#123; name: &quot;奔驰&quot; &#125;, [111, &quot;red&quot;]);
+</code></pre>
+<pre><code class="javascript">/* 
+第一个参数是绑定的this，如果在非严格模式下,null和undefined会被替换为window，
+并且原始值会被转换为对象。如果使用new运算符构造绑定函数，则忽略该值
+
+之后的参数与call类似
+*/
+function myBind(context, ...arg) &#123;
+  context = context || window;
+  let self = this;
+  let fn = function () &#123;&#125;;
+  let _fn = function () &#123;
+    // 如果是new操作，则忽略传入this绑定的值
+    return self.apply(this instanceof _fn ? this : context, arg);
+  &#125;;
+  fn.prototype = this.prototype;
+  _fn.prototype = new fn();
+  return _fn;
+&#125;
+
+Function.prototype.myBind = function () &#123;
+  let outContext = arguments[0]; // 取上下文
+  let outArgs = Array.from(arguments).slice(1); // 取外部入参
+  const outThis = this; // 存外部this
+  let cb = function () &#123;
+    const isNew = typeof new.target !== &quot;undefined&quot;; // 判断函数是否被new过
+    const inArgs = Array.from(arguments); // 取内部入参
+    return outThis.apply(
+      isNew ? this : outContext,
+      outArgs.concat(inArgs)
+    ); // 改变指向，合并函数入参
+  &#125;;
+  cb.prototype = outThis.prototype; // 继承构造函数原型
+  return cb; // 返回创建函数
+&#125;;
+
+// 试一下
+var obj = &#123; name: 1, age: 2 &#125;;
+var name = &quot;Leo&quot;,
+  age = 18;
+function Fn(height, Gender) &#123;
+  console.log(
+    &quot;name：&quot;,
+    this.name,
+    &quot;age:&quot;,
+    this.age,
+    &quot;height:&quot;,
+    height,
+    &quot;Gender:&quot;,
+    Gender
+  );
+&#125;
+Fn.prototype.say = function () &#123;
+  console.log(&quot;Fn.prototype.say&quot;);
+&#125;;
+
+var fn1 = Fn.myBind_3(obj, &quot;80cm&quot;);
+var obj1 = new fn1(&quot;male&quot;); // name： undefined age: undefined height: 80cm Gender: male
+obj1.say(); // Fn.prototype.say
+
+var fn1 = Fn.bind(obj, &quot;80cm&quot;);
+var obj1 = new fn1(&quot;male&quot;); // name： undefined age: undefined height: 80cm Gender: male
+obj1.say(); // Fn.prototype.say
+</code></pre>
+<h3 id="箭头函数"><a href="#箭头函数" class="headerlink" title="箭头函数"></a>箭头函数</h3><h4 id="箭头函数与普通函数的区别"><a href="#箭头函数与普通函数的区别" class="headerlink" title="箭头函数与普通函数的区别"></a>箭头函数与普通函数的区别</h4><p>箭头函数没有自己的this、arguments、super或new.target，并且它不能作为构造函数<br>箭头函数的this是通过继承来的（根据它书写的位置的函数的执行上下文来确定）(有一个简单的小口诀就是它的this是它上一层的爸爸)</p>
+<h4 id="箭头函数的this的指向"><a href="#箭头函数的this的指向" class="headerlink" title="箭头函数的this的指向"></a>箭头函数的this的指向</h4><pre><code class="javascript">//最外层的箭头函数的this
+let foo=()=&gt;&#123;
+  console.log(this)
+&#125;
+foo()//window(这里的this指向并不能改变)
+
+
+
+//函数里边的箭头函数
+function foo()&#123;
+  let bar=()=&gt;&#123;
+    console.log(this)//这里的this继承的是foo的this指向(this:箭头函数的上一层的爸爸)
+    /* 
+    箭头函数是bar这一层，上一层是foo,foo的爸爸是window
+    */
+  &#125;
+  bar()
+&#125;
+let obj=&#123;&#125;
+foo()//window
+foo.call(obj)
+/* obj(通过改变foo的this进而间接改变了里边箭头函数的this，
+而箭头函数的this还是那个位置的值，这也就是我最开始的时候说改变加引号的原因) */
+</code></pre>
+<h2 id="严格模式下的this指向"><a href="#严格模式下的this指向" class="headerlink" title="严格模式下的this指向"></a>严格模式下的this指向</h2><p>严格模式下的this指向和普通模式下差不多，不同的是全局函数的this，不能指向window而是undefined</p>
+<h3 id="全局作用域中的this"><a href="#全局作用域中的this" class="headerlink" title="全局作用域中的this"></a>全局作用域中的this</h3><p>在严格模式下，全局作用域中this指向window对象</p>
+<pre><code class="javascript">&quot;use strict&quot;
+console.log(this);// window
+</code></pre>
+<h3 id="全局作用域中的this-1"><a href="#全局作用域中的this-1" class="headerlink" title="全局作用域中的this"></a>全局作用域中的this</h3><h4 id="无显示指定"><a href="#无显示指定" class="headerlink" title="无显示指定"></a>无显示指定</h4><pre><code class="javascript">&quot;use strict&quot;
+function foo() &#123;
+  console.log(this);// undefined
+&#125;
+foo()
+</code></pre>
+<h4 id="显示指定"><a href="#显示指定" class="headerlink" title="显示指定"></a>显示指定</h4><pre><code class="javascript">&quot;use strict&quot;
+function foo() &#123;
+  console.log(this);// window
+&#125;
+foo.call(this)
+</code></pre>
+<h2 id="练习题"><a href="#练习题" class="headerlink" title="练习题"></a>练习题</h2><pre><code class="javascript">var obj = &#123;
+    a:1,
+    c:2,
+    say:function(a)&#123;
+         console.log(&quot;this1: &quot;+this)
+        var sayA = function(a)&#123;
+            console.log(&quot;this2: &quot;+this)
+            this.a = a
+        &#125;
+        function sayC()&#123;
+             console.log(&quot;this3: &quot;+this)
+         &#125;
+        sayA(a)
+        sayC()
+    &#125;
+&#125;
+obj.say(3)
+/* 
+this1:obj
+this2:window
+this3:window
+*/
+console.log(obj.a+&quot;  &quot;+obj.c)//1 2
+console.log(window.a+&quot;  &quot;+window.c)//3 undefined
+</code></pre>
+<pre><code class="javascript">function Person(name,age)&#123;
+      this.name = name
+      this.age = age
+&#125;
+var person1 = new Person(&quot;张三&quot;,18)
+var person2 = Person(&quot;李四&quot;,12)
+console.log(person1)//&#123;name:张三,age:18&#125;
+console.log(person2)//undefined
+console.log(person1.name,person1.age)//张三，18
+console.log(window.name,window.age)//李四，12
+</code></pre>
+<pre><code class="javascript">//练习题三答案
+function Test(a, b) &#123;
+    this.a = a
+    this.b = b
+    this.say = function (a, b) &#123;
+          this.a = a
+           this.b = b
+           console.log(this)
+        console.log(a, b)
+     &#125;
+&#125;
+var obj1 = new Test(1, 1)
+console.log(obj1.a, obj1.b)//1,1
+obj1.say()//obj1,undefined,undefined
+console.log(obj1.a, obj1.b)//undefined,undefined
+var obj2 = &#123; a: 2, b: 2 &#125;
+obj1.say(4, 4)//obj1,4,4
+console.log(obj1.a, obj1.b)//4,4
+obj1.say.call(obj2, 3, 3)//obj2,3,3
+console.log(obj2.a + &quot;--&quot; + obj2.b)//3--3
+</code></pre>
+<pre><code class="javascript">//练习题四答案
+let obj = &#123;
+    func() &#123;
+        const arrowFunc = () =&gt; &#123;
+            console.log(this)
+        &#125; 
+        return arrowFunc
+    &#125;,
+    _name: &quot;obj&quot;,
+&#125;
+//箭头函数的this指向一直是上一层的爸爸(即func的this指向)
+obj.func()()//obj
+//func是一个全局变量它的this指向的是window
+func = obj.func
+func()()//window
+obj.func.bind(&#123; _name: &quot;newObj&quot; &#125;)()()//&#123; _name: &quot;newObj&quot; &#125;
+obj.func.bind()()()//window
+obj.func.bind(&#123; _name: &quot;bindObj&quot; &#125;).apply(&#123; _name: &quot;applyObj&quot; &#125;)()//&#123; _name: &quot;bindObj&quot; &#125;
+//bind会返回绑定好this的函数供调用
+//解释bind改变的是func的this指向，之后无论如何调用都不会改变
+</code></pre>
+<pre><code class="javascript">//练习题五答案
+var length = 10
+function fn () &#123;
+  console.log(this.length)
+&#125;
+
+var obj = &#123;
+  length: 5,
+  method: function (fn) &#123;
+    fn()//10
+    arguments[0]()//2
+    //相当于arguments调用arguments取出第一个值fn(类似obj.属性调用，对象也可以根据[]的方式取出)
+  &#125;
+&#125;
+obj.method(fn, 1)
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">6</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">1.2k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-11-23T13:11:03.977Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
