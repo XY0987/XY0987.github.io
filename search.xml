@@ -8,7 +8,7 @@
       <link href="/2023/11/23/webFontBasic/"/>
       <url>/2023/11/23/webFontBasic/</url>
       
-        <content type="html"><![CDATA[ <div class="recent-posts category_ui" id="recent-posts">        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/webFontBasic/js/thisDetail" title="标题" data-pjax-state="">this详解</a>                <div class="content">this详解，手写call、apply、bind</div>            </div>        </div></div>]]></content>
+        <content type="html"><![CDATA[ <div class="recent-posts category_ui" id="recent-posts">        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/webFontBasic/js/thisDetail" title="标题" data-pjax-state="">this详解</a>                <div class="content">this详解，手写call、apply、bind</div>            </div>        </div>        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/webFontBasic/js/fnCuritizing" title="标题" data-pjax-state="">函数柯里化，实现add(1)(2)...累加函数</a>                <div class="content">函数柯里化，实现add(1)(2)...累加函数,附加柯里化的简单应用</div>            </div>        </div></div>]]></content>
       
       
       
