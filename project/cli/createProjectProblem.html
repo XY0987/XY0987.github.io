@@ -1,0 +1,325 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>ts脚手架—初始化心血历程 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="平常写项目的时候，一般都会使用官方的脚手架去开发，虽然这个确实省掉了我们不少时间，也给我们一个项目模板，不过对于一个项目来讲，官方给的模板肯定不足以满足我们的日常开发需求，我们平常经常使用的或者封装的一些工具或组件这些东西还需要我们手动给粘贴过来，这种做法麻烦不说，有时候粘贴的时候还会出现报错，修改起来也比较麻烦。另外还有一点就是之前在学习 RN 的时候，一些依赖的版本问题特别麻烦，稍微修改一下就">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ts脚手架—初始化心血历程">
+<meta property="og:url" content="http://example.com/project/cli/createProjectProblem.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="平常写项目的时候，一般都会使用官方的脚手架去开发，虽然这个确实省掉了我们不少时间，也给我们一个项目模板，不过对于一个项目来讲，官方给的模板肯定不足以满足我们的日常开发需求，我们平常经常使用的或者封装的一些工具或组件这些东西还需要我们手动给粘贴过来，这种做法麻烦不说，有时候粘贴的时候还会出现报错，修改起来也比较麻烦。另外还有一点就是之前在学习 RN 的时候，一些依赖的版本问题特别麻烦，稍微修改一下就">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-11-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-11-24T11:24:38.808Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/cli/createProjectProblem.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ts脚手架—初始化心血历程',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-11-24 19:24:38'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">ts脚手架—初始化心血历程</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>平常写项目的时候，一般都会使用官方的脚手架去开发，虽然这个确实省掉了我们不少时间，也给我们一个项目模板，不过对于一个项目来讲，官方给的模板肯定不足以满足我们的日常开发需求，我们平常经常使用的或者封装的一些工具或组件这些东西还需要我们手动给粘贴过来，这种做法麻烦不说，有时候粘贴的时候还会出现报错，修改起来也比较麻烦。<br>另外还有一点就是之前在学习 RN 的时候，一些依赖的版本问题特别麻烦，稍微修改一下就会导致一些第三方库无法使用。<br>由此我就想着自己开发一个脚手架，用于初始化项目，避免重发搭建项目初始框架的大量工作。</p>
+<h2 id="搭建项目"><a href="#搭建项目" class="headerlink" title="搭建项目"></a>搭建项目</h2><h3 id="初始化项目目录"><a href="#初始化项目目录" class="headerlink" title="初始化项目目录"></a>初始化项目目录</h3><pre><code class="javascript">mkdir 项目名称 &amp;&amp; cd 项目名称 &amp;&amp; npm init -y &amp;&amp; yarn add typescript -D &amp;&amp; npx tsc --init
+</code></pre>
+<p>这条命令是在当前目录下创建一个目录，并且切换到该目录中，初始化项目生成 package.json 文件，并使用 yarn 安装 typescript，最后生成 tsconfig.json 文件<br>之后再创建的项目文件夹中新建 src 文件夹，并新建 index.ts 文件，用于当作项目的入口文件<br>在 index.ts 中写代码之前一定要在最上方加一句</p>
+<pre><code class="javascript">#!/usr/bin/env node
+</code></pre>
+<p>表示从环境变量中查找，使用 node 解释器运行<br>在 index.ts 中添加测试代码</p>
+<pre><code class="typescript">console.log(&quot;hello world&quot;);
+</code></pre>
+<h3 id="设置-tsconfig-json"><a href="#设置-tsconfig-json" class="headerlink" title="设置 tsconfig.json"></a>设置 tsconfig.json</h3><pre><code class="json">&#123;
+  &quot;compileOnSave&quot;: true,
+  &quot;compilerOptions&quot;: &#123;
+    &quot;target&quot;: &quot;ES2018&quot;,
+    &quot;module&quot;: &quot;commonjs&quot;,
+    &quot;moduleResolution&quot;: &quot;node&quot;,
+    &quot;experimentalDecorators&quot;: true,
+    &quot;emitDecoratorMetadata&quot;: true,
+    &quot;inlineSourceMap&quot;: true,
+    &quot;noImplicitThis&quot;: true,
+    &quot;noUnusedLocals&quot;: true,
+    &quot;stripInternal&quot;: true,
+    &quot;pretty&quot;: true,
+    &quot;declaration&quot;: true,
+    &quot;outDir&quot;: &quot;lib&quot;,
+    &quot;baseUrl&quot;: &quot;./&quot;,
+    &quot;paths&quot;: &#123;
+      &quot;*&quot;: [&quot;src/*&quot;]
+    &#125;
+  &#125;,
+  &quot;exclude&quot;: [&quot;lib&quot;, &quot;node_modules&quot;]
+&#125;
+</code></pre>
+<h3 id="安装其他依赖"><a href="#安装其他依赖" class="headerlink" title="安装其他依赖"></a>安装其他依赖</h3><ol>
+<li>@types&#x2F;node</li>
+</ol>
+<pre><code class="bash">yarn add @types/node -D
+</code></pre>
+<p>node ts 的类型</p>
+<ol start="2">
+<li>ts-node-dev</li>
+</ol>
+<pre><code class="bash">yarn add ts-node-dev -D
+</code></pre>
+<p>开发环境实时编译<br>在 package.json 的 scripts 中增加如下内容</p>
+<pre><code class="json">&#123;
+  &quot;scripts&quot;: &#123;
+    &quot;dev&quot;: &quot;ts-node-dev --respawn --transpile-only src/index.ts&quot;
+  &#125;
+&#125;
+</code></pre>
+<h2 id="团队合作方面"><a href="#团队合作方面" class="headerlink" title="团队合作方面"></a>团队合作方面</h2><p>在一个多人合作中，代码的质量可以说是非常重要的一个东西，特别是在多人协作的一个大型项目，代码质量一方面是代码规范另一方面是代码格式规范还有一方面是提交代码规范</p>
+<h3 id="ESLint"><a href="#ESLint" class="headerlink" title="ESLint"></a>ESLint</h3><p>初始化 ESLint</p>
+<pre><code class="bash">npx eslint --init
+</code></pre>
+<h3 id="Prettier"><a href="#Prettier" class="headerlink" title="Prettier"></a>Prettier</h3><pre><code class="bash">yarn add prettier -D
+</code></pre>
+<p>新建.prettierrc.js，这个文件是配置 Prettier 格式化代码的规则的，推荐配置如下：</p>
+<pre><code class="javascript">module.exports = &#123;
+  // 一行最多 80 字符
+  printWidth: 80,
+  // 使用 2 个空格缩进
+  tabWidth: 2,
+  // 不使用 tab 缩进，而使用空格
+  useTabs: false,
+  // 行尾需要有分号
+  semi: true,
+  // 使用单引号代替双引号
+  singleQuote: true,
+  // 对象的 key 仅在必要时用引号
+  quoteProps: &quot;as-needed&quot;,
+  // jsx 不使用单引号，而使用双引号
+  jsxSingleQuote: false,
+  // 末尾使用逗号
+  trailingComma: &quot;all&quot;,
+  // 大括号内的首尾需要空格 &#123; foo: bar &#125;
+  bracketSpacing: true,
+  // jsx 标签的反尖括号需要换行
+  jsxBracketSameLine: false,
+  // 箭头函数，只有一个参数的时候，也需要括号
+  arrowParens: &quot;always&quot;,
+  // 每个文件格式化的范围是文件的全部内容
+  rangeStart: 0,
+  rangeEnd: Infinity,
+  // 不需要写文件开头的 @prettier
+  requirePragma: false,
+  // 不需要自动在文件开头插入 @prettier
+  insertPragma: false,
+  // 使用默认的折行标准
+  proseWrap: &quot;preserve&quot;,
+  // 根据显示样式决定 html 要不要折行
+  htmlWhitespaceSensitivity: &quot;css&quot;,
+  // 换行符使用 lf
+  endOfLine: &quot;lf&quot;,
+&#125;;
+</code></pre>
+<p>由于 eslint 也有格式化代码的功能，所以需要安装一个第三方库解决冲突问题</p>
+<pre><code class="javascript">yarn add eslint-config-prettier -D
+</code></pre>
+<p>在.eslintrc.js<strong>文件的 extends 最后添加’prettier’，用于覆盖一部分 ESLint 规则</strong></p>
+<h3 id="提交代码规范"><a href="#提交代码规范" class="headerlink" title="提交代码规范"></a>提交代码规范</h3><p>运行下面命令之前要先初始化 git 仓库</p>
+<pre><code class="bash">yarn add @commitlint/config-conventional @commitlint/cli -D
+</code></pre>
+<p>生成配置文件</p>
+<pre><code class="bash">echo &quot;module.exports = &#123;extends: [&#39;@commitlint/config-conventional&#39;]&#125;&quot; &gt; commitlint.config.js
+</code></pre>
+<p>生成使用命令的方式生成 commitlint.config.js 文件，有可能会被系统误认为 utf-16 的编码格式，我们需要看一下这个文件，如果是 utf-16 编码的话改成 utf-8，否则会因为编码格式的原因导致 pretter 工作的时候出现乱码问题<br>生成提交代码的钩子函数</p>
+<pre><code class="javascript">npx mrm lint-staged
+</code></pre>
+<p>为 package.json 文件添加下列配置，这个会在 commit 阶段提交之前执行 lint-staged 命令</p>
+<pre><code class="json">&quot;husky&quot;: &#123;
+  &quot;hooks&quot;: &#123;
+    &quot;pre-commit&quot;: &quot;lint-staged&quot;
+  &#125;
+&#125;,
+</code></pre>
+<p>同时修改 lint-staged 的配置项，为其添加 ts<br>添加提交钩子</p>
+<pre><code class="bash">npx husky add .husky/commit-msg  &#39;npx --no -- commitlint --edit $&#123;1&#125;&#39;
+</code></pre>
+<h2 id="构建项目"><a href="#构建项目" class="headerlink" title="构建项目"></a>构建项目</h2><p>在 package.json 中添加以下命令</p>
+<pre><code class="json">&quot;build&quot;: &quot;rimraf lib &amp;&amp; tsc --build&quot;
+</code></pre>
+<h2 id="脚手架"><a href="#脚手架" class="headerlink" title="脚手架"></a>脚手架</h2><h3 id="脚手架常用工具包"><a href="#脚手架常用工具包" class="headerlink" title="脚手架常用工具包"></a>脚手架常用工具包</h3><ol>
+<li>commander 完整的 node.js 命令行解决方案</li>
+<li>chalk 装饰终端</li>
+<li>shelljs 在 node 中使用 unix sehll 命令</li>
+<li>inquirer 交互式命令行用户界面</li>
+<li>clear-console 清空命令行的当前界面</li>
+<li>ora 丰富命令行，添加一些图标、动效</li>
+<li>download-git-repo 使用 node 从 git 仓库下载代码</li>
+</ol>
+<p>安装工具</p>
+<pre><code class="shell">yarn add commander chalk shelljs inquirer clear-console
+</code></pre>
+<h3 id="本地调试"><a href="#本地调试" class="headerlink" title="本地调试"></a>本地调试</h3><p>在 package.json 中添加</p>
+<pre><code class="json">&quot;bin&quot;: &#123;
+  &quot;ts-cli&quot;: &quot;./lib/index.js&quot;
+&#125;
+</code></pre>
+<p>bin 表示命令(ts-cli)的可执行文件的位置，运行 yarn build 生成 lib 文件，接下来在项目根目录执行 npm link</p>
+<h3 id="npm-link-详解"><a href="#npm-link-详解" class="headerlink" title="npm link 详解"></a>npm link 详解</h3><p>该命令一般用于我们在平常写的一些包并没有发布，在我们本地运行测试，其主要作用是在全局文件中创建一个符号连接，这个连接指向 npm link 运行的地方，这样我们就可以在全局运行我们写的脚手架进行测试了</p>
+<p>完成上述操作后，我们可以运行命令来测试我们是否成功</p>
+<pre><code class="bash">ts-cli
+</code></pre>
+<p>如果在控制台输出 hello world 就表示搭建成功了</p>
+<h2 id="报错"><a href="#报错" class="headerlink" title="报错"></a>报错</h2><h3 id="husky-错误，输出乱码"><a href="#husky-错误，输出乱码" class="headerlink" title="husky 错误，输出乱码"></a>husky 错误，输出乱码</h3><p>这个原因是我们没有安装 husky，安装一下就行了</p>
+<pre><code class="bash">yarn add husky -D
+</code></pre>
+<p>到此我们就搭建好了基本的脚手架工具</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">6</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">1.2k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-11-24T11:32:00.903Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
