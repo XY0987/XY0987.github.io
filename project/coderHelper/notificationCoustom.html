@@ -1,0 +1,381 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>react+vite+electron实现托盘消息预览及自定义消息通知和图标闪烁问题 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="在写项目的时候想要实现一个类似qq那样的有消息时图标闪烁，鼠标移入图标时预览消息内容，百度了很多，但是大多数博客都是使用原生的Notification，于是就自己动手写一个。把这个封装成了一个类，可以使用原生的消息提醒也可以使用自定义的消息提醒。 原理解析实现鼠标移入托盘图标显示自定义内容，就是再开辟一个新的窗口，把其定位到图标的位置上方，然后开启一个定时器，隔一段时间去查询一下鼠标是否再图标上或">
+<meta property="og:type" content="website">
+<meta property="og:title" content="react+vite+electron实现托盘消息预览及自定义消息通知和图标闪烁问题">
+<meta property="og:url" content="http://example.com/project/coderHelper/notificationCoustom.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="在写项目的时候想要实现一个类似qq那样的有消息时图标闪烁，鼠标移入图标时预览消息内容，百度了很多，但是大多数博客都是使用原生的Notification，于是就自己动手写一个。把这个封装成了一个类，可以使用原生的消息提醒也可以使用自定义的消息提醒。 原理解析实现鼠标移入托盘图标显示自定义内容，就是再开辟一个新的窗口，把其定位到图标的位置上方，然后开启一个定时器，隔一段时间去查询一下鼠标是否再图标上或">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-11-26T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-11-27T08:39:01.899Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/coderHelper/notificationCoustom.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'react+vite+electron实现托盘消息预览及自定义消息通知和图标闪烁问题',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-11-27 16:39:01'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">react+vite+electron实现托盘消息预览及自定义消息通知和图标闪烁问题</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>在写项目的时候想要实现一个类似qq那样的有消息时图标闪烁，鼠标移入图标时预览消息内容，百度了很多，但是大多数博客都是使用原生的Notification，于是就自己动手写一个。把这个封装成了一个类，可以使用原生的消息提醒也可以使用自定义的消息提醒。</p>
+<h2 id="原理解析"><a href="#原理解析" class="headerlink" title="原理解析"></a>原理解析</h2><p>实现鼠标移入托盘图标显示自定义内容，就是再开辟一个新的窗口，把其定位到图标的位置上方，然后开启一个定时器，隔一段时间去查询一下鼠标是否再图标上或新窗口的位置，如果不在就销毁创建的窗口。electron在加载的时候是可以指定加载的hash路径的，所以我们就可以直接指定hash路径，来达到显示自定义内容的目的。（注意：这里为什么使用hash路径，其主要原因是打包后history路径有问题，会显示白屏）。<br>图标闪动就是开启一个定时器，隔一段时间去更换托盘的图标照片。</p>
+<p>另外需要额外注意的是，我们上边实现鼠标移入显示一个新窗口，监听的事件是托盘的mouse-move（鼠标移入）事件，为什么需要开启一个定时器去查询鼠标位置呢，一方面electron的托盘mouse-leave（鼠标移出）事件并不支持window电脑，另一方面是鼠标在新窗口中，我们仍要把它当作在托盘中，不能销毁新创建的窗口</p>
+<p>说了上边的注意事项，我们可以发现，其难点就是实现查询鼠标位置，去销毁窗口，还有就是使用mouse-move事件去实现mouse-move和mouse-leave两个事件</p>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><pre><code class="typescript">import &#123; is &#125; from &#39;@electron-toolkit/utils&#39;
+import &#123;
+  BrowserWindow,
+  BrowserWindowConstructorOptions,
+  Tray,
+  screen,
+  Notification,
+  NotificationConstructorOptions
+&#125; from &#39;electron&#39;
+import &#123; join &#125; from &#39;path&#39;
+
+export type NotifiType = &#39;Nomal&#39; | &#39;Custom&#39;
+//自定义通知配置
+interface OptionsType extends BrowserWindowConstructorOptions &#123;
+  // 显示的hash路径
+  hash?: string
+  // 是否图标闪动
+  isFlash?: boolean
+  // 是否自动关闭刷新
+  removeClose?: boolean
+&#125;
+// electron自带通知配置
+interface NomalOptionsType extends NotificationConstructorOptions &#123;&#125;
+
+interface flashOptions &#123;
+  time: number //闪动的时间间隔
+&#125;
+// 闪动图标，关闭函数
+interface flashReturn &#123;
+  close: () =&gt; void
+&#125;
+
+/*
+需要传递Tray
+内置提醒，配置对象，点击执行函数
+自定义提醒（创建一个新窗口），是否闪动图标，新窗口配置对象，新窗口显示的路径
+*/
+// 默认显示图标
+const DEFAULTIMGURL = &#39;../../resources/icon.png&#39;
+// 突变闪动时切换的图标
+const FLICKERIMGURL = &#39;../../resources/empty.png&#39;
+// 默认自定义通知配置
+const defaultOptions: OptionsType = &#123;
+  width: 300,
+  height: 100,
+  show: false,
+  frame: false,
+  alwaysOnTop: true,
+  isFlash: true
+&#125;
+// 默认系统通知配置
+const defaultNomalOptions: NomalOptionsType = &#123;
+  title: &#39;测试&#39;,
+  icon: join(__dirname, DEFAULTIMGURL),
+  body: &#39;测试body&#39;
+&#125;
+// 用于记录监听函数，用于实现移除监听事件，避免重复监听
+let listenerFn: any = null
+export class NotifiCoustom &#123;
+  // 是否离开的定时器
+  protected leaveInter: any
+  // 闪动图标的定时器
+  protected flashInter: any
+  protected trayBounds: any
+  protected point: any
+  protected isLeave: boolean = true
+  protected tray: Tray
+  protected messagePreview: any
+  protected options: OptionsType | NomalOptionsType = defaultOptions
+  constructor(tray: Tray) &#123;
+    this.tray = tray
+  &#125;
+  // 显示
+  show(&#123;
+    type,
+    options,
+    clickFn
+  &#125;: &#123;
+    type: NotifiType
+    options?: OptionsType
+    clickFn?: (event: any) =&gt; void
+  &#125;) &#123;
+    if (type === &#39;Nomal&#39;) &#123;
+      this.options = options ? options : defaultNomalOptions
+      this.nomalNotification(clickFn)
+    &#125; else &#123;
+      this.options = options ? options : defaultOptions
+      // 执行自定义(自定义图标闪动是固定的500ms)
+      this.customNotification()
+    &#125;
+  &#125;
+
+  // 闪动图标
+  flashIcon(options: flashOptions): flashReturn &#123;
+    let count = 0
+    if (this.flashInter) &#123;
+      clearInterval(this.flashInter)
+    &#125;
+    this.flashInter = setInterval(() =&gt; &#123;
+      count += 1
+      if (count % 2 === 0) &#123;
+        this.tray.setImage(join(__dirname, DEFAULTIMGURL))
+      &#125; else &#123;
+        this.tray.setImage(join(__dirname, FLICKERIMGURL))
+      &#125;
+    &#125;, options.time)
+
+    return &#123; close: this.close.bind(this) &#125;
+  &#125;
+  // 关闭闪动
+  close() &#123;
+    clearInterval(this.flashInter)
+    this.tray.setImage(join(__dirname, DEFAULTIMGURL))
+  &#125;
+  // 移除监听事件
+  removeListener() &#123;
+    this.tray.removeListener(&#39;mouse-move&#39;, listenerFn)
+    listenerFn = null
+  &#125;
+
+  private nomalNotification(clickFn?: (event: any) =&gt; void) &#123;
+    new Notification(this.options)
+      .on(&#39;click&#39;, (event) =&gt; &#123;
+        clickFn &amp;&amp; clickFn(event)
+      &#125;)
+      .show()
+  &#125;
+
+  private customNotification() &#123;
+    this.customInit()
+  &#125;
+
+  private listener() &#123;
+    // 鼠标移入停止闪烁
+    this.close()
+    if (this.isLeave) &#123;
+      this.messagePreview = new BrowserWindow(this.options)
+      if (is.dev &amp;&amp; process.env[&#39;ELECTRON_RENDERER_URL&#39;]) &#123;
+        this.messagePreview.loadURL(
+          `$&#123;process.env[&#39;ELECTRON_RENDERER_URL&#39;]&#125;/#$&#123;(this.options as OptionsType).hash&#125;`
+        )
+      &#125; else &#123;
+        this.messagePreview.loadFile(join(__dirname, &#39;../renderer/index.html&#39;), &#123;
+          hash: (this.options as OptionsType).hash
+        &#125;)
+      &#125;
+      const position = this.tray.getBounds()
+      this.messagePreview.setPosition(position.x, position.y - 100)
+      this.messagePreview.show()
+      //触发mouse-enter
+      this.isLeave = false
+      this.checkTrayLeave()
+    &#125;
+  &#125;
+
+  private customInit() &#123;
+    if ((this.options as OptionsType).isFlash) &#123;
+      this.flashIcon(&#123; time: 500 &#125;)
+    &#125;
+    // 监听过了，不再监听
+    if (listenerFn) &#123;
+      this.close()
+      return
+    &#125;
+    listenerFn = this.listener.bind(this)
+    this.tray.on(&#39;mouse-move&#39;, listenerFn)
+  &#125;
+
+  private checkTrayLeave() &#123;
+    clearInterval(this.leaveInter)
+    this.leaveInter = setInterval(() =&gt; &#123;
+      this.trayBounds = this.tray.getBounds()
+      this.point = screen.getCursorScreenPoint()
+      // 鼠标移出托盘
+      if (
+        !(
+          this.trayBounds.x &lt; this.point.x &amp;&amp;
+          this.trayBounds.y &lt; this.point.y &amp;&amp;
+          this.point.x &lt; this.trayBounds.x + this.trayBounds.width &amp;&amp;
+          this.point.y &lt; this.trayBounds.y + this.trayBounds.height
+        )
+      ) &#123;
+        // 鼠标移除自定义窗口的位置
+        if (
+          this.point.x - this.trayBounds.x &lt; 0 ||
+          this.point.x - this.trayBounds.x &gt; (this.options as any).width ||
+          this.point.y &lt; this.trayBounds.y - (this.options as any).height
+        ) &#123;
+          this.isLeave = true
+          if ((this.options as OptionsType).removeClose) &#123;
+            this.removeListener()
+          &#125;
+          this.messagePreview.close()
+          clearInterval(this.leaveInter)
+        &#125;
+      &#125;
+    &#125;, 100)
+  &#125;
+&#125;
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">6</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">1.3k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-11-27T08:44:41.288Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
