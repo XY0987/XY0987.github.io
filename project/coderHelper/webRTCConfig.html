@@ -1,0 +1,889 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>webRtc实现音视频直播——附带脚手架创建demo项目查看 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="之前在写大创项目的时候，当时后端使用的是腾讯云的音视频服务，当时就没有研究过多音视频直播的一些东西，算是与音视频的第一次邂逅吧，虽然没自己去实现这种方法，但是也对音视频直播的实现有了一个大概的思路，就是拉流和推流而腾讯云的音视频直播服务是作为一个转流的一个服务器。之后自己申请的大创项目是自习直播平台，就想着既然是直播平台，直播就自己去实现吧，当时和后端研究了使用websocket去写，前端录屏去分">
+<meta property="og:type" content="website">
+<meta property="og:title" content="webRtc实现音视频直播——附带脚手架创建demo项目查看">
+<meta property="og:url" content="http://example.com/project/coderHelper/webRTCConfig.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="之前在写大创项目的时候，当时后端使用的是腾讯云的音视频服务，当时就没有研究过多音视频直播的一些东西，算是与音视频的第一次邂逅吧，虽然没自己去实现这种方法，但是也对音视频直播的实现有了一个大概的思路，就是拉流和推流而腾讯云的音视频直播服务是作为一个转流的一个服务器。之后自己申请的大创项目是自习直播平台，就想着既然是直播平台，直播就自己去实现吧，当时和后端研究了使用websocket去写，前端录屏去分">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-12-07T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-08T11:09:55.096Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/coderHelper/webRTCConfig.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'webRtc实现音视频直播——附带脚手架创建demo项目查看',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-12-08 19:09:55'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">webRtc实现音视频直播——附带脚手架创建demo项目查看</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>之前在写大创项目的时候，当时后端使用的是腾讯云的音视频服务，当时就没有研究过多音视频直播的一些东西，算是与音视频的第一次邂逅吧，虽然没自己去实现这种方法，但是也对音视频直播的实现有了一个大概的思路，就是拉流和推流而腾讯云的音视频直播服务是作为一个转流的一个服务器。<br>之后自己申请的大创项目是自习直播平台，就想着既然是直播平台，直播就自己去实现吧，当时和后端研究了使用websocket去写，前端录屏去分段发送，然后后端做一个转发，最后前端在合并显示，这个最终实现的效果也不好，也研究了使用RTMP去写，最后因为我的服务器是2核2G的，有点拉跨，就转而使用腾讯云的音视频直播服务了。也算是尝试了音视频直播自己去实现。<br>截至到目前为止，我使用的就是WebRtc去实现音视频直播，使用node作为一个信令服务器。由于是浏览器原生支持的API，所以在测试功能的时候也没有明显的卡顿。</p>
+<h2 id="音视频直播的前置知识"><a href="#音视频直播的前置知识" class="headerlink" title="音视频直播的前置知识"></a>音视频直播的前置知识</h2><p>音视频直播其核心就是推流和拉流</p>
+<blockquote>
+<p>推流就是讲开直播的一方把直播音视频画面推流到服务器上，而拉流是将服务器上的音视频画面给拉取到本地，然后去播放</p>
+</blockquote>
+<p>这个环节主要讲解的是前置知识，上边也说过了直播最重要的就是推流和拉流，那么我们就需要去了解跟我们平常推流密不可分的一个API—Navigator，这个是获取计算机的摄像头或麦克风。</p>
+<h3 id="注意事项"><a href="#注意事项" class="headerlink" title="注意事项"></a><strong>注意事项</strong></h3><p>摄像头和麦克风属于用户的隐私设备，而浏览器为了保护用户的隐私，所以，获取摄像头和麦克风的一些设备是有前提的</p>
+<ol>
+<li>以https协议开头</li>
+<li>wss协议开头</li>
+<li>localhost</li>
+<li>127.0.0.1</li>
+<li>file开头的</li>
+<li>chrome插件打开的地址</li>
+</ol>
+<p>除了以上条件以外，我们如果执行以下获取音视频设备的API是会报错，因为navigator.mediaDevices.getUserMedia会是undefined</p>
+<h3 id="getUserMedia"><a href="#getUserMedia" class="headerlink" title="getUserMedia()"></a>getUserMedia()</h3><ul>
+<li>navigator.mediaDevices.getUserMedia获取设备上的音频设备和摄像头设备</li>
+</ul>
+<pre><code class="javascript">function handleError(error) &#123;
+  alert(&quot;摄像头无法正常使用，请检查是否占用或缺失&quot;)
+  console.error(&#39;navigator.MediaDevices.getUserMedia error: &#39;, error.message, error.name);
+&#125;
+/**
+ * @author suke
+ * device list init 
+ */
+function initInnerLocalDevice()&#123;
+  const that  = this
+  var localDevice = &#123;
+    audioIn:[],
+    videoIn: [],
+    audioOut: []
+
+  &#125;
+  let constraints = &#123; video:true, audio: true &#125;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) &#123;
+    console.log(&quot;浏览器不支持获取媒体设备&quot;);
+    return;
+  &#125;
+  navigator.mediaDevices.getUserMedia(constraints)
+    .then(function(stream) &#123;
+      stream.getTracks().forEach(trick =&gt; &#123;
+        trick.stop()
+      &#125;)
+      // 获取所有的音视频设备
+      navigator.mediaDevices.enumerateDevices()
+        .then(function(devices) &#123;
+          devices.forEach(function(device) &#123;
+            let obj = &#123;id:device.deviceId, kind:device.kind, label:device.label&#125;
+            if(device.kind === &#39;audioinput&#39;)&#123;
+              if(localDevice.audioIn.filter(e=&gt;e.id === device.deviceId).length === 0)&#123;
+                localDevice.audioIn.push(obj)
+              &#125;
+            &#125;if(device.kind === &#39;audiooutput&#39;)&#123;
+              if(localDevice.audioOut.filter(e=&gt;e.id === device.deviceId).length === 0)&#123;
+                localDevice.audioOut.push(obj)
+              &#125;
+            &#125;else if(device.kind === &#39;videoinput&#39; )&#123;
+              if(localDevice.videoIn.filter(e=&gt;e.id === device.deviceId).length === 0)&#123;
+                localDevice.videoIn.push(obj)
+              &#125;
+            &#125;
+          &#125;);
+        &#125;)
+        .catch(handleError);
+
+    &#125;)
+    .catch(handleError);
+&#125;
+</code></pre>
+<h4 id="指定分辨率"><a href="#指定分辨率" class="headerlink" title="指定分辨率"></a>指定分辨率</h4><p>我们上边使用的constraints是{ video:true, audio: true }，除了这种参数，我们还可以获取流媒体的时候指定分辨率</p>
+<pre><code class="javascript">//--------------------①:1--------------------------
+&#123;
+  audio: true,
+    video: &#123;
+    width: &#123; min: 320, ideal: 1280, max: 1920 &#125;,
+    height: &#123; min: 240, ideal: 720, max: 1080 &#125;
+  &#125;
+&#125;
+//--------------------②:2--------------------------
+&#123;
+  audio: true,
+    video: &#123; width: 720, height: 480&#125;
+&#125;
+</code></pre>
+<h4 id="指定前置摄像头或后置摄像头-移动端可用"><a href="#指定前置摄像头或后置摄像头-移动端可用" class="headerlink" title="指定前置摄像头或后置摄像头(移动端可用)"></a>指定前置摄像头或后置摄像头(移动端可用)</h4><pre><code class="javascript">// 前置摄像头
+&#123; audio: true, video: &#123; facingMode: &quot;user&quot; &#125; &#125;
+// 后置摄像头
+&#123; audio: true, video: &#123; facingMode: &#123; exact: &quot;environment&quot; &#125; &#125; &#125;
+</code></pre>
+<h4 id="指定FPS"><a href="#指定FPS" class="headerlink" title="指定FPS"></a>指定FPS</h4><blockquote>
+<p>FPS：指定视频一秒显示多少张图片</p>
+</blockquote>
+<pre><code class="javascript">const constraints = &#123;
+  audio: true,
+  video: &#123;
+    width:1920,
+    height:1080,
+    frameRate: &#123; ideal: 10, max: 15 &#125;
+  &#125;
+&#125;;
+</code></pre>
+<h3 id="getDisplayMedia"><a href="#getDisplayMedia" class="headerlink" title="getDisplayMedia()"></a>getDisplayMedia()</h3><p>用于分享桌面</p>
+<pre><code class="javascript">async function getShareMedia()&#123;
+  const constraints = &#123;
+    video:&#123;width:1920,height:1080&#125;,
+    audio:false
+  &#125;;
+  if (window.stream) &#123;
+    window.stream.getTracks().forEach(track =&gt; &#123;
+      track.stop();
+    &#125;);
+  &#125;
+  return await navigator.mediaDevices.getDisplayMedia(constraints).catch(handleError);
+&#125;
+</code></pre>
+<p>constraints也同getUserMedia()方法的配置对象</p>
+<h3 id="常见的需求的使用"><a href="#常见的需求的使用" class="headerlink" title="常见的需求的使用"></a>常见的需求的使用</h3><h4 id="共享屏幕"><a href="#共享屏幕" class="headerlink" title="共享屏幕"></a>共享屏幕</h4><pre><code class="javascript">const startDesk = async () =&gt; &#123;
+  try &#123;
+    const stream = await navigator.mediaDevices.getDisplayMedia(&#123;
+      audio: true,
+      video: true
+    &#125;)
+    const audioTrack = await navigator.mediaDevices.getUserMedia(&#123; audio: true &#125;);
+    // 添加声音轨道
+    stream.addTrack(audioTrack.getAudioTracks()[0]);
+    videoDesk.srcObject = stream
+  &#125; catch (error) &#123;
+    console.log(error);
+  &#125;
+&#125;
+</code></pre>
+<h4 id="共享摄像头"><a href="#共享摄像头" class="headerlink" title="共享摄像头"></a>共享摄像头</h4><pre><code class="javascript">const startSchema = () =&gt; &#123;
+  navigator.mediaDevices.getUserMedia(&#123;
+    // 除了这些还可以指定分辨率，以及前置摄像头和后者摄像头，FPS
+    audio: true,
+    video: true
+  &#125;)
+    .then((stream) =&gt; &#123;
+      video.srcObject = stream;
+    &#125;)
+    .catch(err =&gt; &#123;
+      console.log(err);
+    &#125;)
+&#125;
+</code></pre>
+<h4 id="摄像头视频流和屏幕视频流合并"><a href="#摄像头视频流和屏幕视频流合并" class="headerlink" title="摄像头视频流和屏幕视频流合并"></a>摄像头视频流和屏幕视频流合并</h4><p>摄像头视频流和屏幕视频流合并可以借助<a target="_blank" rel="noopener" href="https://github.com/t-mullen/video-stream-merger">合并视频流</a>来实现</p>
+<pre><code class="javascript">async function assignSchema() &#123;
+  let localstream = await await navigator.mediaDevices.getUserMedia(&#123;
+    video: &#123;
+      width: 1920,
+      height: 1080,
+      frameRate: &#123; ideal: 15, max: 24 &#125;,
+    &#125;,
+  &#125;)
+  let shareStream = await await navigator.mediaDevices.getDisplayMedia(&#123;
+    video: &#123; width: 1920, height: 1080 &#125;,
+    audio: false,
+  &#125;)
+  let mergerVideo = new VideoStreamMerger(&#123; fps: 24, clearRect: true &#125;)
+  mergerVideo.addStream(shareStream, &#123;
+    x: 0,
+    y: 0,
+    width: mergerVideo.width,
+    height: mergerVideo.height,
+    mute: true,
+  &#125;)
+  mergerVideo.addStream(localstream, &#123;
+    x: 0,
+    y: 0,
+    width: 200,
+    height: 150,
+    mute: false,
+  &#125;);
+  mergerVideo.start()
+  videoSchema.srcObject = mergerVideo.result
+&#125;
+</code></pre>
+<h4 id="完整案例"><a href="#完整案例" class="headerlink" title="完整案例"></a>完整案例</h4><pre><code class="html">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;en&quot;&gt;
+
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot;&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+    &lt;title&gt;Document&lt;/title&gt;
+  &lt;/head&gt;
+
+  &lt;body&gt;
+    &lt;div style=&quot;display: flex;margin-bottom: 20px;&quot;&gt;
+      &lt;!-- 显示头像 --&gt;
+      头像
+      &lt;video src=&quot;&quot; id=&quot;video&quot; controls width=&quot;500px&quot; height=&quot;500px&quot; style=&quot;margin-right: 20px;&quot;&gt;&lt;/video&gt;
+      &lt;!-- 显示共享桌面 --&gt;
+      桌面
+      &lt;video src=&quot;&quot; id=&quot;videoDesk&quot; controls width=&quot;500px&quot; height=&quot;500px&quot;&gt;&lt;/video&gt;
+    &lt;/div&gt;
+    &lt;button onclick=&quot;startSchema()&quot;&gt;开启摄像头&lt;/button&gt;
+    &lt;button onclick=&quot;startDesk()&quot;&gt;共享桌面&lt;/button&gt;
+    &lt;button onclick=&quot;assignSchema()&quot;&gt;合并视频流&lt;/button&gt;
+    &lt;video src=&quot;&quot; id=&quot;videoSchema&quot; controls width=&quot;500px&quot; height=&quot;500px&quot;&gt;&lt;/video&gt;
+    &lt;!-- 这里引入了合并的第三方库 --&gt;
+    &lt;script src=&quot;./video-stream-merger.js&quot;&gt;&lt;/script&gt;
+    &lt;script&gt;
+      const video = document.getElementById(&#39;video&#39;)
+      const videoDesk = document.getElementById(&#39;videoDesk&#39;)
+      const videoSchema = document.getElementById(&#39;videoSchema&#39;)
+      const startSchema = () =&gt; &#123;
+        navigator.mediaDevices.getUserMedia(&#123;
+          // 除了这些还可以指定分辨率，以及前置摄像头和后者摄像头，FPS
+          audio: true,
+          video: true
+        &#125;)
+          .then((stream) =&gt; &#123;
+            video.srcObject = stream;
+          &#125;)
+          .catch(err =&gt; &#123;
+            console.log(err);
+          &#125;)
+      &#125;
+      const startDesk = async () =&gt; &#123;
+        try &#123;
+          const stream = await navigator.mediaDevices.getDisplayMedia(&#123;
+            audio: true,
+            video: true
+          &#125;)
+          const audioTrack = await navigator.mediaDevices.getUserMedia(&#123; audio: true &#125;);
+          // 添加声音轨道
+          stream.addTrack(audioTrack.getAudioTracks()[0]);
+          videoDesk.srcObject = stream
+        &#125; catch (error) &#123;
+          console.log(error);
+        &#125;
+      &#125;
+
+      async function assignSchema() &#123;
+        let audioId = null
+        let videoId = null
+        let localstream = await await navigator.mediaDevices.getUserMedia(&#123;
+          audio: &#123; deviceId: audioId ? &#123; exact: audioId &#125; : undefined &#125;,
+          video: &#123;
+            deviceId: videoId ? &#123; exact: videoId &#125; : undefined,
+            width: 1920,
+            height: 1080,
+            frameRate: &#123; ideal: 15, max: 24 &#125;,
+          &#125;,
+        &#125;)
+        let shareStream = await await navigator.mediaDevices.getDisplayMedia(&#123;
+          video: &#123; width: 1920, height: 1080 &#125;,
+          audio: false,
+        &#125;)
+        let mergerVideo = new VideoStreamMerger(&#123; fps: 24, clearRect: true &#125;)
+        mergerVideo.addStream(shareStream, &#123;
+          x: 0,
+          y: 0,
+          width: mergerVideo.width,
+          height: mergerVideo.height,
+          mute: true,
+        &#125;)
+        mergerVideo.addStream(localstream, &#123;
+          x: 0,
+          y: 0,
+          width: 200,
+          height: 150,
+          mute: false,
+        &#125;);
+        mergerVideo.start()
+        videoSchema.srcObject = mergerVideo.result
+      &#125;
+    &lt;/script&gt;
+  &lt;/body&gt;
+
+&lt;/html&gt;
+</code></pre>
+<h3 id="PeerConnection"><a href="#PeerConnection" class="headerlink" title="PeerConnection"></a>PeerConnection</h3><p>上边我们了解了推流的的前置操作，接下来我们就来了解一下WebRtc如何将两个浏览器关联起来，及视频的推流和拉流。</p>
+<blockquote>
+<p><strong>PeerConnection</strong>是整个WebRtc通话最重要的一部分，另外也需要注意一点就是虽然WebRtc已经成为WebRtc的标准了，但是并不是所有的浏览器都满足这些标准的，因为国内很多的浏览器内核都是基于谷歌内核，因此WebRtc在大多数浏览器中也是兼容的。常用的兼容WebRtc的浏览器：Chrome、360、Edge、火狐、Safari</p>
+</blockquote>
+<p>为了兼容不同的浏览器我们可以使用以下方法来获取</p>
+<pre><code class="javascript">var PeerConnection = window.RTCPeerConnection ||
+  window.mozRTCPeerConnection ||
+  window.webkitRTCPeerConnection;
+</code></pre>
+<h4 id="核心方法："><a href="#核心方法：" class="headerlink" title="核心方法："></a>核心方法：</h4><ul>
+<li>addIceCandidate()：保存ICE候选信息，双方协商信息，持续整个建立通信过程，直到没有更多候选信息</li>
+<li>addTrack()：添加音视频轨道</li>
+<li>createAnswer()：创建应答信令</li>
+<li>createDataChannel()：创建消息信道，建立WebRtc通信之后，就可以P2P直接发送文本信息，无需中转服务器</li>
+<li>createOffer()：创建初始信令</li>
+<li>setRemoteDescription()：保存远端发送来的信令</li>
+<li>setLocalDescription()：保存自己端创建的信令</li>
+</ul>
+<p>除了上述方法，还有一些监听函数，这些监听函数用于监听远程发送过来的信息</p>
+<ul>
+<li>ondatachannel：创建datachannel后监听回调以及P2P消息监听</li>
+<li>ontrack：监听远程媒体轨道即远端音视频信息</li>
+<li>onicecandidate：ICE候选监听</li>
+</ul>
+<h3 id="WebRtc的会话流程"><a href="#WebRtc的会话流程" class="headerlink" title="WebRtc的会话流程"></a>WebRtc的会话流程</h3><p>以A呼叫B</p>
+<ol>
+<li>A呼叫B一般通过WebSocket（或其他实时通信协议）来让对方能接收到信息</li>
+<li>B接受应答，A和B开始初始化PeerConnection实例，用于关联A和B的会话信息</li>
+<li>A调用createOffer创建信令，同时通过setLocalDescription方法在本地实例PeerConnection中存储一份</li>
+<li>A通过信令服务器将信令转发给B</li>
+<li>B接受到A的信令之后，调用setRemoteDescription将器存储在初始化好的PeerConnection中</li>
+<li>B调用createAnswer创建应答，并调用setLocalDescription存储在本地PeerConnection实例中</li>
+<li>B将自己创建的应答通过服务器转发给A</li>
+<li>A调用setRemoteDescription将B的应答存储在本地PeerConnection实例中</li>
+<li>完成通话</li>
+</ol>
+<h2 id="音视频会议实践"><a href="#音视频会议实践" class="headerlink" title="音视频会议实践"></a>音视频会议实践</h2><h3 id="会议后台——信令服务器"><a href="#会议后台——信令服务器" class="headerlink" title="会议后台——信令服务器"></a>会议后台——信令服务器</h3><p>可以全局或者本地下载我编写的一个脚手架来查看</p>
+<pre><code class="bash">yarn add @xy0711/xytem -g
+</code></pre>
+<pre><code class="bash">xytem demo
+</code></pre>
+<p>创建对应的会议后台和前台模板</p>
+<h3 id="多对多具体代码"><a href="#多对多具体代码" class="headerlink" title="多对多具体代码"></a>多对多具体代码</h3><p>下载第三方库</p>
+<pre><code class="bash">yarn add socket.io-client
+</code></pre>
+<pre><code class="typescript">import &#123; io &#125; from &quot;socket.io-client&quot;;
+// 合并视频流的第三方库
+import &#123; VideoStreamMerger &#125; from &quot;./mergeStream&quot;;
+
+const $serverSocketUrl = &quot;ws://127.0.0.1:18080&quot;;
+
+function handleError(error: Error) &#123;
+  // alert(&quot;摄像头无法正常使用，请检查是否占用或缺失&quot;)
+  console.error(
+    &quot;navigator.MediaDevices.getUserMedia error: &quot;,
+    error.message,
+    error.name,
+  );
+&#125;
+
+var PeerConnection = window.RTCPeerConnection;
+
+// 存储所有的建立连接（一对多）
+var RtcPcMaps = new Map();
+
+class CallupMany &#123;
+  formInline: any = &#123;&#125;;
+  localStream: any;
+  linkSocket: any;
+  centerDialogVisible: boolean = false;
+  roomUserList: any[] = [];
+  rtcPcParams = &#123;
+    iceServers: [],
+  &#125;;
+  mediaStatus = &#123;
+    audio: false,
+    video: false,
+  &#125;;
+  setUserList: any;
+  mergerVideo: VideoStreamMerger | null = null;
+
+  // 进入会议初始化
+  init(nickname: any, roomId: any, userId: any, setUserList: any) &#123;
+    this.formInline.nickname = nickname;
+    this.formInline.roomId = roomId;
+    this.formInline.userId = userId;
+    this.setUserList = setUserList;
+    this.clientWS();
+  &#125;
+  // 连接到ws(初始化ws监听事件)
+  clientWS() &#123;
+    const that = this;
+    this.linkSocket = io($serverSocketUrl, &#123;
+      reconnectionDelayMax: 10000,
+      transports: [&quot;websocket&quot;],
+      query: that.formInline,
+    &#125;);
+    this.linkSocket.on(&quot;connect&quot;, async (_e: any) =&gt; &#123;
+      that.centerDialogVisible = false; //加入后
+      //获取房间用户列表（新用户进房间后需要和房间内每个用户进行RTC连接 后进入着主动push offer）
+      setTimeout(() =&gt; &#123;
+        that.linkSocket.emit(&quot;roomUserList&quot;, &#123;
+          roomId: that.formInline.roomId,
+        &#125;);
+      &#125;, 500);
+    &#125;);
+    // 用户列表(加入会议的所有人)
+    this.linkSocket.on(&quot;roomUserList&quot;, (e: any) =&gt; &#123;
+      that.roomUserList = e;
+      that.setUserList(e);
+      //拿到房间用户列表之后开始建立RTC连接
+      that.initMeetingRoomPc();
+    &#125;);
+    // 接收到消息
+    this.linkSocket.on(&quot;msg&quot;, async (e: any) =&gt; &#123;
+      if (e[&quot;type&quot;] === &quot;join&quot; || e[&quot;type&quot;] === &quot;leave&quot;) &#123;
+        const userId = e[&quot;data&quot;][&quot;userId&quot;];
+        const nickname = e[&quot;data&quot;][&quot;nickname&quot;];
+        // 加入房间
+        if (e[&quot;type&quot;] === &quot;join&quot;) &#123;
+          that.roomUserList.push(&#123;
+            userId: userId,
+            nickname: nickname,
+            roomId: that.formInline.roomId,
+          &#125;);
+        &#125; else &#123;
+          // 离开房间
+          RtcPcMaps.delete(that.formInline.userId + &quot;-&quot; + userId);
+          that.removeChildVideoDom(userId);
+        &#125;
+      &#125;
+      // 收到信令
+      if (e[&quot;type&quot;] === &quot;offer&quot;) &#123;
+        await that.onRemoteOffer(e[&quot;data&quot;][&quot;userId&quot;], e[&quot;data&quot;][&quot;offer&quot;]);
+      &#125;
+      // 收到应答
+      if (e[&quot;type&quot;] === &quot;answer&quot;) &#123;
+        await that.onRemoteAnswer(e[&quot;data&quot;][&quot;userId&quot;], e[&quot;data&quot;][&quot;answer&quot;]);
+      &#125;
+      // 收到候选信息
+      if (e[&quot;type&quot;] === &quot;candidate&quot;) &#123;
+        that.onCandiDate(e[&quot;data&quot;][&quot;userId&quot;], e[&quot;data&quot;][&quot;candidate&quot;]);
+      &#125;
+    &#125;);
+    // ws连接出现错误
+    this.linkSocket.on(&quot;error&quot;, (e: any) =&gt; &#123;
+      console.log(&quot;error&quot;, e);
+    &#125;);
+  &#125;
+
+  // 共享桌面
+  async shareDesk() &#123;
+    this.mergerVideo?.destroy();
+    this.mergerVideo = null;
+    const newStream = await this.getLocalDeskMedia();
+    this.localStream = newStream;
+    this.replaceRemoteStream(newStream);
+  &#125;
+  // 开启摄像头(合并后的音视频)
+  async shareAssignSchema() &#123;
+    this.mergerVideo?.destroy();
+    this.mergerVideo = null;
+    const newStream = await this.getAssignMedia();
+    this.localStream = newStream;
+    this.replaceRemoteStream(newStream);
+  &#125;
+  // 显示默认视频流(只有摄像头)
+  async shareDefault() &#123;
+    this.mergerVideo?.destroy();
+    this.mergerVideo = null;
+    const newStream = await this.getLocalUserMedia();
+    this.localStream = newStream;
+    this.replaceRemoteStream(newStream);
+  &#125;
+
+  // 获取摄像头设备信息
+  async getLocalUserMedia() &#123;
+    const audioId = this.formInline.audioInId;
+    const videoId = this.formInline.videoId;
+    const constraints = &#123;
+      audio: &#123; deviceId: audioId ? &#123; exact: audioId &#125; : undefined &#125;,
+      video: &#123;
+        deviceId: videoId ? &#123; exact: videoId &#125; : undefined,
+        width: 640,
+        height: 480,
+        frameRate: &#123; ideal: 20, max: 24 &#125;,
+      &#125;,
+    &#125;;
+    if ((window as any).stream) &#123;
+      (window as any).stream.getTracks().forEach((track: any) =&gt; &#123;
+        track.stop();
+      &#125;);
+    &#125;
+    return await navigator.mediaDevices
+      .getUserMedia(constraints)
+      .catch(handleError);
+  &#125;
+  // 获取共享桌面视频流
+  async getLocalDeskMedia() &#123;
+    const stream = await navigator.mediaDevices.getDisplayMedia(&#123;
+      audio: true,
+      video: true,
+    &#125;);
+    const audioTrack = await navigator.mediaDevices.getUserMedia(&#123;
+      audio: true,
+    &#125;);
+    // 添加声音轨道
+    stream.addTrack(audioTrack.getAudioTracks()[0]);
+    return stream;
+  &#125;
+  // 获取合并后的视频流
+  async getAssignMedia() &#123;
+    const audioId = this.formInline.audioInId;
+    const videoId = this.formInline.videoId;
+    let localstream = await navigator.mediaDevices.getUserMedia(&#123;
+      audio: &#123; deviceId: audioId ? &#123; exact: audioId &#125; : undefined &#125;,
+      video: &#123;
+        deviceId: videoId ? &#123; exact: videoId &#125; : undefined,
+        width: 1920,
+        height: 1080,
+        frameRate: &#123; ideal: 15, max: 24 &#125;,
+      &#125;,
+    &#125;);
+    let shareStream = await navigator.mediaDevices.getDisplayMedia(&#123;
+      video: &#123; width: 1920, height: 1080 &#125;,
+      audio: false,
+    &#125;);
+    this.mergerVideo = new VideoStreamMerger(&#123; fps: 24, clearRect: true &#125;);
+    this.mergerVideo.addStream(shareStream, &#123;
+      x: 0,
+      y: 0,
+      width: this.mergerVideo.width,
+      height: this.mergerVideo.height,
+      mute: true,
+    &#125;);
+    this.mergerVideo.addStream(localstream, &#123;
+      x: 0,
+      y: 0,
+      width: 200,
+      height: 150,
+      mute: false,
+    &#125;);
+    this.mergerVideo.start();
+    return this.mergerVideo.result;
+  &#125;
+
+  // 切换远程流
+  async replaceRemoteStream(newStream: any) &#123;
+    // 先关闭原始的音视频流
+    if ((window as any).stream) &#123;
+      (window as any).stream.getTracks().forEach((track: any) =&gt; &#123;
+        track.stop();
+      &#125;);
+    &#125;
+    await this.setDomVideoStream(&quot;localdemo01&quot;, newStream);
+    const [videoTrack] = newStream.getVideoTracks();
+    //多个RTC关联
+    RtcPcMaps.forEach((e) =&gt; &#123;
+      const senders = e.getSenders();
+      const send = senders.find((s: any) =&gt; s.track.kind === &quot;video&quot;);
+      send.replaceTrack(videoTrack);
+    &#125;);
+  &#125;
+  // 遍历建立联系
+  async initMeetingRoomPc() &#123;
+    const that = this;
+    if (!this.localStream) &#123;
+      this.localStream = await this.getLocalUserMedia();
+      //开始静音和关闭摄像头
+      this.initMediaStatus();
+    &#125;
+    this.setDomVideoStream(&quot;localdemo01&quot;, this.localStream);
+    const localUid = this.formInline.userId;
+    let others = this.roomUserList
+      .filter((e: any) =&gt; e.userId !== localUid)
+      .map((e: any, index: any) =&gt; &#123;
+        return e.userId;
+      &#125;);
+    // 遍历其他用户，建立连接
+    others.forEach(async (uid: any) =&gt; &#123;
+      let pcKey = localUid + &quot;-&quot; + uid;
+      let pc = RtcPcMaps.get(pcKey);
+      if (!pc) &#123;
+        pc = new PeerConnection(that.rtcPcParams);
+        RtcPcMaps.set(pcKey, pc);
+      &#125;
+      for (const track of that.localStream.getTracks()) &#123;
+        pc.addTrack(track);
+      &#125;
+      //创建offer
+      let offer = await pc.createOffer(&#123; iceRestart: true &#125;);
+      //设置offer未本地描述
+      await pc.setLocalDescription(offer);
+      //发送offer给被呼叫端
+      let params = &#123; targetUid: uid, userId: localUid, offer: offer &#125;;
+      that.linkSocket.emit(&quot;offer&quot;, params);
+      that.onPcEvent(pc, localUid, uid);
+    &#125;);
+  &#125;
+  // 设置本地音视频
+  async setDomVideoStream(domId: any, newStream: any) &#123;
+    let video = document.getElementById(domId) as any;
+    let stream = video.srcObject;
+    if (stream) &#123;
+      stream.getAudioTracks().forEach((e: any) =&gt; &#123;
+        stream.removeTrack(e);
+      &#125;);
+      stream.getVideoTracks().forEach((e: any) =&gt; &#123;
+        stream.removeTrack(e);
+      &#125;);
+    &#125;
+    video.srcObject = newStream;
+    video.muted = true;
+  &#125;
+  // 会议有人离开了，把对应的video元素给删除掉
+  removeChildVideoDom(domId: any) &#123;
+    let video = document.getElementById(domId) as any;
+    if (video) &#123;
+      video.parentNode.removeChild(video);
+    &#125;
+  &#125;
+  // 有人进入会议创建对应的video元素
+  createRemoteDomVideoStream(domId: any, trick: any) &#123;
+    let parentDom = document.getElementById(&quot;allVideo&quot;) as any;
+    let id = domId + &quot;-media&quot;;
+    let video = document.getElementById(id) as any;
+    if (!video) &#123;
+      video = document.createElement(&quot;video&quot;);
+      video.id = id;
+      video.controls = true;
+      video.autoplay = true;
+      video.muted = true;
+      video.style.width = &quot;100%&quot;;
+      video.style.height = &quot;100%&quot;;
+    &#125;
+    let stream = video.srcObject;
+    if (stream) &#123;
+      stream.addTrack(trick);
+    &#125; else &#123;
+      let newStream = new MediaStream();
+      newStream.addTrack(trick);
+      video.srcObject = newStream;
+      video.muted = false;
+      parentDom.appendChild(video);
+    &#125;
+  &#125;
+  // 事件监听
+  onPcEvent(pc: any, localUid: any, remoteUid: any) &#123;
+    const that = this;
+    pc.ontrack = function (event: any) &#123;
+      that.createRemoteDomVideoStream(remoteUid, event.track);
+    &#125;;
+    pc.onicecandidate = (event: any) =&gt; &#123;
+      if (event.candidate) &#123;
+        that.linkSocket.emit(&quot;candidate&quot;, &#123;
+          targetUid: remoteUid,
+          userId: localUid,
+          candidate: event.candidate,
+        &#125;);
+      &#125; else &#123;
+        /* 在此次协商中，没有更多的候选了 */
+        console.log(&quot;在此次协商中，没有更多的候选了&quot;);
+      &#125;
+    &#125;;
+  &#125;
+  // 候选信息
+  onCandiDate(fromUid: any, candidate: any) &#123;
+    const localUid = this.formInline.userId;
+    let pcKey = localUid + &quot;-&quot; + fromUid;
+    let pc = RtcPcMaps.get(pcKey);
+    pc.addIceCandidate(candidate);
+  &#125;
+  // 创建offer
+  async onRemoteOffer(fromUid: any, offer: any) &#123;
+    const localUid = this.formInline.userId;
+    let pcKey = localUid + &quot;-&quot; + fromUid;
+    let pc = RtcPcMaps.get(pcKey);
+    if (!pc) &#123;
+      pc = new PeerConnection(this.rtcPcParams);
+      RtcPcMaps.set(pcKey, pc);
+    &#125;
+    this.onPcEvent(pc, localUid, fromUid);
+    for (const track of this.localStream.getTracks()) &#123;
+      pc.addTrack(track);
+    &#125;
+    // this.localStream.getAudioTracks[0];
+    await pc.setRemoteDescription(offer);
+    let answer = await pc.createAnswer();
+    await pc.setLocalDescription(answer);
+    let params = &#123; targetUid: fromUid, userId: localUid, answer: answer &#125;;
+    this.linkSocket.emit(&quot;answer&quot;, params);
+  &#125;
+  // 创建answer
+  async onRemoteAnswer(fromUid: any, answer: any) &#123;
+    const localUid = this.formInline.userId;
+    let pcKey = localUid + &quot;-&quot; + fromUid;
+    let pc = RtcPcMaps.get(pcKey);
+    await pc.setRemoteDescription(answer);
+  &#125;
+  // 打开或关闭麦克风
+  audioControl(b: any) &#123;
+    RtcPcMaps.forEach((v, k) =&gt; &#123;
+      const senders = v.getSenders();
+      const send = senders.find((s: any) =&gt; s.track.kind === &quot;audio&quot;);
+      send.track.enabled = b;
+      this.mediaStatus.audio = send.track.enabled;
+    &#125;);
+    this.localStream.getAudioTracks()[0].enabled = b;
+    this.mediaStatus.audio = b;
+  &#125;
+  // 打开或关闭视频
+  videoControl(b: any) &#123;
+    RtcPcMaps.forEach((v, k) =&gt; &#123;
+      const senders = v.getSenders();
+      const send = senders.find((s: any) =&gt; s.track.kind === &quot;video&quot;);
+      send.track.enabled = b;
+      this.mediaStatus.video = send.track.enabled;
+    &#125;);
+    this.localStream.getVideoTracks()[0].enabled = b;
+    this.mediaStatus.video = b;
+  &#125;
+  // 默认静音和关闭摄像头
+  initMediaStatus() &#123;
+    // this.localStream.getVideoTracks()[0].enabled = false;
+    // this.localStream.getAudioTracks()[0].enabled = false;
+    // console.log(&quot;进入房间默认已关闭你的麦克风和摄像头，请手动打开&quot;);
+  &#125;
+  // 获取对应dom元素对应的音频状态
+  getAudioStatus(domId: any) &#123;
+    console.log(&quot;domId&quot;, domId);
+    let video = document.getElementById(domId) as any;
+    let stream = video.srcObject;
+    return stream.getAudioTracks()[0].enabled;
+  &#125;
+&#125;
+const callupMeeting = new CallupMany();
+export default callupMeeting;
+</code></pre>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/project/" title="项目">项目</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">6</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">1.4k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-12-08T11:16:04.243Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
