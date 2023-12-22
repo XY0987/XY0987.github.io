@@ -1,0 +1,903 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>手写promise,实现Promise/A+规范 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="最近在看手写API的面试题，发现了一个手写Promise，之前学长讲课的时候讲过，不过当时我还是刚刚接触前端，还没有学那么多，所以学长讲的，也没有听懂，时隔一年多，我已经大三了，也该研究一下这么写了。网上挺多手写promise的文章，但是我试了几个没有多少完全通过官方promises-aplus-tests测试库的全部案例的，而且大部分代码完全一样，没有讲解为什么这样做，这就导致在看的时候稀里糊涂">
+<meta property="og:type" content="website">
+<meta property="og:title" content="手写promise,实现Promise&#x2F;A+规范">
+<meta property="og:url" content="http://example.com/apiInMy/promise.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="最近在看手写API的面试题，发现了一个手写Promise，之前学长讲课的时候讲过，不过当时我还是刚刚接触前端，还没有学那么多，所以学长讲的，也没有听懂，时隔一年多，我已经大三了，也该研究一下这么写了。网上挺多手写promise的文章，但是我试了几个没有多少完全通过官方promises-aplus-tests测试库的全部案例的，而且大部分代码完全一样，没有讲解为什么这样做，这就导致在看的时候稀里糊涂">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-12-21T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-22T12:57:17.520Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/apiInMy/promise.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '手写promise,实现Promise/A+规范',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-12-22 20:57:17'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">手写promise,实现Promise/A+规范</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>最近在看手写API的面试题，发现了一个手写Promise，之前学长讲课的时候讲过，不过当时我还是刚刚接触前端，还没有学那么多，所以学长讲的，也没有听懂，时隔一年多，我已经大三了，也该研究一下这么写了。<br>网上挺多手写promise的文章，但是我试了几个没有多少完全通过官方promises-aplus-tests测试库的全部案例的，而且大部分代码完全一样，没有讲解为什么这样做，这就导致在看的时候稀里糊涂的。这就来总结一下</p>
+<h2 id="实现目标"><a href="#实现目标" class="headerlink" title="实现目标"></a>实现目标</h2><p>要想手写promise，我们先要知道原生promise的一些方法，由此来照猫画虎，实现我们自己的一个promise方法，另外我们实现promise是按照Promise A+的规范来写的，具体可以看<a target="_blank" rel="noopener" href="https://promisesaplus.com/">Promise&#x2F;A+</a>文档</p>
+<ol>
+<li>函数的基本使用</li>
+<li>resolve、resject方法</li>
+<li>then方法</li>
+<li>catch方法</li>
+<li>finally方法</li>
+<li>MyPromise.resolve和MyPromise.reject静态方法</li>
+<li>MyPromise.all和MyPromise.race静态方法</li>
+<li>MyPromise.allSettled和MyPromise.all静态方法</li>
+<li>使用promises-aplus-tests测试并通过官方案例</li>
+</ol>
+<h2 id="MyPromise实现"><a href="#MyPromise实现" class="headerlink" title="MyPromise实现"></a>MyPromise实现</h2><h3 id="定义状态"><a href="#定义状态" class="headerlink" title="定义状态"></a>定义状态</h3><p>我们都知道原生的promise有三种状态pending（等待）、fulfilled（已实现）、rejected（已失败），并且一旦改变状态之后不可再次改变</p>
+<pre><code class="javascript">const status = &#123;
+    PENDING: &#39;pending&#39;,
+    FULFILLED: &#39;fulfilled&#39;,
+    REJECTED: &#39;rejected&#39;
+&#125;
+</code></pre>
+<h3 id="完成类基本构造"><a href="#完成类基本构造" class="headerlink" title="完成类基本构造"></a>完成类基本构造</h3><p>因为我们平常在用promise的时候经常会用到new Promise，这么我们就可以看出来promise实际上是一个构造函数或者类，为了方便，我们这里使用类来写，我们在new的一般会传入一个回调函数，该函数接收两个回调函数作为参数，一个是resolve，一个是reject，接下来我们就来实现这些</p>
+<pre><code class="javascript">const status = &#123;
+  PENDING: &#39;pending&#39;,
+  FULFILLED: &#39;fulfilled&#39;,
+  REJECTED: &#39;rejected&#39;
+&#125;
+
+class MyPromise &#123;
+  constructor(executor) &#123;
+    // 初始化类的基本操作
+    this.init()
+    // 定义resolve和reject函数
+    const resolve = (successValue) =&gt; &#123;
+      // 当且仅当状态为padding时才会触发
+      if (this.status !== status.PENDING) &#123;
+        return
+      &#125;
+      this.status = status.FULFILLED
+      this.value = successValue
+      this.successFns.forEach(callBack =&gt; callBack())
+    &#125;
+    const reject = (failValue) =&gt; &#123;
+      // 当且仅当状态为padding时才会触发
+      if (this.status !== status.PENDING) &#123;
+        return
+      &#125;
+      this.status = status.REJECTED
+      this.reason = failValue
+      this.failFns.forEach(callBack =&gt; callBack())
+    &#125;
+
+    // 执行传入的函数，当该函数抛出移除或者出错时，直接失败
+    try &#123;
+      executor(resolve, reject)
+    &#125; catch (error) &#123;
+      reject(error)
+    &#125;
+  &#125;
+
+  init() &#123;
+    // 初始化状态
+    this.status = status.PENDING
+
+    // 用于存放成功的值
+    this.value = null
+    // 用于存放成功的回到函数
+    this.successFns = []
+
+    // 用于存放出错的值
+    this.reason = null
+    // 用于存放失败的回调函数
+    this.failFns = []
+  &#125;
+&#125;
+</code></pre>
+<h3 id="then方法"><a href="#then方法" class="headerlink" title="then方法"></a>then方法</h3><p>then方法，也是接收两个函数，一个是成功的回调，另一个是失败的回调，只不过我们平常为了方便，不会传入第二个函数</p>
+<pre><code class="javascript">then(successFn, failFn) &#123;
+  // 这里需要判断当前状态，如果是pedding时我们，就需要把回调函数压入对应的数组，供之后成功的时候执行
+  if (this.status === status.PENDING) &#123;
+    // 压入函数我们还需要注意一点就是为了模仿异步性，我们使用setTimeout来代替
+    this.successFns.push(() =&gt; &#123;
+      setTimeout(() =&gt; &#123;
+        // 这里需要注意以下this的指向，因为我们用的是箭头函数，所以this的指向仍任是实例
+        successFn(this.successRes)
+      &#125;)
+    &#125;)
+    this.failFns.push(() =&gt; &#123;
+      setTimeout(() =&gt; &#123;
+        failFn(this.failRes)
+      &#125;)
+    &#125;)
+  &#125;
+  // 如果当前状态已经是成功的状态了，就直接执行（仍需要保证执行的异步性）
+  if (this.status === status.FULFILLED) &#123;
+    setTimeout(() =&gt; &#123;
+      successFn(this.successRes)
+    &#125;)
+  &#125;
+  // 如果当前状态已经是失败的状态，就直接执行
+  if (this.status === status.REJECTED) &#123;
+    setTimeout(() =&gt; &#123;
+      failFn(this.failRes)
+    &#125;)
+  &#125;
+&#125;
+</code></pre>
+<p>另外需要注意一下，我们上边实现的then方法，仍有不足，就是我们一般调用then方法时，我们可以链式调用，这就需要我们返回一个promise方法</p>
+<h4 id="修改then方法"><a href="#修改then方法" class="headerlink" title="修改then方法"></a>修改then方法</h4><pre><code class="javascript">then(successFn, failFn) &#123;
+  // 如果不传处理函数，则使用默认处理函数
+  successFn = typeof successFn === &#39;function&#39; ? successFn : value =&gt; value;
+  failFn = typeof failFn === &#39;function&#39; ? failFn : err =&gt; &#123; throw err &#125;;
+  const promise2 = new MyPromise((resolve, reject) =&gt; &#123;
+    // 这里需要判断当前状态，如果是pedding时我们，就需要把回调函数压入对应的数组，供之后成功的时候执行
+    if (this.status === status.PENDING) &#123;
+      // 压入函数我们还需要注意一点就是为了模仿异步性，我们使用setTimeout来代替
+      this.successFns.push(() =&gt; &#123;
+        setTimeout(() =&gt; &#123;
+          try &#123;
+            // 这里需要注意以下this的指向，因为我们用的是箭头函数，所以this的指向仍任是实例
+            successFn(this.value)
+          &#125; catch (error) &#123;
+            reject(error)
+          &#125;
+        &#125;)
+      &#125;)
+      this.failFns.push(() =&gt; &#123;
+        setTimeout(() =&gt; &#123;
+          try &#123;
+            failFn(this.reason)
+          &#125; catch (error) &#123;
+            reject(error)
+          &#125;
+        &#125;)
+      &#125;)
+    &#125;
+    // 如果当前状态已经是成功的状态了，就直接执行（仍需要保证执行的异步性）
+    if (this.status === status.FULFILLED) &#123;
+      setTimeout(() =&gt; &#123;
+        try &#123;
+          successFn(this.value)
+        &#125; catch (error) &#123;
+          reject(error)
+        &#125;
+      &#125;)
+    &#125;
+    // 如果当前状态已经是失败的状态，就直接执行
+    if (this.status === status.REJECTED) &#123;
+      setTimeout(() =&gt; &#123;
+        try &#123;
+          failFn(this.reason)
+        &#125; catch (error) &#123;
+          reject(error)
+        &#125;
+      &#125;)
+    &#125;
+  &#125;)
+
+  return promise2
+&#125;
+</code></pre>
+<p>不过我们修改后，仍然不对，因为我们then传入的函数中仍然可以返回一个promise方法，所以我们需要拿到传入函数返回的promise的结果，然后作为promise2的返回结果，这时候可能有人会疑惑为什么不能返回自身而是新建一个promise，这个是因为自身的状态已经改变过了，就不能再改变了。另外还有一种疑惑就是我们为什么不判断传入函数的执行结果，然后判断它是否返回一个promise函数，然后再返回，这是因为传入函数的执行是异步的，而then的链式调用是同步的，所以我们需要立马返回一个promise，并拿到返回的结果值（包括promise的返回结果）然后作为我们创建的promise2的返回值，以此达到链式调用的功能</p>
+<h4 id="链式调用"><a href="#链式调用" class="headerlink" title="链式调用"></a>链式调用</h4><pre><code class="javascript">then(successFn, failFn) &#123;
+  // 如果不传处理函数，则使用默认处理函数
+  successFn = typeof successFn === &#39;function&#39; ? successFn : value =&gt; value;
+  failFn = typeof failFn === &#39;function&#39; ? failFn : err =&gt; &#123; throw err &#125;;
+
+  const promise2 = new MyPromise((resolve, reject) =&gt; &#123;
+    // 这里需要判断当前状态，如果是pedding时我们，就需要把回调函数压入对应的数组，供之后成功的时候执行
+    if (this.status === status.PENDING) &#123;
+      // 压入函数我们还需要注意一点就是为了模仿异步性，我们使用setTimeout来代替
+      this.successFns.push(() =&gt; &#123;
+        setTimeout(() =&gt; &#123;
+          try &#123;
+            // 这里需要注意以下this的指向，因为我们用的是箭头函数，所以this的指向仍任是实例
+            const x = successFn(this.value)
+            resolvePromise(promise2, x, resolve, reject)
+          &#125; catch (error) &#123;
+            reject(error)
+          &#125;
+        &#125;)
+      &#125;)
+      this.failFns.push(() =&gt; &#123;
+        setTimeout(() =&gt; &#123;
+          try &#123;
+            const x = failFn(this.reason)
+            resolvePromise(promise2, x, resolve, reject)
+          &#125; catch (error) &#123;
+            reject(error)
+          &#125;
+        &#125;)
+      &#125;)
+    &#125;
+    // 如果当前状态已经是成功的状态了，就直接执行（仍需要保证执行的异步性）
+    if (this.status === status.FULFILLED) &#123;
+      setTimeout(() =&gt; &#123;
+        try &#123;
+          const x = successFn(this.value)
+          resolvePromise(promise2, x, resolve, reject)
+        &#125; catch (error) &#123;
+          reject(error)
+        &#125;
+      &#125;)
+    &#125;
+    // 如果当前状态已经是失败的状态，就直接执行
+    if (this.status === status.REJECTED) &#123;
+      setTimeout(() =&gt; &#123;
+        try &#123;
+          const x = failFn(this.reason)
+          resolvePromise(promise2, x, resolve, reject)
+        &#125; catch (error) &#123;
+          reject(error)
+        &#125;
+      &#125;)
+    &#125;
+  &#125;)
+
+  return promise2
+&#125;
+</code></pre>
+<p>这里我们定义了一个resolvePromise用来递归的拿到返回的结果的值</p>
+<pre><code class="javascript">function resolvePromise(promise2, x, resolve, reject) &#123;
+  // 避免出现自己等待自己的情况
+  if (promise2 === x) &#123;
+    return reject(new TypeError(&#39;Chaining cycle detected for promise&#39;));
+  &#125;
+  // 多次调用resolve或reject以第一次为主，忽略后边的
+  let called = false
+  // 判断传入的x是否是一个包含then方法的对象，如果有，就认为resolve返回的值是一个promise
+  if (x !== null &amp;&amp; (typeof x === &#39;object&#39; || typeof x === &#39;function&#39;)) &#123;
+    try &#123;
+      const then = x.then
+      if (typeof then === &#39;function&#39;) &#123;
+        // 认为是一个promise
+        then.call(
+          x,
+          y =&gt; &#123;
+            if (called) &#123;
+              return
+            &#125;
+            called = true
+            // 递归执行，避免resolve是一个promise值
+            resolvePromise(promise2, y, resolve, reject)
+          &#125;,
+          reason =&gt; &#123;
+            if (called) &#123;
+              return
+            &#125;
+            called = true
+            reject(reason)
+          &#125;)
+      &#125; else &#123;
+        resolve(x)
+      &#125;
+    &#125; catch (error) &#123;
+      if (called) &#123;
+        return
+      &#125;
+      called = true
+      reject(error)
+    &#125;
+  &#125; else &#123;
+    // 其他值，可以直接返回
+    resolve(x)
+  &#125;
+&#125;
+</code></pre>
+<p>由此我们完成了手写promise中最复杂的一个功能，另外需要注意一点的是，可能有人不明白既然我们调用了resolve那么它的状态就会改变，为什么还需要called变量来过滤，其实很多博客说的都是避免重复调用，但是我看这个的时候比较迷，就是成功或者失败的函数的执行时机只能是statues为pedding的时候，怎么可能会重复调用呢，其实这个说法不太准确，准确的应该按Promise&#x2F;A+规范中2.3.3.3中说的</p>
+<blockquote>
+<p>If both resolvePromise and rejectPromise are called, or multiple calls to the same argument are made, the first call takes precedence, and any further calls are ignored.<br>如果同时调用 resolvePromise 和 rejectPromise ，或者对同一参数进行多次调用，则第一个调用优先，并且忽略任何后续调用。</p>
+</blockquote>
+<p>即：我们重复调用resolve或者reject应该以第一次的为准，而忽略后续的，我们可以看这种情况理解一下</p>
+<pre><code class="javascript">const p = new MyPromise(resolve =&gt; &#123;
+  resolve()
+&#125;)
+const thenable1 = &#123;
+  then(reslove) &#123;
+    setTimeout(() =&gt; &#123;
+      reslove(2)
+    &#125;, 0)
+  &#125;,
+&#125;
+const thenable2 = &#123;
+  then(resolve) &#123;
+    resolve(thenable1)
+    resolve(1)
+  &#125;,
+&#125;
+
+p.then(() =&gt; &#123;
+  return thenable2
+&#125;)
+  .then(res =&gt; &#123;
+    console.log(res);
+  &#125;)
+</code></pre>
+<p>按上边规范所说的情况，我们应该最终得到的结果是2，但是如果没有called的情况，我们会得到1<br>这个很好理解，我们应该以第一个resolve为主，但是第一个resolve的值是一个带resolve函数的对象，并且用一个宏任务setTimeout来包裹，所以其执行时机会比resolve(2)要晚一步，那么就会错误的拿到1，这时候我们需要忽略后续的调用而采用第一次调用</p>
+<h3 id="完成其他方法"><a href="#完成其他方法" class="headerlink" title="完成其他方法"></a>完成其他方法</h3><pre><code class="javascript">static resolve(value) &#123;
+  // 传入的是一个promise
+  if (value instanceof MyPromise) &#123;
+    return value
+  &#125;
+  return new MyPromise((resolve, reject) =&gt; &#123;
+    resolve(value)
+  &#125;)
+&#125;
+
+static reject(err) &#123;
+  return new MyPromise((resolve, reject) =&gt; &#123;
+    reject(err)
+  &#125;)
+&#125;
+
+catch(failFn) &#123;
+  return this.then(null, failFn)
+&#125;
+
+finally(callback) &#123;
+  // 调用then方法，传入两个相同的处理函数
+  return this.then(
+    value =&gt; &#123;
+      // 创建一个新的Promise实例，确保异步执行callback
+      return MyPromise.resolve(callback()).then(() =&gt; value);
+    &#125;,
+    reason =&gt; &#123;
+      // 创建一个新的Promise实例，确保异步执行callback
+      return MyPromise.resolve(callback()).then(() =&gt; &#123; throw reason; &#125;);
+    &#125;
+  );
+&#125;
+
+static all(promises) &#123;
+  return new MyPromise((resolve, reject) =&gt; &#123;
+    const res = []
+    let conunt = 0
+    promises.forEach((promise, index) =&gt; &#123;
+      MyPromise.resolve(promise).then(value =&gt; &#123;
+        res[index] = value
+        conunt++
+        if (conunt === promises.length) &#123;
+          resolve(res)
+        &#125;
+      &#125;, err =&gt; &#123;
+        reject(err)
+      &#125;)
+    &#125;)
+  &#125;)
+&#125;
+
+static race(promises) &#123;
+  return new MyPromise((resolve, reject) =&gt; &#123;
+    promises.forEach(promise =&gt; &#123;
+      MyPromise.resolve(promise).then(value =&gt; &#123;
+        resolve(value)
+      &#125;, err =&gt; &#123;
+        reject(err)
+      &#125;)
+    &#125;)
+  &#125;)
+&#125;
+
+static allSettled(promises) &#123;
+  const result = [];
+  let settledCount = 0;
+  promises.forEach((promise, index) =&gt; &#123;
+    MyPromise.resolve(promise).then(
+      value =&gt; &#123;
+        result[index] = &#123; status: &#39;fulfilled&#39;, value &#125;;
+        settledCount++;
+        if (settledCount === promises.length) &#123;
+          resolve(result);
+        &#125;
+      &#125;,
+      reason =&gt; &#123;
+        result[index] = &#123; status: &#39;rejected&#39;, reason &#125;;
+        settledCount++;
+        if (settledCount === promises.length) &#123;
+          resolve(result);
+        &#125;
+      &#125;
+    );
+  &#125;);
+&#125;
+
+static any(promises) &#123;
+  return new MyPromise((resolve, reject) =&gt; &#123;
+    const errors = [];
+    let rejectedCount = 0;
+    promises.forEach((promise, index) =&gt; &#123;
+      MyPromise.resolve(promise).then(
+        value =&gt; &#123;
+          resolve(value);
+        &#125;,
+        reason =&gt; &#123;
+          errors[index] = reason;
+          rejectedCount++;
+          if (rejectedCount === promises.length) &#123;
+            reject(new AggregateError(errors, &#39;All promises were rejected&#39;));
+          &#125;
+        &#125;
+      );
+    &#125;);
+  &#125;);
+&#125;
+</code></pre>
+<h3 id="完整代码"><a href="#完整代码" class="headerlink" title="完整代码"></a>完整代码</h3><p>由此我们就完成了手写promise，并且完成了其中的一些方法</p>
+<pre><code class="javascript">const status = &#123;
+  PENDING: &#39;pending&#39;,
+  FULFILLED: &#39;fulfilled&#39;,
+  REJECTED: &#39;rejected&#39;
+&#125;
+
+function resolvePromise(promise2, x, resolve, reject) &#123;
+  // 避免出现自己等待自己的情况
+  if (promise2 === x) &#123;
+    return reject(new TypeError(&#39;Chaining cycle detected for promise&#39;));
+  &#125;
+  // 多次调用resolve或reject以第一次为主，忽略后边的
+  let called = false
+  // 判断传入的x是否是一个包含then方法的对象，如果有，就认为resolve返回的值是一个promise
+  if (x !== null &amp;&amp; (typeof x === &#39;object&#39; || typeof x === &#39;function&#39;)) &#123;
+    try &#123;
+      const then = x.then
+      if (typeof then === &#39;function&#39;) &#123;
+        // 认为是一个promise
+        then.call(
+          x,
+          y =&gt; &#123;
+            if (called) &#123;
+              return
+            &#125;
+            called = true
+            // 递归执行，避免resolve是一个promise值
+            resolvePromise(promise2, y, resolve, reject)
+          &#125;,
+          reason =&gt; &#123;
+            if (called) &#123;
+              return
+            &#125;
+            called = true
+            reject(reason)
+          &#125;)
+      &#125; else &#123;
+        resolve(x)
+      &#125;
+    &#125; catch (error) &#123;
+      if (called) &#123;
+        return
+      &#125;
+      called = true
+      reject(error)
+    &#125;
+  &#125; else &#123;
+    // 其他值，可以直接返回
+    resolve(x)
+  &#125;
+&#125;
+
+class MyPromise &#123;
+  constructor(executor) &#123;
+    // 初始化类的基本操作
+    this.init()
+    // 定义resolve和reject函数
+    const resolve = (successValue) =&gt; &#123;
+      // 当且仅当状态为padding时才会触发
+      if (this.status !== status.PENDING) &#123;
+        return
+      &#125;
+      this.status = status.FULFILLED
+      this.value = successValue
+      this.successFns.forEach(callBack =&gt; callBack())
+    &#125;
+    const reject = (failValue) =&gt; &#123;
+      // 当且仅当状态为padding时才会触发
+      if (this.status !== status.PENDING) &#123;
+        return
+      &#125;
+      this.status = status.REJECTED
+      this.reason = failValue
+      this.failFns.forEach(callBack =&gt; callBack())
+    &#125;
+
+    // 执行传入的函数，当该函数抛出移除或者出错时，直接失败
+    try &#123;
+      executor(resolve, reject)
+    &#125; catch (error) &#123;
+      reject(error)
+    &#125;
+  &#125;
+
+  init() &#123;
+    // 初始化状态
+    this.status = status.PENDING
+
+    // 用于存放成功的值
+    this.value = null
+    // 用于存放成功的回到函数
+    this.successFns = []
+
+    // 用于存放出错的值
+    this.reason = null
+    // 用于存放失败的回调函数
+    this.failFns = []
+  &#125;
+
+  then(successFn, failFn) &#123;
+    // 如果不传处理函数，则使用默认处理函数
+    successFn = typeof successFn === &#39;function&#39; ? successFn : value =&gt; value;
+    failFn = typeof failFn === &#39;function&#39; ? failFn : err =&gt; &#123; throw err &#125;;
+
+    const promise2 = new MyPromise((resolve, reject) =&gt; &#123;
+      // 这里需要判断当前状态，如果是pedding时我们，就需要把回调函数压入对应的数组，供之后成功的时候执行
+      if (this.status === status.PENDING) &#123;
+        // 压入函数我们还需要注意一点就是为了模仿异步性，我们使用setTimeout来代替
+        this.successFns.push(() =&gt; &#123;
+          setTimeout(() =&gt; &#123;
+            try &#123;
+              // 这里需要注意以下this的指向，因为我们用的是箭头函数，所以this的指向仍任是实例
+              const x = successFn(this.value)
+              resolvePromise(promise2, x, resolve, reject)
+            &#125; catch (error) &#123;
+              reject(error)
+            &#125;
+          &#125;)
+        &#125;)
+        this.failFns.push(() =&gt; &#123;
+          setTimeout(() =&gt; &#123;
+            try &#123;
+              const x = failFn(this.reason)
+              resolvePromise(promise2, x, resolve, reject)
+            &#125; catch (error) &#123;
+              reject(error)
+            &#125;
+          &#125;)
+        &#125;)
+      &#125;
+      // 如果当前状态已经是成功的状态了，就直接执行（仍需要保证执行的异步性）
+      if (this.status === status.FULFILLED) &#123;
+        setTimeout(() =&gt; &#123;
+          try &#123;
+            const x = successFn(this.value)
+            resolvePromise(promise2, x, resolve, reject)
+          &#125; catch (error) &#123;
+            reject(error)
+          &#125;
+        &#125;)
+      &#125;
+      // 如果当前状态已经是失败的状态，就直接执行
+      if (this.status === status.REJECTED) &#123;
+        setTimeout(() =&gt; &#123;
+          try &#123;
+            const x = failFn(this.reason)
+            resolvePromise(promise2, x, resolve, reject)
+          &#125; catch (error) &#123;
+            reject(error)
+          &#125;
+        &#125;)
+      &#125;
+    &#125;)
+    return promise2
+  &#125;
+
+  static resolve(value) &#123;
+    // 传入的是一个promise
+    if (value instanceof MyPromise) &#123;
+      return value
+    &#125;
+    return new MyPromise((resolve, reject) =&gt; &#123;
+      resolve(value)
+    &#125;)
+  &#125;
+
+  static reject(err) &#123;
+    return new MyPromise((resolve, reject) =&gt; &#123;
+      reject(err)
+    &#125;)
+  &#125;
+
+  catch(failFn) &#123;
+    return this.then(null, failFn)
+  &#125;
+
+  finally(callback) &#123;
+    // 调用then方法，传入两个相同的处理函数
+    return this.then(
+      value =&gt; &#123;
+        // 创建一个新的Promise实例，确保异步执行callback
+        return MyPromise.resolve(callback()).then(() =&gt; value);
+      &#125;,
+      reason =&gt; &#123;
+        // 创建一个新的Promise实例，确保异步执行callback
+        return MyPromise.resolve(callback()).then(() =&gt; &#123; throw reason; &#125;);
+      &#125;
+    );
+  &#125;
+
+  static all(promises) &#123;
+    return new MyPromise((resolve, reject) =&gt; &#123;
+      const res = []
+      let conunt = 0
+      promises.forEach((promise, index) =&gt; &#123;
+        MyPromise.resolve(promise).then(value =&gt; &#123;
+          res[index] = value
+          conunt++
+          if (conunt === promises.length) &#123;
+            resolve(res)
+          &#125;
+        &#125;, err =&gt; &#123;
+          reject(err)
+        &#125;)
+      &#125;)
+    &#125;)
+  &#125;
+
+  static race(promises) &#123;
+    return new MyPromise((resolve, reject) =&gt; &#123;
+      promises.forEach(promise =&gt; &#123;
+        MyPromise.resolve(promise).then(value =&gt; &#123;
+          resolve(value)
+        &#125;, err =&gt; &#123;
+          reject(err)
+        &#125;)
+      &#125;)
+    &#125;)
+  &#125;
+
+  static allSettled(promises) &#123;
+    const result = [];
+    let settledCount = 0;
+    promises.forEach((promise, index) =&gt; &#123;
+      MyPromise.resolve(promise).then(
+        value =&gt; &#123;
+          result[index] = &#123; status: &#39;fulfilled&#39;, value &#125;;
+          settledCount++;
+          if (settledCount === promises.length) &#123;
+            resolve(result);
+          &#125;
+        &#125;,
+        reason =&gt; &#123;
+          result[index] = &#123; status: &#39;rejected&#39;, reason &#125;;
+          settledCount++;
+          if (settledCount === promises.length) &#123;
+            resolve(result);
+          &#125;
+        &#125;
+      );
+    &#125;);
+  &#125;
+
+  static any(promises) &#123;
+    return new MyPromise((resolve, reject) =&gt; &#123;
+      const errors = [];
+      let rejectedCount = 0;
+      promises.forEach((promise, index) =&gt; &#123;
+        MyPromise.resolve(promise).then(
+          value =&gt; &#123;
+            resolve(value);
+          &#125;,
+          reason =&gt; &#123;
+            errors[index] = reason;
+            rejectedCount++;
+            if (rejectedCount === promises.length) &#123;
+              reject(new AggregateError(errors, &#39;All promises were rejected&#39;));
+            &#125;
+          &#125;
+        );
+      &#125;);
+    &#125;);
+  &#125;
+&#125;
+
+module.exports = &#123;
+  MyPromise
+&#125;
+</code></pre>
+<h3 id="测试"><a href="#测试" class="headerlink" title="测试"></a>测试</h3><p>写完了代码我们还需要测试我们写的代码是否符合promise&#x2F;A+规范，我们可以使用promises-aplus-tests来测试</p>
+<ol>
+<li>初始化项目</li>
+</ol>
+<pre><code class="bash">npm init --y
+</code></pre>
+<ol start="2">
+<li>安装依赖</li>
+</ol>
+<pre><code class="bash">yarn add promises-aplus-tests -D
+</code></pre>
+<ol start="3">
+<li>新建adapter.js</li>
+</ol>
+<pre><code class="javascript">const &#123; MyPromise &#125; = require(&#39;./MyPromise&#39;)
+
+// 暴露适配器对象
+module.exports = &#123;
+    resolved: MyPromise.resolve,
+    rejected: MyPromise.reject,
+    deferred() &#123;
+        const result = &#123;&#125;;
+        result.promise = new MyPromise((resolve, reject) =&gt; &#123;
+            result.resolve = resolve;
+            result.reject = reject;
+        &#125;);
+        return result;
+    &#125;
+&#125;;
+</code></pre>
+<ol start="4">
+<li>新建test.js</li>
+</ol>
+<pre><code class="javascript">const promisesAplusTests = require(&#39;promises-aplus-tests&#39;);
+const adapter = require(&#39;./adapter&#39;);
+
+promisesAplusTests(adapter, function (err) &#123;
+    if (err) &#123;
+        console.error(&#39;Promises/A+ 测试失败:&#39;);
+        console.error(err);
+    &#125; else &#123;
+        console.log(&#39;Promises/A+ 测试通过&#39;);
+    &#125;
+&#125;);
+</code></pre>
+<ol start="5">
+<li>执行测试</li>
+</ol>
+<pre><code class="javascript">node test.js
+</code></pre>
+<p>这样我们就查看我们的代码是否符合promise&#x2F;A+的规范了</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>我们完成了测试，就表示我们写的一个符合Promise&#x2F;A+规范的promise，另外我们也补充了一些promise的一些基本方法，虽然有些人说手写API没啥用，不过我不这样认为，因为我们手写API的过程中，不仅能更多的了解到原生API的一些方法的实现原理，这样可以帮助我们遇到问题时更快速的定位，另外也给我们一个思路，手写promise的过程中我感觉它有点像一个发布订阅模式，同时还要考虑一些异步的问题，我这里是用setTimeout来简单模拟的，还可以用一个微任务队列去模拟，这个更多的是体会思想吧。真的不得不服知道标准的哪些人。</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">7</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/index/" title="小站说明">小站说明</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/29/technologyStudy/" title="技术学习">技术学习</a><time datetime="2023-07-28T16:00:00.000Z" title="发表于 2023-07-29 00:00:00">2023-07-29</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">1</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">4</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">7</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">1.5k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-12-22T13:02:23.403Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
