@@ -1,0 +1,494 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>vue封装带确定、取消按钮的弹窗提示组件，可用promise回调 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一、前言&amp;nbsp;&amp;nbsp;&amp;nbsp;学习vue也有一段时间了，通过一段时间的学习，逐渐了解了vue框架的一些用法，目前我能感受到vue框架最强大的功能之一就是组件，即代码的复用。而在之前的写项目中经常会用到一些弹窗，在之前的项目中这些弹窗都是写在一个模板页面中，去调用。在学了vue之后我就想着能不能用vue去封装一个全局的弹窗组件，可以使用类似vuex的的方式通过this.$xxx的方式直">
+<meta property="og:type" content="website">
+<meta property="og:title" content="vue封装带确定、取消按钮的弹窗提示组件，可用promise回调">
+<meta property="og:url" content="http://example.com/project/vue/confim.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="一、前言&amp;nbsp;&amp;nbsp;&amp;nbsp;学习vue也有一段时间了，通过一段时间的学习，逐渐了解了vue框架的一些用法，目前我能感受到vue框架最强大的功能之一就是组件，即代码的复用。而在之前的写项目中经常会用到一些弹窗，在之前的项目中这些弹窗都是写在一个模板页面中，去调用。在学了vue之后我就想着能不能用vue去封装一个全局的弹窗组件，可以使用类似vuex的的方式通过this.$xxx的方式直">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2022-11-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-23T13:28:46.493Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/vue/confim.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'vue封装带确定、取消按钮的弹窗提示组件，可用promise回调',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-12-23 21:28:46'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">vue封装带确定、取消按钮的弹窗提示组件，可用promise回调</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h4 id="一、前言"><a href="#一、前言" class="headerlink" title="一、前言"></a>一、前言</h4><p>&nbsp;&nbsp;&nbsp;学习vue也有一段时间了，通过一段时间的学习，逐渐了解了vue框架的一些用法，目前我能感受到vue框架最强大的功能之一就是组件，即代码的复用。而在之前的写项目中经常会用到一些弹窗，在之前的项目中这些弹窗都是写在一个模板页面中，去调用。在学了vue之后我就想着能不能用vue去封装一个全局的弹窗组件，可以使用类似vuex的的方式通过this.$xxx的方式直接调用。</p>
+<h4 id="二、弹窗组件代码封装"><a href="#二、弹窗组件代码封装" class="headerlink" title="二、弹窗组件代码封装"></a>二、弹窗组件代码封装</h4><pre><code class="js">&lt;template&gt;
+  &lt;div class=&quot;myAlertDiv&quot; v-show=&quot;show&quot;&gt;
+    &lt;div class=&quot;myAlertItem&quot; v-show=&quot;type === 1&quot;&gt;
+      &lt;button class=&quot;iconSty&quot; @click=&quot;cancelBtnFn&quot;&gt;
+        &lt;i class=&quot;el-icon-close&quot;&gt;&lt;/i&gt;
+      &lt;/button&gt;
+      &lt;div class=&quot;tittle&quot;&gt;&#123;&#123; title &#125;&#125;&lt;/div&gt;
+      &lt;div class=&quot;msg&quot; v-text=&quot;message&quot;&gt;&lt;/div&gt;
+      &lt;div class=&quot;operator&quot;&gt;
+        &lt;button @click=&quot;sureBtnFn&quot; class=&quot;generalSty suerSty hoverSty&quot;&gt;
+          &#123;&#123; sureMsg &#125;&#125;
+        &lt;/button&gt;
+        &lt;button @click=&quot;cancelBtnFn&quot; class=&quot;generalSty cancelSty hoverSty&quot;&gt;
+          &#123;&#123; cancelMsg &#125;&#125;
+        &lt;/button&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;hintMsg hintGeneralSty animationSty&quot; v-show=&quot;type === 2&quot;&gt;
+      &lt;span&gt;
+        &lt;i class=&quot;el-icon-warning-outline&quot;&gt;&lt;/i&gt;
+      &lt;/span&gt;
+      &lt;span&gt;
+        &#123;&#123; message &#125;&#125;
+      &lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;warningMsg hintGeneralSty animationSty&quot; v-show=&quot;type === 3&quot;&gt;
+      &lt;span&gt;
+        &lt;i class=&quot;el-icon-warning-outline&quot;&gt;&lt;/i&gt;
+      &lt;/span&gt;
+      &lt;span&gt;
+        &#123;&#123; message &#125;&#125;
+      &lt;/span&gt;
+    &lt;/div&gt;
+    &lt;div class=&quot;successMsg hintGeneralSty animationSty&quot; v-show=&quot;type === 4&quot;&gt;
+      &lt;span&gt;
+        &lt;i class=&quot;el-icon-circle-check&quot;&gt;&lt;/i&gt;
+      &lt;/span&gt;
+      &lt;span&gt;
+        &#123;&#123; message &#125;&#125;
+      &lt;/span&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import &#123; Icon &#125; from &quot;element-ui&quot;;
+export default &#123;
+  data() &#123;
+    return &#123;
+      // 提示标题
+      title: &quot;提示&quot;,
+      //   提示内容
+      message: &quot;提示信息&quot;,
+      //   确定按钮内容
+      sureMsg: &quot;确定&quot;,
+      //   取消按钮内容
+      cancelMsg: &quot;取消&quot;,
+      //   用于指定是什么类型的提示信息,1表示带确定和取消的弹窗，2表示提示信息，3表示警告，4表示成功
+      type: 4,
+      //   是否展示
+      show: false,
+    &#125;;
+  &#125;,
+  //这里用到了element-ui的图标，因为这里只在这个组件中使用了，所以就局部注册了图标组件
+  components: &#123;
+    [Icon.name]: Icon,
+  &#125;,
+  methods: &#123;
+    // 初始化函数
+    init() &#123;
+      this.show = true;
+      //当类型是1时，弹窗带取消和确定按钮，可以通过this.$xx的方式调用之后通过.then（表示确定）或.catch（表示取消）来表示是取消还是成功
+      if (this.type == 1) &#123;
+        return new Promise((resolve, resject) =&gt; &#123;
+          this.promiseResult = &#123; resolve, resject &#125;;
+        &#125;);
+      &#125; else &#123;
+      //类型不是1，则是提示弹窗，不需要确定按钮和取消按钮，但是需要等动画执行完毕之后再销毁组件实例
+        // 销毁组件(需等动画执行完)
+        setTimeout(() =&gt; &#123;
+          //执行销销毁组件实例函数
+          this.destruction();
+        &#125;, 1500);
+      &#125;
+    &#125;,
+    // 确定函数
+    sureBtnFn() &#123;
+      this.promiseResult.resolve();
+      //执行销毁组件实例函数
+      this.destruction();
+    &#125;,
+    // 取消函数
+    cancelBtnFn() &#123;
+      this.promiseResult.resject();
+      this.destruction();
+    &#125;,
+    // 销毁函数
+    destruction() &#123;
+      this.show = false;
+      //   销毁实例
+      this.$destroy(true);
+      //将组件从body中移除
+      this.$el.parentNode.removeChild(this.$el);
+    &#125;,
+  &#125;,
+&#125;;
+&lt;/script&gt;
+&lt;style scoped&gt;
+button &#123;
+  outline: none;
+  background-color: white;
+  color: white;
+  border: none;
+  cursor: pointer;
+&#125;
+
+.myAlertDiv &#123;
+  width: 100%;
+  height: 100%;
+  position: fixed;
+  background-color: rgba(0, 0, 0, 0.5);
+  top: 0px;
+  left: 0px;
+&#125;
+
+.myAlertDiv &gt; div &#123;
+  padding: 10px;
+  position: relative;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -150%);
+  text-align: center;
+&#125;
+
+.myAlertItem &#123;
+  width: 500px;
+  min-height: 100px;
+  max-height: 400px;
+  background-color: white;
+&#125;
+
+.tittle &#123;
+  font-size: 20px;
+  font-weight: bold;
+&#125;
+
+.msg &#123;
+  margin-top: 20px;
+  word-wrap: break-word;
+  max-height: 100px;
+  overflow: auto;
+&#125;
+
+.generalSty &#123;
+  padding: 5px 15px;
+  margin-top: 10px;
+  margin-right: 20px;
+&#125;
+
+.suerSty &#123;
+  background-color: #67c23a;
+&#125;
+
+.cancelSty &#123;
+  background-color: #f56c6c;
+&#125;
+
+.hoverSty:hover &#123;
+  opacity: 0.8;
+&#125;
+
+.iconSty &#123;
+  position: absolute;
+  right: 20px;
+  color: black;
+&#125;
+
+.hintGeneralSty &#123;
+  width: 400px;
+  color: white;
+&#125;
+
+.hintGeneralSty &gt; span &#123;
+  display: block;
+  padding: 5px 10px;
+&#125;
+
+/* 提示信息 */
+.hintMsg &#123;
+  background-color: #f39c12;
+&#125;
+
+/* 警告 */
+.warningMsg &#123;
+  background-color: red;
+&#125;
+
+.successMsg &#123;
+  background-color: #27ae60;
+&#125;
+
+.animationSty &#123;
+  animation: hintAnimation 1s ease alternate;
+&#125;
+
+//动画
+@keyframes hintAnimation &#123;
+  from &#123;
+    top: 10px;
+  &#125;
+  to &#123;
+    top: 50%;
+  &#125;
+&#125;
+&lt;/style&gt;
+</code></pre>
+<h4 id="三、简单分析"><a href="#三、简单分析" class="headerlink" title="三、简单分析"></a>三、简单分析</h4><p>现在我们有了一个公共的组件和样式，那么我们就要想，要怎么实现再任意地方使用this. $xxx的方式调用呢。既然通过this. $xxx的方式调用那么我们会想到我们什么时候这样用过这种方式去调用呢？<br>vuex中我们使用过，全局事件总线我们也使用过。那么我们就必须利用一个vue的一个重要的内置关系<strong>VueComponent.prototype.<strong>proto</strong>&#x3D;&#x3D;&#x3D;Vue.prototype</strong><br>那么我就需要把我们组件的一些方法放到Vue的原型上边。只有这样才能实现全局通过this. $xxx的方式调用<br>使用过vuex的我们都知道，我们需要在创建vm之前使用Vue.use(vuex)的方式才能在全局使用，里边复杂的东西我也不太清楚，不过能确定的一点就是，他里边一定有一个Vue.prototype. $ xxx&#x3D;xxx，还有就是vuex里边肯定有一个install函数,而且vue会自动调用这个函数</p>
+<h4 id="四、Vue-use之前的准备"><a href="#四、Vue-use之前的准备" class="headerlink" title="四、Vue.use之前的准备"></a>四、Vue.use之前的准备</h4><p>既然知道了这些，我们就可以利用这些东西写一个配置文件，用于最后的Vue.use最后就能全局使用了，这个是js文件而非vue文件</p>
+<pre><code class="js">// 引入弹窗组件
+import myAlert from &#39;../components/myComponent/myAlert&#39;
+//引入Vue
+import Vue from &#39;vue&#39;
+
+// 创建组件构造函数
+const hint = Vue.extend(myAlert)
+// 注册全局组件
+Vue.component(&#39;myHint&#39;, hint)
+// 创建函数(传入配置对象)
+const hintFn = function (options) &#123;
+    let data = &#123;
+        message: (options &amp;&amp; options.message) || &#39;提示信息&#39;,
+        type: (options &amp;&amp; options.type) || 2
+    &#125;
+    if (options.type == 1) &#123;
+        data.title = (options &amp;&amp; options.title) || &#39;提示信息&#39;
+        data.sureMsg = (options &amp;&amp; options.sureMsg) || &#39;确定&#39;
+        data.cancelMsg = (options &amp;&amp; options.cancelMsg) || &#39;取消&#39;
+    &#125;
+    // 实例化组件对象
+    const Instance = new hint(&#123;
+        data: data
+    &#125;)
+    // 挂载
+    let vm = Instance.$mount()
+    // 添加到body里边
+    document.body.appendChild(vm.$el)
+    //调用的是弹窗组件的init方法
+    return vm.init()
+&#125;
+// 暴露
+export default &#123;
+    install: (Vue) =&gt; &#123;
+    //这里写成$hintFn,是为了迎合vue的一些方法名
+        Vue.prototype.$hintFn = hintFn // 挂到Vue的原型上使用
+    &#125;
+&#125;
+</code></pre>
+<h4 id="五、main文件的配置及组件的使用"><a href="#五、main文件的配置及组件的使用" class="headerlink" title="五、main文件的配置及组件的使用"></a>五、main文件的配置及组件的使用</h4><p>main.js文件的配置</p>
+<pre><code class="js">import Vue from &#39;vue&#39;
+import App from &#39;./App.vue&#39;
+//引入上一步写的js文件
+import myHint from &#39;./myAlert/index&#39;
+//使用
+Vue.use(myHint)
+
+new Vue(&#123;
+  render: h =&gt; h(App),
+   mounted() &#123;
+   //我们可以在这里输出的this的原型上看到我们自己定义的方法$hintFn
+    console.log(&#39;this&#39;, this);
+  &#125;,
+&#125;).$mount(&#39;#app&#39;)
+</code></pre>
+<p>组件的使用</p>
+<pre><code class="js">&lt;template&gt;
+  &lt;div&gt;
+    &lt;button @click=&quot;show&quot;&gt;我是app的点击显示带交互的按钮&lt;/button&gt;
+    &lt;button @click=&quot;show1&quot;&gt;我是app的点击显示提示的按钮&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default &#123;
+  name: &quot;App&quot;,
+  methods: &#123;
+    show() &#123;
+      this.$hintFn(&#123;
+        title: &quot;测试&quot;,
+        message: &quot;第一次测试&quot;,
+        type: 1,
+      &#125;)
+        .then(() =&gt; &#123;
+          console.log(&quot;点击了确定&quot;);
+        &#125;)
+        .catch(() =&gt; &#123;
+          console.log(&quot;点击了取消&quot;);
+        &#125;);
+    &#125;,
+    show1() &#123;
+      this.$hintFn(&#123;
+        type: 2,
+        message: &quot;测试&quot;,
+      &#125;);
+    &#125;,
+  &#125;,
+  mounted() &#123;
+  //我们同样可以看到组件原型的上有我们定义的$hintFn方法
+    console.log(&quot;app组件中的this&quot;, this);
+  &#125;,
+&#125;;
+&lt;/script&gt;
+
+&lt;style&gt;
+&lt;/style&gt;
+</code></pre>
+<h4 id="六、总结"><a href="#六、总结" class="headerlink" title="六、总结"></a>六、总结</h4><p>到这里封装的东西就结束了，第一次封装，还有很多不足，这里欢迎大佬们及时指正。<br>下周继续努力吧！！</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webServer/" title="后端技术">后端技术</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/project/" title="项目">项目</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">8</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">2.1k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-12-23T13:32:11.003Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

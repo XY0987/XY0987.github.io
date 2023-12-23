@@ -1,0 +1,578 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>使用element-ui组件库上传文件及自定义上传文件（包含多文件上传及自定义上传携带其他参数） | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="使用element-ui组件库上传文件及自定义上传文件组件使用使用上传组件需要引入并注册Upload组件而这个组件中又用到了Button，所以也需要注册一下Button，我们只需要在main.js(new Vue实例的文件里边)，加上下边的代码 &#x2F;&#x2F;引入 import import &amp;#123; Upload , Button &amp;#125; from &#39;element-ui&#39; &#x2F;&#x2F;">
+<meta property="og:type" content="website">
+<meta property="og:title" content="使用element-ui组件库上传文件及自定义上传文件（包含多文件上传及自定义上传携带其他参数）">
+<meta property="og:url" content="http://example.com/project/vue/uploadFile.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="使用element-ui组件库上传文件及自定义上传文件组件使用使用上传组件需要引入并注册Upload组件而这个组件中又用到了Button，所以也需要注册一下Button，我们只需要在main.js(new Vue实例的文件里边)，加上下边的代码 &#x2F;&#x2F;引入 import import &amp;#123; Upload , Button &amp;#125; from &#39;element-ui&#39; &#x2F;&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2022-11-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-23T13:06:04.335Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/vue/uploadFile.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '使用element-ui组件库上传文件及自定义上传文件（包含多文件上传及自定义上传携带其他参数）',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-12-23 21:06:04'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">使用element-ui组件库上传文件及自定义上传文件（包含多文件上传及自定义上传携带其他参数）</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><h1 id="使用element-ui组件库上传文件及自定义上传文件"><a href="#使用element-ui组件库上传文件及自定义上传文件" class="headerlink" title="使用element-ui组件库上传文件及自定义上传文件"></a>使用element-ui组件库上传文件及自定义上传文件</h1><h2 id="组件使用"><a href="#组件使用" class="headerlink" title="组件使用"></a>组件使用</h2><p>使用上传组件需要引入并注册Upload组件而这个组件中又用到了Button，所以也需要注册一下Button，我们只需要在main.js(new Vue实例的文件里边)，加上下边的代码</p>
+<pre><code class="js">//引入
+import import &#123; Upload , Button &#125; from &#39;element-ui&#39;
+//注册
+Vue.component(Upload.name, Upload)
+Vue.component(Button.name, Button)
+</code></pre>
+<p>官网中有好几种上传的代码，但是总的来说就两种，一种是直接上传的，一种是手动上传的，其他的就是样式稍微变了一下，用法什么的都差不多，所以这里只复制了一下自动上传和手动上传的两个例子的代码来说明一下element-ui提供给我们的一些方法的使用</p>
+<h2 id="一些属性值及函数"><a href="#一些属性值及函数" class="headerlink" title="一些属性值及函数"></a>一些属性值及函数</h2><table>
+<thead>
+<tr>
+<th align="center">属性名</th>
+<th align="center">类型</th>
+<th align="center">作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">action(必选)</td>
+<td align="center">字符串</td>
+<td align="center">指定提交的接口</td>
+</tr>
+<tr>
+<td align="center">multiple</td>
+<td align="center">布尔值</td>
+<td align="center">是否支持多文件上传</td>
+</tr>
+<tr>
+<td align="center">drag</td>
+<td align="center">布尔值</td>
+<td align="center">是否启用拖拽</td>
+</tr>
+<tr>
+<td align="center">on-preview</td>
+<td align="center">函数</td>
+<td align="center">点击文件列表中已上传的文件时执行的函数</td>
+</tr>
+<tr>
+<td align="center">on-remove</td>
+<td align="center">函数</td>
+<td align="center">文件列表移除文件时执行的函数</td>
+</tr>
+<tr>
+<td align="center">on-success</td>
+<td align="center">函数</td>
+<td align="center">文件上传成功时执行的函数</td>
+</tr>
+<tr>
+<td align="center">on-error</td>
+<td align="center">函数</td>
+<td align="center">文件上传失败时执行的函数</td>
+</tr>
+<tr>
+<td align="center">on-change</td>
+<td align="center">函数</td>
+<td align="center">文件状态改变时的钩子，添加文件、上传成功和上传失败时都会被调用</td>
+</tr>
+<tr>
+<td align="center">before-upload</td>
+<td align="center">函数</td>
+<td align="center">上传文件之前执行的函数</td>
+</tr>
+<tr>
+<td align="center">before-remove</td>
+<td align="center">函数</td>
+<td align="center">删除文件之前执行的函数</td>
+</tr>
+<tr>
+<td align="center">auto-upload</td>
+<td align="center">布尔值</td>
+<td align="center">是否选取文件后立即进行上传</td>
+</tr>
+<tr>
+<td align="center">file-list</td>
+<td align="center">数组</td>
+<td align="center">上传的文件列表</td>
+</tr>
+<tr>
+<td align="center">http-request</td>
+<td align="center">函数</td>
+<td align="center">覆盖掉默认上传的行为</td>
+</tr>
+<tr>
+<td align="center">disabled</td>
+<td align="center">布尔值</td>
+<td align="center">是否禁用</td>
+</tr>
+<tr>
+<td align="center">limit</td>
+<td align="center">数字</td>
+<td align="center">最大允许上传个数</td>
+</tr>
+<tr>
+<td align="center">on-exceed</td>
+<td align="center">函数</td>
+<td align="center">超出个数限制时执行的函数</td>
+</tr>
+</tbody></table>
+<p>其中的一些函数我们在自动上传中不好说明，所以上边的一些属性和方法的用法演示主要在自定义上传中演示</p>
+<h2 id="提示信息的配置"><a href="#提示信息的配置" class="headerlink" title="提示信息的配置"></a>提示信息的配置</h2><p>在上传的文件中的官方代码中我们不仅用到Upload组件和Button组件，同时还需要引入提示信息的一个的一个模块和提示信息的一个模块</p>
+<p>只需要在上边组件使用的代码修改为</p>
+<pre><code class="js">//引入
+import import &#123; Upload , Button , MessageBox ,Message &#125; from &#39;element-ui&#39;
+//注册
+Vue.component(Upload.name, Upload)
+Vue.component(Button.name, Button)
+//往Vue原型中添加方法，这样的话我们才能在全局里边通过this来直接访问到
+Vue.prototype.$confirm = MessageBox.confirm
+Vue.prototype.$message=Message
+</code></pre>
+<p>上边往Vue原型中添加方法我们用到了Vue原型中的一个关系,即<strong>VueComponent.prototype.proto&#x3D;&#x3D;&#x3D;Vue.prototype</strong></p>
+<p>同时MessageBox中不仅包含我们用到的confim也包含其他的一些提示类的方法</p>
+<p>this.$confim()会出现一个带确定和取消按钮的弹窗，同时函数执行会返回一个promise对象，我们可以在其.then方法中执行点击确定的回调，在.catch中执行取消的回调</p>
+<p>this.$message.xxx()会出现一个提示框，提示框的类型分为四种，分别是成功(xxx的值是success)，错误(xxx的值是error)、警告(xxx的值是warning)以及消息(不写message后边的东西)，我们通过修改$message点后边的的值,当然我们这里只是说简单的说明一下我们这里用到的，想要了解具体的可以看官方文档去细致的了解一下</p>
+<h2 id="直接上传"><a href="#直接上传" class="headerlink" title="直接上传"></a>直接上传</h2><p>直接上传顾名思义就是我们上传图片的时候，上传完它就会”立即”上传给action所指定的url连接</p>
+<pre><code class="html">&lt;template&gt;
+  &lt;el-upload
+    class=&quot;upload-demo&quot;
+    action=&quot;&quot;
+    :on-preview=&quot;handlePreview&quot;
+    :on-remove=&quot;handleRemove&quot;
+    :before-remove=&quot;beforeRemove&quot;
+    multiple
+    :on-success=&quot;handleSuccess&quot;
+    :on-error=&quot;handleError&quot;
+    :on-change=&quot;handelChange&quot;
+    :limit=&quot;3&quot;
+    :on-exceed=&quot;handleExceed&quot;
+    :file-list=&quot;fileList&quot;
+  &gt;
+    &lt;el-button size=&quot;small&quot; type=&quot;primary&quot;&gt;点击上传&lt;/el-button&gt;
+    &lt;!-- 用于指定上传文件下的文字说明 --&gt;
+    &lt;div slot=&quot;tip&quot; class=&quot;el-upload__tip&quot;&gt;
+      只能上传jpg/png文件，且不超过500kb
+    &lt;/div&gt;
+  &lt;/el-upload&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default &#123;
+  data() &#123;
+    return &#123;
+      //初始化上传列表
+      fileList: [],
+    &#125;;
+  &#125;,
+  methods: &#123;
+    handelChange(file,fileList)&#123;
+      console.log(&quot;文件修改执行的函数&quot;, file, fileList);
+      this.fileList=fileList;
+    &#125;,
+    handleRemove(file, fileList) &#123;
+      console.log(&quot;移除文件执行的函数&quot;, file, fileList);
+      this.fileList=fileList;
+    &#125;,
+    handlePreview(file) &#123;
+      console.log(&quot;点击已经上传的文件&quot;, file);
+    &#125;,
+    handleSuccess() &#123;
+      this.$message.success(&quot;上传成功&quot;);
+    &#125;,
+    handleError() &#123;
+      this.$message.error(&quot;上传失败&quot;);
+    &#125;,
+    handleExceed(files, fileList) &#123;
+      this.$message.warning(
+        `当前限制选择 3 个文件，本次选择了 $&#123;files.length&#125; 个文件，共选择了 $&#123;
+          files.length + fileList.length
+        &#125; 个文件`
+      );
+    &#125;,
+    beforeRemove(file, fileList) &#123;
+      console.log(&#39;移除之前执行的函数&#39;,fileList);
+      return this.$confirm(`确定移除 $&#123;file.name&#125;？`);
+    &#125;,
+  &#125;,
+&#125;;
+&lt;/script&gt;
+
+&lt;style&gt;
+&lt;/style&gt;
+</code></pre>
+<h2 id="手动上传"><a href="#手动上传" class="headerlink" title="手动上传"></a>手动上传</h2><pre><code class="js">&lt;template&gt;
+  &lt;div&gt;
+    &lt;el-upload
+      class=&quot;upload-demo&quot;
+      ref=&quot;upload&quot;
+      action=&quot;&quot;
+      :on-preview=&quot;handlePreview&quot;
+      :on-remove=&quot;handleRemove&quot;
+      :file-list=&quot;fileList&quot;
+      :on-change=&quot;handelChange&quot;
+      name=&quot;cover&quot;
+      :multiple=&quot;true&quot;
+      :auto-upload=&quot;false&quot;
+    &gt;
+      &lt;el-button slot=&quot;trigger&quot; size=&quot;small&quot; type=&quot;primary&quot;&gt;选取文件&lt;/el-button&gt;
+      &lt;div slot=&quot;tip&quot; class=&quot;el-upload__tip&quot;&gt;
+        只能上传jpg/png文件，且不超过500kb
+      &lt;/div&gt;
+    &lt;/el-upload&gt;
+    &lt;el-button @click=&quot;handelSend&quot;&gt;上传&lt;/el-button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default &#123;
+  data() &#123;
+    return &#123;
+      fileList: [],
+    &#125;;
+  &#125;,
+  methods: &#123;
+    handelChange(file, fileList) &#123;
+      this.fileList = fileList;
+      console.log(&quot;文件修改执行的函数&quot;, file, fileList);
+    &#125;,
+    handleRemove(file, fileList) &#123;
+      console.log(&quot;移除文件执行的函数&quot;, file, fileList);
+      this.filesList = fileList;
+    &#125;,
+    handlePreview(file) &#123;
+      console.log(&quot;点击已经上传的文件&quot;, file);
+    &#125;,
+    handleExceed(files, fileList) &#123;
+      this.$message.warning(
+        `当前限制选择 3 个文件，本次选择了 $&#123;files.length&#125; 个文件，共选择了 $&#123;
+          files.length + fileList.length
+        &#125; 个文件`
+      );
+    &#125;,
+    beforeRemove(file, fileList) &#123;
+      console.log(&quot;移除之前执行的函数&quot;, fileList);
+      return this.$confirm(`确定移除 $&#123;file.name&#125;？`);
+    &#125;,
+    handelSend() &#123;
+        this.$refs.upload.submit();
+    &#125;,
+  &#125;,
+&#125;;
+&lt;/script&gt;
+
+&lt;style&gt;
+&lt;/style&gt;
+</code></pre>
+<p>手动上传只是手动触发一下上传的事件并没有特别的地方</p>
+<h2 id="自定义上传方式"><a href="#自定义上传方式" class="headerlink" title="自定义上传方式"></a>自定义上传方式</h2><p>在平常的开发中我们经常会有 上传图片的需求，然而仅仅使用element-ui上给我们的案例的话，并不能满足全部的开发场景（例如上传文件的同时还需要上传多个其他数据），所以我们就需要自定义上传方式，同时官方文档中也给了我们自定义的方式，但是我们这里的例子跟官方文档给我们的例子并不是完全一样</p>
+<p>这里为了说明一些细节，我们就采用多文件上传，并上传其他参数，最终点击确定按钮的时候在上传文件的方式来说明问题</p>
+<p>实现多文件上传的方式有两种，这两种方式大概都差不多，只不过有一种方式有一个细节需要我们注意一些</p>
+<h4 id="方式一-利用fileList"><a href="#方式一-利用fileList" class="headerlink" title="方式一(利用fileList)"></a>方式一(利用fileList)</h4><pre><code class="js">&lt;template&gt;
+  &lt;div&gt;
+    &lt;el-upload
+      class=&quot;upload-demo&quot;
+      ref=&quot;upload&quot;
+      action=&quot;&quot;
+      :on-preview=&quot;handlePreview&quot;
+      :on-remove=&quot;handleRemove&quot;
+      :file-list=&quot;fileList&quot;
+      :on-change=&quot;handelChange&quot;
+      name=&quot;cover&quot;
+      :multiple=&quot;true&quot;
+      :auto-upload=&quot;false&quot;
+    &gt;
+      &lt;el-button slot=&quot;trigger&quot; size=&quot;small&quot; type=&quot;primary&quot;&gt;选取文件&lt;/el-button&gt;
+      &lt;div slot=&quot;tip&quot; class=&quot;el-upload__tip&quot;&gt;
+        只能上传jpg/png文件，且不超过500kb
+      &lt;/div&gt;
+    &lt;/el-upload&gt;
+    &lt;el-button @click=&quot;handelSend&quot;&gt;上传&lt;/el-button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default &#123;
+  data() &#123;
+    return &#123;
+      fileList: [],
+    &#125;;
+  &#125;,
+  methods: &#123;
+    handelChange(file, fileList) &#123;
+      this.fileList = fileList;
+      console.log(&quot;文件修改执行的函数&quot;, file, fileList);
+    &#125;,
+    handleRemove(file, fileList) &#123;
+      console.log(&quot;移除文件执行的函数&quot;, file, fileList);
+      this.filesList = fileList;
+    &#125;,
+    handlePreview(file) &#123;
+      console.log(&quot;点击已经上传的文件&quot;, file);
+    &#125;,
+    handleExceed(files, fileList) &#123;
+      this.$message.warning(
+        `当前限制选择 3 个文件，本次选择了 $&#123;files.length&#125; 个文件，共选择了 $&#123;
+          files.length + fileList.length
+        &#125; 个文件`
+      );
+    &#125;,
+    beforeRemove(file, fileList) &#123;
+      console.log(&quot;移除之前执行的函数&quot;, fileList);
+      return this.$confirm(`确定移除 $&#123;file.name&#125;？`);
+    &#125;,
+    handelSend() &#123;
+      console.log(&quot;上传文件&quot;, this.fileList);
+      //   这里需要判断一下文件大小或者类型
+      //   自定义上传就需要我们使用fromdata对象来上传文件
+      let formdata = new FormData();
+      for (let i = 0; i &lt; this.fileList.length; i++) &#123;
+        // 我们上传的文件保存在每个文件对象的raw里边
+        formdata.append(&quot;file&quot;, this.fileList[i].raw);
+      &#125;
+      //   添加其他属性
+      formdata.append(&quot;something&quot;, &quot;something&quot;);
+      // 发送请求
+    &#125;,
+  &#125;,
+&#125;;
+&lt;/script&gt;
+
+&lt;style&gt;
+&lt;/style&gt;
+</code></pre>
+<h4 id="方式二-利用官方提供的http-request函数"><a href="#方式二-利用官方提供的http-request函数" class="headerlink" title="方式二(利用官方提供的http-request函数)"></a>方式二(利用官方提供的http-request函数)</h4><p>利用官方提供的http-request函数自定义上传的话我们需要利用到官方给我们提供的手动上传的一个方式submit方法,同时我们还有一个特别注意的点就是http-request函数执行的次数，具体的我们看下边的代码</p>
+<pre><code class="js">&lt;template&gt;
+  &lt;div&gt;
+    &lt;el-upload
+      class=&quot;upload-demo&quot;
+      ref=&quot;upload&quot;
+      action=&quot;&quot;
+      :on-preview=&quot;handlePreview&quot;
+      :on-remove=&quot;handleRemove&quot;
+      :file-list=&quot;fileList&quot;
+      :on-change=&quot;handelChange&quot;
+      :http-request=&quot;uploadFile&quot;
+      name=&quot;cover&quot;
+      :multiple=&quot;true&quot;
+      :auto-upload=&quot;false&quot;
+    &gt;
+      &lt;el-button slot=&quot;trigger&quot; size=&quot;small&quot; type=&quot;primary&quot;&gt;选取文件&lt;/el-button&gt;
+      &lt;div slot=&quot;tip&quot; class=&quot;el-upload__tip&quot;&gt;
+        只能上传jpg/png文件，且不超过500kb
+      &lt;/div&gt;
+    &lt;/el-upload&gt;
+    &lt;el-button @click=&quot;handelSend&quot;&gt;上传&lt;/el-button&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+export default &#123;
+  data() &#123;
+    return &#123;
+      fileList: [],
+    &#125;;
+  &#125;,
+  methods: &#123;
+    handelChange(file, fileList) &#123;
+      this.fileList = fileList;
+      console.log(&quot;文件修改执行的函数&quot;, file, fileList);
+    &#125;,
+    handleRemove(file, fileList) &#123;
+      console.log(&quot;移除文件执行的函数&quot;, file, fileList);
+      this.filesList = fileList;
+    &#125;,
+    handlePreview(file) &#123;
+      console.log(&quot;点击已经上传的文件&quot;, file);
+    &#125;,
+    handleExceed(files, fileList) &#123;
+      this.$message.warning(
+        `当前限制选择 3 个文件，本次选择了 $&#123;files.length&#125; 个文件，共选择了 $&#123;
+          files.length + fileList.length
+        &#125; 个文件`
+      );
+    &#125;,
+    beforeRemove(file, fileList) &#123;
+      console.log(&quot;移除之前执行的函数&quot;, fileList);
+      return this.$confirm(`确定移除 $&#123;file.name&#125;？`);
+    &#125;,
+    // 方法二
+    handelSend() &#123;
+      let formdata = new FormData();
+      //   定义一个fromdata对象用于
+      this.formdata = formdata;
+      //   触发提交文件(执行submit()这个函数会根据有多少个文件就执行多少次http-requests所绑定的函数)
+      this.$refs.upload.submit();
+      this.formdata.append(&quot;something&quot;, &quot;something&quot;);
+      //   发送请求,这里上传的的是this.fromdata而不是this.fileList
+    &#125;,
+    uploadFile(file) &#123;
+      // 判断文件
+      console.log(&quot;自定义上传文件&quot;, file);
+      this.formdata.append(&quot;file&quot;, file.file);
+    &#125;,
+  &#125;,
+&#125;;
+&lt;/script&gt;
+
+&lt;style&gt;
+&lt;/style&gt;
+</code></pre>
+<p>需要注意的是我们自定义上传的方式并不会触发上传失败和上传成功的函数，所以需要我们自己根据上传情况手动调用</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>以上就是我上传文件的一些分享。另外给大家分享一下按需引入的小技巧，对于初学者的我们来说有时候按需引入并不知道引入什么，一般情况下我们引入的是官方文档中el后边的东西，然后我就发现<strong>官方文档的左边导航栏的字母</strong>正好就是我们按需引入的所要引入的东西（当然有时候我们不仅需要引入导航栏的字母也需要我们引入el后边的东西），而有些是通过this.$xxx的方式调用的，这篇博客也差不多包含了需要这种调用的全部东西了。</p>
+<p>这周的分享就到这里了，下周继续努力吧！！！！</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webServer/" title="后端技术">后端技术</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/project/" title="项目">项目</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">8</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">2.1k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-12-23T13:32:11.003Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

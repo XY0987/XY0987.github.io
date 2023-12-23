@@ -1,16 +1,16 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>前端基础 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="this详解                 this详解，手写call、apply、bind                                                             函数柯里化，实现add(1)(2)...累加函数                 函数柯里化，实现add">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>react+TS使用antd Upload组件自定义上传 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="这个项目是使用antd和react+ts写的，其中遇到上传图片的一个问题，antd的Upload组件并不能满足所有的开发情况，有时候我们在上传图片的同时也需要我们上传其他参数，或者是添加图片之后并不希望直接上传到服务器上而是等待用户填写其他数据之后点击确定按钮上传，这就需要我们自定义上传文件，取消默认的行为。 组件二次封装import React, &amp;#123; useState &amp;#125; f">
 <meta property="og:type" content="website">
-<meta property="og:title" content="前端基础">
-<meta property="og:url" content="http://example.com/webFontBasic/index.html">
+<meta property="og:title" content="react+TS使用antd Upload组件自定义上传">
+<meta property="og:url" content="http://example.com/project/ape/uploadFile.html">
 <meta property="og:site_name" content="XY·夜星">
-<meta property="og:description" content="this详解                 this详解，手写call、apply、bind                                                             函数柯里化，实现add(1)(2)...累加函数                 函数柯里化，实现add">
+<meta property="og:description" content="这个项目是使用antd和react+ts写的，其中遇到上传图片的一个问题，antd的Upload组件并不能满足所有的开发情况，有时候我们在上传图片的同时也需要我们上传其他参数，或者是添加图片之后并不希望直接上传到服务器上而是等待用户填写其他数据之后点击确定按钮上传，这就需要我们自定义上传文件，取消默认的行为。 组件二次封装import React, &amp;#123; useState &amp;#125; f">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
-<meta property="article:published_time" content="2023-11-22T16:00:00.000Z">
-<meta property="article:modified_time" content="2023-11-23T14:21:16.562Z">
+<meta property="article:published_time" content="2023-05-19T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-23T13:15:59.475Z">
 <meta property="article:author" content="夜星">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/webFontBasic/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/ape/uploadFile.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
   root: '/',
   algolia: undefined,
   localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
@@ -52,12 +52,12 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '前端基础',
+  title: 'react+TS使用antd Upload组件自定义上传',
   isPost: false,
   isHome: false,
   isHighlightShrink: false,
   isToc: false,
-  postUpdate: '2023-11-23 22:21:16'
+  postUpdate: '2023-12-23 21:15:59'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -161,20 +161,109 @@
       }
     }
     detectApple()
-    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">前端基础</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"> <div class="recent-posts category_ui" id="recent-posts">
-        <div class="recent-post-item">
-            <div class="recent-post-info">
-                <a class="article-title" href="/webFontBasic/js/thisDetail" title="标题" data-pjax-state="">this详解</a>
-                <div class="content">this详解，手写call、apply、bind</div>
-            </div>
-        </div>
-        <div class="recent-post-item">
-            <div class="recent-post-info">
-                <a class="article-title" href="/webFontBasic/js/fnCuritizing" title="标题" data-pjax-state="">函数柯里化，实现add(1)(2)...累加函数</a>
-                <div class="content">函数柯里化，实现add(1)(2)...累加函数,附加柯里化的简单应用</div>
-            </div>
-        </div>
-</div>
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">react+TS使用antd Upload组件自定义上传</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>这个项目是使用antd和react+ts写的，其中遇到上传图片的一个问题，antd的Upload组件并不能满足所有的开发情况，有时候我们在上传图片的同时也需要我们上传其他参数，或者是添加图片之后并不希望直接上传到服务器上而是等待用户填写其他数据之后点击确定按钮上传，这就需要我们自定义上传文件，取消默认的行为。</p>
+<h4 id="组件二次封装"><a href="#组件二次封装" class="headerlink" title="组件二次封装"></a>组件二次封装</h4><pre><code class="tsx">import React, &#123; useState &#125; from &quot;react&quot;;
+import &#123; PlusOutlined &#125; from &quot;@ant-design/icons&quot;;
+import &#123; Modal, Upload &#125; from &quot;antd&quot;;
+import type &#123; RcFile, UploadProps &#125; from &quot;antd/es/upload&quot;;
+import type &#123; UploadFile &#125; from &quot;antd/es/upload/interface&quot;;
+
+//传递props中包含开始要显示的fileList，图片改变的后的回调函数
+export function MyUpload(&#123;
+  onChangeFn,
+  fileList,
+&#125;: &#123;
+  onChangeFn: (file: any) =&gt; void;
+  fileList: any;
+&#125;) &#123;
+//这个函数是用于图片实现弹窗预览获取图片预览的编码的
+  const getBase64 = (file: RcFile): Promise&lt;string&gt; =&gt;
+    new Promise((resolve, reject) =&gt; &#123;
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () =&gt; resolve(reader.result as string);
+      reader.onerror = (error) =&gt; reject(error);
+    &#125;);
+
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewImage, setPreviewImage] = useState(&quot;&quot;);
+  const [previewTitle, setPreviewTitle] = useState(&quot;&quot;);
+
+  const handleCancel = () =&gt; setPreviewOpen(false);
+
+  const handlePreview = async (file: UploadFile) =&gt; &#123;
+    if (!file.url &amp;&amp; !file.preview) &#123;
+      file.preview = await getBase64(file.originFileObj as RcFile);
+    &#125;
+
+    setPreviewImage(file.url || (file.preview as string));
+    setPreviewOpen(true);
+    setPreviewTitle(
+      file.name || file.url!.substring(file.url!.lastIndexOf(&quot;/&quot;) + 1)
+    );
+  &#125;;
+
+  const handleChange: UploadProps[&quot;onChange&quot;] = (&#123; fileList: newFileList &#125;) =&gt; &#123;
+    onChangeFn(newFileList);
+  &#125;;
+  return (
+    &lt;&gt;
+      &lt;Upload
+        listType=&quot;picture-card&quot;
+        fileList=&#123;fileList&#125;
+        onPreview=&#123;handlePreview&#125;
+        onChange=&#123;handleChange&#125;
+        //beoreUpload返回值为false的时候会取消默认上传行为
+        beforeUpload=&#123;() =&gt; false&#125;
+      &gt;
+        &#123;
+        //这里我们限制死了图片个数是8个，也可以通过props传参进行限制
+        fileList.length &gt;= 8 ? null : (
+          &lt;div&gt;
+            &lt;PlusOutlined /&gt;
+            &lt;div style=&#123;&#123; marginTop: 8 &#125;&#125;&gt;上传&lt;/div&gt;
+          &lt;/div&gt;
+        )&#125;
+      &lt;/Upload&gt;
+      //图片预览
+      &lt;Modal
+        open=&#123;previewOpen&#125;
+        title=&#123;previewTitle&#125;
+        footer=&#123;null&#125;
+        onCancel=&#123;handleCancel&#125;
+      &gt;
+        &lt;img alt=&quot;example&quot; style=&#123;&#123; width: "100%" &#125;&#125; src=&#123;previewImage&#125; /&gt;
+      &lt;/Modal&gt;
+    &lt;/&gt;
+  );
+&#125;
+</code></pre>
+<h4 id="组件的使用"><a href="#组件的使用" class="headerlink" title="组件的使用"></a>组件的使用</h4><pre><code class="tsx">import React, &#123; useState &#125; from &quot;react&quot;;
+import &#123; MyUpload &#125; from &quot;../../components/myUpload&quot;;
+import &#123; Button &#125; from &quot;antd&quot;;
+
+export default function OrderManage() &#123;
+  const [fileList, setFilseList] = useState&lt;any[]&gt;([])
+  function sendImg() &#123;
+    if (fileList.length === 0) &#123;
+      // 没有上传图片
+      return
+    &#125;
+    const formdata = new FormData()
+    for (let i = 0; i &lt; fileList.length; i++) &#123;
+      // 将要上传的文件添加到formdata对象中
+      formdata.append(&#39;file&#39;, fileList[i].originFileObj)
+    &#125;
+    // 添加其他参数
+    // 请求接口
+  &#125;
+  return &lt;div&gt;
+    &lt;MyUpload fileList=&#123;fileList&#125; onChangeFn=&#123;setFilseList&#125;&gt;&lt;/MyUpload&gt;
+    &lt;Button onClick=&#123;sendImg&#125;&gt;确定&lt;/Button&gt;
+  &lt;/div&gt;;
+&#125;
+</code></pre>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>用react写项目也有一段时间了，最大的感受就是react非常的灵活，这样写可以，那样写也可以，可能学的时候视频上没有教怎么写项目吧，这就导致我在写这个项目的时候经常的考虑这样写对不对，虽然功能也都实现了，但是总感觉自己写的不是很好，这就导致写过的东西会一直考虑写的好不好，然后不断的修改，还有的就是感觉这个项目拖的时间有点长，算一下差不多也有两个星期了，但是交互的东西并不是很多，而且每天写项目的时间也不像之前考核写项目那么多，之后项目要赶一下，虽然只有一个人，但是前期的工作都差不多了，剩下的就是简单的用接口交互就行了。</p>
 </div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webServer/" title="后端技术">后端技术</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/project/" title="项目">项目</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">8</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">2.1k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-12-23T13:32:11.003Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
         <style>
             [bg-lazy] {

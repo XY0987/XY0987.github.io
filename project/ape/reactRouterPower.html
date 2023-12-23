@@ -1,0 +1,413 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>react-router v6实现权限管理+自动替换页面标题 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="学了一段时间的react+ts，想着写一个项目练练手，由于初次写react+ts项目，有很多东西并不知道应该怎么写，再加上之前写vue项目的习惯，突然转换react有点不习惯，有很多在vue中的写法，并不知道是否在react中仍然可行。写项目之前先考虑了权限管理，第一次使用react-router v6 也不知道是否有更好的写法。这次就来简单分享一下我实现权限管理以及拦截器中遇到的一些问题。 权限">
+<meta property="og:type" content="website">
+<meta property="og:title" content="react-router v6实现权限管理+自动替换页面标题">
+<meta property="og:url" content="http://example.com/project/ape/reactRouterPower.html">
+<meta property="og:site_name" content="XY·夜星">
+<meta property="og:description" content="学了一段时间的react+ts，想着写一个项目练练手，由于初次写react+ts项目，有很多东西并不知道应该怎么写，再加上之前写vue项目的习惯，突然转换react有点不习惯，有很多在vue中的写法，并不知道是否在react中仍然可行。写项目之前先考虑了权限管理，第一次使用react-router v6 也不知道是否有更好的写法。这次就来简单分享一下我实现权限管理以及拦截器中遇到的一些问题。 权限">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
+<meta property="article:published_time" content="2023-05-12T16:00:00.000Z">
+<meta property="article:modified_time" content="2023-12-23T13:14:19.018Z">
+<meta property="article:author" content="夜星">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/project/ape/reactRouterPower.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'react-router v6实现权限管理+自动替换页面标题',
+  isPost: false,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2023-12-23 21:14:19'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">react-router v6实现权限管理+自动替换页面标题</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>学了一段时间的react+ts，想着写一个项目练练手，由于初次写react+ts项目，有很多东西并不知道应该怎么写，再加上之前写vue项目的习惯，突然转换react有点不习惯，有很多在vue中的写法，并不知道是否在react中仍然可行。写项目之前先考虑了权限管理，第一次使用react-router v6 也不知道是否有更好的写法。这次就来简单分享一下我实现权限管理以及拦截器中遇到的一些问题。</p>
+<h4 id="权限管理"><a href="#权限管理" class="headerlink" title="权限管理"></a>权限管理</h4><p>这次项目是有三种权限，分别是用户，商家以及管理员。这次写的权限管理是高级权限能访问低级权限的所有页面，但是低级权限不能访问高级权限的页面。<br>简单实现</p>
+<pre><code class="tsx">// 在这里进行判断用户权限使用不同的页面
+import React from &quot;react&quot;;
+import Merchant from &quot;../pages/merchant&quot;;
+import Admin from &quot;../pages/admin&quot;;
+import User from &quot;../pages/user&quot;;
+
+export default function Index() &#123;
+//这里使用power来判断是否登录，以及权限
+  let power = localStorage.getItem(&quot;power&quot;);
+  return (
+    &lt;div&gt;
+      &#123;power ? (
+        power === &quot;1&quot; ? (
+          &lt;Merchant&gt;&lt;/Merchant&gt;
+        ) : (
+          &lt;Admin&gt;&lt;/Admin&gt;
+        )
+      ) : (
+        &lt;User&gt;&lt;/User&gt;
+      )&#125;
+    &lt;/div&gt;
+  );
+&#125;
+</code></pre>
+<p>我实现权限管理的方式就是根据不同的权限挂载不同的页面，在页面中实现挂载不同的路由。<br>之后看一下我在三种不同页面中的路由定义以及具体内容，即不需要显示的路由就不应该被注册<br>user路由表</p>
+<pre><code class="tsx">// 引入路由
+import Login from &quot;../pages/user/login&quot;;
+import Register from &quot;../pages/user/register&quot;;
+import NoPower from &quot;../pages/error/noPower&quot;;
+import NoPage from &quot;../pages/error/noPage&quot;;
+import &#123; myRouteObj &#125; from &quot;../type&quot;;
+
+//这里的myRouteObj是我自定义的一个类型用于拓展title实现页面标题的自动切换
+export const userRoutes: myRouteObj[] = [
+  &#123;
+    path: &quot;/404&quot;,
+    element: &lt;NoPage&gt;&lt;/NoPage&gt;,
+    title: &#39;404&#39;
+  &#125;,
+  &#123;
+    path: &quot;/login&quot;,
+    element: &lt;Login&gt;&lt;/Login&gt;,
+    title: &#39;登录&#39;
+  &#125;,
+  &#123;
+    path: &quot;/register&quot;,
+    element: &lt;Register&gt;&lt;/Register&gt;,
+    title: &#39;注册&#39;
+  &#125;,
+];
+
+const routes = [
+  ...userRoutes,
+  &#123;
+    path: &quot;*&quot;,
+    element: &lt;NoPower&gt;&lt;/NoPower&gt;,
+    title: &#39;没有权限&#39;
+  &#125;,
+];
+
+export default routes;
+</code></pre>
+<p>路由表中暴露了两个对象，分别是最”原始的对象”和使用的对象，这两个对象的区别就是是否有拦截器，为什么需要把这个给区分开，是因为我们的目的是高权限的用户能访问到低权限用户所能访问的页面，又由于我们是通过返回不同的页面来实现的权限管理（即使用过程中必须高权限的路由中包含低权限的路由）而且拦截器必须要放在最后，所以就分了两个来暴露，一个是供注册路由使用（有拦截器版本），另一个是由高级权限路由表合并使用</p>
+<p>myRouteObj的内容</p>
+<pre><code class="ts">import &#123; NonIndexRouteObject &#125; from &quot;react-router&quot;;
+export interface myRouteObj extends NonIndexRouteObject &#123;
+  title?: string;
+&#125;
+</code></pre>
+<p>user页面的入口文件</p>
+<pre><code class="tsx">import React from &quot;react&quot;;
+import userRoutes from &quot;../../router/user&quot;;
+import &#123; useMyRoutes &#125; from &quot;../../hooks/route&quot;;
+
+export default function User() &#123;
+//这里的useMyRoutes是我自己封装的一个钩子函数
+  const element = useMyRoutes(userRoutes);
+  return &lt;div&gt;&#123;element&#125;&lt;/div&gt;;
+&#125;
+</code></pre>
+<p>useMyRoutes钩子函数的具体内容<br>该钩子函数用于更换页面标题以及一级路由表中是否有该路由(没有的话会跳到404)，这里为什么只判断了一级路由表是因为我个人感觉一级路由如果输入错误，其就应该跳转到404页面，而二级路由输入错误，应该重定向到二级路由正确的位置，这样我感觉对用户要更友好一点，所以我在二级路由中添加了重定向的功能，并且也实现了替换标题的功能，如果没有标题的话会返回一个默认值</p>
+<pre><code class="ts">import &#123; useEffect &#125; from &quot;react&quot;;
+import &#123; useLocation, useNavigate, useRoutes &#125; from &quot;react-router&quot;;
+import &#123; myRouteObj &#125; from &quot;../type&quot;;
+
+function flatDeep(children: any, findArr: any): string &#123;
+  // 判断children数组中是否有想要的元素
+  let tempArr = children.map((item: any) =&gt; item.path);
+  let index = tempArr.indexOf(findArr[0]);
+  if (index !== -1) &#123;
+    return findArr.length &gt; 1
+      ? flatDeep(children[index], findArr.splice(1, findArr.length))
+      : children[index].title;
+     ? children[index].title
+     : &quot;商城&quot;;
+  &#125;
+  return &quot;商城&quot;;
+&#125;
+
+export function useMyRoutes(routes: myRouteObj[]) &#123;
+  // 判断路由表中是否有对应路由，如果没有就返回到404
+  const location = useLocation();
+  const navigate = useNavigate();
+  useEffect(() =&gt; &#123;
+  /*
+这里有一个小问题，困扰了我半天，就是原本我获取路径是写在useEffect外边的，页面每次刷新就会显示成错误的标题，最后输出是因为报存的值没有更新，所以就改到useEffect函数里边了
+*/
+    // 非空
+    const firstPathName = location.pathname
+      .split(&quot;/&quot;)
+      .filter((item) =&gt; item !== &quot;&quot;);
+    const firstPath = routes.map((item) =&gt; item.path?.split(&quot;/&quot;)[1]);
+    let index = firstPath.indexOf(firstPathName[0]);
+    if (!index) &#123;
+      navigate(&quot;/404&quot;);
+      return;
+    &#125;
+    // 判断是否是首页
+    if (location.pathname === &quot;/&quot;) &#123;
+      document.title = &quot;商城&quot;;
+      return;
+    &#125;
+    // 判断是几级路由
+    if (firstPathName.length &gt; 1) &#123;
+      // 多级
+      document.title = flatDeep(
+        routes[index].children,
+        firstPathName.splice(1, firstPathName.length)
+      );
+      return;
+    &#125;
+    // 一级
+    document.title = routes[index].title
+      ? (routes[index].title as string)
+      : &quot;商城&quot;;
+  &#125;, [location, navigate, routes]);
+  return useRoutes(routes);
+&#125;
+</code></pre>
+<p>商家的路由表</p>
+<pre><code class="tsx">import &#123; Navigate &#125; from &quot;react-router&quot;;
+import Merchant from &quot;../pages/merchant&quot;;
+import Commodity from &quot;../pages/merchant/commodity&quot;;
+import &#123; userRoutes &#125; from &quot;./user&quot;;
+import &#123; getRoutesObj &#125; from &quot;../utils&quot;;
+import &#123; myRouteObj &#125; from &quot;../type&quot;;
+
+const children: myRouteObj[] = [
+  &#123;
+    path: &quot;commodity&quot;,
+    element: &lt;Commodity&gt;&lt;/Commodity&gt;,
+  &#125;,
+];
+
+const primitiveObj = &#123;
+  path: &quot;/merchant/*&quot;,
+  element: &lt;Merchant&gt;&lt;/Merchant&gt;,
+  title: &#39;商店后台&#39;
+&#125;;
+
+// 有拦截器版本
+export const [routes, defaultRoutes] = getRoutesObj(
+  userRoutes,
+  primitiveObj,
+  children,
+  &#123;
+    path: &quot;*&quot;,
+    element: &lt;Navigate to=&quot;/merchant/commodity&quot;&gt;&lt;/Navigate&gt;,
+  &#125;
+);
+</code></pre>
+<p>getRoutesObj是我自定义的为二级路由添加重定向的工具函数，至于为什么封装这个函数，其原因就是商家和管理员都要使用，原本是想把重定向添加到最外层，但是这个由于react-router v6并不是严格匹配模式，所以即使匹配上路由也会尝试往下匹配更精确的路由比如&#x2F;about和&#x2F;about:id所以封装了该函数添加二级拦截器</p>
+<pre><code class="ts">import &#123; myRouteObj &#125; from &quot;../type&quot;;
+
+// 第一个参数是复用的数组对象,第二个参数是有拦截器的对象
+
+/**
+ *生成路由表配置（加拦截器）
+ * @export
+ * @param &#123;myRouteObj[]&#125; reuseObj 复用的数组对象
+ * @param &#123;myRouteObj&#125; targetObj 目标对象
+ * @param &#123;myRouteObj[]&#125; childrenObj 子级路由
+ * @param &#123;myRouteObj&#125; globalinterceptorObj 全局拦截路由
+ * @param &#123;myRouteObj&#125; interceptor 可选拦截器对象(添加子级路由中)
+ */
+export function getRoutesObj(
+  reuseObj: myRouteObj[],
+  targetObj: myRouteObj,
+  childrenObj: myRouteObj[],
+  interceptorObj?: myRouteObj
+) &#123;
+  //  先复制一份children
+  const children = [...childrenObj];
+  //   判断是否有值
+  if (interceptorObj) &#123;
+    children.push(interceptorObj);
+  &#125;
+  return [
+    [
+      ...reuseObj,
+      &#123;
+        ...targetObj,
+        children: children,
+      &#125;,
+    ],
+    [
+      ...reuseObj,
+      &#123;
+        ...targetObj,
+        children: [...childrenObj],
+      &#125;,
+    ],
+  ];
+&#125;
+</code></pre>
+<p>商家入口文件</p>
+<pre><code class="tsx">import React, &#123; Fragment &#125; from &quot;react&quot;;
+import &#123; Outlet &#125; from &quot;react-router&quot;;
+import &#123; routes &#125; from &quot;../../router/merchant&quot;;
+import &#123; useMyRoutes &#125; from &quot;../../hooks/route&quot;;
+import &#123; myRouteObj &#125; from &quot;../../type&quot;;
+
+export default function Merchant() &#123;
+  const element = useMyRoutes(routes as myRouteObj[]);
+  return (
+    &lt;Fragment&gt;
+      &#123;element&#125;
+      &lt;Outlet&gt;&lt;/Outlet&gt;
+    &lt;/Fragment&gt;
+  );
+&#125;
+</code></pre>
+<p>管理员的和商家的差不多，这里就不再过多叙述了</p>
+<h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><p>实现这个权限管理还是花了有一天多的时间，有很多东西没有这么写过，也不知道正规的是否应该这样写，不过现在还是先实现功能就行了，等之后随着不断的练习和学习，也能检验我这个方法是否是对的，第一次写react+TS的项目，仍有很多不足，如果哪位大佬有觉得不妥的地方，也欢迎指出，一同学习，共同进步。</p>
+</div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webServer/" title="后端技术">后端技术</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/project/" title="项目">项目</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">8</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">2.1k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2023-12-23T13:32:11.003Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
