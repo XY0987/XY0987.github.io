@@ -17,6 +17,19 @@
     
     
     <entry>
+      <title>后端技术</title>
+      <link href="/2023/11/23/webServer/"/>
+      <url>/2023/11/23/webServer/</url>
+      
+        <content type="html"><![CDATA[ <div class="recent-posts category_ui" id="recent-posts">        <div class="recent-post-item">            <div class="recent-post-info">                <a class="article-title" href="/webServer/fs" title="标题" data-pjax-state="">node——fs模块</a>                <div class="content">node——fs模块详解，更加优雅的读取文件</div>            </div>        </div></div>]]></content>
+      
+      
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>工具</title>
       <link href="/2023/09/16/tools/"/>
       <url>/2023/09/16/tools/</url>
