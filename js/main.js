@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const div = document.getElementsByClassName('headline')
   for (let i = 0; i < div.length; i++) {
     if (div[i].innerHTML === '文章') {
-      div[i].nextSibling.innerHTML = 44
+      div[i].nextSibling.innerHTML = 45
     }
   }
   let headerContentWidth, $nav

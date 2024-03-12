@@ -1,16 +1,16 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>工具 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="mongodb安装问题及部分问题解决                 总结以及分享mongodb安装中遇到的问题                                                             pkg打包项目                 pkg打包项目踩坑记录">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>async和await实现原理 | XY·夜星</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="我们一直使用async和await，来让我们以同步的方式来调用异步代码，它实际上就是promise语法糖，书写起来也比较方便。一直都是使用，但是并不知道它的实现原理是什么，今天再看es6文档的时候看到了，就简单来记录一下。 引导其实这个问题看似很难，但是其实是我们应该知道的一个问题，比如说我们在学习es6的时候有一个generator生成器函数，随后我们就开始学习了async和await，我记得当">
 <meta property="og:type" content="website">
-<meta property="og:title" content="工具">
-<meta property="og:url" content="http://example.com/tools/index.html">
+<meta property="og:title" content="async和await实现原理">
+<meta property="og:url" content="http://example.com/webFontBasic/js/asyncAndawaitDet.html">
 <meta property="og:site_name" content="XY·夜星">
-<meta property="og:description" content="mongodb安装问题及部分问题解决                 总结以及分享mongodb安装中遇到的问题                                                             pkg打包项目                 pkg打包项目踩坑记录">
+<meta property="og:description" content="我们一直使用async和await，来让我们以同步的方式来调用异步代码，它实际上就是promise语法糖，书写起来也比较方便。一直都是使用，但是并不知道它的实现原理是什么，今天再看es6文档的时候看到了，就简单来记录一下。 引导其实这个问题看似很难，但是其实是我们应该知道的一个问题，比如说我们在学习es6的时候有一个generator生成器函数，随后我们就开始学习了async和await，我记得当">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg">
-<meta property="article:published_time" content="2023-09-15T16:00:00.000Z">
-<meta property="article:modified_time" content="2023-12-23T13:20:37.547Z">
+<meta property="article:published_time" content="2024-03-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2024-03-12T03:37:23.673Z">
 <meta property="article:author" content="夜星">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/tools/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+<meta name="twitter:image" content="https://i.loli.net/2020/05/01/gkihqEjXxJ5UZ1C.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/webFontBasic/js/asyncAndawaitDet.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
   root: '/',
   algolia: undefined,
   localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
@@ -52,12 +52,12 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '工具',
+  title: 'async和await实现原理',
   isPost: false,
   isHome: false,
   isHighlightShrink: false,
   isToc: false,
-  postUpdate: '2023-12-23 21:20:37'
+  postUpdate: '2024-03-12 11:37:23'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -161,26 +161,86 @@
       }
     }
     detectApple()
-    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">工具</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"> <div class="recent-posts category_ui" id="recent-posts">
-        <div class="recent-post-item">
-            <div class="recent-post-info">
-                <a class="article-title" href="/tools/mongodb" title="标题" data-pjax-state="">mongodb安装问题及部分问题解决</a>
-                <div class="content">总结以及分享mongodb安装中遇到的问题</div>
-            </div>
-        </div>
-        <div class="recent-post-item">
-            <div class="recent-post-info">
-                <a class="article-title" href="/tools/pkg" title="标题" data-pjax-state="">pkg打包项目</a>
-                <div class="content">pkg打包项目踩坑记录</div>
-            </div>
-        </div>
-        <div class="recent-post-item">
-            <div class="recent-post-info">
-                <a class="article-title" href="/tools/package" title="标题" data-pjax-state="">前端包管理器的简介，pnpm的使用以及和npm的区别</a>
-                <div class="content">前端包管理器的简介，pnpm的使用以及和npm的区别</div>
-            </div>
-        </div>
-</div>
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-home-page" id="page-header" style="background-image: url('/img/top_bac.jpg')"><nav id="nav"><span id="blog-info"><a href="/" title="XY·夜星"><span class="site-name">XY·夜星</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/technologyStudy/"><i class="fa-fw fas fa-tags"></i><span> 技术学习</span></a></div><div class="menus_item"><a class="site-page" href="/project/"><i class="fa-fw fas fa-folder-open"></i><span> 项目</span></a></div><div class="menus_item"><a class="site-page" href="/webFontBasic/"><i class="fa-fw fas fa-archive"></i><span> 前端基础</span></a></div><div class="menus_item"><a class="site-page" href="/apiInMy/"><i class="fa-fw fas fa-heart"></i><span> 手写API</span></a></div><div class="menus_item"><a class="site-page" href="/webServer/"><span> 后端</span></a></div><div class="menus_item"><a class="site-page" href="/tools/"><span> 工具</span></a></div><div class="menus_item"><a class="site-page" href="/algorithm/"><span> 算法</span></a></div><div class="menus_item"><a class="site-page" href="/notes/"><i class="fa-fw fas fa-heart"></i><span> 杂记</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="page-site-info"><h1 id="site-title">async和await实现原理</h1></div></header><main class="layout" id="content-inner"><div id="page"><div id="article-container"><p>我们一直使用async和await，来让我们以同步的方式来调用异步代码，它实际上就是promise语法糖，书写起来也比较方便。一直都是使用，但是并不知道它的实现原理是什么，今天再看es6文档的时候看到了，就简单来记录一下。</p>
+<h2 id="引导"><a href="#引导" class="headerlink" title="引导"></a>引导</h2><p>其实这个问题看似很难，但是其实是我们应该知道的一个问题，比如说我们在学习es6的时候有一个generator生成器函数，随后我们就开始学习了async和await，我记得当时我看视频中老师说了把generator的*换成async把yield换成await，就是async和await<br>由此我们可见，async和await的实现和生成器函数密不可分</p>
+<h2 id="生成器函数详解"><a href="#生成器函数详解" class="headerlink" title="生成器函数详解"></a>生成器函数详解</h2><p>因为我们平常用生成器函数比较少，所以可能有些遗忘，所以我这里来简单的回顾一下</p>
+<ol>
+<li>函数声明</li>
+</ol>
+<pre><code class="javascript">// 注意，生成器函数的星号不受两侧空格的影响
+function* generatorFn() &#123;&#125;
+</code></pre>
+<ol start="2">
+<li>使用</li>
+</ol>
+<p>声明生成器之后，我们需要调用生成器函数来产生一个生成器对象，然后控制整个函数的调度，另外需要注意的一点是：生成器一开始处于暂停执行，我们需要先调用，才能执行（这里也就牵涉到为什么next第一次传入的值没有效果，是因为是为了开启调度的），与生成器相似的是，生成器对象也实现了iterator接口，会有next()方法（该方法用于调度到下一个），同时返回值会有一个done（ture表示调度结束了）和value</p>
+<pre><code class="javascript">//直接使用
+function* generatorFn() &#123; 
+  return &#39;foo&#39;; 
+&#125; 
+let generatorObject = generatorFn(); 
+console.log(generatorObject); // generatorFn &#123;&lt;suspended&gt;&#125; 
+console.log(generatorObject.next()); // &#123; done: true, value: &#39;foo&#39; &#125;
+</code></pre>
+<pre><code class="javascript">// 使用yield中断
+function* generatorFn() &#123; 
+  yield &#39;foo&#39;; 
+  yield &#39;bar&#39;; 
+  return &#39;baz&#39;; 
+&#125; 
+let generatorObject = generatorFn(); 
+console.log(generatorObject.next()); // &#123; done: false, value: &#39;foo&#39; &#125; 
+console.log(generatorObject.next()); // &#123; done: false, value: &#39;bar&#39; &#125; 
+console.log(generatorObject.next()); // &#123; done: true, value: &#39;baz&#39; &#125;
+</code></pre>
+<pre><code class="javascript">// 使用next传值
+function* generatorFn(initial) &#123; 
+  console.log(initial); 
+  console.log(yield); 
+  console.log(yield); 
+&#125; 
+// 生成一个生成器对象
+let generatorObject = generatorFn(&#39;foo&#39;);
+// 开启调度，执行第一个输出，输出传入的initial
+generatorObject.next(&#39;bar&#39;); // foo 
+// 调度下一个，next传入值会作为上一个yield的返回值(即第二个next传入的值会作为第一个yield的返回值)
+generatorObject.next(&#39;baz&#39;); // baz 
+// 输出qux，解释同上一个
+generatorObject.next(&#39;qux&#39;); // qux
+
+/*
+这里可能比较绕一点，我们只需要记住第一次调用next传入的值是无效的
+因为第一次的next是启动调度，之后调用的next传入的值会作为yield的返回值
+比如我们第二次调用next(&#39;baz&#39;)会输出yield
+*/
+</code></pre>
+<h2 id="实现async和await"><a href="#实现async和await" class="headerlink" title="实现async和await"></a>实现async和await</h2><pre><code class="javascript">function spawn(genF) &#123;
+  return new Promise(function (resolve, reject) &#123;
+    const gen = genF();
+    function step(nextF) &#123;
+      let next;
+      try &#123;
+        next = nextF();
+      &#125; catch (e) &#123;
+        return reject(e);
+      &#125;
+      // done是false表示已经没有后续的代码要运行了
+      if (next.done) &#123;
+        return resolve(next.value);
+      &#125;
+      Promise.resolve(next.value).then(function (v) &#123;
+        // 开始调度，这里next传递的值会作为上一次yeild的返回值（即第二次执行next函数会作为第一个yield的返回值因为第一个没有用）
+        step(function () &#123; return gen.next(v); &#125;);
+      &#125;, function (e) &#123;
+        step(function () &#123; return gen.throw(e); &#125;);
+      &#125;);
+    &#125;
+    // 开始调度，第一次next传递的值没有效果，用于开始调度
+    step(function () &#123; return gen.next(undefined); &#125;);
+  &#125;);
+&#125;
+</code></pre>
+<p>以上就是async和await的实现原理，我们在调用的时候直接传入一个生成器函数就可以</p>
 </div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">前端切图仔</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">8</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">0</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">0</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/" target="_blank" title="Github"><i class="fab fa-github"></i></a><a class="social-icon" href="https://blog.csdn.net/mjh1667002013" target="_blank" title="CSDN"><i class="fa fa-book-open"></i></a><a class="social-icon" href="tencent://AddContact/?fromId=45&amp;fromSubId=1&amp;subcmd=all&amp;uin=728831102&amp;website=www.oicqzone.com" target="_blank" title="QQ"><i class="fab fa-qq"></i></a><a class="social-icon" href="mailto:1976083684@qq.com" target="_blank" title="Email"><i class="fas fa-envelope-open-text"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">This is my Blog</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webServer/" title="后端技术">后端技术</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/11/23/webFontBasic/" title="前端基础">前端基础</a><time datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/project/" title="项目">项目</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/16/tools/" title="工具">工具</a><time datetime="2023-09-15T16:00:00.000Z" title="发表于 2023-09-16 00:00:00">2023-09-16</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/09/10/algorithm/" title="算法">算法</a><time datetime="2023-09-09T16:00:00.000Z" title="发表于 2023-09-10 00:00:00">2023-09-10</time></div></div></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/11/"><span class="card-archive-list-date">十一月 2023</span><span class="card-archive-list-count">2</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/09/"><span class="card-archive-list-date">九月 2023</span><span class="card-archive-list-count">3</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/07/"><span class="card-archive-list-date">七月 2023</span><span class="card-archive-list-count">3</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">8</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">2.1k</div></div><div class="webinfo-item"><div class="item-name">本站访客数 :</div><div class="item-count" id="busuanzi_value_site_uv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">本站总访问量 :</div><div class="item-count" id="busuanzi_value_site_pv"><i class="fa-solid fa-spinner fa-spin"></i></div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2024-03-12T03:41:48.939Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer" style="background-image: url('/img/top_bac.jpg')"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2024 By 夜星</div><div class="framework-info"><span>框架 </span><a target="_blank" rel="noopener" href="https://hexo.io">Hexo</a><span class="footer-separator">|</span><span>主题 </span><a target="_blank" rel="noopener" href="https://github.com/jerryc127/hexo-theme-butterfly">Butterfly</a></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
         <style>
             [bg-lazy] {
