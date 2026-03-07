@@ -1,0 +1,334 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>wangeditor自定义按钮及上传文件配置 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="我们这次项目是一个在线考试系统，其中有一个富文本的需求，并且有一个填空的样式，但是wangeditor富文本并没有原生的这些东西，只能自己自定义一下自定义按钮js文件 import E from &#39;wangeditor&#39; &#x2F;&#x2F; npm 安装 const &amp;#123; BtnMenu &amp;#125; &#x3D; E var _this &#x3D; null export default class A">
+<meta property="og:type" content="article">
+<meta property="og:title" content="wangeditor自定义按钮及上传文件配置">
+<meta property="og:url" content="http://example.com/posts/vue-wangeditor-config/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="我们这次项目是一个在线考试系统，其中有一个富文本的需求，并且有一个填空的样式，但是wangeditor富文本并没有原生的这些东西，只能自己自定义一下自定义按钮js文件 import E from &#39;wangeditor&#39; &#x2F;&#x2F; npm 安装 const &amp;#123; BtnMenu &amp;#125; &#x3D; E var _this &#x3D; null export default class A">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2022-12-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-07T03:20:59.718Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vue">
+<meta property="article:tag" content="富文本编辑器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/vue-wangeditor-config/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'wangeditor自定义按钮及上传文件配置',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2026-03-07 11:20:59'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">66</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">wangeditor自定义按钮及上传文件配置</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2022-12-09T16:00:00.000Z" title="发表于 2022-12-10 00:00:00">2022-12-10</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-07T03:20:59.718Z" title="更新于 2026-03-07 11:20:59">2026-03-07</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>4分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>我们这次项目是一个在线考试系统，其中有一个富文本的需求，并且有一个填空的样式，但是wangeditor富文本并没有原生的这些东西，只能自己自定义一下<br><img src="/img/loading.gif" data-original="https://img-blog.csdnimg.cn/7e6da190063f41bbbb0cfc57fa1fdfda.png" alt="在这里插入图片描述"><br>自定义按钮js文件</p>
+<pre><code class="js">import E from &#39;wangeditor&#39; // npm 安装
+const &#123; BtnMenu &#125; = E
+var _this = null
+export default class AlertMenu extends BtnMenu &#123;
+    constructor(editor) &#123;
+        // data-title属性表示当鼠标悬停在该按钮上时提示该按钮的功能简述
+        _this = editor
+        const $elem = E.$(
+            `&lt;div class=&quot;w-e-menu&quot; data-title=&quot;填空&quot;&gt;
+                填空
+            &lt;/div&gt;`
+        )
+        super($elem, editor)
+    &#125;
+    // 菜单点击事件
+    clickHandler() &#123;
+        // 做任何你想做的事情
+        // 可参考【常用 API】文档，来操作编辑器
+        _this.cmd.do(&quot;insertHTML&quot;, `&amp;nbsp;&lt;u style=&quot;pading:0px 10px;&quot;&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;1&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;/u&gt;&amp;nbsp;`)
+
+    &#125;
+    // 菜单是否被激活（如果不需要，这个函数可以空着）
+    // 1. 激活是什么？光标放在一段加粗、下划线的文本时，菜单栏里的 B 和 U 被激活，如下图
+    // 2. 什么时候执行这个函数？每次编辑器区域的选区变化（如鼠标操作、键盘操作等），都会触发各个菜单的 tryChangeActive 函数，重新计算菜单的激活状态
+    tryChangeActive() &#123;
+        // 激活菜单
+        // 1. 菜单 DOM 节点会增加一个 .w-e-active 的 css class
+        // 2. this.this.isActive === true
+        this.active()
+        // // 取消激活菜单
+        // // 1. 菜单 DOM 节点会删掉 .w-e-active
+        // // 2. this.this.isActive === false
+        // this.unActive()
+    &#125;
+&#125;
+</code></pre>
+<p>组件中的书写</p>
+<pre><code class="js">&lt;template&gt;
+  &lt;div&gt;
+    &lt;button @click=&quot;dialogVisible = true&quot;&gt;点击&lt;/button&gt;
+    &lt;el-dialog
+      @opened=&quot;createEditor()&quot;
+      title=&quot;提示&quot;
+      :visible.sync=&quot;dialogVisible&quot;
+      width=&quot;70%&quot;
+      :before-close=&quot;handleClose&quot;
+    &gt;
+      &lt;div id=&quot;editor&quot;&gt;&lt;/div&gt;
+      &lt;span slot=&quot;footer&quot; class=&quot;dialog-footer&quot;&gt;
+        &lt;el-button @click=&quot;handleClose&quot;&gt;取 消&lt;/el-button&gt;
+        &lt;el-button type=&quot;primary&quot; @click=&quot;sureFn&quot;&gt;确 定&lt;/el-button&gt;
+      &lt;/span&gt;
+    &lt;/el-dialog&gt;
+  &lt;/div&gt;
+&lt;/template&gt;
+
+&lt;script&gt;
+import E from &quot;wangeditor&quot;;
+import &#123; Dialog &#125; from &quot;element-ui&quot;;
+import AlertMenu from &quot;&quot;; // 根据上边的js文件实际路径进行引入即可
+import myStore from &quot;../../store/index&quot;;
+export default &#123;
+  name: &quot;myText&quot;,
+  components: &#123;
+    [Dialog.name]: Dialog,
+  &#125;,
+  data() &#123;
+    return &#123;
+      dialogVisible: false,
+      editor: null,
+      editorContent: &quot;&quot;,
+      value: &quot;&quot;,
+    &#125;;
+  &#125;,
+  methods: &#123;
+    createEditor() &#123;
+      this.editor = new E(&quot;#editor&quot;);
+      //配置内容改变时的函数,并将其赋值给vule
+      this.editor.config.onchange = (html) =&gt; &#123;
+        this.value = html;
+      &#125;;
+      this.editor.config.menus = [
+        &quot;head&quot;, // 标题
+        &quot;bold&quot;, // 粗体
+        &quot;fontSize&quot;, // 字号
+        &quot;fontName&quot;, // 字体
+        &quot;italic&quot;, // 斜体
+        &quot;underline&quot;, // 下划线
+        &quot;strikeThrough&quot;, // 删除线
+        &quot;foreColor&quot;, // 文字颜色
+        &quot;backColor&quot;, // 背景颜色
+        &quot;link&quot;, // 插入链接
+        &quot;list&quot;, // 列表
+        &quot;justify&quot;, // 对齐方式
+        &quot;quote&quot;, // 引用
+        &quot;emoticon&quot;, // 表情
+        &quot;image&quot;, // 插入图片
+        &quot;table&quot;, // 表格
+        &quot;code&quot;, // 插入代码
+        &quot;undo&quot;, // 撤销
+        &quot;redo&quot;, // 重复
+      ];
+      // 配置自定义按钮
+      this.editor.menus.extend(&quot;alertMenu&quot;, AlertMenu); // 配置扩展的菜单
+      this.editor.config.menus = this.editor.config.menus.concat(&quot;alertMenu&quot;);
+      // 配置上传图片
+      this.editor.config.uploadImgShowBase64 = true; // base 64 存储图片
+      this.editor.config.uploadImgServer = &quot;/api/admin/addPicture&quot;;
+      // 配置服务器端地址
+      this.editor.config.uploadFileName = &quot;file&quot;; // 后端接受上传文件的参数名
+      this.editor.config.uploadImgHeaders = &#123;
+        token: myStore.state.token, // 设置请求头
+      &#125;;
+      this.editor.config.uploadImgHooks = &#123;
+        fail: function () &#123;
+          this.$message(&#123;
+            message: &quot;图片上传失败&quot;,
+            type: &quot;warning&quot;,
+          &#125;);
+        &#125;,
+        error: function () &#123;
+          this.$message.error(&quot;图片上传出错&quot;);
+        &#125;,
+        success: (xhr, editor, result) =&gt; &#123;
+          // 图片上传成功回调
+          console.log(&quot;成功&quot;, result);
+        &#125;,
+        customInsert: (insertImg, result, editor) =&gt; &#123;
+          // 图片上传成功，插入图片的回调
+          console.log(result);
+          console.log(editor);
+          insertImg(result.data);
+        &#125;,
+      &#125;;
+      this.editor.create();
+    &#125;,
+    handleClose() &#123;
+      this.$confirm(&quot;确认要关闭吗?&quot;, &quot;提示&quot;, &#123;
+        confirmButtonText: &quot;确定&quot;,
+        cancelButtonText: &quot;取消&quot;,
+        type: &quot;warning&quot;,
+      &#125;)
+        .then(() =&gt; &#123;
+        &#125;)
+        .catch(() =&gt; &#123;&#125;);
+    &#125;,
+  &#125;,
+  mounted()&#123;
+    this。createEditor()
+&#125;
+&#125;;
+&lt;/script&gt;
+</code></pre>
+<p>以上就是自定义按钮和上传图片的一些配置</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vue/">Vue</a><a class="post-meta__tags" href="/tags/%E5%AF%8C%E6%96%87%E6%9C%AC%E7%BC%96%E8%BE%91%E5%99%A8/">富文本编辑器</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/react-hook-modal/" title="React Hook Modal"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">React Hook Modal</div></div></a></div><div class="next-post pull-right"><a href="/posts/vue-element-upload/" title="使用element-ui组件库上传文件及自定义上传文件（包含多文件上传及自定义上传携带其他参数）"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">使用element-ui组件库上传文件及自定义上传文件（包含多文件上传及自定义上传携带其他参数）</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">46</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">66</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">8</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/async-await-principle/" title="async和await实现原理">async和await实现原理</a><time datetime="2024-03-11T16:00:00.000Z" title="发表于 2024-03-12 00:00:00">2024-03-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/commonjs-esmodule/" title="CommonJS和ES Module的区别">CommonJS和ES Module的区别</a><time datetime="2024-02-02T16:00:00.000Z" title="发表于 2024-02-03 00:00:00">2024-02-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-call-apply-bind/" title="手写call、apply、bind">手写call、apply、bind</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-deep-clone/" title="手写深拷贝">手写深拷贝</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-jsonp/" title="实现JSONP">实现JSONP</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
