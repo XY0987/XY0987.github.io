@@ -1,0 +1,471 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>深入理解浏览器回流与重绘：原理与优化实践 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="浏览器的回流（Reflow）和重绘（Repaint）是前端性能优化中的重要概念。理解它们的工作原理，对于编写高性能的网页应用至关重要。 一、浏览器的渲染过程在讨论回流和重绘之前，我们需要先了解浏览器的渲染流程： DOM树 → CSSOM树 → 渲染树 → 布局 → 绘制 → 合成  1.1 渲染流程详解 构建 DOM 树：解析 HTML，生成 DOM 树 构建 CSSOM 树：解析 CSS，生成">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解浏览器回流与重绘：原理与优化实践">
+<meta property="og:url" content="http://example.com/posts/browser-reflow-repaint/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="浏览器的回流（Reflow）和重绘（Repaint）是前端性能优化中的重要概念。理解它们的工作原理，对于编写高性能的网页应用至关重要。 一、浏览器的渲染过程在讨论回流和重绘之前，我们需要先了解浏览器的渲染流程： DOM树 → CSSOM树 → 渲染树 → 布局 → 绘制 → 合成  1.1 渲染流程详解 构建 DOM 树：解析 HTML，生成 DOM 树 构建 CSSOM 树：解析 CSS，生成">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2024-03-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T01:16:40.785Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="浏览器">
+<meta property="article:tag" content="回流">
+<meta property="article:tag" content="重绘">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/browser-reflow-repaint/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '深入理解浏览器回流与重绘：原理与优化实践',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 09:16:40'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">深入理解浏览器回流与重绘：原理与优化实践</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-03-14T16:00:00.000Z" title="发表于 2024 00:00:00">2024</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T01:16:40.785Z" title="更新于 2026 09:16:40">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cs-fundamentals/">基础知识</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>浏览器的回流（Reflow）和重绘（Repaint）是前端性能优化中的重要概念。理解它们的工作原理，对于编写高性能的网页应用至关重要。</p>
+<h2 id="一、浏览器的渲染过程"><a href="#一、浏览器的渲染过程" class="headerlink" title="一、浏览器的渲染过程"></a>一、浏览器的渲染过程</h2><p>在讨论回流和重绘之前，我们需要先了解浏览器的渲染流程：</p>
+<pre><code>DOM树 → CSSOM树 → 渲染树 → 布局 → 绘制 → 合成
+</code></pre>
+<h3 id="1-1-渲染流程详解"><a href="#1-1-渲染流程详解" class="headerlink" title="1.1 渲染流程详解"></a>1.1 渲染流程详解</h3><ol>
+<li><strong>构建 DOM 树</strong>：解析 HTML，生成 DOM 树</li>
+<li><strong>构建 CSSOM 树</strong>：解析 CSS，生成 CSSOM 树</li>
+<li><strong>生成渲染树（Render Tree）</strong>：DOM 树与 CSSOM 树合并</li>
+<li><strong>布局（Layout&#x2F;Reflow）</strong>：计算元素的位置和大小</li>
+<li><strong>绘制（Paint&#x2F;Repaint）</strong>：将元素绘制到屏幕上</li>
+<li><strong>合成（Composite）</strong>：将多个图层合并显示</li>
+</ol>
+<h2 id="二、什么是回流（Reflow）"><a href="#二、什么是回流（Reflow）" class="headerlink" title="二、什么是回流（Reflow）"></a>二、什么是回流（Reflow）</h2><h3 id="2-1-定义"><a href="#2-1-定义" class="headerlink" title="2.1 定义"></a>2.1 定义</h3><p><strong>回流</strong>是指浏览器重新计算元素的位置和几何属性，重新构建渲染树的过程。当页面的布局发生改变时，浏览器需要重新计算元素的位置和大小。</p>
+<h3 id="2-2-触发回流的情况"><a href="#2-2-触发回流的情况" class="headerlink" title="2.2 触发回流的情况"></a>2.2 触发回流的情况</h3><p>以下操作会触发回流：</p>
+<pre><code class="javascript">// 1. 改变窗口大小
+window.resizeTo(1000, 800)
+
+// 2. 改变字体大小
+document.body.style.fontSize = &#39;20px&#39;
+
+// 3. 添加或删除元素
+const div = document.createElement(&#39;div&#39;)
+document.body.appendChild(div)
+
+// 4. 改变元素尺寸
+element.style.width = &#39;200px&#39;
+element.style.height = &#39;100px&#39;
+element.style.padding = &#39;10px&#39;
+element.style.margin = &#39;20px&#39;
+element.style.border = &#39;1px solid #ccc&#39;
+
+// 5. 改变元素位置
+element.style.position = &#39;absolute&#39;
+element.style.top = &#39;100px&#39;
+element.style.left = &#39;200px&#39;
+
+// 6. 读取某些属性或调用某些方法
+const offsetWidth = element.offsetWidth
+const offsetHeight = element.offsetHeight
+const scrollTop = element.scrollTop
+const clientWidth = element.clientWidth
+const rect = element.getBoundingClientRect()
+window.getComputedStyle(element)
+</code></pre>
+<h3 id="2-3-常见触发回流的属性和方法"><a href="#2-3-常见触发回流的属性和方法" class="headerlink" title="2.3 常见触发回流的属性和方法"></a>2.3 常见触发回流的属性和方法</h3><table>
+<thead>
+<tr>
+<th>属性&#x2F;方法</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>offsetTop/Left/Width/Height</code></td>
+<td>元素偏移量和尺寸</td>
+</tr>
+<tr>
+<td><code>scrollTop/Left/Width/Height</code></td>
+<td>滚动相关尺寸</td>
+</tr>
+<tr>
+<td><code>clientTop/Left/Width/Height</code></td>
+<td>客户区尺寸</td>
+</tr>
+<tr>
+<td><code>getBoundingClientRect()</code></td>
+<td>获取元素边界矩形</td>
+</tr>
+<tr>
+<td><code>getComputedStyle()</code></td>
+<td>获取计算后的样式</td>
+</tr>
+<tr>
+<td><code>scrollIntoView()</code></td>
+<td>滚动到可视区域</td>
+</tr>
+<tr>
+<td><code>scrollTo()</code></td>
+<td>滚动到指定位置</td>
+</tr>
+</tbody></table>
+<h2 id="三、什么是重绘（Repaint）"><a href="#三、什么是重绘（Repaint）" class="headerlink" title="三、什么是重绘（Repaint）"></a>三、什么是重绘（Repaint）</h2><h3 id="3-1-定义"><a href="#3-1-定义" class="headerlink" title="3.1 定义"></a>3.1 定义</h3><p><strong>重绘</strong>是指元素的外观发生改变，但布局没有改变，浏览器只需重新绘制元素的过程。重绘的代价比重流小得多。</p>
+<h3 id="3-2-触发重绘的情况"><a href="#3-2-触发重绘的情况" class="headerlink" title="3.2 触发重绘的情况"></a>3.2 触发重绘的情况</h3><p>以下操作只会触发重绘，不会触发回流：</p>
+<pre><code class="javascript">// 改变颜色
+element.style.color = &#39;red&#39;
+element.style.backgroundColor = &#39;#fff&#39;
+
+// 改变边框颜色
+element.style.borderColor = &#39;blue&#39;
+
+// 改变可见性
+element.style.visibility = &#39;hidden&#39;
+
+// 改变背景
+element.style.backgroundImage = &#39;url(...)&#39;
+
+// 改变阴影
+element.style.boxShadow = &#39;0 0 10px rgba(0,0,0,0.5)&#39;
+
+// 改变轮廓
+element.style.outline = &#39;1px solid red&#39;
+</code></pre>
+<h2 id="四、回流与重绘的关系"><a href="#四、回流与重绘的关系" class="headerlink" title="四、回流与重绘的关系"></a>四、回流与重绘的关系</h2><h3 id="4-1-关系图"><a href="#4-1-关系图" class="headerlink" title="4.1 关系图"></a>4.1 关系图</h3><pre><code>回流一定重绘，重绘不一定回流
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>回流</th>
+<th>重绘</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>改变元素尺寸&#x2F;位置</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>改变元素颜色</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>改变字体大小</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>改变背景颜色</td>
+<td>❌</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>添加&#x2F;删除元素</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-性能影响"><a href="#4-2-性能影响" class="headerlink" title="4.2 性能影响"></a>4.2 性能影响</h3><pre><code class="javascript">// 回流的性能消耗远大于重绘
+// 回流成本 = 计算布局 + 绘制
+// 重绘成本 = 绘制
+
+// 回流影响范围
+// 全局回流：整个页面布局重新计算
+// 局部回流：只影响部分元素
+</code></pre>
+<h2 id="五、回流与重绘的优化策略"><a href="#五、回流与重绘的优化策略" class="headerlink" title="五、回流与重绘的优化策略"></a>五、回流与重绘的优化策略</h2><h3 id="5-1-批量修改样式"><a href="#5-1-批量修改样式" class="headerlink" title="5.1 批量修改样式"></a>5.1 批量修改样式</h3><pre><code class="javascript">// ❌ 不好的写法 - 触发多次回流
+element.style.width = &#39;100px&#39;
+element.style.height = &#39;100px&#39;
+element.style.margin = &#39;10px&#39;
+element.style.padding = &#39;10px&#39;
+
+// ✅ 好的写法 - 只触发一次回流
+// 方式1：使用 cssText
+element.style.cssText = &#39;width: 100px; height: 100px; margin: 10px; padding: 10px;&#39;
+
+// 方式2：添加 CSS 类
+element.classList.add(&#39;active&#39;)
+
+// 方式3：一次性修改多个样式
+Object.assign(element.style, &#123;
+  width: &#39;100px&#39;,
+  height: &#39;100px&#39;,
+  margin: &#39;10px&#39;,
+  padding: &#39;10px&#39;
+&#125;)
+</code></pre>
+<h3 id="5-2-批量修改-DOM"><a href="#5-2-批量修改-DOM" class="headerlink" title="5.2 批量修改 DOM"></a>5.2 批量修改 DOM</h3><pre><code class="javascript">// ❌ 不好的写法 - 每次插入都触发回流
+const list = document.getElementById(&#39;list&#39;)
+for (let i = 0; i &lt; 100; i++) &#123;
+  const item = document.createElement(&#39;li&#39;)
+  item.textContent = `Item $&#123;i&#125;`
+  list.appendChild(item) // 每次都触发回流
+&#125;
+
+// ✅ 好的写法 - 使用 DocumentFragment
+const fragment = document.createDocumentFragment()
+for (let i = 0; i &lt; 100; i++) &#123;
+  const item = document.createElement(&#39;li&#39;)
+  item.textContent = `Item $&#123;i&#125;`
+  fragment.appendChild(item)
+&#125;
+list.appendChild(fragment) // 只触发一次回流
+
+// ✅ 好的写法 - 使用 innerHTML
+let html = &#39;&#39;
+for (let i = 0; i &lt; 100; i++) &#123;
+  html += `&lt;li&gt;Item $&#123;i&#125;&lt;/li&gt;`
+&#125;
+list.innerHTML = html
+</code></pre>
+<h3 id="5-3-使用-display-none-隐藏元素"><a href="#5-3-使用-display-none-隐藏元素" class="headerlink" title="5.3 使用 display:none 隐藏元素"></a>5.3 使用 display:none 隐藏元素</h3><pre><code class="javascript">// 对隐藏元素的修改不会触发回流和重绘
+element.style.display = &#39;none&#39;
+
+// 进行大量 DOM 操作
+element.style.width = &#39;100px&#39;
+element.style.height = &#39;100px&#39;
+element.style.margin = &#39;10px&#39;
+
+// 显示元素 - 只触发一次回流
+element.style.display = &#39;block&#39;
+</code></pre>
+<h3 id="5-4-避免频繁读取布局属性"><a href="#5-4-避免频繁读取布局属性" class="headerlink" title="5.4 避免频繁读取布局属性"></a>5.4 避免频繁读取布局属性</h3><pre><code class="javascript">// ❌ 不好的写法 - 强制同步布局（Layout Thrashing）
+for (let i = 0; i &lt; 100; i++) &#123;
+  const width = element.offsetWidth // 读取触发回流
+  element.style.width = width + 10 + &#39;px&#39; // 写入触发回流
+&#125;
+
+// ✅ 好的写法 - 先读取，后写入
+const width = element.offsetWidth // 读取一次
+for (let i = 0; i &lt; 100; i++) &#123;
+  elements[i].style.width = width + 10 + &#39;px&#39;
+&#125;
+</code></pre>
+<h3 id="5-5-使用-transform-代替位置属性"><a href="#5-5-使用-transform-代替位置属性" class="headerlink" title="5.5 使用 transform 代替位置属性"></a>5.5 使用 transform 代替位置属性</h3><pre><code class="javascript">// ❌ 不好的写法 - 触发回流
+element.style.left = &#39;100px&#39;
+element.style.top = &#39;100px&#39;
+
+// ✅ 好的写法 - 只触发合成，不回流不重绘
+element.style.transform = &#39;translate(100px, 100px)&#39;
+</code></pre>
+<h3 id="5-6-使用-opacity-代替-visibility"><a href="#5-6-使用-opacity-代替-visibility" class="headerlink" title="5.6 使用 opacity 代替 visibility"></a>5.6 使用 opacity 代替 visibility</h3><pre><code class="javascript">// visibility: hidden 触发重绘
+element.style.visibility = &#39;hidden&#39;
+
+// opacity: 0 只触发合成
+element.style.opacity = &#39;0&#39;
+</code></pre>
+<h3 id="5-7-使用-CSS3-硬件加速"><a href="#5-7-使用-CSS3-硬件加速" class="headerlink" title="5.7 使用 CSS3 硬件加速"></a>5.7 使用 CSS3 硬件加速</h3><pre><code class="css">.optimized-element &#123;
+  /* 开启 GPU 加速 */
+  transform: translateZ(0);
+  /* 或 */
+  will-change: transform;
+&#125;
+</code></pre>
+<pre><code class="javascript">// will-change 提示浏览器将要发生变化
+element.style.willChange = &#39;transform&#39;
+</code></pre>
+<h3 id="5-8-使用-requestAnimationFrame"><a href="#5-8-使用-requestAnimationFrame" class="headerlink" title="5.8 使用 requestAnimationFrame"></a>5.8 使用 requestAnimationFrame</h3><pre><code class="javascript">// ❌ 不好的写法
+function update() &#123;
+  element.style.width = element.offsetWidth + 10 + &#39;px&#39;
+  element.style.height = element.offsetHeight + 10 + &#39;px&#39;
+&#125;
+
+// ✅ 好的写法 - 使用 requestAnimationFrame 批量更新
+function update() &#123;
+  requestAnimationFrame(() =&gt; &#123;
+    element.style.width = element.offsetWidth + 10 + &#39;px&#39;
+    element.style.height = element.offsetHeight + 10 + &#39;px&#39;
+  &#125;)
+&#125;
+</code></pre>
+<h2 id="六、使用-Chrome-DevTools-分析"><a href="#六、使用-Chrome-DevTools-分析" class="headerlink" title="六、使用 Chrome DevTools 分析"></a>六、使用 Chrome DevTools 分析</h2><h3 id="6-1-Performance-面板"><a href="#6-1-Performance-面板" class="headerlink" title="6.1 Performance 面板"></a>6.1 Performance 面板</h3><ol>
+<li>打开 Chrome DevTools（F12）</li>
+<li>选择 Performance 面板</li>
+<li>点击录制按钮</li>
+<li>执行操作</li>
+<li>停止录制，分析结果</li>
+</ol>
+<h3 id="6-2-Layers-面板"><a href="#6-2-Layers-面板" class="headerlink" title="6.2 Layers 面板"></a>6.2 Layers 面板</h3><p>查看元素的图层信息，确认是否使用了硬件加速。</p>
+<h3 id="6-3-Rendering-面板"><a href="#6-3-Rendering-面板" class="headerlink" title="6.3 Rendering 面板"></a>6.3 Rendering 面板</h3><p>开启以下选项可以可视化回流和重绘：</p>
+<ul>
+<li>Paint flashing：绿色高亮重绘区域</li>
+<li>Layout Shift Regions：蓝色高亮布局偏移</li>
+<li>Layer borders：显示图层边框</li>
+</ul>
+<h2 id="七、现代浏览器优化"><a href="#七、现代浏览器优化" class="headerlink" title="七、现代浏览器优化"></a>七、现代浏览器优化</h2><p>现代浏览器通过以下方式优化回流：</p>
+<h3 id="7-1-批量更新"><a href="#7-1-批量更新" class="headerlink" title="7.1 批量更新"></a>7.1 批量更新</h3><p>浏览器会将多次回流操作合并成一次执行：</p>
+<pre><code class="javascript">// 浏览器优化：这些操作会被批量处理
+element.style.width = &#39;100px&#39;
+element.style.height = &#39;100px&#39;
+element.style.margin = &#39;10px&#39;
+</code></pre>
+<h3 id="7-2-异步布局"><a href="#7-2-异步布局" class="headerlink" title="7.2 异步布局"></a>7.2 异步布局</h3><pre><code class="javascript">// 读取操作会强制同步布局
+const width = element.offsetWidth // 立即计算布局
+</code></pre>
+<h3 id="7-3-增量布局"><a href="#7-3-增量布局" class="headerlink" title="7.3 增量布局"></a>7.3 增量布局</h3><p>只重新计算受影响的部分，而不是整个页面。</p>
+<h2 id="八、总结"><a href="#八、总结" class="headerlink" title="八、总结"></a>八、总结</h2><h3 id="8-1-最佳实践"><a href="#8-1-最佳实践" class="headerlink" title="8.1 最佳实践"></a>8.1 最佳实践</h3><ol>
+<li><strong>批量修改样式</strong>：使用 cssText、CSS 类或 Object.assign</li>
+<li><strong>批量修改 DOM</strong>：使用 DocumentFragment 或 innerHTML</li>
+<li><strong>避免强制同步布局</strong>：先读取后写入，避免读写交替</li>
+<li><strong>使用 CSS3 特性</strong>：transform、opacity、will-change</li>
+<li><strong>隐藏复杂动画</strong>：使用 display:none 进行批量操作</li>
+<li><strong>使用 requestAnimationFrame</strong>：合理安排布局计算时机</li>
+</ol>
+<h3 id="8-2-性能对比"><a href="#8-2-性能对比" class="headerlink" title="8.2 性能对比"></a>8.2 性能对比</h3><pre><code>性能消耗：回流 &gt; 重绘 &gt; 合成
+
+优化优先级：
+1. 避免回流
+2. 减少重绘
+3. 使用合成
+</code></pre>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><a class="post-meta__tags" href="/tags/%E6%B5%8F%E8%A7%88%E5%99%A8/">浏览器</a><a class="post-meta__tags" href="/tags/%E5%9B%9E%E6%B5%81/">回流</a><a class="post-meta__tags" href="/tags/%E9%87%8D%E7%BB%98/">重绘</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/event-loop/" title="JavaScript事件循环：深入理解宏任务与微任务"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">JavaScript事件循环：深入理解宏任务与微任务</div></div></a></div><div class="next-post pull-right"><a href="/posts/async-await-principle/" title="async和await实现原理：从Generator到异步编程的优雅进化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">async和await实现原理：从Generator到异步编程的优雅进化</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E6%B5%8F%E8%A7%88%E5%99%A8%E7%9A%84%E6%B8%B2%E6%9F%93%E8%BF%87%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">一、浏览器的渲染过程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%B8%B2%E6%9F%93%E6%B5%81%E7%A8%8B%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 渲染流程详解</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E5%9B%9E%E6%B5%81%EF%BC%88Reflow%EF%BC%89"><span class="toc-number">2.</span> <span class="toc-text">二、什么是回流（Reflow）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%AE%9A%E4%B9%89"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E8%A7%A6%E5%8F%91%E5%9B%9E%E6%B5%81%E7%9A%84%E6%83%85%E5%86%B5"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 触发回流的情况</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%B8%B8%E8%A7%81%E8%A7%A6%E5%8F%91%E5%9B%9E%E6%B5%81%E7%9A%84%E5%B1%9E%E6%80%A7%E5%92%8C%E6%96%B9%E6%B3%95"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 常见触发回流的属性和方法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%BB%80%E4%B9%88%E6%98%AF%E9%87%8D%E7%BB%98%EF%BC%88Repaint%EF%BC%89"><span class="toc-number">3.</span> <span class="toc-text">三、什么是重绘（Repaint）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%AE%9A%E4%B9%89"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 定义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%A7%A6%E5%8F%91%E9%87%8D%E7%BB%98%E7%9A%84%E6%83%85%E5%86%B5"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 触发重绘的情况</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-number">4.</span> <span class="toc-text">四、回流与重绘的关系</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%85%B3%E7%B3%BB%E5%9B%BE"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 关系图</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E6%80%A7%E8%83%BD%E5%BD%B1%E5%93%8D"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 性能影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%9B%9E%E6%B5%81%E4%B8%8E%E9%87%8D%E7%BB%98%E7%9A%84%E4%BC%98%E5%8C%96%E7%AD%96%E7%95%A5"><span class="toc-number">5.</span> <span class="toc-text">五、回流与重绘的优化策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E6%89%B9%E9%87%8F%E4%BF%AE%E6%94%B9%E6%A0%B7%E5%BC%8F"><span class="toc-number">5.1.</span> <span class="toc-text">5.1 批量修改样式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E6%89%B9%E9%87%8F%E4%BF%AE%E6%94%B9-DOM"><span class="toc-number">5.2.</span> <span class="toc-text">5.2 批量修改 DOM</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E4%BD%BF%E7%94%A8-display-none-%E9%9A%90%E8%97%8F%E5%85%83%E7%B4%A0"><span class="toc-number">5.3.</span> <span class="toc-text">5.3 使用 display:none 隐藏元素</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-%E9%81%BF%E5%85%8D%E9%A2%91%E7%B9%81%E8%AF%BB%E5%8F%96%E5%B8%83%E5%B1%80%E5%B1%9E%E6%80%A7"><span class="toc-number">5.4.</span> <span class="toc-text">5.4 避免频繁读取布局属性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-%E4%BD%BF%E7%94%A8-transform-%E4%BB%A3%E6%9B%BF%E4%BD%8D%E7%BD%AE%E5%B1%9E%E6%80%A7"><span class="toc-number">5.5.</span> <span class="toc-text">5.5 使用 transform 代替位置属性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-6-%E4%BD%BF%E7%94%A8-opacity-%E4%BB%A3%E6%9B%BF-visibility"><span class="toc-number">5.6.</span> <span class="toc-text">5.6 使用 opacity 代替 visibility</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-7-%E4%BD%BF%E7%94%A8-CSS3-%E7%A1%AC%E4%BB%B6%E5%8A%A0%E9%80%9F"><span class="toc-number">5.7.</span> <span class="toc-text">5.7 使用 CSS3 硬件加速</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-8-%E4%BD%BF%E7%94%A8-requestAnimationFrame"><span class="toc-number">5.8.</span> <span class="toc-text">5.8 使用 requestAnimationFrame</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E4%BD%BF%E7%94%A8-Chrome-DevTools-%E5%88%86%E6%9E%90"><span class="toc-number">6.</span> <span class="toc-text">六、使用 Chrome DevTools 分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-Performance-%E9%9D%A2%E6%9D%BF"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 Performance 面板</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-Layers-%E9%9D%A2%E6%9D%BF"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 Layers 面板</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-Rendering-%E9%9D%A2%E6%9D%BF"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 Rendering 面板</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E7%8E%B0%E4%BB%A3%E6%B5%8F%E8%A7%88%E5%99%A8%E4%BC%98%E5%8C%96"><span class="toc-number">7.</span> <span class="toc-text">七、现代浏览器优化</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E6%89%B9%E9%87%8F%E6%9B%B4%E6%96%B0"><span class="toc-number">7.1.</span> <span class="toc-text">7.1 批量更新</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E5%BC%82%E6%AD%A5%E5%B8%83%E5%B1%80"><span class="toc-number">7.2.</span> <span class="toc-text">7.2 异步布局</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E5%A2%9E%E9%87%8F%E5%B8%83%E5%B1%80"><span class="toc-number">7.3.</span> <span class="toc-text">7.3 增量布局</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">八、总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">8.1.</span> <span class="toc-text">8.1 最佳实践</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E6%80%A7%E8%83%BD%E5%AF%B9%E6%AF%94"><span class="toc-number">8.2.</span> <span class="toc-text">8.2 性能对比</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

@@ -1,13 +1,13 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>this详解 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="this不管是在我们的日常开发中还是在我们的面试中，用的都比较多。可以说对一个前端来讲还是非常重要的。下面我们就从以下两个方面来说一下this的指向问题：  非严格模式 严格模式  this概念this表示当前对象的一个引用，在js中this并不是固定不变的，它会随着执行环境的改变而改变，简单来说this永远指向最后调用它的哪个对象 非严格模式下的this指向调用绑定&#x2F;&#x2F;函数直接调用和匿名函数的调">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>JavaScript this 全面解析 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="this 是 JavaScript 中最核心的概念之一，无论是日常开发还是面试，都占据着重要地位。本文将全面深入地解析 this 的指向问题。 一、this 是什么？this 是函数执行时的上下文对象，它的值取决于函数的调用方式，而非定义位置。简单来说：  this 永远指向最后调用它的那个对象  理解 this 的关键在于分析函数的调用位置和调用方式，JavaScript 中有四种绑定规则决定了">
 <meta property="og:type" content="article">
-<meta property="og:title" content="this详解">
+<meta property="og:title" content="JavaScript this 全面解析">
 <meta property="og:url" content="http://example.com/posts/this-detail/index.html">
 <meta property="og:site_name" content="夜星的技术博客">
-<meta property="og:description" content="this不管是在我们的日常开发中还是在我们的面试中，用的都比较多。可以说对一个前端来讲还是非常重要的。下面我们就从以下两个方面来说一下this的指向问题：  非严格模式 严格模式  this概念this表示当前对象的一个引用，在js中this并不是固定不变的，它会随着执行环境的改变而改变，简单来说this永远指向最后调用它的哪个对象 非严格模式下的this指向调用绑定&#x2F;&#x2F;函数直接调用和匿名函数的调">
+<meta property="og:description" content="this 是 JavaScript 中最核心的概念之一，无论是日常开发还是面试，都占据着重要地位。本文将全面深入地解析 this 的指向问题。 一、this 是什么？this 是函数执行时的上下文对象，它的值取决于函数的调用方式，而非定义位置。简单来说：  this 永远指向最后调用它的那个对象  理解 this 的关键在于分析函数的调用位置和调用方式，JavaScript 中有四种绑定规则决定了">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/avator.jpg">
 <meta property="article:published_time" content="2023-11-22T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-03-14T01:25:58.426Z">
+<meta property="article:modified_time" content="2026-03-19T14:19:53.756Z">
 <meta property="article:author" content="夜星">
 <meta property="article:tag" content="JavaScript">
 <meta property="article:tag" content="this">
@@ -54,12 +54,12 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: 'this详解',
+  title: 'JavaScript this 全面解析',
   isPost: true,
   isHome: false,
   isHighlightShrink: false,
   isToc: true,
-  postUpdate: '2026-03-14 09:25:58'
+  postUpdate: '2026 22:19:53'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -163,366 +163,477 @@
       }
     }
     detectApple()
-    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">64</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">this详解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-11-22T16:00:00.000Z" title="发表于 2023-11-23 00:00:00">2023-11-23</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-14T01:25:58.426Z" title="更新于 2026-03-14 09:25:58">2026-03-14</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>this不管是在我们的日常开发中还是在我们的面试中，用的都比较多。可以说对一个前端来讲还是非常重要的。<br>下面我们就从以下两个方面来说一下this的指向问题：</p>
-<ul>
-<li>非严格模式</li>
-<li>严格模式</li>
-</ul>
-<h2 id="this概念"><a href="#this概念" class="headerlink" title="this概念"></a>this概念</h2><p>this表示当前对象的一个引用，在js中this并不是固定不变的，它会随着执行环境的改变而改变，简单来说this永远指向最后调用它的哪个对象</p>
-<h2 id="非严格模式下的this指向"><a href="#非严格模式下的this指向" class="headerlink" title="非严格模式下的this指向"></a>非严格模式下的this指向</h2><h3 id="调用绑定"><a href="#调用绑定" class="headerlink" title="调用绑定"></a>调用绑定</h3><pre><code class="javascript">//函数直接调用和匿名函数的调用this指向window
-console.log(this)//window
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">JavaScript this 全面解析</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-11-22T16:00:00.000Z" title="发表于 2023 00:00:00">2023</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-19T14:19:53.756Z" title="更新于 2026 22:19:53">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span></div></div></div><article class="post-content" id="article-container"><p><code>this</code> 是 JavaScript 中最核心的概念之一，无论是日常开发还是面试，都占据着重要地位。本文将全面深入地解析 <code>this</code> 的指向问题。</p>
+<h2 id="一、this-是什么？"><a href="#一、this-是什么？" class="headerlink" title="一、this 是什么？"></a>一、this 是什么？</h2><p><code>this</code> 是函数执行时的上下文对象，它的值取决于函数的<strong>调用方式</strong>，而非定义位置。简单来说：</p>
+<blockquote>
+<p><strong>this 永远指向最后调用它的那个对象</strong></p>
+</blockquote>
+<p>理解 <code>this</code> 的关键在于分析函数的调用位置和调用方式，JavaScript 中有四种绑定规则决定了 <code>this</code> 的指向。</p>
+<h2 id="二、this-绑定的四种规则"><a href="#二、this-绑定的四种规则" class="headerlink" title="二、this 绑定的四种规则"></a>二、this 绑定的四种规则</h2><h3 id="2-1-默认绑定"><a href="#2-1-默认绑定" class="headerlink" title="2.1 默认绑定"></a>2.1 默认绑定</h3><p>当函数独立调用（不作为对象方法、不使用 call&#x2F;apply&#x2F;bind、不是构造函数）时，<code>this</code> 指向全局对象。</p>
+<pre><code class="javascript">// 全局作用域中的 this
+console.log(this) // window
 
-
-function foo()&#123;
-    console.log(this)
-&#125;
-foo()//window
-
-
-(function ()&#123;
-   console.log(this) //window
-&#125;)()
-
-
-//嵌套函数调用
-let obj=&#123;
-    a:function()&#123;
-        console.log(this)
-    &#125;
-&#125;
-obj.a()//obj
-</code></pre>
-<h3 id="隐式绑定"><a href="#隐式绑定" class="headerlink" title="隐式绑定"></a>隐式绑定</h3><pre><code class="javascript">//隐式丢失
-
-//方法一
-function foo()&#123;
-    console.log(this)
-&#125;
-let obj=&#123;
-    foo:foo
-&#125;
-let bar=obj.foo
-obj.foo()//obj
-bar()//window
-
-
-//方法二
-function foo(fn)&#123;
-    fn()
-&#125;
-function bar()&#123;
-    console.log(this)
-&#125;
-let obj=&#123;
-    bar:bar
-&#125;
-foo(obj.bar)//window
-
-
-//间接改变
-function foo()&#123;
-    console.log(this)
-&#125;
-let obj1=&#123;
-    foo:foo
-&#125;
-let obj2=&#123;
-    
-&#125;
-obj2.foo=obj1.foo
-obj2.foo()//obj2
-</code></pre>
-<h3 id="new-关键字绑定"><a href="#new-关键字绑定" class="headerlink" title="new 关键字绑定"></a>new 关键字绑定</h3><pre><code class="javascript">let that=null
-function Foo()&#123;
-    that=this
-    console.log(this)
-&#125;
-let foo=new Foo()
-console.log(that===foo)
-</code></pre>
-<h3 id="显示绑定"><a href="#显示绑定" class="headerlink" title="显示绑定"></a>显示绑定</h3><pre><code class="javascript">//使用call函数、apply函数和bind函数
-let obj1=&#123;
-    foo:function()&#123;
-        console.log(this)
-    &#125;
-&#125;
-let obj2=&#123;
-    bar:function()&#123;
-        console.log(this)
-    &#125;
-&#125;
-obj1.foo.call(obj2)//obj2
-obj1.foo.apply(obj2)//obj2
-obj1.foo.bind(obj2)()//obj2
-</code></pre>
-<h4 id="call、apply、bind三种方法的区别"><a href="#call、apply、bind三种方法的区别" class="headerlink" title="call、apply、bind三种方法的区别"></a>call、apply、bind三种方法的区别</h4><p>三个方法都是改变this的一个方法，但是三种方法又略有不同，首先call方法和apply方法的区别是传参方面不同<br>call接受多个参数，例如</p>
-<pre><code class="javascript">call(thisArg)
-call(thisArg, arg1)
-call(thisArg, arg1, arg2)
-call(thisArg, arg1, arg2, /* …, */ argN)
-</code></pre>
-<p>apply接受两个参数，第一个参数是this值，第二个参数是一个带下标的集合，这个集合可以是数组，也可以是类数组，apply方法把这个集合中的元素作为参数传递给被调用的函数<br>bind方法是返回一个绑定好this的函数，之后无论如何调用都不会改变，其传参与call一样</p>
-<h4 id="手写call、apply、bind"><a href="#手写call、apply、bind" class="headerlink" title="手写call、apply、bind"></a>手写call、apply、bind</h4><pre><code class="javascript">/* 
-call 第一个参数是this(在非严格模式下，null和undefined将会被替换为全局对象)
-arg1, arg2,…, argN 之后的多个参数都会传入函数中
-*/
-function myCall(context, ...arg) &#123;
-  // 判断是否函数，避免其他数据类型调用call，this表示的是当前执行的函数
-  if (typeof this !== &quot;function&quot;) &#123;
-    console.log(&quot;类型错误&quot;);
-    return;
-  &#125;
-  let res = null;
-  // 判断传入的context是否是null或undefined
-  context = context || window;
-  // 这里fn可能会与context重名
-  context.fn = this;
-  // 调用函数
-  res = context.fn(...arg);
-  // 删除添加的属性
-  delete context.fn;
-  // 返回结果
-  return res;
-&#125;
-Function.prototype.myCall = myCall;
-
-function Car(price, color) &#123;
-  console.log(this.name, price, color);
-&#125;
-Car.myCall(&#123; name: &quot;123&quot; &#125;, 111, &quot;red&quot;);
-</code></pre>
-<pre><code class="javascript">/* 
-apply 接受两个参数，第一个参数是this，在非严格模式下，则null和undefined会被
-替换为window，原始值会被转换为对象
-
-第二个参数是可选，一个类数组对象，用于指定调用func时的参数，或者如果不需要向函数提供参数则为null或undefined
-*/
-function myApply(context, arr) &#123;
-  // 判断调用对象是否为函数，避免原始值调用
-  if (typeof this !== &quot;function&quot;) &#123;
-    console.log(&quot;类型错误&quot;);
-    return;
-  &#125;
-  // 函数执行结果
-  let res = null;
-  // 判断context是否为null或undefined，如果是则赋值为window
-  context = context || window;
-  context.fn = this;
-  // 调用函数(arr可能传入undefined或null)
-  if (arr) &#123;
-    res = context.fn(...arr);
-  &#125; else &#123;
-    res = context.fn();
-  &#125;
-  delete context.fn;
-  return res;
-&#125;
-Function.prototype.myApply = myApply;
-function Car(price, color) &#123;
-  console.log(this.name, price, color);
-&#125;
-Car.myApply(&#123; name: &quot;奔驰&quot; &#125;, [111, &quot;red&quot;]);
-</code></pre>
-<pre><code class="javascript">/* 
-第一个参数是绑定的this，如果在非严格模式下,null和undefined会被替换为window，
-并且原始值会被转换为对象。如果使用new运算符构造绑定函数，则忽略该值
-
-之后的参数与call类似
-*/
-function myBind(context, ...arg) &#123;
-  context = context || window;
-  let self = this;
-  let fn = function () &#123;&#125;;
-  let _fn = function () &#123;
-    // 如果是new操作，则忽略传入this绑定的值
-    return self.apply(this instanceof _fn ? this : context, arg);
-  &#125;;
-  fn.prototype = this.prototype;
-  _fn.prototype = new fn();
-  return _fn;
-&#125;
-
-Function.prototype.myBind = function () &#123;
-  let outContext = arguments[0]; // 取上下文
-  let outArgs = Array.from(arguments).slice(1); // 取外部入参
-  const outThis = this; // 存外部this
-  let cb = function () &#123;
-    const isNew = typeof new.target !== &quot;undefined&quot;; // 判断函数是否被new过
-    const inArgs = Array.from(arguments); // 取内部入参
-    return outThis.apply(
-      isNew ? this : outContext,
-      outArgs.concat(inArgs)
-    ); // 改变指向，合并函数入参
-  &#125;;
-  cb.prototype = outThis.prototype; // 继承构造函数原型
-  return cb; // 返回创建函数
-&#125;;
-
-// 试一下
-var obj = &#123; name: 1, age: 2 &#125;;
-var name = &quot;Leo&quot;,
-  age = 18;
-function Fn(height, Gender) &#123;
-  console.log(
-    &quot;name：&quot;,
-    this.name,
-    &quot;age:&quot;,
-    this.age,
-    &quot;height:&quot;,
-    height,
-    &quot;Gender:&quot;,
-    Gender
-  );
-&#125;
-Fn.prototype.say = function () &#123;
-  console.log(&quot;Fn.prototype.say&quot;);
-&#125;;
-
-var fn1 = Fn.myBind_3(obj, &quot;80cm&quot;);
-var obj1 = new fn1(&quot;male&quot;); // name： undefined age: undefined height: 80cm Gender: male
-obj1.say(); // Fn.prototype.say
-
-var fn1 = Fn.bind(obj, &quot;80cm&quot;);
-var obj1 = new fn1(&quot;male&quot;); // name： undefined age: undefined height: 80cm Gender: male
-obj1.say(); // Fn.prototype.say
-</code></pre>
-<h3 id="箭头函数"><a href="#箭头函数" class="headerlink" title="箭头函数"></a>箭头函数</h3><h4 id="箭头函数与普通函数的区别"><a href="#箭头函数与普通函数的区别" class="headerlink" title="箭头函数与普通函数的区别"></a>箭头函数与普通函数的区别</h4><p>箭头函数没有自己的this、arguments、super或new.target，并且它不能作为构造函数<br>箭头函数的this是通过继承来的（根据它书写的位置的函数的执行上下文来确定）(有一个简单的小口诀就是它的this是它上一层的爸爸)</p>
-<h4 id="箭头函数的this的指向"><a href="#箭头函数的this的指向" class="headerlink" title="箭头函数的this的指向"></a>箭头函数的this的指向</h4><pre><code class="javascript">//最外层的箭头函数的this
-let foo=()=&gt;&#123;
+// 函数独立调用
+function foo() &#123;
   console.log(this)
 &#125;
-foo()//window(这里的this指向并不能改变)
+foo() // window
 
+// 匿名函数调用
+;(function () &#123;
+  console.log(this) // window
+&#125;)()
 
-
-//函数里边的箭头函数
-function foo()&#123;
-  let bar=()=&gt;&#123;
-    console.log(this)//这里的this继承的是foo的this指向(this:箭头函数的上一层的爸爸)
-    /* 
-    箭头函数是bar这一层，上一层是foo,foo的爸爸是window
-    */
+// 嵌套函数中的 this
+function outer() &#123;
+  function inner() &#123;
+    console.log(this) // window（独立调用）
   &#125;
-  bar()
+  inner()
 &#125;
-let obj=&#123;&#125;
-foo()//window
-foo.call(obj)
-/* obj(通过改变foo的this进而间接改变了里边箭头函数的this，
-而箭头函数的this还是那个位置的值，这也就是我最开始的时候说改变加引号的原因) */
+outer()
 </code></pre>
-<h2 id="严格模式下的this指向"><a href="#严格模式下的this指向" class="headerlink" title="严格模式下的this指向"></a>严格模式下的this指向</h2><p>严格模式下的this指向和普通模式下差不多，不同的是全局函数的this，不能指向window而是undefined</p>
-<h3 id="全局作用域中的this"><a href="#全局作用域中的this" class="headerlink" title="全局作用域中的this"></a>全局作用域中的this</h3><p>在严格模式下，全局作用域中this指向window对象</p>
-<pre><code class="javascript">&quot;use strict&quot;
-console.log(this);// window
+<h3 id="2-2-隐式绑定"><a href="#2-2-隐式绑定" class="headerlink" title="2.2 隐式绑定"></a>2.2 隐式绑定</h3><p>当函数作为对象的方法调用时，<code>this</code> 指向该对象。</p>
+<pre><code class="javascript">function foo() &#123;
+  console.log(this.name)
+&#125;
+
+const obj = &#123;
+  name: &#39;obj&#39;,
+  foo: foo
+&#125;
+
+obj.foo() // &#39;obj&#39;（obj 调用了 foo）
 </code></pre>
-<h3 id="全局作用域中的this-1"><a href="#全局作用域中的this-1" class="headerlink" title="全局作用域中的this"></a>全局作用域中的this</h3><h4 id="无显示指定"><a href="#无显示指定" class="headerlink" title="无显示指定"></a>无显示指定</h4><pre><code class="javascript">&quot;use strict&quot;
+<h4 id="隐式丢失"><a href="#隐式丢失" class="headerlink" title="隐式丢失"></a>隐式丢失</h4><p>隐式绑定的函数在某些情况下会丢失绑定对象，回退到默认绑定：</p>
+<pre><code class="javascript">// 情况一：赋值后调用
 function foo() &#123;
-  console.log(this);// undefined
+  console.log(this)
+&#125;
+
+const obj = &#123;
+  foo: foo
+&#125;
+
+const bar = obj.foo // 只是赋值，没有调用
+bar() // window（独立调用，隐式绑定丢失）
+
+// 情况二：回调函数
+function doCallback(fn) &#123;
+  fn() // 这里是独立调用
+&#125;
+
+const obj = &#123;
+  name: &#39;obj&#39;,
+  sayHi: function () &#123;
+    console.log(this.name)
+  &#125;
+&#125;
+
+doCallback(obj.sayHi) // undefined（隐式绑定丢失）
+
+// 情况三：间接引用
+const obj1 = &#123;
+  name: &#39;obj1&#39;,
+  foo: function () &#123;
+    console.log(this.name)
+  &#125;
+&#125;
+
+const obj2 = &#123;
+  name: &#39;obj2&#39;
+&#125;
+
+obj2.foo = obj1.foo
+obj2.foo() // &#39;obj2&#39;（obj2 调用）
+;(obj2.foo = obj1.foo)() // undefined（赋值表达式的返回值是函数本身，独立调用）
+</code></pre>
+<h3 id="2-3-显式绑定"><a href="#2-3-显式绑定" class="headerlink" title="2.3 显式绑定"></a>2.3 显式绑定</h3><p>使用 <code>call</code>、<code>apply</code>、<code>bind</code> 方法可以显式指定函数的 <code>this</code>。</p>
+<pre><code class="javascript">const obj1 = &#123;
+  name: &#39;obj1&#39;,
+  foo: function () &#123;
+    console.log(this.name)
+  &#125;
+&#125;
+
+const obj2 = &#123;
+  name: &#39;obj2&#39;
+&#125;
+
+obj1.foo.call(obj2) // &#39;obj2&#39;
+obj1.foo.apply(obj2) // &#39;obj2&#39;
+obj1.foo.bind(obj2)() // &#39;obj2&#39;
+</code></pre>
+<h4 id="call、apply、bind-的区别"><a href="#call、apply、bind-的区别" class="headerlink" title="call、apply、bind 的区别"></a>call、apply、bind 的区别</h4><table>
+<thead>
+<tr>
+<th>方法</th>
+<th>参数</th>
+<th>返回值</th>
+<th>特点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>call</code></td>
+<td><code>(thisArg, arg1, arg2, ...)</code></td>
+<td>函数执行结果</td>
+<td>立即执行</td>
+</tr>
+<tr>
+<td><code>apply</code></td>
+<td><code>(thisArg, [arg1, arg2, ...])</code></td>
+<td>函数执行结果</td>
+<td>立即执行，参数为数组</td>
+</tr>
+<tr>
+<td><code>bind</code></td>
+<td><code>(thisArg, arg1, arg2, ...)</code></td>
+<td>新函数</td>
+<td>返回绑定后的函数</td>
+</tr>
+</tbody></table>
+<pre><code class="javascript">const person = &#123;
+  name: &#39;张三&#39;
+&#125;
+
+function greet(greeting, punctuation) &#123;
+  console.log(greeting + &#39;, &#39; + this.name + punctuation)
+&#125;
+
+// call：逐个传参
+greet.call(person, &#39;你好&#39;, &#39;！&#39;) // 你好, 张三！
+
+// apply：数组传参
+greet.apply(person, [&#39;你好&#39;, &#39;！&#39;]) // 你好, 张三！
+
+// bind：返回新函数
+const greetPerson = greet.bind(person, &#39;你好&#39;)
+greetPerson(&#39;！&#39;) // 你好, 张三！
+</code></pre>
+<h3 id="2-4-new-绑定"><a href="#2-4-new-绑定" class="headerlink" title="2.4 new 绑定"></a>2.4 new 绑定</h3><p>使用 <code>new</code> 关键字调用构造函数时，<code>this</code> 指向新创建的实例对象。</p>
+<pre><code class="javascript">function Person(name, age) &#123;
+  this.name = name
+  this.age = age
+&#125;
+
+const person1 = new Person(&#39;张三&#39;, 18)
+console.log(person1) // Person &#123; name: &#39;张三&#39;, age: 18 &#125;
+
+// new 做了什么？
+// 1. 创建一个新对象
+// 2. 将新对象的 __proto__ 指向构造函数的 prototype
+// 3. 将 this 绑定到新对象，执行构造函数
+// 4. 返回新对象（如果构造函数返回对象，则返回该对象）
+</code></pre>
+<h2 id="三、this-绑定优先级"><a href="#三、this-绑定优先级" class="headerlink" title="三、this 绑定优先级"></a>三、this 绑定优先级</h2><p>四种绑定规则的优先级从高到低：</p>
+<blockquote>
+<p><strong>new 绑定 &gt; 显式绑定 &gt; 隐式绑定 &gt; 默认绑定</strong></p>
+</blockquote>
+<pre><code class="javascript">// 显式绑定 &gt; 隐式绑定
+const obj = &#123;
+  name: &#39;obj&#39;,
+  foo: function () &#123;
+    console.log(this.name)
+  &#125;
+&#125;
+
+const obj2 = &#123; name: &#39;obj2&#39; &#125;
+obj.foo.call(obj2) // &#39;obj2&#39;（显式绑定优先）
+
+// new 绑定 &gt; 显式绑定
+function foo(name) &#123;
+  this.name = name
+&#125;
+
+const boundFoo = foo.bind(&#123; name: &#39;bound&#39; &#125;)
+const obj = new boundFoo(&#39;new&#39;) // new 绑定优先
+console.log(obj.name) // &#39;new&#39;
+</code></pre>
+<h2 id="四、箭头函数的-this"><a href="#四、箭头函数的-this" class="headerlink" title="四、箭头函数的 this"></a>四、箭头函数的 this</h2><h3 id="4-1-箭头函数的特点"><a href="#4-1-箭头函数的特点" class="headerlink" title="4.1 箭头函数的特点"></a>4.1 箭头函数的特点</h3><p>箭头函数没有自己的 <code>this</code>，它会<strong>捕获定义时所在上下文的 <code>this</code> 值</strong>（词法作用域）。</p>
+<pre><code class="javascript">const obj = &#123;
+  name: &#39;obj&#39;,
+  // 普通函数
+  sayHi: function () &#123;
+    console.log(this.name) // &#39;obj&#39;
+  &#125;,
+  // 箭头函数
+  sayHello: () =&gt; &#123;
+    console.log(this.name) // undefined（继承外层作用域的 this，即 window）
+  &#125;
+&#125;
+
+obj.sayHi() // &#39;obj&#39;
+obj.sayHello() // undefined
+</code></pre>
+<h3 id="4-2-箭头函数的应用场景"><a href="#4-2-箭头函数的应用场景" class="headerlink" title="4.2 箭头函数的应用场景"></a>4.2 箭头函数的应用场景</h3><p>箭头函数非常适合用于回调函数，可以避免 <code>this</code> 丢失的问题：</p>
+<pre><code class="javascript">// 问题：普通函数的 this 丢失
+const obj = &#123;
+  name: &#39;obj&#39;,
+  sayHi: function () &#123;
+    setTimeout(function () &#123;
+      console.log(this.name) // undefined（回调函数独立调用）
+    &#125;, 1000)
+  &#125;
+&#125;
+
+// 解决方案一：保存 this
+const obj1 = &#123;
+  name: &#39;obj1&#39;,
+  sayHi: function () &#123;
+    const self = this
+    setTimeout(function () &#123;
+      console.log(self.name) // &#39;obj1&#39;
+    &#125;, 1000)
+  &#125;
+&#125;
+
+// 解决方案二：箭头函数（推荐）
+const obj2 = &#123;
+  name: &#39;obj2&#39;,
+  sayHi: function () &#123;
+    setTimeout(() =&gt; &#123;
+      console.log(this.name) // &#39;obj2&#39;（继承 sayHi 的 this）
+    &#125;, 1000)
+  &#125;
+&#125;
+</code></pre>
+<h3 id="4-3-箭头函数的-this-不可改变"><a href="#4-3-箭头函数的-this-不可改变" class="headerlink" title="4.3 箭头函数的 this 不可改变"></a>4.3 箭头函数的 this 不可改变</h3><p>箭头函数的 <code>this</code> 在定义时就已确定，无法通过 call&#x2F;apply&#x2F;bind 改变：</p>
+<pre><code class="javascript">const obj = &#123;
+  name: &#39;obj&#39;
+&#125;
+
+const arrowFunc = () =&gt; &#123;
+  console.log(this)
+&#125;
+
+arrowFunc() // window
+arrowFunc.call(obj) // window（无法改变）
+</code></pre>
+<h2 id="五、严格模式下的-this"><a href="#五、严格模式下的-this" class="headerlink" title="五、严格模式下的 this"></a>五、严格模式下的 this</h2><p>严格模式下，全局函数中的 <code>this</code> 不再指向 <code>window</code>，而是 <code>undefined</code>：</p>
+<pre><code class="javascript">// 非严格模式
+function foo() &#123;
+  console.log(this) // window
 &#125;
 foo()
-</code></pre>
-<h4 id="显示指定"><a href="#显示指定" class="headerlink" title="显示指定"></a>显示指定</h4><pre><code class="javascript">&quot;use strict&quot;
-function foo() &#123;
-  console.log(this);// window
+
+// 严格模式
+function bar() &#123;
+  &#39;use strict&#39;
+  console.log(this) // undefined
 &#125;
-foo.call(this)
+bar()
+
+// 但全局作用域的 this 仍然是 window
+;(function () &#123;
+  &#39;use strict&#39;
+  console.log(this) // window
+&#125;)()
 </code></pre>
-<h2 id="练习题"><a href="#练习题" class="headerlink" title="练习题"></a>练习题</h2><pre><code class="javascript">var obj = &#123;
-    a:1,
-    c:2,
-    say:function(a)&#123;
-         console.log(&quot;this1: &quot;+this)
-        var sayA = function(a)&#123;
-            console.log(&quot;this2: &quot;+this)
-            this.a = a
-        &#125;
-        function sayC()&#123;
-             console.log(&quot;this3: &quot;+this)
-         &#125;
-        sayA(a)
-        sayC()
+<h2 id="六、手写实现"><a href="#六、手写实现" class="headerlink" title="六、手写实现"></a>六、手写实现</h2><h3 id="6-1-手写-call"><a href="#6-1-手写-call" class="headerlink" title="6.1 手写 call"></a>6.1 手写 call</h3><pre><code class="javascript">Function.prototype.myCall = function (context, ...args) &#123;
+  // 1. 判断调用者是否为函数
+  if (typeof this !== &#39;function&#39;) &#123;
+    throw new TypeError(&#39;Error&#39;)
+  &#125;
+
+  // 2. 处理 context
+  context = context || window
+
+  // 3. 创建唯一的 key，避免覆盖原属性
+  const fnKey = Symbol()
+
+  // 4. 将函数设为对象的方法
+  context[fnKey] = this
+
+  // 5. 执行函数
+  const result = context[fnKey](...args)
+
+  // 6. 删除添加的属性
+  delete context[fnKey]
+
+  // 7. 返回结果
+  return result
+&#125;
+
+// 测试
+function greet(greeting) &#123;
+  console.log(greeting + &#39;, &#39; + this.name)
+&#125;
+
+greet.myCall(&#123; name: &#39;张三&#39; &#125;, &#39;你好&#39;) // 你好, 张三
+</code></pre>
+<h3 id="6-2-手写-apply"><a href="#6-2-手写-apply" class="headerlink" title="6.2 手写 apply"></a>6.2 手写 apply</h3><pre><code class="javascript">Function.prototype.myApply = function (context, args) &#123;
+  if (typeof this !== &#39;function&#39;) &#123;
+    throw new TypeError(&#39;Error&#39;)
+  &#125;
+
+  context = context || window
+  const fnKey = Symbol()
+  context[fnKey] = this
+
+  // args 可能是 undefined 或 null
+  const result = args ? context[fnKey](...args) : context[fnKey]()
+
+  delete context[fnKey]
+  return result
+&#125;
+
+// 测试
+function sum(a, b) &#123;
+  console.log(this.name, a + b)
+&#125;
+
+sum.myApply(&#123; name: &#39;计算结果&#39; &#125;, [1, 2]) // 计算结果 3
+</code></pre>
+<h3 id="6-3-手写-bind"><a href="#6-3-手写-bind" class="headerlink" title="6.3 手写 bind"></a>6.3 手写 bind</h3><pre><code class="javascript">Function.prototype.myBind = function (context, ...outerArgs) &#123;
+  if (typeof this !== &#39;function&#39;) &#123;
+    throw new TypeError(&#39;Error&#39;)
+  &#125;
+
+  const fn = this
+
+  const boundFn = function (...innerArgs) &#123;
+    // 如果是 new 调用，this 指向新创建的实例
+    // 否则使用绑定的 context
+    return fn.apply(
+      this instanceof boundFn ? this : context,
+      [...outerArgs, ...innerArgs]
+    )
+  &#125;
+
+  // 维持原型链
+  boundFn.prototype = Object.create(fn.prototype)
+
+  return boundFn
+&#125;
+
+// 测试
+const person = &#123; name: &#39;张三&#39; &#125;
+
+function greet(greeting, punctuation) &#123;
+  console.log(greeting + &#39;, &#39; + this.name + punctuation)
+&#125;
+
+const greetPerson = greet.myBind(person, &#39;你好&#39;)
+greetPerson(&#39;！&#39;) // 你好, 张三！
+
+// new 调用测试
+function Person(name) &#123;
+  this.name = name
+&#125;
+
+const BoundPerson = Person.myBind(&#123; name: &#39;默认&#39; &#125;)
+const p = new BoundPerson(&#39;李四&#39;)
+console.log(p.name) // &#39;李四&#39;（new 调用时忽略绑定的 this）
+</code></pre>
+<h2 id="七、实战练习"><a href="#七、实战练习" class="headerlink" title="七、实战练习"></a>七、实战练习</h2><h3 id="练习一：基础绑定"><a href="#练习一：基础绑定" class="headerlink" title="练习一：基础绑定"></a>练习一：基础绑定</h3><pre><code class="javascript">var obj = &#123;
+  a: 1,
+  say: function () &#123;
+    console.log(&#39;this1:&#39;, this)
+
+    var sayA = function () &#123;
+      console.log(&#39;this2:&#39;, this)
     &#125;
+
+    function sayB() &#123;
+      console.log(&#39;this3:&#39;, this)
+    &#125;
+
+    sayA() // window（独立调用）
+    sayB() // window（独立调用）
+  &#125;
 &#125;
-obj.say(3)
-/* 
-this1:obj
-this2:window
-this3:window
-*/
-console.log(obj.a+&quot;  &quot;+obj.c)//1 2
-console.log(window.a+&quot;  &quot;+window.c)//3 undefined
+
+obj.say() // this1: obj（obj 调用）
+// 输出：this1: obj, this2: window, this3: window
 </code></pre>
-<pre><code class="javascript">function Person(name,age)&#123;
-      this.name = name
-      this.age = age
+<h3 id="练习二：构造函数"><a href="#练习二：构造函数" class="headerlink" title="练习二：构造函数"></a>练习二：构造函数</h3><pre><code class="javascript">function Person(name, age) &#123;
+  this.name = name
+  this.age = age
 &#125;
-var person1 = new Person(&quot;张三&quot;,18)
-var person2 = Person(&quot;李四&quot;,12)
-console.log(person1)//&#123;name:张三,age:18&#125;
-console.log(person2)//undefined
-console.log(person1.name,person1.age)//张三，18
-console.log(window.name,window.age)//李四，12
+
+var person1 = new Person(&#39;张三&#39;, 18)
+var person2 = Person(&#39;李四&#39;, 12) // 忘记 new，this 指向 window
+
+console.log(person1) // &#123; name: &#39;张三&#39;, age: 18 &#125;
+console.log(person2) // undefined（函数没有返回值）
+console.log(window.name, window.age) // &#39;李四&#39;, 12（污染全局）
 </code></pre>
-<pre><code class="javascript">//练习题三答案
-function Test(a, b) &#123;
-    this.a = a
-    this.b = b
-    this.say = function (a, b) &#123;
-          this.a = a
-           this.b = b
-           console.log(this)
-        console.log(a, b)
-     &#125;
+<h3 id="练习三：箭头函数"><a href="#练习三：箭头函数" class="headerlink" title="练习三：箭头函数"></a>练习三：箭头函数</h3><pre><code class="javascript">const obj = &#123;
+  func() &#123;
+    const arrowFunc = () =&gt; &#123;
+      console.log(this)
+    &#125;
+    return arrowFunc
+  &#125;,
+  _name: &#39;obj&#39;
 &#125;
-var obj1 = new Test(1, 1)
-console.log(obj1.a, obj1.b)//1,1
-obj1.say()//obj1,undefined,undefined
-console.log(obj1.a, obj1.b)//undefined,undefined
-var obj2 = &#123; a: 2, b: 2 &#125;
-obj1.say(4, 4)//obj1,4,4
-console.log(obj1.a, obj1.b)//4,4
-obj1.say.call(obj2, 3, 3)//obj2,3,3
-console.log(obj2.a + &quot;--&quot; + obj2.b)//3--3
+
+// 箭头函数的 this 继承自 func
+// func 的 this 取决于调用方式
+
+obj.func()() // obj（obj 调用 func）
+
+const func = obj.func
+func()() // window（独立调用 func）
+
+obj.func.bind(&#123; _name: &#39;bindObj&#39; &#125;)()() // &#123; _name: &#39;bindObj&#39; &#125;
+obj.func.bind()()() // window（bind 无参数，this 为 window）
+
+// bind 返回的函数 this 不可再改变
+obj.func.bind(&#123; _name: &#39;bindObj&#39; &#125;).apply(&#123; _name: &#39;applyObj&#39; &#125;)()
+// 输出：&#123; _name: &#39;bindObj&#39; &#125;（bind 的 this 不可改变）
 </code></pre>
-<pre><code class="javascript">//练习题四答案
-let obj = &#123;
-    func() &#123;
-        const arrowFunc = () =&gt; &#123;
-            console.log(this)
-        &#125; 
-        return arrowFunc
-    &#125;,
-    _name: &quot;obj&quot;,
-&#125;
-//箭头函数的this指向一直是上一层的爸爸(即func的this指向)
-obj.func()()//obj
-//func是一个全局变量它的this指向的是window
-func = obj.func
-func()()//window
-obj.func.bind(&#123; _name: &quot;newObj&quot; &#125;)()()//&#123; _name: &quot;newObj&quot; &#125;
-obj.func.bind()()()//window
-obj.func.bind(&#123; _name: &quot;bindObj&quot; &#125;).apply(&#123; _name: &quot;applyObj&quot; &#125;)()//&#123; _name: &quot;bindObj&quot; &#125;
-//bind会返回绑定好this的函数供调用
-//解释bind改变的是func的this指向，之后无论如何调用都不会改变
-</code></pre>
-<pre><code class="javascript">//练习题五答案
-var length = 10
-function fn () &#123;
+<h3 id="练习四：arguments-中的-this"><a href="#练习四：arguments-中的-this" class="headerlink" title="练习四：arguments 中的 this"></a>练习四：arguments 中的 this</h3><pre><code class="javascript">var length = 10
+
+function fn() &#123;
   console.log(this.length)
 &#125;
 
 var obj = &#123;
   length: 5,
   method: function (fn) &#123;
-    fn()//10
-    arguments[0]()//2
-    //相当于arguments调用arguments取出第一个值fn(类似obj.属性调用，对象也可以根据[]的方式取出)
+    fn() // 10（独立调用，this 为 window）
+    arguments[0]() // 2（arguments 调用，this 为 arguments）
   &#125;
 &#125;
-obj.method(fn, 1)
+
+obj.method(fn, 1) // arguments = &#123; 0: fn, 1: 1, length: 2 &#125;
+// 输出：10, 2
 </code></pre>
-</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/this/">this</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/function-currying/" title="函数柯里化，实现add(1)(2)...累加函数"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">函数柯里化，实现add(1)(2)...累加函数</div></div></a></div><div class="next-post pull-right"><a href="/posts/electron-vite-react/" title="electron-vite初始化react桌面端应用，及相关问题解决方案"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">electron-vite初始化react桌面端应用，及相关问题解决方案</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">53</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">64</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#this%E6%A6%82%E5%BF%B5"><span class="toc-number">1.</span> <span class="toc-text">this概念</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%9E%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84this%E6%8C%87%E5%90%91"><span class="toc-number">2.</span> <span class="toc-text">非严格模式下的this指向</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B0%83%E7%94%A8%E7%BB%91%E5%AE%9A"><span class="toc-number">2.1.</span> <span class="toc-text">调用绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9A%90%E5%BC%8F%E7%BB%91%E5%AE%9A"><span class="toc-number">2.2.</span> <span class="toc-text">隐式绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#new-%E5%85%B3%E9%94%AE%E5%AD%97%E7%BB%91%E5%AE%9A"><span class="toc-number">2.3.</span> <span class="toc-text">new 关键字绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%98%BE%E7%A4%BA%E7%BB%91%E5%AE%9A"><span class="toc-number">2.4.</span> <span class="toc-text">显示绑定</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#call%E3%80%81apply%E3%80%81bind%E4%B8%89%E7%A7%8D%E6%96%B9%E6%B3%95%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">2.4.1.</span> <span class="toc-text">call、apply、bind三种方法的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%89%8B%E5%86%99call%E3%80%81apply%E3%80%81bind"><span class="toc-number">2.4.2.</span> <span class="toc-text">手写call、apply、bind</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0"><span class="toc-number">2.5.</span> <span class="toc-text">箭头函数</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E4%B8%8E%E6%99%AE%E9%80%9A%E5%87%BD%E6%95%B0%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">2.5.1.</span> <span class="toc-text">箭头函数与普通函数的区别</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E7%9A%84this%E7%9A%84%E6%8C%87%E5%90%91"><span class="toc-number">2.5.2.</span> <span class="toc-text">箭头函数的this的指向</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84this%E6%8C%87%E5%90%91"><span class="toc-number">3.</span> <span class="toc-text">严格模式下的this指向</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A8%E5%B1%80%E4%BD%9C%E7%94%A8%E5%9F%9F%E4%B8%AD%E7%9A%84this"><span class="toc-number">3.1.</span> <span class="toc-text">全局作用域中的this</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A8%E5%B1%80%E4%BD%9C%E7%94%A8%E5%9F%9F%E4%B8%AD%E7%9A%84this-1"><span class="toc-number">3.2.</span> <span class="toc-text">全局作用域中的this</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%97%A0%E6%98%BE%E7%A4%BA%E6%8C%87%E5%AE%9A"><span class="toc-number">3.2.1.</span> <span class="toc-text">无显示指定</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%98%BE%E7%A4%BA%E6%8C%87%E5%AE%9A"><span class="toc-number">3.2.2.</span> <span class="toc-text">显示指定</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0%E9%A2%98"><span class="toc-number">4.</span> <span class="toc-text">练习题</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/async-await-principle/" title="async和await实现原理">async和await实现原理</a><time datetime="2024-03-11T16:00:00.000Z" title="发表于 2024-03-12 00:00:00">2024-03-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/commonjs-esmodule/" title="CommonJS和ES Module的区别">CommonJS和ES Module的区别</a><time datetime="2024-02-02T16:00:00.000Z" title="发表于 2024-02-03 00:00:00">2024-02-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-call-apply-bind/" title="手写call、apply、bind">手写call、apply、bind</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-jsonp/" title="实现JSONP">实现JSONP</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-deep-clone/" title="手写深拷贝">手写深拷贝</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+<h3 id="练习五：综合题"><a href="#练习五：综合题" class="headerlink" title="练习五：综合题"></a>练习五：综合题</h3><pre><code class="javascript">var name = &#39;window&#39;
+
+var obj1 = &#123;
+  name: &#39;obj1&#39;,
+  foo: function () &#123;
+    console.log(this.name)
+  &#125;
+&#125;
+
+var obj2 = &#123;
+  name: &#39;obj2&#39;,
+  foo: () =&gt; &#123;
+    console.log(this.name)
+  &#125;
+&#125;
+
+obj1.foo() // &#39;obj1&#39;（obj1 调用）
+obj2.foo() // &#39;window&#39;（箭头函数继承外层 this）
+
+obj1.foo.call(obj2) // &#39;obj2&#39;（显式绑定）
+obj2.foo.call(obj1) // &#39;window&#39;（箭头函数 this 不可改变）
+
+new obj1.foo() // undefined（new 调用，this 指向新实例，没有 name 属性）
+// new obj2.foo() // 报错（箭头函数不能作为构造函数）
+</code></pre>
+<h2 id="八、总结"><a href="#八、总结" class="headerlink" title="八、总结"></a>八、总结</h2><p>记住判断 <code>this</code> 指向的四个步骤：</p>
+<ol>
+<li><strong>是否是箭头函数？</strong> → 继承定义时外层的 <code>this</code></li>
+<li><strong>是否使用 new 调用？</strong> → <code>this</code> 指向新创建的实例</li>
+<li><strong>是否使用 call&#x2F;apply&#x2F;bind？</strong> → <code>this</code> 指向绑定的对象</li>
+<li><strong>是否作为对象方法调用？</strong> → <code>this</code> 指向该对象</li>
+<li><strong>以上都不是？</strong> → 严格模式为 <code>undefined</code>，非严格模式为 <code>window</code></li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/this/">this</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/function-currying/" title="函数柯里化，实现add(1)(2)...累加函数"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">函数柯里化，实现add(1)(2)...累加函数</div></div></a></div><div class="next-post pull-right"><a href="/posts/electron-vite-react/" title="electron-vite初始化react桌面端应用，及相关问题解决方案"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">electron-vite初始化react桌面端应用，及相关问题解决方案</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81this-%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">1.</span> <span class="toc-text">一、this 是什么？</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81this-%E7%BB%91%E5%AE%9A%E7%9A%84%E5%9B%9B%E7%A7%8D%E8%A7%84%E5%88%99"><span class="toc-number">2.</span> <span class="toc-text">二、this 绑定的四种规则</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E9%BB%98%E8%AE%A4%E7%BB%91%E5%AE%9A"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 默认绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E9%9A%90%E5%BC%8F%E7%BB%91%E5%AE%9A"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 隐式绑定</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%9A%90%E5%BC%8F%E4%B8%A2%E5%A4%B1"><span class="toc-number">2.2.1.</span> <span class="toc-text">隐式丢失</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E6%98%BE%E5%BC%8F%E7%BB%91%E5%AE%9A"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 显式绑定</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#call%E3%80%81apply%E3%80%81bind-%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="toc-number">2.3.1.</span> <span class="toc-text">call、apply、bind 的区别</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-new-%E7%BB%91%E5%AE%9A"><span class="toc-number">2.4.</span> <span class="toc-text">2.4 new 绑定</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81this-%E7%BB%91%E5%AE%9A%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">3.</span> <span class="toc-text">三、this 绑定优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E7%9A%84-this"><span class="toc-number">4.</span> <span class="toc-text">四、箭头函数的 this</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E7%9A%84%E7%89%B9%E7%82%B9"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 箭头函数的特点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E7%9A%84%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 箭头函数的应用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0%E7%9A%84-this-%E4%B8%8D%E5%8F%AF%E6%94%B9%E5%8F%98"><span class="toc-number">4.3.</span> <span class="toc-text">4.3 箭头函数的 this 不可改变</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E4%B8%A5%E6%A0%BC%E6%A8%A1%E5%BC%8F%E4%B8%8B%E7%9A%84-this"><span class="toc-number">5.</span> <span class="toc-text">五、严格模式下的 this</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E6%89%8B%E5%86%99%E5%AE%9E%E7%8E%B0"><span class="toc-number">6.</span> <span class="toc-text">六、手写实现</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E6%89%8B%E5%86%99-call"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 手写 call</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%89%8B%E5%86%99-apply"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 手写 apply</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E6%89%8B%E5%86%99-bind"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 手写 bind</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%AE%9E%E6%88%98%E7%BB%83%E4%B9%A0"><span class="toc-number">7.</span> <span class="toc-text">七、实战练习</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0%E4%B8%80%EF%BC%9A%E5%9F%BA%E7%A1%80%E7%BB%91%E5%AE%9A"><span class="toc-number">7.1.</span> <span class="toc-text">练习一：基础绑定</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0%E4%BA%8C%EF%BC%9A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0"><span class="toc-number">7.2.</span> <span class="toc-text">练习二：构造函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0%E4%B8%89%EF%BC%9A%E7%AE%AD%E5%A4%B4%E5%87%BD%E6%95%B0"><span class="toc-number">7.3.</span> <span class="toc-text">练习三：箭头函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0%E5%9B%9B%EF%BC%9Aarguments-%E4%B8%AD%E7%9A%84-this"><span class="toc-number">7.4.</span> <span class="toc-text">练习四：arguments 中的 this</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%83%E4%B9%A0%E4%BA%94%EF%BC%9A%E7%BB%BC%E5%90%88%E9%A2%98"><span class="toc-number">7.5.</span> <span class="toc-text">练习五：综合题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">八、总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
         <style>
             [bg-lazy] {
                 background-image: none !important;

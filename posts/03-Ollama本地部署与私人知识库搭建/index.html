@@ -1,0 +1,609 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Ollama本地部署与私人知识库搭建 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：最近ollama比较火，都在本地部署大模型。所以这一篇，我想讲解一下如何在自己的电脑上跑大模型。  环境准备与 Ollama 安装硬件要求先说实话，本地跑大模型对硬件有要求：    模型规模 最低内存 推荐配置    1.5B-3B（如 DeepSeek-R1:1.5b） 4GB RAM 8GB RAM   7B-8B（如 LLaMA3:8b、Qwen2.5:7b） 8GB RAM 16G">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Ollama本地部署与私人知识库搭建">
+<meta property="og:url" content="http://example.com/posts/03-Ollama%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E4%B8%8E%E7%A7%81%E4%BA%BA%E7%9F%A5%E8%AF%86%E5%BA%93%E6%90%AD%E5%BB%BA/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：最近ollama比较火，都在本地部署大模型。所以这一篇，我想讲解一下如何在自己的电脑上跑大模型。  环境准备与 Ollama 安装硬件要求先说实话，本地跑大模型对硬件有要求：    模型规模 最低内存 推荐配置    1.5B-3B（如 DeepSeek-R1:1.5b） 4GB RAM 8GB RAM   7B-8B（如 LLaMA3:8b、Qwen2.5:7b） 8GB RAM 16G">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2025-02-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-19T14:52:49.000Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Ollama">
+<meta property="article:tag" content="本地部署">
+<meta property="article:tag" content="RAG">
+<meta property="article:tag" content="知识库">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/03-Ollama%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E4%B8%8E%E7%A7%81%E4%BA%BA%E7%9F%A5%E8%AF%86%E5%BA%93%E6%90%AD%E5%BB%BA/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Ollama本地部署与私人知识库搭建',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 22:52:49'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Ollama本地部署与私人知识库搭建</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-02-04T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-19T14:52:49.000Z" title="更新于 2026 22:52:49">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：最近ollama比较火，都在本地部署大模型。所以这一篇，我想讲解一下<strong>如何在自己的电脑上跑大模型</strong>。</p>
+</blockquote>
+<h2 id="环境准备与-Ollama-安装"><a href="#环境准备与-Ollama-安装" class="headerlink" title="环境准备与 Ollama 安装"></a>环境准备与 Ollama 安装</h2><h3 id="硬件要求"><a href="#硬件要求" class="headerlink" title="硬件要求"></a>硬件要求</h3><p>先说实话，本地跑大模型对硬件有要求：</p>
+<table>
+<thead>
+<tr>
+<th>模型规模</th>
+<th>最低内存</th>
+<th>推荐配置</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.5B-3B（如 DeepSeek-R1:1.5b）</td>
+<td>4GB RAM</td>
+<td>8GB RAM</td>
+</tr>
+<tr>
+<td>7B-8B（如 LLaMA3:8b、Qwen2.5:7b）</td>
+<td>8GB RAM</td>
+<td>16GB RAM</td>
+</tr>
+<tr>
+<td>14B（如 Qwen2.5:14b）</td>
+<td>16GB RAM</td>
+<td>32GB RAM</td>
+</tr>
+<tr>
+<td>32B-70B</td>
+<td>32GB+ RAM</td>
+<td>64GB+ RAM &#x2F; GPU</td>
+</tr>
+</tbody></table>
+<p><strong>我的实际配置</strong>：MacBook Pro M2 16GB —— 跑 7B-8B 模型流畅，14B 模型可以接受，再大就吃力了。</p>
+<h3 id="安装-Ollama"><a href="#安装-Ollama" class="headerlink" title="安装 Ollama"></a>安装 Ollama</h3><pre><code class="bash"># macOS —— 直接下载安装
+# 访问 https://ollama.com/download 下载安装包，双击安装即可
+
+# 或者用 Homebrew
+brew install ollama
+
+# Linux —— 一行命令
+curl -fsSL https://ollama.com/install.sh | sh
+
+# 验证安装
+ollama --version
+# 输出类似：ollama version is 0.6.x
+</code></pre>
+<h3 id="下载并运行第一个模型"><a href="#下载并运行第一个模型" class="headerlink" title="下载并运行第一个模型"></a>下载并运行第一个模型</h3><pre><code class="bash"># 推荐从 Qwen2.5:7b 开始（中文能力强，性价比高）
+ollama run qwen2.5:7b
+
+# 下载完成后直接进入对话模式
+&gt;&gt;&gt; 你好，请用一句话介绍自己
+我是通义千问，一个由阿里云开发的AI助手。
+
+&gt;&gt;&gt; 用JavaScript写一个快速排序
+# 它会直接输出可运行的代码
+
+# 退出对话
+&gt;&gt;&gt; /bye
+</code></pre>
+<h3 id="常用模型推荐"><a href="#常用模型推荐" class="headerlink" title="常用模型推荐"></a>常用模型推荐</h3><pre><code class="bash"># 中文场景首选
+ollama pull qwen2.5:7b        # 阿里通义千问，中文很强
+ollama pull deepseek-r1:8b     # DeepSeek推理模型，逻辑链清晰
+
+# 轻量级（性能弱但速度快，适合测试）
+ollama pull qwen2.5:1.5b
+ollama pull deepseek-r1:1.5b
+
+# 嵌入模型（构建知识库必需）
+ollama pull shaw/dmeta-embedding-zh:latest   # 文本向量化模型
+
+# 查看已下载的模型
+ollama list
+</code></pre>
+<p><strong>我的选型建议</strong>：</p>
+<ul>
+<li>日常中文对话：<code>qwen2.5:7b</code>（中文理解最好）</li>
+<li>代码生成：<code>deepseek-r1:8b</code>（推理链条清晰，代码质量高）</li>
+<li>知识库嵌入：<code>shaw/dmeta-embedding-zh:latest</code>（处理中文比较好的本地嵌入模型）</li>
+</ul>
+<h2 id="Ollama-API-调用"><a href="#Ollama-API-调用" class="headerlink" title="Ollama API 调用"></a>Ollama API 调用</h2><p>Ollama 安装后自动启动一个 HTTP 服务（默认端口 11434），兼容 OpenAI API 格式：</p>
+<pre><code class="javascript">// 基础对话调用 —— 和调 OpenAI 几乎一样
+const response = await fetch(&#39;http://localhost:11434/api/chat&#39;, &#123;
+  method: &#39;POST&#39;,
+  headers: &#123; &#39;Content-Type&#39;: &#39;application/json&#39; &#125;,
+  body: JSON.stringify(&#123;
+    model: &#39;qwen2.5:7b&#39;,
+    messages: [
+      &#123; role: &#39;system&#39;, content: &#39;你是一个友好的助手&#39; &#125;,
+      &#123; role: &#39;user&#39;, content: &#39;用一句话解释什么是闭包&#39; &#125;
+    ],
+    stream: false  // 非流式，等待完整响应
+  &#125;)
+&#125;);
+
+const data = await response.json();
+console.log(data.message.content);
+// 输出：&quot;闭包是指一个函数能够访问并记住其词法作用域中的变量，即使该函数在其词法作用域之外执行。&quot;
+</code></pre>
+<pre><code class="javascript">// 流式调用 —— 逐字输出
+async function streamChat(prompt) &#123;
+  const response = await fetch(&#39;http://localhost:11434/api/chat&#39;, &#123;
+    method: &#39;POST&#39;,
+    headers: &#123; &#39;Content-Type&#39;: &#39;application/json&#39; &#125;,
+    body: JSON.stringify(&#123;
+      model: &#39;qwen2.5:7b&#39;,
+      messages: [&#123; role: &#39;user&#39;, content: prompt &#125;],
+      stream: true  // 流式输出
+    &#125;)
+  &#125;);
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let fullResponse = &#39;&#39;;
+
+  while (true) &#123;
+    const &#123; done, value &#125; = await reader.read();
+    if (done) break;
+
+    const chunk = decoder.decode(value);
+    const json = JSON.parse(chunk);
+
+    if (json.message?.content) &#123;
+      process.stdout.write(json.message.content);  // 逐字打印
+      fullResponse += json.message.content;
+    &#125;
+  &#125;
+
+  return fullResponse;
+&#125;
+
+await streamChat(&#39;写一个Node.js的Hello World HTTP服务器&#39;);
+</code></pre>
+<h2 id="文本向量化：知识库的基础"><a href="#文本向量化：知识库的基础" class="headerlink" title="文本向量化：知识库的基础"></a>文本向量化：知识库的基础</h2><p>构建知识库的核心步骤是<strong>把文本转换为向量</strong>，这样才能进行语义检索。</p>
+<pre><code class="javascript">// 使用 Ollama 的嵌入模型生成文本向量
+async function getEmbedding(text) &#123;
+  const response = await fetch(&#39;http://localhost:11434/api/embed&#39;, &#123;
+    method: &#39;POST&#39;,
+    headers: &#123; &#39;Content-Type&#39;: &#39;application/json&#39; &#125;,
+    body: JSON.stringify(&#123;
+      model: &#39;shaw/dmeta-embedding-zh:latest&#39;,
+      input: text
+    &#125;)
+  &#125;);
+
+  const data = await response.json();
+  return data.embeddings[0];  // 返回一个数字数组（向量）
+&#125;
+
+// 测试
+const vector = await getEmbedding(&#39;JavaScript闭包是什么？&#39;);
+console.log(`向量维度: $&#123;vector.length&#125;`);  // 768维
+console.log(`前5个分量: $&#123;vector.slice(0, 5)&#125;`);
+// 输出类似: [0.0234, -0.0891, 0.0456, ...]
+</code></pre>
+<h2 id="实战：构建知识库问答系统"><a href="#实战：构建知识库问答系统" class="headerlink" title="实战：构建知识库问答系统"></a>实战：构建知识库问答系统</h2><p>现在我们把所有能力串起来，构建一个<strong>本地知识库问答系统</strong>。</p>
+<h3 id="项目结构"><a href="#项目结构" class="headerlink" title="项目结构"></a>项目结构</h3><pre><code class="bash">local-rag/
+├── package.json
+├── index.mjs        # 主程序
+├── knowledge/       # 知识库文档
+│   ├── react-hooks.md
+│   └── nodejs-basics.md
+└── db/              # 向量存储（简单JSON实现）
+    └── vectors.json
+</code></pre>
+<h3 id="完整代码实现"><a href="#完整代码实现" class="headerlink" title="完整代码实现"></a>完整代码实现</h3><pre><code class="javascript">// index.mjs —— 完全本地化的知识库问答系统
+import fs from &#39;fs/promises&#39;;
+import path from &#39;path&#39;;
+import readline from &#39;readline&#39;;
+
+const OLLAMA_BASE = &#39;http://localhost:11434&#39;;
+const CHAT_MODEL = &#39;qwen2.5:7b&#39;;
+const EMBED_MODEL = &#39;shaw/dmeta-embedding-zh:latest&#39;;
+const VECTOR_DB_PATH = &#39;./db/vectors.json&#39;;
+const KNOWLEDGE_DIR = &#39;./knowledge&#39;;
+
+// ========== 1. 向量化工具 ==========
+async function getEmbedding(text) &#123;
+  const res = await fetch(`$&#123;OLLAMA_BASE&#125;/api/embed`, &#123;
+    method: &#39;POST&#39;,
+    headers: &#123; &#39;Content-Type&#39;: &#39;application/json&#39; &#125;,
+    body: JSON.stringify(&#123; model: EMBED_MODEL, input: text &#125;)
+  &#125;);
+  const data = await res.json();
+  return data.embeddings[0];
+&#125;
+
+function cosineSimilarity(a, b) &#123;
+  let dot = 0, normA = 0, normB = 0;
+  for (let i = 0; i &lt; a.length; i++) &#123;
+    dot += a[i] * b[i];
+    normA += a[i] * a[i];
+    normB += b[i] * b[i];
+  &#125;
+  return dot / (Math.sqrt(normA) * Math.sqrt(normB));
+&#125;
+
+// ========== 2. 文档处理 ==========
+function splitDocument(text, chunkSize = 500, overlap = 50) &#123;
+  // 优先按段落分割，保持语义完整
+  const paragraphs = text.split(/\n\n+/);
+  const chunks = [];
+  let currentChunk = &#39;&#39;;
+
+  for (const para of paragraphs) &#123;
+    if ((currentChunk + para).length &gt; chunkSize &amp;&amp; currentChunk) &#123;
+      chunks.push(currentChunk.trim());
+      // 保留overlap部分，避免语义断裂
+      const words = currentChunk.split(&#39;&#39;);
+      currentChunk = words.slice(-overlap).join(&#39;&#39;) + &#39;\n\n&#39; + para;
+    &#125; else &#123;
+      currentChunk += (currentChunk ? &#39;\n\n&#39; : &#39;&#39;) + para;
+    &#125;
+  &#125;
+  if (currentChunk.trim()) &#123;
+    chunks.push(currentChunk.trim());
+  &#125;
+
+  return chunks;
+&#125;
+
+// ========== 3. 知识库构建 ==========
+async function buildKnowledgeBase() &#123;
+  console.log(&#39;📚 开始构建知识库...&#39;);
+
+  const files = await fs.readdir(KNOWLEDGE_DIR);
+  const mdFiles = files.filter(f =&gt; f.endsWith(&#39;.md&#39;));
+  const vectorDB = [];
+
+  for (const file of mdFiles) &#123;
+    const content = await fs.readFile(path.join(KNOWLEDGE_DIR, file), &#39;utf-8&#39;);
+    const chunks = splitDocument(content);
+
+    console.log(`  📄 $&#123;file&#125; → $&#123;chunks.length&#125; 个文档块`);
+
+    for (let i = 0; i &lt; chunks.length; i++) &#123;
+      const embedding = await getEmbedding(chunks[i]);
+      vectorDB.push(&#123;
+        id: `$&#123;file&#125;_chunk_$&#123;i&#125;`,
+        source: file,
+        text: chunks[i],
+        embedding
+      &#125;);
+    &#125;
+  &#125;
+
+  // 持久化存储
+  await fs.mkdir(&#39;./db&#39;, &#123; recursive: true &#125;);
+  await fs.writeFile(VECTOR_DB_PATH, JSON.stringify(vectorDB));
+  console.log(`✅ 知识库构建完成，共 $&#123;vectorDB.length&#125; 个文档块\n`);
+
+  return vectorDB;
+&#125;
+
+// ========== 4. 语义检索 ==========
+async function searchKnowledge(query, vectorDB, topK = 3) &#123;
+  const queryEmbedding = await getEmbedding(query);
+
+  const scored = vectorDB.map(doc =&gt; (&#123;
+    ...doc,
+    score: cosineSimilarity(queryEmbedding, doc.embedding)
+  &#125;));
+
+  scored.sort((a, b) =&gt; b.score - a.score);
+  return scored.slice(0, topK);
+&#125;
+
+// ========== 5. RAG 问答 ==========
+async function ragChat(question, vectorDB) &#123;
+  // 步骤1: 检索相关文档
+  const relevantDocs = await searchKnowledge(question, vectorDB);
+
+  console.log(&#39;\n🔍 检索到相关文档:&#39;);
+  relevantDocs.forEach((doc, i) =&gt; &#123;
+    console.log(`  [$&#123;i + 1&#125;] $&#123;doc.source&#125; (相关度: $&#123;doc.score.toFixed(3)&#125;)`);
+  &#125;);
+
+  // 步骤2: 构建带上下文的Prompt
+  const context = relevantDocs.map(d =&gt; d.text).join(&#39;\n\n---\n\n&#39;);
+
+  const messages = [
+    &#123;
+      role: &#39;system&#39;,
+      content: `你是一个基于知识库的问答助手。请严格根据提供的&quot;参考资料&quot;回答用户问题。
+如果参考资料中没有相关信息，请明确说&quot;根据现有知识库，我没有找到相关信息&quot;。
+不要编造参考资料中不存在的内容。回答要简洁准确。`
+    &#125;,
+    &#123;
+      role: &#39;user&#39;,
+      content: `参考资料：
+$&#123;context&#125;
+
+问题：$&#123;question&#125;`
+    &#125;
+  ];
+
+  // 步骤3: 调用本地模型生成回答（流式输出）
+  const response = await fetch(`$&#123;OLLAMA_BASE&#125;/api/chat`, &#123;
+    method: &#39;POST&#39;,
+    headers: &#123; &#39;Content-Type&#39;: &#39;application/json&#39; &#125;,
+    body: JSON.stringify(&#123; model: CHAT_MODEL, messages, stream: true &#125;)
+  &#125;);
+
+  process.stdout.write(&#39;\n💬 回答: &#39;);
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) &#123;
+    const &#123; done, value &#125; = await reader.read();
+    if (done) break;
+    const lines = decoder.decode(value).split(&#39;\n&#39;).filter(Boolean);
+    for (const line of lines) &#123;
+      try &#123;
+        const json = JSON.parse(line);
+        if (json.message?.content) &#123;
+          process.stdout.write(json.message.content);
+        &#125;
+      &#125; catch &#123;&#125;
+    &#125;
+  &#125;
+  console.log(&#39;\n&#39;);
+&#125;
+
+// ========== 6. 主程序 ==========
+async function main() &#123;
+  // 加载或构建知识库
+  let vectorDB;
+  try &#123;
+    const data = await fs.readFile(VECTOR_DB_PATH, &#39;utf-8&#39;);
+    vectorDB = JSON.parse(data);
+    console.log(`📂 已加载知识库，共 $&#123;vectorDB.length&#125; 个文档块\n`);
+  &#125; catch &#123;
+    vectorDB = await buildKnowledgeBase();
+  &#125;
+
+  // 交互式问答
+  const rl = readline.createInterface(&#123;
+    input: process.stdin,
+    output: process.stdout
+  &#125;);
+
+  console.log(&#39;🤖 本地知识库问答系统已启动（输入 exit 退出，输入 rebuild 重建知识库）\n&#39;);
+
+  const ask = () =&gt; &#123;
+    rl.question(&#39;❓ 你的问题: &#39;, async (input) =&gt; &#123;
+      const trimmed = input.trim();
+      if (trimmed === &#39;exit&#39;) &#123;
+        rl.close();
+        return;
+      &#125;
+      if (trimmed === &#39;rebuild&#39;) &#123;
+        vectorDB = await buildKnowledgeBase();
+        ask();
+        return;
+      &#125;
+      if (trimmed) &#123;
+        await ragChat(trimmed, vectorDB);
+      &#125;
+      ask();
+    &#125;);
+  &#125;;
+
+  ask();
+&#125;
+
+main();
+</code></pre>
+<h3 id="准备知识库文档"><a href="#准备知识库文档" class="headerlink" title="准备知识库文档"></a>准备知识库文档</h3><pre><code class="markdown">&lt;!-- knowledge/react-hooks.md --&gt;
+# React Hooks 核心知识
+
+## useState
+useState 是 React 最基础的 Hook，用于在函数组件中添加状态。
+
+使用方式：
+const [state, setState] = useState(initialValue);
+
+注意事项：
+1. setState 是异步的，不要依赖更新后的值
+2. 如果新状态依赖旧状态，使用函数式更新：setState(prev =&gt; prev + 1)
+3. 对于对象和数组，必须返回新的引用才能触发重渲染
+
+## useEffect
+useEffect 用于处理副作用，如数据请求、订阅、DOM操作等。
+
+清除副作用：
+useEffect(() =&gt; &#123;
+  const timer = setInterval(() =&gt; console.log(&#39;tick&#39;), 1000);
+  return () =&gt; clearInterval(timer);  // 清除函数
+&#125;, []);
+
+依赖数组：
+- 空数组 []：只在挂载时执行一次
+- [dep1, dep2]：依赖变化时重新执行
+- 不传：每次渲染都执行（慎用）
+</code></pre>
+<h3 id="运行效果"><a href="#运行效果" class="headerlink" title="运行效果"></a>运行效果</h3><pre><code class="bash"># 先确保 Ollama 运行中
+ollama serve
+
+# 启动知识库系统
+node index.mjs
+
+# 输出：
+# 📚 开始构建知识库...
+#   📄 react-hooks.md → 3 个文档块
+# ✅ 知识库构建完成，共 3 个文档块
+#
+# 🤖 本地知识库问答系统已启动
+#
+# ❓ 你的问题: useEffect的依赖数组怎么用？
+#
+# 🔍 检索到相关文档:
+#   [1] react-hooks.md (相关度: 0.847)
+#
+# 💬 回答: 根据知识库内容，useEffect的依赖数组有三种用法：
+# 1. 空数组 []：副作用只在组件挂载时执行一次
+# 2. [dep1, dep2]：当依赖项变化时重新执行副作用
+# 3. 不传依赖数组：每次渲染都会执行（应该慎用）
+# 需要注意的是，忘记添加依赖项是常见的坑，会导致闭包陷阱...
+</code></pre>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>这篇文章我们完成了：</p>
+<ol>
+<li>✅ Ollama 安装和模型管理</li>
+<li>✅ 本地模型 API 调用（非流式+流式）</li>
+<li>✅ 文本向量化和语义检索原理</li>
+<li>✅ 完全本地化的 RAG 知识库问答系统</li>
+</ol>
+<p>全程数据不出本机，不花一分钱 API 费用。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Ollama/">Ollama</a><a class="post-meta__tags" href="/tags/%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2/">本地部署</a><a class="post-meta__tags" href="/tags/RAG/">RAG</a><a class="post-meta__tags" href="/tags/%E7%9F%A5%E8%AF%86%E5%BA%93/">知识库</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/04-Function-Calling%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/" title="Function Calling深度解析：让AI拥有双手"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Function Calling深度解析：让AI拥有双手</div></div></a></div><div class="next-post pull-right"><a href="/posts/02-%E6%8F%90%E7%A4%BA%E8%AF%8D%E5%B7%A5%E7%A8%8B-System-Prompt%E4%B8%8EUser-Prompt/" title="提示词工程：System Prompt vs User Prompt 的本质差异"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">提示词工程：System Prompt vs User Prompt 的本质差异</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E5%87%86%E5%A4%87%E4%B8%8E-Ollama-%E5%AE%89%E8%A3%85"><span class="toc-number">1.</span> <span class="toc-text">环境准备与 Ollama 安装</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E8%A6%81%E6%B1%82"><span class="toc-number">1.1.</span> <span class="toc-text">硬件要求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%89%E8%A3%85-Ollama"><span class="toc-number">1.2.</span> <span class="toc-text">安装 Ollama</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8B%E8%BD%BD%E5%B9%B6%E8%BF%90%E8%A1%8C%E7%AC%AC%E4%B8%80%E4%B8%AA%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.3.</span> <span class="toc-text">下载并运行第一个模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B8%B8%E7%94%A8%E6%A8%A1%E5%9E%8B%E6%8E%A8%E8%8D%90"><span class="toc-number">1.4.</span> <span class="toc-text">常用模型推荐</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Ollama-API-%E8%B0%83%E7%94%A8"><span class="toc-number">2.</span> <span class="toc-text">Ollama API 调用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E6%9C%AC%E5%90%91%E9%87%8F%E5%8C%96%EF%BC%9A%E7%9F%A5%E8%AF%86%E5%BA%93%E7%9A%84%E5%9F%BA%E7%A1%80"><span class="toc-number">3.</span> <span class="toc-text">文本向量化：知识库的基础</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%EF%BC%9A%E6%9E%84%E5%BB%BA%E7%9F%A5%E8%AF%86%E5%BA%93%E9%97%AE%E7%AD%94%E7%B3%BB%E7%BB%9F"><span class="toc-number">4.</span> <span class="toc-text">实战：构建知识库问答系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E7%BB%93%E6%9E%84"><span class="toc-number">4.1.</span> <span class="toc-text">项目结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E4%BB%A3%E7%A0%81%E5%AE%9E%E7%8E%B0"><span class="toc-number">4.2.</span> <span class="toc-text">完整代码实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%86%E5%A4%87%E7%9F%A5%E8%AF%86%E5%BA%93%E6%96%87%E6%A1%A3"><span class="toc-number">4.3.</span> <span class="toc-text">准备知识库文档</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%90%E8%A1%8C%E6%95%88%E6%9E%9C"><span class="toc-number">4.4.</span> <span class="toc-text">运行效果</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">5.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

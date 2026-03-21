@@ -1,0 +1,841 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>JavaScript事件循环：深入理解宏任务与微任务 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言事件循环（Event Loop）是 JavaScript 异步编程的核心机制，也是面试中的高频考点。理解事件循环，才能真正理解 JavaScript 的异步执行顺序。本文将深入剖析事件循环的工作原理，帮你彻底搞懂宏任务与微任务的执行机制。 一、为什么需要事件循环？1.1 JavaScript 的单线程特性JavaScript 从诞生之初就是一门单线程语言，这意味着它同一时间只能做一件事。 &#x2F;&#x2F;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript事件循环：深入理解宏任务与微任务">
+<meta property="og:url" content="http://example.com/posts/event-loop/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言事件循环（Event Loop）是 JavaScript 异步编程的核心机制，也是面试中的高频考点。理解事件循环，才能真正理解 JavaScript 的异步执行顺序。本文将深入剖析事件循环的工作原理，帮你彻底搞懂宏任务与微任务的执行机制。 一、为什么需要事件循环？1.1 JavaScript 的单线程特性JavaScript 从诞生之初就是一门单线程语言，这意味着它同一时间只能做一件事。 &#x2F;&#x2F;">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2024-03-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T09:50:24.649Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="异步编程">
+<meta property="article:tag" content="事件循环">
+<meta property="article:tag" content="Event Loop">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/event-loop/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'JavaScript事件循环：深入理解宏任务与微任务',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 17:50:24'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">JavaScript事件循环：深入理解宏任务与微任务</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-03-14T16:00:00.000Z" title="发表于 2024 00:00:00">2024</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T09:50:24.649Z" title="更新于 2026 17:50:24">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span></div></div></div><article class="post-content" id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>事件循环（Event Loop）是 JavaScript 异步编程的核心机制，也是面试中的高频考点。理解事件循环，才能真正理解 JavaScript 的异步执行顺序。本文将深入剖析事件循环的工作原理，帮你彻底搞懂宏任务与微任务的执行机制。</p>
+<h2 id="一、为什么需要事件循环？"><a href="#一、为什么需要事件循环？" class="headerlink" title="一、为什么需要事件循环？"></a>一、为什么需要事件循环？</h2><h3 id="1-1-JavaScript-的单线程特性"><a href="#1-1-JavaScript-的单线程特性" class="headerlink" title="1.1 JavaScript 的单线程特性"></a>1.1 JavaScript 的单线程特性</h3><p>JavaScript 从诞生之初就是一门<strong>单线程</strong>语言，这意味着它同一时间只能做一件事。</p>
+<pre><code class="javascript">// 单线程：代码按顺序执行
+console.log(1);
+console.log(2);
+console.log(3);
+// 输出：1 2 3（严格按顺序）
+</code></pre>
+<p><strong>为什么是单线程？</strong></p>
+<p>JavaScript 的主要用途是处理网页交互和 DOM 操作。如果是多线程，两个线程同时操作一个 DOM 节点，一个修改、一个删除，就会产生冲突。为了避免复杂的线程同步问题，JavaScript 选择了单线程。</p>
+<h3 id="1-2-单线程的问题"><a href="#1-2-单线程的问题" class="headerlink" title="1.2 单线程的问题"></a>1.2 单线程的问题</h3><p>单线程意味着所有任务都要排队执行，如果前一个任务耗时很长，后面的任务就要一直等待：</p>
+<pre><code class="javascript">// 同步阻塞问题
+console.log(&#39;开始&#39;);
+
+// 模拟耗时操作（同步）
+const start = Date.now();
+while (Date.now() - start &lt; 3000) &#123;&#125; // 阻塞3秒
+
+console.log(&#39;结束&#39;);
+// 用户在这3秒内无法进行任何操作！
+</code></pre>
+<h3 id="1-3-解决方案：异步-事件循环"><a href="#1-3-解决方案：异步-事件循环" class="headerlink" title="1.3 解决方案：异步 + 事件循环"></a>1.3 解决方案：异步 + 事件循环</h3><p>为了解决单线程的阻塞问题，JavaScript 将任务分为两类：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>特点</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>同步任务</strong></td>
+<td>立即执行，在主线程上排队</td>
+<td>变量赋值、函数调用</td>
+</tr>
+<tr>
+<td><strong>异步任务</strong></td>
+<td>不进入主线程，等待结果后再执行</td>
+<td>setTimeout、AJAX、Promise</td>
+</tr>
+</tbody></table>
+<p><strong>事件循环</strong>就是协调同步任务和异步任务执行顺序的机制。</p>
+<h2 id="二、核心概念"><a href="#二、核心概念" class="headerlink" title="二、核心概念"></a>二、核心概念</h2><h3 id="2-1-调用栈（Call-Stack）"><a href="#2-1-调用栈（Call-Stack）" class="headerlink" title="2.1 调用栈（Call Stack）"></a>2.1 调用栈（Call Stack）</h3><p>调用栈是一个<strong>后进先出（LIFO）</strong>的结构，用于记录代码执行的位置：</p>
+<pre><code class="javascript">function multiply(a, b) &#123;
+  return a * b;
+&#125;
+
+function square(n) &#123;
+  return multiply(n, n);
+&#125;
+
+function printSquare(n) &#123;
+  const result = square(n);
+  console.log(result);
+&#125;
+
+printSquare(4);
+</code></pre>
+<p><strong>调用栈执行过程：</strong></p>
+<pre><code>1. printSquare(4) 入栈
+2. square(4) 入栈
+3. multiply(4, 4) 入栈
+4. multiply 返回 16，出栈
+5. square 返回 16，出栈
+6. console.log(16) 入栈
+7. console.log 执行完毕，出栈
+8. printSquare 执行完毕，出栈
+</code></pre>
+<p>![调用栈示意图]</p>
+<h3 id="2-2-任务队列（Task-Queue）"><a href="#2-2-任务队列（Task-Queue）" class="headerlink" title="2.2 任务队列（Task Queue）"></a>2.2 任务队列（Task Queue）</h3><p>任务队列是一个<strong>先进先出（FIFO）</strong>的结构，用于存放等待执行的异步任务回调。</p>
+<p>JavaScript 中有两种任务队列：</p>
+<pre><code>┌─────────────────────────────────────┐
+│           任务队列                   │
+├─────────────────┬───────────────────┤
+│   宏任务队列     │    微任务队列      │
+│ (Macrotask)     │   (Microtask)     │
+├─────────────────┼───────────────────┤
+│ setTimeout      │ Promise.then      │
+│ setInterval     │ Promise.catch     │
+│ setImmediate    │ Promise.finally   │
+│ I/O             │ process.nextTick  │
+│ UI Rendering    │ MutationObserver  │
+│ requestAnimation│ queueMicrotask    │
+└─────────────────┴───────────────────┘
+</code></pre>
+<h3 id="2-3-宏任务与微任务"><a href="#2-3-宏任务与微任务" class="headerlink" title="2.3 宏任务与微任务"></a>2.3 宏任务与微任务</h3><h4 id="宏任务（Macrotask）"><a href="#宏任务（Macrotask）" class="headerlink" title="宏任务（Macrotask）"></a>宏任务（Macrotask）</h4><table>
+<thead>
+<tr>
+<th>API</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>setTimeout</code></td>
+<td>延迟执行</td>
+</tr>
+<tr>
+<td><code>setInterval</code></td>
+<td>定时执行</td>
+</tr>
+<tr>
+<td><code>setImmediate</code></td>
+<td>Node.js 环境，立即执行</td>
+</tr>
+<tr>
+<td><code>I/O</code></td>
+<td>文件读写、网络请求</td>
+</tr>
+<tr>
+<td><code>UI Rendering</code></td>
+<td>浏览器渲染</td>
+</tr>
+<tr>
+<td><code>requestAnimationFrame</code></td>
+<td>动画帧回调</td>
+</tr>
+</tbody></table>
+<h4 id="微任务（Microtask）"><a href="#微任务（Microtask）" class="headerlink" title="微任务（Microtask）"></a>微任务（Microtask）</h4><table>
+<thead>
+<tr>
+<th>API</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Promise.then/catch/finally</code></td>
+<td>Promise 回调</td>
+</tr>
+<tr>
+<td><code>process.nextTick</code></td>
+<td>Node.js 环境，优先级最高</td>
+</tr>
+<tr>
+<td><code>MutationObserver</code></td>
+<td>DOM 变化监听</td>
+</tr>
+<tr>
+<td><code>queueMicrotask</code></td>
+<td>手动添加微任务</td>
+</tr>
+</tbody></table>
+<p><strong>关键区别：</strong></p>
+<pre><code class="javascript">// 宏任务
+setTimeout(() =&gt; console.log(&#39;setTimeout&#39;), 0);
+
+// 微任务
+Promise.resolve().then(() =&gt; console.log(&#39;Promise&#39;));
+
+console.log(&#39;同步代码&#39;);
+
+// 输出顺序：同步代码 → Promise → setTimeout
+</code></pre>
+<h3 id="2-4-任务优先级"><a href="#2-4-任务优先级" class="headerlink" title="2.4 任务优先级"></a>2.4 任务优先级</h3><h4 id="浏览器环境"><a href="#浏览器环境" class="headerlink" title="浏览器环境"></a>浏览器环境</h4><pre><code>同步代码 &gt; 微任务 &gt; 宏任务
+
+微任务内部优先级：
+Promise.then/catch/finally &gt; MutationObserver &gt; queueMicrotask
+</code></pre>
+<pre><code class="javascript">// 验证微任务优先级
+MutationObserver = window.MutationObserver || function() &#123;&#125;;
+queueMicrotask(() =&gt; console.log(&#39;queueMicrotask&#39;));
+Promise.resolve().then(() =&gt; console.log(&#39;Promise&#39;));
+// 输出：Promise → queueMicrotask（Promise 更早加入队列）
+</code></pre>
+<h4 id="Node-js-环境"><a href="#Node-js-环境" class="headerlink" title="Node.js 环境"></a>Node.js 环境</h4><pre><code>同步代码 &gt; process.nextTick &gt; Promise（微任务） &gt; 宏任务
+</code></pre>
+<pre><code class="javascript">// Node.js 环境
+process.nextTick(() =&gt; console.log(&#39;nextTick&#39;));
+Promise.resolve().then(() =&gt; console.log(&#39;Promise&#39;));
+setTimeout(() =&gt; console.log(&#39;setTimeout&#39;), 0);
+
+// 输出：nextTick → Promise → setTimeout
+</code></pre>
+<p><strong>Node.js 完整优先级：</strong></p>
+<pre><code>process.nextTick &gt; Promise微任务 &gt; timer(setTimeout/setInterval) 
+&gt; pending callbacks &gt; idle/prepare &gt; poll 
+&gt; check(setImmediate) &gt; close callbacks
+</code></pre>
+<h2 id="三、事件循环执行流程"><a href="#三、事件循环执行流程" class="headerlink" title="三、事件循环执行流程"></a>三、事件循环执行流程</h2><h3 id="3-1-完整执行机制"><a href="#3-1-完整执行机制" class="headerlink" title="3.1 完整执行机制"></a>3.1 完整执行机制</h3><pre><code>┌───────────────────────────────────────────┐
+│                  事件循环                   │
+│                                           │
+│  ┌─────────────────────────────────────┐  │
+│  │  1. 从调用栈执行同步代码              │  │
+│  │     直到调用栈为空                    │  │
+│  └──────────────────┬──────────────────┘  │
+│                     ▼                     │
+│  ┌─────────────────────────────────────┐  │
+│  │  2. 检查微任务队列                    │  │
+│  │     - 如果有，依次执行所有微任务       │  │
+│  │     - 执行完一个，继续检查下一个       │  │
+│  │     - 直到微任务队列为空              │  │
+│  └──────────────────┬──────────────────┘  │
+│                     ▼                     │
+│  ┌─────────────────────────────────────┐  │
+│  │  3. UI 渲染（如果有需要）             │  │
+│  └──────────────────┬──────────────────┘  │
+│                     ▼                     │
+│  ┌─────────────────────────────────────┐  │
+│  │  4. 从宏任务队列取出一个任务执行       │  │
+│  └──────────────────┬──────────────────┘  │
+│                     │                     │
+│                     ▼                     │
+│         ┌─────────────────────┐          │
+│         │  回到步骤 2         │          │
+│         │  （新一轮循环）      │          │
+│         └─────────────────────┘          │
+└───────────────────────────────────────────┘
+</code></pre>
+<h3 id="3-2-执行流程口诀"><a href="#3-2-执行流程口诀" class="headerlink" title="3.2 执行流程口诀"></a>3.2 执行流程口诀</h3><pre><code>同步先执行，
+栈空查微任，
+微任全清完，
+宏任取一个，
+循环往复行。
+</code></pre>
+<h3 id="3-3-详细步骤"><a href="#3-3-详细步骤" class="headerlink" title="3.3 详细步骤"></a>3.3 详细步骤</h3><ol>
+<li><strong>执行同步代码</strong>：将同步任务压入调用栈执行，直到调用栈为空</li>
+<li><strong>检查微任务队列</strong>：依次执行所有微任务，直到队列为空</li>
+<li><strong>UI 渲染</strong>：浏览器会检查是否需要重新渲染页面</li>
+<li><strong>执行一个宏任务</strong>：从宏任务队列取出第一个任务执行</li>
+<li><strong>回到步骤 2</strong>：开始新一轮的事件循环</li>
+</ol>
+<p><strong>注意：</strong> 每次执行完一个宏任务，都会检查并执行所有微任务！</p>
+<h2 id="四、经典面试题解析"><a href="#四、经典面试题解析" class="headerlink" title="四、经典面试题解析"></a>四、经典面试题解析</h2><h3 id="4-1-基础题目"><a href="#4-1-基础题目" class="headerlink" title="4.1 基础题目"></a>4.1 基础题目</h3><pre><code class="javascript">console.log(1);
+
+setTimeout(() =&gt; &#123;
+  console.log(2);
+&#125;, 0);
+
+Promise.resolve().then(() =&gt; &#123;
+  console.log(3);
+&#125;);
+
+console.log(4);
+</code></pre>
+<p><strong>执行过程分析：</strong></p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作</th>
+<th>调用栈</th>
+<th>微任务队列</th>
+<th>宏任务队列</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>console.log(1)</code></td>
+<td>[log]</td>
+<td>[]</td>
+<td>[]</td>
+<td>1</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>setTimeout</code></td>
+<td>[setTimeout]</td>
+<td>[]</td>
+<td>[callback]</td>
+<td>-</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>Promise.then</code></td>
+<td>[then]</td>
+<td>[callback]</td>
+<td>[setTimeout回调]</td>
+<td>-</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>console.log(4)</code></td>
+<td>[log]</td>
+<td>[Promise回调]</td>
+<td>[setTimeout回调]</td>
+<td>4</td>
+</tr>
+<tr>
+<td>5</td>
+<td>同步结束</td>
+<td>[]</td>
+<td>[Promise回调]</td>
+<td>[setTimeout回调]</td>
+<td>-</td>
+</tr>
+<tr>
+<td>6</td>
+<td>执行微任务</td>
+<td>[]</td>
+<td>[]</td>
+<td>[setTimeout回调]</td>
+<td>3</td>
+</tr>
+<tr>
+<td>7</td>
+<td>执行宏任务</td>
+<td>[]</td>
+<td>[]</td>
+<td>[]</td>
+<td>2</td>
+</tr>
+</tbody></table>
+<p><strong>输出结果：<code>1 4 3 2</code></strong></p>
+<h3 id="4-2-进阶题目"><a href="#4-2-进阶题目" class="headerlink" title="4.2 进阶题目"></a>4.2 进阶题目</h3><pre><code class="javascript">console.log(&#39;script start&#39;);
+
+async function async1() &#123;
+  await async2();
+  console.log(&#39;async1 end&#39;);
+&#125;
+
+async function async2() &#123;
+  console.log(&#39;async2 end&#39;);
+&#125;
+
+async1();
+
+setTimeout(function () &#123;
+  console.log(&#39;setTimeout&#39;);
+&#125;, 0);
+
+new Promise((resolve) =&gt; &#123;
+  console.log(&#39;Promise&#39;);
+  resolve();
+&#125;).then(function () &#123;
+  console.log(&#39;promise1&#39;);
+&#125;).then(function () &#123;
+  console.log(&#39;promise2&#39;);
+&#125;);
+
+console.log(&#39;script end&#39;);
+</code></pre>
+<p><strong>关键点：<code>await</code> 后面的代码相当于 <code>Promise.then</code></strong></p>
+<pre><code class="javascript">// async1 等价于
+function async1() &#123;
+  return Promise.resolve(async2()).then(() =&gt; &#123;
+    console.log(&#39;async1 end&#39;);
+  &#125;);
+&#125;
+</code></pre>
+<p><strong>执行过程：</strong></p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>操作</th>
+<th>输出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td><code>console.log(&#39;script start&#39;)</code></td>
+<td>script start</td>
+</tr>
+<tr>
+<td>2</td>
+<td>调用 <code>async1()</code>，进入 <code>async2()</code></td>
+<td>async2 end</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>await</code> 后续代码加入微任务</td>
+<td>-</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>setTimeout</code> 加入宏任务队列</td>
+<td>-</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>new Promise</code> 执行同步部分</td>
+<td>Promise</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code>.then</code> 加入微任务队列</td>
+<td>-</td>
+</tr>
+<tr>
+<td>7</td>
+<td><code>console.log(&#39;script end&#39;)</code></td>
+<td>script end</td>
+</tr>
+<tr>
+<td>8</td>
+<td>执行微任务：async1 end</td>
+<td>async1 end</td>
+</tr>
+<tr>
+<td>9</td>
+<td>执行微任务：promise1</td>
+<td>promise1</td>
+</tr>
+<tr>
+<td>10</td>
+<td><code>.then</code> 链式调用，promise2 加入微任务</td>
+<td>-</td>
+</tr>
+<tr>
+<td>11</td>
+<td>执行微任务：promise2</td>
+<td>promise2</td>
+</tr>
+<tr>
+<td>12</td>
+<td>执行宏任务：setTimeout</td>
+<td>setTimeout</td>
+</tr>
+</tbody></table>
+<p><strong>输出结果：</strong></p>
+<pre><code>script start
+async2 end
+Promise
+script end
+async1 end
+promise1
+promise2
+setTimeout
+</code></pre>
+<h3 id="4-3-复杂嵌套题目"><a href="#4-3-复杂嵌套题目" class="headerlink" title="4.3 复杂嵌套题目"></a>4.3 复杂嵌套题目</h3><pre><code class="javascript">new Promise((resolve, reject) =&gt; &#123;
+  console.log(&#39;Promise1&#39;);
+  resolve();
+&#125;)
+  .then(() =&gt; &#123;
+    console.log(&#39;Promise2&#39;);
+    new Promise((resolve, reject) =&gt; &#123;
+      console.log(&#39;Promise3&#39;);
+      resolve();
+    &#125;)
+      .then(() =&gt; &#123;
+        console.log(&#39;Promise4&#39;);
+      &#125;)
+      .then(() =&gt; &#123;
+        console.log(&#39;Promise5&#39;);
+      &#125;);
+  &#125;)
+  .then(() =&gt; &#123;
+    console.log(&#39;Promise6&#39;);
+  &#125;);
+
+setTimeout(() =&gt; &#123;
+  console.log(&#39;setTimeout&#39;);
+&#125;, 0);
+
+console.log(&#39;script end&#39;);
+</code></pre>
+<p><strong>解析要点：</strong></p>
+<ol>
+<li>Promise 构造函数中的代码是同步执行的</li>
+<li>第一个 <code>.then</code> 的回调执行时，内部的 Promise 又产生新的微任务</li>
+<li>注意 Promise 链式调用的时序</li>
+</ol>
+<p><strong>输出结果：</strong></p>
+<pre><code>Promise1
+script end
+Promise2
+Promise3
+Promise4
+Promise6
+Promise5
+setTimeout
+</code></pre>
+<p><strong>详细分析：</strong></p>
+<pre><code class="javascript">// 第一次微任务检查
+微任务队列: [then1回调]
+执行 then1 回调:
+  - 输出 Promise2
+  - 创建新 Promise（同步执行 console.log(&#39;Promise3&#39;)）
+  - 新 Promise 的 then 加入微任务队列
+  - 外层第二个 then 加入微任务队列（等待第一个 then 返回的 Promise）
+
+// 第二次微任务检查
+微任务队列: [内层then回调, 外层then2回调]
+执行内层 then 回调:
+  - 输出 Promise4
+  - 链式 then5 加入微任务队列
+执行外层 then2 回调:
+  - 输出 Promise6
+
+// 第三次微任务检查
+微任务队列: [then5回调]
+执行 then5 回调:
+  - 输出 Promise5
+
+// 执行宏任务
+输出 setTimeout
+</code></pre>
+<h3 id="4-4-async-await-与-Promise-的转换"><a href="#4-4-async-await-与-Promise-的转换" class="headerlink" title="4.4 async&#x2F;await 与 Promise 的转换"></a>4.4 async&#x2F;await 与 Promise 的转换</h3><pre><code class="javascript">async function async1() &#123;
+  console.log(&#39;async1 start&#39;);
+  await async2();
+  console.log(&#39;async1 end&#39;);
+&#125;
+
+async function async2() &#123;
+  console.log(&#39;async2&#39;);
+&#125;
+
+async1();
+
+console.log(&#39;script end&#39;);
+</code></pre>
+<p><strong>转换理解：</strong></p>
+<pre><code class="javascript">function async1() &#123;
+  console.log(&#39;async1 start&#39;);
+  return Promise.resolve(async2()).then(() =&gt; &#123;
+    console.log(&#39;async1 end&#39;);
+  &#125;);
+&#125;
+</code></pre>
+<p><strong>输出：</strong></p>
+<pre><code>async1 start
+async2
+script end
+async1 end
+</code></pre>
+<h2 id="五、Node-js-事件循环"><a href="#五、Node-js-事件循环" class="headerlink" title="五、Node.js 事件循环"></a>五、Node.js 事件循环</h2><p>Node.js 的事件循环与浏览器有所区别，基于 libuv 实现。不同的node版本优先级也有细微的差异。</p>
+<h3 id="5-1-Node-js-事件循环阶段"><a href="#5-1-Node-js-事件循环阶段" class="headerlink" title="5.1 Node.js 事件循环阶段"></a>5.1 Node.js 事件循环阶段</h3><pre><code>   ┌───────────────────────┐
+┌─&gt;│        timers         │ setTimeout/setInterval
+│  └───────────┬───────────┘
+│  ┌───────────┴───────────┐
+│  │     pending callbacks  │ I/O 回调
+│  └───────────┬───────────┘
+│  ┌───────────┴───────────┐
+│  │       idle, prepare   │ 内部使用
+│  └───────────┬───────────┘
+│  ┌───────────┴───────────┐
+│  │        poll           │ 轮询，等待新 I/O 事件
+│  └───────────┬───────────┘
+│  ┌───────────┴───────────┐
+│  │        check          │ setImmediate
+│  └───────────┬───────────┘
+│  ┌───────────┴───────────┐
+└──┤    close callbacks    │ close 事件
+   └───────────────────────┘
+</code></pre>
+<h3 id="5-2-process-nextTick"><a href="#5-2-process-nextTick" class="headerlink" title="5.2 process.nextTick"></a>5.2 process.nextTick</h3><p>Node.js 中 <code>process.nextTick</code> 的优先级高于 Promise：</p>
+<pre><code class="javascript">// Node.js 环境
+process.nextTick(() =&gt; &#123;
+  console.log(&#39;nextTick&#39;);
+&#125;);
+
+Promise.resolve().then(() =&gt; &#123;
+  console.log(&#39;Promise&#39;);
+&#125;);
+
+// 输出：nextTick → Promise
+</code></pre>
+<h3 id="5-3-setTimeout-vs-setImmediate"><a href="#5-3-setTimeout-vs-setImmediate" class="headerlink" title="5.3 setTimeout vs setImmediate"></a>5.3 setTimeout vs setImmediate</h3><p>在 Node.js 中，<code>setTimeout</code> 和 <code>setImmediate</code> 的执行顺序取决于上下文：</p>
+<pre><code class="javascript">// 在 I/O 回调中
+const fs = require(&#39;fs&#39;);
+
+fs.readFile(__filename, () =&gt; &#123;
+  setTimeout(() =&gt; console.log(&#39;timeout&#39;), 0);
+  setImmediate(() =&gt; console.log(&#39;immediate&#39;));
+&#125;);
+// 输出：immediate → timeout（setImmediate 先执行）
+
+// 在主模块中
+setTimeout(() =&gt; console.log(&#39;timeout&#39;), 0);
+setImmediate(() =&gt; console.log(&#39;immediate&#39;));
+// 输出顺序不确定（取决于性能）
+</code></pre>
+<h2 id="六、实战技巧与最佳实践"><a href="#六、实战技巧与最佳实践" class="headerlink" title="六、实战技巧与最佳实践"></a>六、实战技巧与最佳实践</h2><h3 id="6-1-合理使用微任务"><a href="#6-1-合理使用微任务" class="headerlink" title="6.1 合理使用微任务"></a>6.1 合理使用微任务</h3><pre><code class="javascript">// ❌ 不推荐：大量微任务可能阻塞 UI 渲染
+function processArray(arr) &#123;
+  arr.forEach(item =&gt; &#123;
+    Promise.resolve().then(() =&gt; &#123;
+      // 处理每个元素
+    &#125;);
+  &#125;);
+&#125;
+
+// ✅ 推荐：使用宏任务让 UI 有机会渲染
+function processArray(arr) &#123;
+  let i = 0;
+  function process() &#123;
+    if (i &lt; arr.length) &#123;
+      // 处理 arr[i]
+      i++;
+      setTimeout(process, 0); // 让出主线程
+    &#125;
+  &#125;
+  process();
+&#125;
+</code></pre>
+<h3 id="6-2-避免任务队列饥饿"><a href="#6-2-避免任务队列饥饿" class="headerlink" title="6.2 避免任务队列饥饿"></a>6.2 避免任务队列饥饿</h3><pre><code class="javascript">// ❌ 微任务不断添加，宏任务无法执行
+function infiniteMicrotasks() &#123;
+  Promise.resolve().then(() =&gt; &#123;
+    console.log(&#39;微任务&#39;);
+    infiniteMicrotasks();
+  &#125;);
+&#125;
+infiniteMicrotasks();
+setTimeout(() =&gt; console.log(&#39;宏任务&#39;), 0);
+// &quot;宏任务&quot; 永远不会执行！
+
+// ✅ 使用宏任务让出控制权
+function betterApproach() &#123;
+  Promise.resolve().then(() =&gt; &#123;
+    console.log(&#39;微任务&#39;);
+    setTimeout(betterApproach, 0);
+  &#125;);
+&#125;
+</code></pre>
+<h3 id="6-3-利用-queueMicrotask"><a href="#6-3-利用-queueMicrotask" class="headerlink" title="6.3 利用 queueMicrotask"></a>6.3 利用 queueMicrotask</h3><pre><code class="javascript">// 使用 queueMicrotask 添加微任务
+function doSomething() &#123;
+  queueMicrotask(() =&gt; &#123;
+    console.log(&#39;微任务执行&#39;);
+  &#125;);
+&#125;
+
+// 在自定义类中使用
+class EventEmitter &#123;
+  constructor() &#123;
+    this.listeners = &#123;&#125;;
+  &#125;
+  
+  emit(event, data) &#123;
+    // 使用微任务确保异步通知
+    queueMicrotask(() =&gt; &#123;
+      if (this.listeners[event]) &#123;
+        this.listeners[event].forEach(fn =&gt; fn(data));
+      &#125;
+    &#125;);
+  &#125;
+&#125;
+</code></pre>
+<h2 id="七、总结"><a href="#七、总结" class="headerlink" title="七、总结"></a>七、总结</h2><h3 id="7-1-核心要点"><a href="#7-1-核心要点" class="headerlink" title="7.1 核心要点"></a>7.1 核心要点</h3><pre><code>1. JavaScript 是单线程语言
+2. 同步代码在调用栈中执行
+3. 异步任务分为宏任务和微任务
+4. 事件循环流程：同步 → 微任务 → 宏任务 → 循环
+5. 每次宏任务执行后，都会清空微任务队列
+</code></pre>
+<h3 id="7-2-执行顺序速记"><a href="#7-2-执行顺序速记" class="headerlink" title="7.2 执行顺序速记"></a>7.2 执行顺序速记</h3><pre><code>同步代码 → process.nextTick(Node.js) → 微任务 → 宏任务
+</code></pre>
+<h3 id="7-3-面试必记"><a href="#7-3-面试必记" class="headerlink" title="7.3 面试必记"></a>7.3 面试必记</h3><table>
+<thead>
+<tr>
+<th>问题</th>
+<th>答案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>为什么 JS 是单线程？</td>
+<td>避免 DOM 操作冲突</td>
+</tr>
+<tr>
+<td>微任务优先级为什么高于宏任务？</td>
+<td>确保异步操作结果尽快处理</td>
+</tr>
+<tr>
+<td><code>setTimeout(fn, 0)</code> 什么时候执行？</td>
+<td>下一次事件循环的宏任务阶段</td>
+</tr>
+<tr>
+<td><code>await</code> 后面的代码什么时候执行？</td>
+<td>作为微任务执行</td>
+</tr>
+</tbody></table>
+<hr>
+<p><strong>理解事件循环，是掌握 JavaScript 异步编程的关键！</strong></p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/%E5%BC%82%E6%AD%A5%E7%BC%96%E7%A8%8B/">异步编程</a><a class="post-meta__tags" href="/tags/%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/">事件循环</a><a class="post-meta__tags" href="/tags/Event-Loop/">Event Loop</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/browser-cache/" title="浏览器缓存完全指南：从强缓存到协商缓存"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">浏览器缓存完全指南：从强缓存到协商缓存</div></div></a></div><div class="next-post pull-right"><a href="/posts/browser-reflow-repaint/" title="深入理解浏览器回流与重绘：原理与优化实践"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">深入理解浏览器回流与重绘：原理与优化实践</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%EF%BC%9F"><span class="toc-number">2.</span> <span class="toc-text">一、为什么需要事件循环？</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-JavaScript-%E7%9A%84%E5%8D%95%E7%BA%BF%E7%A8%8B%E7%89%B9%E6%80%A7"><span class="toc-number">2.1.</span> <span class="toc-text">1.1 JavaScript 的单线程特性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-%E5%8D%95%E7%BA%BF%E7%A8%8B%E7%9A%84%E9%97%AE%E9%A2%98"><span class="toc-number">2.2.</span> <span class="toc-text">1.2 单线程的问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A%E5%BC%82%E6%AD%A5-%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF"><span class="toc-number">2.3.</span> <span class="toc-text">1.3 解决方案：异步 + 事件循环</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-number">3.</span> <span class="toc-text">二、核心概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E8%B0%83%E7%94%A8%E6%A0%88%EF%BC%88Call-Stack%EF%BC%89"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 调用栈（Call Stack）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%EF%BC%88Task-Queue%EF%BC%89"><span class="toc-number">3.2.</span> <span class="toc-text">2.2 任务队列（Task Queue）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%AE%8F%E4%BB%BB%E5%8A%A1%E4%B8%8E%E5%BE%AE%E4%BB%BB%E5%8A%A1"><span class="toc-number">3.3.</span> <span class="toc-text">2.3 宏任务与微任务</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AE%8F%E4%BB%BB%E5%8A%A1%EF%BC%88Macrotask%EF%BC%89"><span class="toc-number">3.3.1.</span> <span class="toc-text">宏任务（Macrotask）</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%BE%AE%E4%BB%BB%E5%8A%A1%EF%BC%88Microtask%EF%BC%89"><span class="toc-number">3.3.2.</span> <span class="toc-text">微任务（Microtask）</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-%E4%BB%BB%E5%8A%A1%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">3.4.</span> <span class="toc-text">2.4 任务优先级</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B5%8F%E8%A7%88%E5%99%A8%E7%8E%AF%E5%A2%83"><span class="toc-number">3.4.1.</span> <span class="toc-text">浏览器环境</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Node-js-%E7%8E%AF%E5%A2%83"><span class="toc-number">3.4.2.</span> <span class="toc-text">Node.js 环境</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">4.</span> <span class="toc-text">三、事件循环执行流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%AE%8C%E6%95%B4%E6%89%A7%E8%A1%8C%E6%9C%BA%E5%88%B6"><span class="toc-number">4.1.</span> <span class="toc-text">3.1 完整执行机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B%E5%8F%A3%E8%AF%80"><span class="toc-number">4.2.</span> <span class="toc-text">3.2 执行流程口诀</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E8%AF%A6%E7%BB%86%E6%AD%A5%E9%AA%A4"><span class="toc-number">4.3.</span> <span class="toc-text">3.3 详细步骤</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%BB%8F%E5%85%B8%E9%9D%A2%E8%AF%95%E9%A2%98%E8%A7%A3%E6%9E%90"><span class="toc-number">5.</span> <span class="toc-text">四、经典面试题解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%9F%BA%E7%A1%80%E9%A2%98%E7%9B%AE"><span class="toc-number">5.1.</span> <span class="toc-text">4.1 基础题目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E8%BF%9B%E9%98%B6%E9%A2%98%E7%9B%AE"><span class="toc-number">5.2.</span> <span class="toc-text">4.2 进阶题目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%A4%8D%E6%9D%82%E5%B5%8C%E5%A5%97%E9%A2%98%E7%9B%AE"><span class="toc-number">5.3.</span> <span class="toc-text">4.3 复杂嵌套题目</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-async-await-%E4%B8%8E-Promise-%E7%9A%84%E8%BD%AC%E6%8D%A2"><span class="toc-number">5.4.</span> <span class="toc-text">4.4 async&#x2F;await 与 Promise 的转换</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81Node-js-%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF"><span class="toc-number">6.</span> <span class="toc-text">五、Node.js 事件循环</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-Node-js-%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF%E9%98%B6%E6%AE%B5"><span class="toc-number">6.1.</span> <span class="toc-text">5.1 Node.js 事件循环阶段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-process-nextTick"><span class="toc-number">6.2.</span> <span class="toc-text">5.2 process.nextTick</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-setTimeout-vs-setImmediate"><span class="toc-number">6.3.</span> <span class="toc-text">5.3 setTimeout vs setImmediate</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%AE%9E%E6%88%98%E6%8A%80%E5%B7%A7%E4%B8%8E%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">7.</span> <span class="toc-text">六、实战技巧与最佳实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%90%88%E7%90%86%E4%BD%BF%E7%94%A8%E5%BE%AE%E4%BB%BB%E5%8A%A1"><span class="toc-number">7.1.</span> <span class="toc-text">6.1 合理使用微任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E9%81%BF%E5%85%8D%E4%BB%BB%E5%8A%A1%E9%98%9F%E5%88%97%E9%A5%A5%E9%A5%BF"><span class="toc-number">7.2.</span> <span class="toc-text">6.2 避免任务队列饥饿</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%88%A9%E7%94%A8-queueMicrotask"><span class="toc-number">7.3.</span> <span class="toc-text">6.3 利用 queueMicrotask</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">七、总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E6%A0%B8%E5%BF%83%E8%A6%81%E7%82%B9"><span class="toc-number">8.1.</span> <span class="toc-text">7.1 核心要点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E6%89%A7%E8%A1%8C%E9%A1%BA%E5%BA%8F%E9%80%9F%E8%AE%B0"><span class="toc-number">8.2.</span> <span class="toc-text">7.2 执行顺序速记</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E9%9D%A2%E8%AF%95%E5%BF%85%E8%AE%B0"><span class="toc-number">8.3.</span> <span class="toc-text">7.3 面试必记</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

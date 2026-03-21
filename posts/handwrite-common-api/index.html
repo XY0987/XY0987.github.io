@@ -1,0 +1,923 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>手写常用API：从原理到实现 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言在前端面试和日常开发中，手写原生 API 是考察 JavaScript 基础的重要方式。通过手写实现，我们不仅能深入理解这些 API 的工作原理，还能提升编码能力和对语言特性的掌握。本文将系统性地实现对象方法、数组方法等常用 API。 一、对象方法1.1 Object.createObject.create() 方法创建一个新对象，使用现有的对象来提供新创建的对象的 __proto__。 标准">
+<meta property="og:type" content="article">
+<meta property="og:title" content="手写常用API：从原理到实现">
+<meta property="og:url" content="http://example.com/posts/handwrite-common-api/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言在前端面试和日常开发中，手写原生 API 是考察 JavaScript 基础的重要方式。通过手写实现，我们不仅能深入理解这些 API 的工作原理，还能提升编码能力和对语言特性的掌握。本文将系统性地实现对象方法、数组方法等常用 API。 一、对象方法1.1 Object.createObject.create() 方法创建一个新对象，使用现有的对象来提供新创建的对象的 __proto__。 标准">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2024-03-20T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T09:41:36.688Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="手写API">
+<meta property="article:tag" content="面试">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/handwrite-common-api/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '手写常用API：从原理到实现',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 17:41:36'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">手写常用API：从原理到实现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2024-03-20T16:00:00.000Z" title="发表于 2024 00:00:00">2024</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T09:41:36.688Z" title="更新于 2026 17:41:36">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>20分钟</span></span></div></div></div><article class="post-content" id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在前端面试和日常开发中，手写原生 API 是考察 JavaScript 基础的重要方式。通过手写实现，我们不仅能深入理解这些 API 的工作原理，还能提升编码能力和对语言特性的掌握。本文将系统性地实现对象方法、数组方法等常用 API。</p>
+<h2 id="一、对象方法"><a href="#一、对象方法" class="headerlink" title="一、对象方法"></a>一、对象方法</h2><h3 id="1-1-Object-create"><a href="#1-1-Object-create" class="headerlink" title="1.1 Object.create"></a>1.1 Object.create</h3><p><code>Object.create()</code> 方法创建一个新对象，使用现有的对象来提供新创建的对象的 <code>__proto__</code>。</p>
+<h4 id="标准实现"><a href="#标准实现" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 创建一个新对象，使用现有对象作为新对象的原型
+ * @param &#123;Object&#125; proto - 新对象的原型对象
+ * @param &#123;Object&#125; propertiesObject - 可选，属性描述符对象
+ * @returns &#123;Object&#125; 新对象
+ */
+function myCreate(proto, propertiesObject) &#123;
+  // 参数校验：proto 必须是对象或 null
+  if (typeof proto !== &#39;object&#39; &amp;&amp; typeof proto !== &#39;function&#39; &amp;&amp; proto !== null) &#123;
+    throw new TypeError(&#39;Object prototype may only be an Object or null&#39;)
+  &#125;
+
+  // 创建一个空构造函数
+  function F() &#123;&#125;
+
+  // 将构造函数的原型指向 proto
+  F.prototype = proto
+
+  // 创建新实例
+  const obj = new F()
+
+  // 如果传入了属性描述符，使用 Object.defineProperties 添加属性
+  if (propertiesObject !== undefined) &#123;
+    Object.defineProperties(obj, propertiesObject)
+  &#125;
+
+  return obj
+&#125;
+
+// 测试
+const person = &#123;
+  name: &#39;Alice&#39;,
+  sayHi() &#123;
+    console.log(`Hi, I&#39;m $&#123;this.name&#125;`)
+  &#125;
+&#125;
+
+const alice = myCreate(person, &#123;
+  age: &#123;
+    value: 18,
+    writable: true,
+    enumerable: true,
+    configurable: true
+  &#125;
+&#125;)
+
+alice.sayHi() // &quot;Hi, I&#39;m Alice&quot;
+console.log(alice.age) // 18
+console.log(Object.getPrototypeOf(alice) === person) // true
+</code></pre>
+<h4 id="核心原理"><a href="#核心原理" class="headerlink" title="核心原理"></a>核心原理</h4><ol>
+<li>创建一个空的构造函数 <code>F</code></li>
+<li>将 <code>F.prototype</code> 指向传入的原型对象</li>
+<li>通过 <code>new F()</code> 创建新对象，新对象的 <code>__proto__</code> 指向 <code>proto</code></li>
+<li>如果有第二个参数，使用 <code>Object.defineProperties</code> 定义属性</li>
+</ol>
+<hr>
+<h3 id="1-2-instanceof"><a href="#1-2-instanceof" class="headerlink" title="1.2 instanceof"></a>1.2 instanceof</h3><p><code>instanceof</code> 运算符用于检测构造函数的 <code>prototype</code> 属性是否出现在某个实例对象的原型链上。</p>
+<h4 id="标准实现-1"><a href="#标准实现-1" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 检测构造函数的 prototype 是否在对象的原型链上
+ * @param &#123;Object&#125; obj - 要检测的对象
+ * @param &#123;Function&#125; constructor - 构造函数
+ * @returns &#123;boolean&#125;
+ */
+function myInstanceof(obj, constructor) &#123;
+  // 基本类型直接返回 false
+  if (typeof obj !== &#39;object&#39; || obj === null) &#123;
+    return false
+  &#125;
+
+  // constructor 必须是函数
+  if (typeof constructor !== &#39;function&#39;) &#123;
+    throw new TypeError(&#39;Right-hand side of instanceof is not callable&#39;)
+  &#125;
+
+  // 获取构造函数的 prototype
+  let prototype = constructor.prototype
+
+  // 获取对象的原型
+  let proto = Object.getPrototypeOf(obj)
+
+  // 沿着原型链查找
+  while (proto !== null) &#123;
+    if (proto === prototype) &#123;
+      return true
+    &#125;
+    proto = Object.getPrototypeOf(proto)
+  &#125;
+
+  return false
+&#125;
+
+// 测试
+console.log(myInstanceof([], Array)) // true
+console.log(myInstanceof([], Object)) // true
+console.log(myInstanceof(&#123;&#125;, Array)) // false
+console.log(myInstanceof(&#39;hello&#39;, String)) // false（基本类型）
+console.log(myInstanceof(new String(&#39;hello&#39;), String)) // true
+
+// 原型链继承测试
+function Animal(name) &#123;
+  this.name = name
+&#125;
+function Dog(name, breed) &#123;
+  Animal.call(this, name)
+  this.breed = breed
+&#125;
+Dog.prototype = Object.create(Animal.prototype)
+Dog.prototype.constructor = Dog
+
+const myDog = new Dog(&#39;Buddy&#39;, &#39;Golden Retriever&#39;)
+console.log(myInstanceof(myDog, Dog)) // true
+console.log(myInstanceof(myDog, Animal)) // true
+console.log(myInstanceof(myDog, Object)) // true
+</code></pre>
+<h4 id="核心原理-1"><a href="#核心原理-1" class="headerlink" title="核心原理"></a>核心原理</h4><ol>
+<li>基本类型（<code>null</code>、<code>undefined</code>、原始值）直接返回 <code>false</code></li>
+<li>获取对象的原型链（通过 <code>Object.getPrototypeOf</code>）</li>
+<li>获取构造函数的 <code>prototype</code> 属性</li>
+<li>沿着原型链向上查找，直到找到匹配或到达原型链顶端（<code>null</code>）</li>
+</ol>
+<hr>
+<h3 id="1-3-new-操作符"><a href="#1-3-new-操作符" class="headerlink" title="1.3 new 操作符"></a>1.3 new 操作符</h3><p><code>new</code> 运算符创建一个用户定义的对象类型的实例或具有构造函数的内置对象的实例。</p>
+<h4 id="标准实现-2"><a href="#标准实现-2" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 模拟 new 操作符
+ * @param &#123;Function&#125; constructor - 构造函数
+ * @param &#123;...any&#125; args - 传递给构造函数的参数
+ * @returns &#123;Object&#125; 新创建的对象
+ */
+function myNew(constructor, ...args) &#123;
+  // 构造函数必须是函数
+  if (typeof constructor !== &#39;function&#39;) &#123;
+    throw new TypeError(`$&#123;constructor&#125; is not a constructor`)
+  &#125;
+
+  // 1. 创建一个新对象，原型指向构造函数的 prototype
+  const obj = Object.create(constructor.prototype)
+
+  // 2. 执行构造函数，绑定 this 到新对象
+  const result = constructor.apply(obj, args)
+
+  // 3. 如果构造函数返回了对象，则返回该对象；否则返回新创建的对象
+  const isObject = typeof result === &#39;object&#39; &amp;&amp; result !== null
+  const isFunction = typeof result === &#39;function&#39;
+
+  return isObject || isFunction ? result : obj
+&#125;
+
+// 测试
+function Person(name, age) &#123;
+  this.name = name
+  this.age = age
+&#125;
+
+Person.prototype.sayHi = function () &#123;
+  console.log(`Hi, I&#39;m $&#123;this.name&#125;, $&#123;this.age&#125; years old`)
+&#125;
+
+const alice = myNew(Person, &#39;Alice&#39;, 18)
+alice.sayHi() // &quot;Hi, I&#39;m Alice, 18 years old&quot;
+console.log(alice instanceof Person) // true
+
+// 测试构造函数返回对象的情况
+function Person2(name) &#123;
+  this.name = name
+  return &#123;
+    name: &#39;Custom Name&#39;,
+    age: 20
+  &#125;
+&#125;
+
+const bob = myNew(Person2, &#39;Bob&#39;)
+console.log(bob.name) // &#39;Custom Name&#39;
+console.log(bob.age) // 20
+</code></pre>
+<h4 id="核心原理-2"><a href="#核心原理-2" class="headerlink" title="核心原理"></a>核心原理</h4><p><code>new</code> 操作符做了四件事：</p>
+<ol>
+<li><strong>创建一个空对象</strong>：继承构造函数的 <code>prototype</code></li>
+<li><strong>绑定 this</strong>：执行构造函数，将 <code>this</code> 指向新对象</li>
+<li><strong>处理返回值</strong>：如果构造函数返回对象，则使用该返回值；否则返回新对象</li>
+<li><strong>返回实例</strong>：最终返回创建的对象实例</li>
+</ol>
+<hr>
+<h2 id="二、数组方法"><a href="#二、数组方法" class="headerlink" title="二、数组方法"></a>二、数组方法</h2><h3 id="2-1-数组扁平化"><a href="#2-1-数组扁平化" class="headerlink" title="2.1 数组扁平化"></a>2.1 数组扁平化</h3><p>将多维数组转换为一维数组。</p>
+<h4 id="方法一：递归"><a href="#方法一：递归" class="headerlink" title="方法一：递归"></a>方法一：递归</h4><pre><code class="javascript">/**
+ * 数组扁平化 - 递归实现
+ * @param &#123;Array&#125; arr - 要扁平化的数组
+ * @returns &#123;Array&#125; 扁平化后的数组
+ */
+function flatten(arr) &#123;
+  const result = []
+
+  arr.forEach(item =&gt; &#123;
+    if (Array.isArray(item)) &#123;
+      // 递归处理嵌套数组
+      result.push(...flatten(item))
+    &#125; else &#123;
+      result.push(item)
+    &#125;
+  &#125;)
+
+  return result
+&#125;
+
+// 测试
+console.log(flatten([1, [2, [3, [4, 5]]]])) // [1, 2, 3, 4, 5]
+console.log(flatten([1, [2, 3], [4, [5, 6]]])) // [1, 2, 3, 4, 5, 6]
+</code></pre>
+<h4 id="方法二：reduce"><a href="#方法二：reduce" class="headerlink" title="方法二：reduce"></a>方法二：reduce</h4><pre><code class="javascript">/**
+ * 数组扁平化 - reduce 实现
+ * @param &#123;Array&#125; arr - 要扁平化的数组
+ * @returns &#123;Array&#125; 扁平化后的数组
+ */
+function flattenByReduce(arr) &#123;
+  return arr.reduce((acc, item) =&gt; &#123;
+    return acc.concat(Array.isArray(item) ? flattenByReduce(item) : item)
+  &#125;, [])
+&#125;
+
+// 测试
+console.log(flattenByReduce([1, [2, [3, [4, 5]]]])) // [1, 2, 3, 4, 5]
+</code></pre>
+<h4 id="方法三：指定深度"><a href="#方法三：指定深度" class="headerlink" title="方法三：指定深度"></a>方法三：指定深度</h4><pre><code class="javascript">/**
+ * 数组扁平化 - 指定深度
+ * @param &#123;Array&#125; arr - 要扁平化的数组
+ * @param &#123;number&#125; depth - 扁平化深度
+ * @returns &#123;Array&#125; 扁平化后的数组
+ */
+function flattenDepth(arr, depth = 1) &#123;
+  if (depth === 0) return arr
+
+  return arr.reduce((acc, item) =&gt; &#123;
+    if (Array.isArray(item) &amp;&amp; depth &gt; 0) &#123;
+      return acc.concat(flattenDepth(item, depth - 1))
+    &#125;
+    return acc.concat(item)
+  &#125;, [])
+&#125;
+
+// 测试
+const arr = [1, [2, [3, [4, 5]]]]
+console.log(flattenDepth(arr, 1)) // [1, 2, [3, [4, 5]]]
+console.log(flattenDepth(arr, 2)) // [1, 2, 3, [4, 5]]
+console.log(flattenDepth(arr, Infinity)) // [1, 2, 3, 4, 5]
+</code></pre>
+<h4 id="方法四：迭代实现"><a href="#方法四：迭代实现" class="headerlink" title="方法四：迭代实现"></a>方法四：迭代实现</h4><pre><code class="javascript">/**
+ * 数组扁平化 - 迭代实现（避免递归栈溢出）
+ * @param &#123;Array&#125; arr - 要扁平化的数组
+ * @returns &#123;Array&#125; 扁平化后的数组
+ */
+function flattenIterative(arr) &#123;
+  const result = []
+  const stack = [...arr]
+
+  while (stack.length) &#123;
+    const item = stack.pop()
+
+    if (Array.isArray(item)) &#123;
+      // 将数组元素推入栈中
+      stack.push(...item)
+    &#125; else &#123;
+      result.unshift(item)
+    &#125;
+  &#125;
+
+  return result
+&#125;
+
+// 测试
+console.log(flattenIterative([1, [2, [3, [4, 5]]]])) // [1, 2, 3, 4, 5]
+</code></pre>
+<hr>
+<h3 id="2-2-push"><a href="#2-2-push" class="headerlink" title="2.2 push"></a>2.2 push</h3><p>向数组的末尾添加一个或多个元素，并返回新的长度。</p>
+<h4 id="标准实现-3"><a href="#标准实现-3" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 模拟数组的 push 方法
+ * @param &#123;...any&#125; items - 要添加的元素
+ * @returns &#123;number&#125; 新数组的长度
+ */
+Array.prototype.myPush = function (...items) &#123;
+  // 遍历要添加的元素
+  for (let i = 0; i &lt; items.length; i++) &#123;
+    this[this.length] = items[i]
+  &#125;
+
+  return this.length
+&#125;
+
+// 测试
+const arr = [1, 2, 3]
+const newLength = arr.myPush(4, 5, 6)
+console.log(arr) // [1, 2, 3, 4, 5, 6]
+console.log(newLength) // 6
+
+// 链式调用测试
+arr.myPush(7).myPush(8) // 报错，因为 push 返回的是数字
+</code></pre>
+<h4 id="核心原理-3"><a href="#核心原理-3" class="headerlink" title="核心原理"></a>核心原理</h4><ol>
+<li><code>this</code> 指向调用该方法的数组</li>
+<li>在数组末尾逐个添加元素（通过 <code>this.length</code> 索引）</li>
+<li>返回新的数组长度</li>
+</ol>
+<hr>
+<h3 id="2-3-filter"><a href="#2-3-filter" class="headerlink" title="2.3 filter"></a>2.3 filter</h3><p>创建一个新数组，其包含通过所提供函数实现的测试的所有元素。</p>
+<h4 id="标准实现-4"><a href="#标准实现-4" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 模拟数组的 filter 方法
+ * @param &#123;Function&#125; callback - 回调函数
+ * @param &#123;any&#125; thisArg - 可选，回调函数的 this 值
+ * @returns &#123;Array&#125; 过滤后的新数组
+ */
+Array.prototype.myFilter = function (callback, thisArg) &#123;
+  // 参数校验
+  if (typeof callback !== &#39;function&#39;) &#123;
+    throw new TypeError(`$&#123;callback&#125; is not a function`)
+  &#125;
+
+  const result = []
+
+  // 遍历数组
+  for (let i = 0; i &lt; this.length; i++) &#123;
+    // 处理稀疏数组（跳过空位）
+    if (i in this) &#123;
+      // 执行回调函数
+      const isPassed = callback.call(thisArg, this[i], i, this)
+
+      // 如果返回真值，添加到结果数组
+      if (isPassed) &#123;
+        result.push(this[i])
+      &#125;
+    &#125;
+  &#125;
+
+  return result
+&#125;
+
+// 测试
+const nums = [1, 2, 3, 4, 5, 6]
+
+// 基本用法
+const evens = nums.myFilter(num =&gt; num % 2 === 0)
+console.log(evens) // [2, 4, 6]
+
+// 使用 thisArg
+const obj = &#123;
+  min: 3,
+  filterNum(num) &#123;
+    return num &gt;= this.min
+  &#125;
+&#125;
+
+const filtered = nums.myFilter(obj.filterNum, obj)
+console.log(filtered) // [3, 4, 5, 6]
+
+// 处理稀疏数组
+const sparseArray = [1, , , , 5]
+console.log(sparseArray.myFilter(x =&gt; x !== undefined)) // [1, 5]
+</code></pre>
+<h4 id="核心原理-4"><a href="#核心原理-4" class="headerlink" title="核心原理"></a>核心原理</h4><ol>
+<li>回调函数接收三个参数：元素值、索引、原数组</li>
+<li>遍历数组，对每个元素执行回调函数</li>
+<li>如果回调函数返回真值，将元素添加到结果数组</li>
+<li>返回新数组，不改变原数组</li>
+</ol>
+<hr>
+<h3 id="2-4-map"><a href="#2-4-map" class="headerlink" title="2.4 map"></a>2.4 map</h3><p>创建一个新数组，其结果是该数组中的每个元素是调用一次提供的函数后的返回值。</p>
+<h4 id="标准实现-5"><a href="#标准实现-5" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 模拟数组的 map 方法
+ * @param &#123;Function&#125; callback - 回调函数
+ * @param &#123;any&#125; thisArg - 可选，回调函数的 this 值
+ * @returns &#123;Array&#125; 映射后的新数组
+ */
+Array.prototype.myMap = function (callback, thisArg) &#123;
+  // 参数校验
+  if (typeof callback !== &#39;function&#39;) &#123;
+    throw new TypeError(`$&#123;callback&#125; is not a function`)
+  &#125;
+
+  const result = new Array(this.length)
+
+  // 遍历数组
+  for (let i = 0; i &lt; this.length; i++) &#123;
+    // 处理稀疏数组
+    if (i in this) &#123;
+      // 执行回调函数，将结果存入结果数组
+      result[i] = callback.call(thisArg, this[i], i, this)
+    &#125;
+  &#125;
+
+  return result
+&#125;
+
+// 测试
+const nums = [1, 2, 3, 4, 5]
+
+// 基本用法
+const doubled = nums.myMap(num =&gt; num * 2)
+console.log(doubled) // [2, 4, 6, 8, 10]
+
+// 返回对象
+const objects = nums.myMap(num =&gt; (&#123; value: num &#125;))
+console.log(objects) // [&#123;value: 1&#125;, &#123;value: 2&#125;, &#123;value: 3&#125;, &#123;value: 4&#125;, &#123;value: 5&#125;]
+
+// 使用 thisArg
+const obj = &#123;
+  multiplier: 10,
+  multiply(num) &#123;
+    return num * this.multiplier
+  &#125;
+&#125;
+
+const multiplied = nums.myMap(obj.multiply, obj)
+console.log(multiplied) // [10, 20, 30, 40, 50]
+
+// 处理稀疏数组
+const sparseArray = [1, , , , 5]
+const mapped = sparseArray.myMap(x =&gt; x * 2)
+console.log(mapped) // [2, empty × 3, 10]
+</code></pre>
+<h4 id="核心原理-5"><a href="#核心原理-5" class="headerlink" title="核心原理"></a>核心原理</h4><ol>
+<li>创建与原数组长度相同的新数组</li>
+<li>遍历数组，对每个元素执行回调函数</li>
+<li>将回调函数的返回值存入新数组对应位置</li>
+<li>返回新数组，不改变原数组</li>
+<li>保留稀疏数组的空位特性</li>
+</ol>
+<hr>
+<h3 id="2-5-repeat（字符串方法）"><a href="#2-5-repeat（字符串方法）" class="headerlink" title="2.5 repeat（字符串方法）"></a>2.5 repeat（字符串方法）</h3><p>构造并返回一个新字符串，该字符串包含被连接在一起的指定数量的字符串副本。</p>
+<h4 id="标准实现-6"><a href="#标准实现-6" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 模拟字符串的 repeat 方法
+ * @param &#123;number&#125; count - 重复次数
+ * @returns &#123;string&#125; 重复后的字符串
+ */
+String.prototype.myRepeat = function (count) &#123;
+  // 转换为数字
+  count = Number(count)
+
+  // 边界检查
+  if (Number.isNaN(count) || count &lt; 0) &#123;
+    throw new RangeError(&#39;Invalid count value&#39;)
+  &#125;
+
+  // count 为 0 或字符串为空，返回空字符串
+  if (count === 0 || this.length === 0) &#123;
+    return &#39;&#39;
+  &#125;
+
+  // count 为 Infinity 抛出错误
+  if (count === Infinity) &#123;
+    throw new RangeError(&#39;Invalid count value&#39;)
+  &#125;
+
+  // 向下取整
+  count = Math.floor(count)
+
+  // 拼接字符串
+  let result = &#39;&#39;
+  for (let i = 0; i &lt; count; i++) &#123;
+    result += this
+  &#125;
+
+  return result
+&#125;
+
+// 测试
+console.log(&#39;abc&#39;.myRepeat(3)) // &#39;abcabcabc&#39;
+console.log(&#39;hello&#39;.myRepeat(2)) // &#39;hellohello&#39;
+console.log(&#39;a&#39;.myRepeat(5)) // &#39;aaaaa&#39;
+console.log(&#39;abc&#39;.myRepeat(0)) // &#39;&#39;
+console.log(&#39;&#39;.myRepeat(10)) // &#39;&#39;
+
+// 边界情况测试
+console.log(&#39;abc&#39;.myRepeat(2.9)) // &#39;abcabc&#39;（向下取整）
+console.log(&#39;abc&#39;.myRepeat(&#39;3&#39;)) // &#39;abcabcabc&#39;（字符串转数字）
+
+// 错误情况测试
+try &#123;
+  console.log(&#39;abc&#39;.myRepeat(-1))
+&#125; catch (e) &#123;
+  console.log(e.message) // &#39;Invalid count value&#39;
+&#125;
+
+try &#123;
+  console.log(&#39;abc&#39;.myRepeat(Infinity))
+&#125; catch (e) &#123;
+  console.log(e.message) // &#39;Invalid count value&#39;
+&#125;
+</code></pre>
+<h4 id="核心原理-6"><a href="#核心原理-6" class="headerlink" title="核心原理"></a>核心原理</h4><ol>
+<li>参数校验：<code>count</code> 必须是非负整数</li>
+<li>处理特殊情况：<code>count</code> 为 0 或字符串为空</li>
+<li>向下取整处理小数</li>
+<li>循环拼接字符串</li>
+<li>优化版本使用二分法减少拼接次数</li>
+</ol>
+<hr>
+<h2 id="三、其他实用方法"><a href="#三、其他实用方法" class="headerlink" title="三、其他实用方法"></a>三、其他实用方法</h2><h3 id="3-1-Array-isArray"><a href="#3-1-Array-isArray" class="headerlink" title="3.1 Array.isArray"></a>3.1 Array.isArray</h3><p>确定传递的值是否是一个 Array。</p>
+<h4 id="标准实现-7"><a href="#标准实现-7" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 检测值是否为数组
+ * @param &#123;any&#125; value - 要检测的值
+ * @returns &#123;boolean&#125;
+ */
+function myIsArray(value) &#123;
+  // 方法一：Object.prototype.toString
+  return Object.prototype.toString.call(value) === &#39;[object Array]&#39;
+&#125;
+
+// 方法二：instanceof（不推荐，跨 iframe 失效）
+function isArrayByInstanceof(value) &#123;
+  return value instanceof Array
+&#125;
+
+// 测试
+console.log(myIsArray([1, 2, 3])) // true
+console.log(myIsArray(&#39;hello&#39;)) // false
+console.log(myIsArray(&#123; length: 3 &#125;)) // false
+console.log(myIsArray(new Array(3))) // true
+console.log(myIsArray(Array.from(&#39;hello&#39;))) // true
+</code></pre>
+<hr>
+<h3 id="3-2-Object-is"><a href="#3-2-Object-is" class="headerlink" title="3.2 Object.is"></a>3.2 Object.is</h3><p>判断两个值是否为同一个值。</p>
+<h4 id="标准实现-8"><a href="#标准实现-8" class="headerlink" title="标准实现"></a>标准实现</h4><pre><code class="javascript">/**
+ * 判断两个值是否相同
+ * @param &#123;any&#125; x - 第一个值
+ * @param &#123;any&#125; y - 第二个值
+ * @returns &#123;boolean&#125;
+ */
+function myObjectIs(x, y) &#123;
+  // 处理 +0 和 -0
+  if (x === y) &#123;
+    // +0 === -0 返回 true，但 Object.is(+0, -0) 返回 false
+    return x !== 0 || 1 / x === 1 / y
+  &#125;
+
+  // 处理 NaN
+  // NaN === NaN 返回 false，但 Object.is(NaN, NaN) 返回 true
+  return x !== x &amp;&amp; y !== y
+&#125;
+
+// 测试
+console.log(myObjectIs(1, 1)) // true
+console.log(myObjectIs(&#39;hello&#39;, &#39;hello&#39;)) // true
+console.log(myObjectIs(true, true)) // true
+console.log(myObjectIs(null, null)) // true
+console.log(myObjectIs(undefined, undefined)) // true
+
+// 与 === 的区别
+console.log(myObjectIs(+0, -0)) // false（=== 返回 true）
+console.log(myObjectIs(NaN, NaN)) // true（=== 返回 false）
+
+// 引用类型
+const obj = &#123;&#125;
+console.log(myObjectIs(obj, obj)) // true
+console.log(myObjectIs(&#123;&#125;, &#123;&#125;)) // false
+</code></pre>
+<hr>
+<h3 id="3-3-数组去重"><a href="#3-3-数组去重" class="headerlink" title="3.3 数组去重"></a>3.3 数组去重</h3><h4 id="方法一：Set"><a href="#方法一：Set" class="headerlink" title="方法一：Set"></a>方法一：Set</h4><pre><code class="javascript">/**
+ * 数组去重 - Set 实现
+ * @param &#123;Array&#125; arr - 要去重的数组
+ * @returns &#123;Array&#125; 去重后的数组
+ */
+function unique(arr) &#123;
+  return [...new Set(arr)]
+&#125;
+
+// 测试
+console.log(unique([1, 2, 2, 3, 3, 4])) // [1, 2, 3, 4]
+console.log(unique([&#39;a&#39;, &#39;b&#39;, &#39;a&#39;, &#39;c&#39;])) // [&#39;a&#39;, &#39;b&#39;, &#39;c&#39;]
+</code></pre>
+<h4 id="方法二：filter-indexOf"><a href="#方法二：filter-indexOf" class="headerlink" title="方法二：filter + indexOf"></a>方法二：filter + indexOf</h4><pre><code class="javascript">/**
+ * 数组去重 - filter + indexOf
+ * @param &#123;Array&#125; arr - 要去重的数组
+ * @returns &#123;Array&#125; 去重后的数组
+ */
+function uniqueByFilter(arr) &#123;
+  return arr.filter((item, index) =&gt; &#123;
+    return arr.indexOf(item) === index
+  &#125;)
+&#125;
+
+// 测试
+console.log(uniqueByFilter([1, 2, 2, 3, 3, 4])) // [1, 2, 3, 4]
+</code></pre>
+<h4 id="方法三：reduce"><a href="#方法三：reduce" class="headerlink" title="方法三：reduce"></a>方法三：reduce</h4><pre><code class="javascript">/**
+ * 数组去重 - reduce 实现
+ * @param &#123;Array&#125; arr - 要去重的数组
+ * @returns &#123;Array&#125; 去重后的数组
+ */
+function uniqueByReduce(arr) &#123;
+  return arr.reduce((acc, item) =&gt; &#123;
+    if (!acc.includes(item)) &#123;
+      acc.push(item)
+    &#125;
+    return acc
+  &#125;, [])
+&#125;
+
+// 测试
+console.log(uniqueByReduce([1, 2, 2, 3, 3, 4])) // [1, 2, 3, 4]
+</code></pre>
+<h4 id="方法四：对象引用去重"><a href="#方法四：对象引用去重" class="headerlink" title="方法四：对象引用去重"></a>方法四：对象引用去重</h4><pre><code class="javascript">/**
+ * 数组对象去重 - 根据某个属性
+ * @param &#123;Array&#125; arr - 要去重的数组
+ * @param &#123;string&#125; key - 根据哪个属性去重
+ * @returns &#123;Array&#125; 去重后的数组
+ */
+function uniqueByKey(arr, key) &#123;
+  const map = new Map()
+  return arr.filter(item =&gt; &#123;
+    const value = item[key]
+    if (!map.has(value)) &#123;
+      map.set(value, true)
+      return true
+    &#125;
+    return false
+  &#125;)
+&#125;
+
+// 测试
+const users = [
+  &#123; id: 1, name: &#39;Alice&#39; &#125;,
+  &#123; id: 2, name: &#39;Bob&#39; &#125;,
+  &#123; id: 1, name: &#39;Alice&#39; &#125;,
+  &#123; id: 3, name: &#39;Charlie&#39; &#125;
+]
+
+console.log(uniqueByKey(users, &#39;id&#39;))
+// [&#123; id: 1, name: &#39;Alice&#39; &#125;, &#123; id: 2, name: &#39;Bob&#39; &#125;, &#123; id: 3, name: &#39;Charlie&#39; &#125;]
+</code></pre>
+<hr>
+<h3 id="3-4-reduce（补充）"><a href="#3-4-reduce（补充）" class="headerlink" title="3.4 reduce（补充）"></a>3.4 reduce（补充）</h3><p>虽然原生的 reduce 已经存在，但手写实现有助于深入理解。</p>
+<pre><code class="javascript">/**
+ * 模拟数组的 reduce 方法
+ * @param &#123;Function&#125; callback - 回调函数
+ * @param &#123;any&#125; initialValue - 初始值
+ * @returns &#123;any&#125; 累计结果
+ */
+Array.prototype.myReduce = function (callback, initialValue) &#123;
+  // 参数校验
+  if (typeof callback !== &#39;function&#39;) &#123;
+    throw new TypeError(`$&#123;callback&#125; is not a function`)
+  &#125;
+
+  // 空数组且没有初始值，抛出错误
+  if (this.length === 0 &amp;&amp; initialValue === undefined) &#123;
+    throw new TypeError(&#39;Reduce of empty array with no initial value&#39;)
+  &#125;
+
+  let accumulator
+  let startIndex
+
+  // 判断是否提供了初始值
+  if (initialValue !== undefined) &#123;
+    accumulator = initialValue
+    startIndex = 0
+  &#125; else &#123;
+    // 没有初始值，使用数组的第一个元素作为初始值
+    // 需要找到第一个非空位
+    startIndex = 0
+    while (startIndex &lt; this.length &amp;&amp; !(startIndex in this)) &#123;
+      startIndex++
+    &#125;
+    if (startIndex &gt;= this.length) &#123;
+      throw new TypeError(&#39;Reduce of empty array with no initial value&#39;)
+    &#125;
+    accumulator = this[startIndex]
+    startIndex++
+  &#125;
+
+  // 遍历数组
+  for (let i = startIndex; i &lt; this.length; i++) &#123;
+    if (i in this) &#123;
+      accumulator = callback(accumulator, this[i], i, this)
+    &#125;
+  &#125;
+
+  return accumulator
+&#125;
+
+// 测试
+const arr = [1, 2, 3, 4, 5]
+
+// 求和
+const sum = arr.myReduce((acc, num) =&gt; acc + num, 0)
+console.log(sum) // 15
+
+// 求乘积
+const product = arr.myReduce((acc, num) =&gt; acc * num, 1)
+console.log(product) // 120
+
+// 找最大值
+const max = arr.myReduce((acc, num) =&gt; Math.max(acc, num))
+console.log(max) // 5
+
+// 数组扁平化
+const nested = [[1, 2], [3, 4], [5, 6]]
+const flattened = nested.myReduce((acc, arr) =&gt; acc.concat(arr), [])
+console.log(flattened) // [1, 2, 3, 4, 5, 6]
+
+// 统计每个元素出现次数
+const words = [&#39;apple&#39;, &#39;banana&#39;, &#39;apple&#39;, &#39;orange&#39;, &#39;banana&#39;, &#39;apple&#39;]
+const wordCount = words.myReduce((acc, word) =&gt; &#123;
+  acc[word] = (acc[word] || 0) + 1
+  return acc
+&#125;, &#123;&#125;)
+console.log(wordCount) // &#123; apple: 3, banana: 2, orange: 1 &#125;
+</code></pre>
+<hr>
+<h2 id="四、面试常见问题"><a href="#四、面试常见问题" class="headerlink" title="四、面试常见问题"></a>四、面试常见问题</h2><h3 id="4-1-为什么-typeof-null-object-？"><a href="#4-1-为什么-typeof-null-object-？" class="headerlink" title="4.1 为什么 typeof null === &#39;object&#39;？"></a>4.1 为什么 <code>typeof null === &#39;object&#39;</code>？</h3><p>这是 JavaScript 的一个历史遗留 Bug。在 JavaScript 的早期版本中，值存储在 32 位单元中，包含 1-3 位类型标签和实际数据。对象的类型标签是 <code>000</code>，而 <code>null</code> 表示为空指针（所有位为 0），因此 <code>typeof null</code> 错误地返回 <code>&#39;object&#39;</code>。</p>
+<h3 id="4-2-instanceof-能判断基本类型吗？"><a href="#4-2-instanceof-能判断基本类型吗？" class="headerlink" title="4.2 instanceof 能判断基本类型吗？"></a>4.2 <code>instanceof</code> 能判断基本类型吗？</h3><p>不能。<code>instanceof</code> 只能判断引用类型，基本类型会返回 <code>false</code>。</p>
+<pre><code class="javascript">console.log(&#39;hello&#39; instanceof String) // false
+console.log(new String(&#39;hello&#39;) instanceof String) // true
+</code></pre>
+<p>可以使用 <code>typeof</code> 或 <code>Object.prototype.toString.call()</code> 判断基本类型。</p>
+<h3 id="4-3-为什么手写-API-要考虑边界情况？"><a href="#4-3-为什么手写-API-要考虑边界情况？" class="headerlink" title="4.3 为什么手写 API 要考虑边界情况？"></a>4.3 为什么手写 API 要考虑边界情况？</h3><p>在实际开发中，API 的健壮性至关重要。考虑边界情况可以：</p>
+<ol>
+<li><strong>避免运行时错误</strong>：防止传入错误类型的参数导致崩溃</li>
+<li><strong>提高代码质量</strong>：使代码更加健壮和可靠</li>
+<li><strong>符合规范</strong>：原生 API 都有严格的参数验证和错误处理</li>
+<li><strong>提升面试竞争力</strong>：展示对细节的关注和深入理解</li>
+</ol>
+<hr>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>本文系统性地实现了 JavaScript 中常用的对象方法和数组方法：</p>
+<h3 id="对象方法"><a href="#对象方法" class="headerlink" title="对象方法"></a>对象方法</h3><ul>
+<li><strong>Object.create</strong>：创建对象并指定原型</li>
+<li><strong>instanceof</strong>：检测原型链关系</li>
+<li><strong>new</strong>：创建对象实例</li>
+</ul>
+<h3 id="数组方法"><a href="#数组方法" class="headerlink" title="数组方法"></a>数组方法</h3><ul>
+<li><strong>flatten</strong>：多维数组扁平化（多种实现方式）</li>
+<li><strong>push</strong>：数组末尾添加元素</li>
+<li><strong>filter</strong>：过滤数组元素</li>
+<li><strong>map</strong>：映射数组元素</li>
+<li><strong>reduce</strong>：数组累计计算</li>
+</ul>
+<h3 id="字符串方法"><a href="#字符串方法" class="headerlink" title="字符串方法"></a>字符串方法</h3><ul>
+<li><strong>repeat</strong>：字符串重复</li>
+</ul>
+<h3 id="其他方法"><a href="#其他方法" class="headerlink" title="其他方法"></a>其他方法</h3><ul>
+<li><strong>Array.isArray</strong>：数组类型检测</li>
+<li><strong>Object.is</strong>：精确相等判断</li>
+<li><strong>数组去重</strong>：多种实现方案</li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/%E6%89%8B%E5%86%99API/">手写API</a><a class="post-meta__tags" href="/tags/%E9%9D%A2%E8%AF%95/">面试</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/http-https-difference/" title="HTTP与HTTPS深度解析：原理、区别与安全性"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">HTTP与HTTPS深度解析：原理、区别与安全性</div></div></a></div><div class="next-post pull-right"><a href="/posts/http-evolution/" title="HTTP协议演进史：从HTTP/1.0到HTTP/3.0的全面解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">HTTP协议演进史：从HTTP/1.0到HTTP/3.0的全面解析</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%AF%B9%E8%B1%A1%E6%96%B9%E6%B3%95"><span class="toc-number">2.</span> <span class="toc-text">一、对象方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-Object-create"><span class="toc-number">2.1.</span> <span class="toc-text">1.1 Object.create</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0"><span class="toc-number">2.1.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86"><span class="toc-number">2.1.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-instanceof"><span class="toc-number">2.2.</span> <span class="toc-text">1.2 instanceof</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-1"><span class="toc-number">2.2.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86-1"><span class="toc-number">2.2.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-new-%E6%93%8D%E4%BD%9C%E7%AC%A6"><span class="toc-number">2.3.</span> <span class="toc-text">1.3 new 操作符</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-2"><span class="toc-number">2.3.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86-2"><span class="toc-number">2.3.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E6%95%B0%E7%BB%84%E6%96%B9%E6%B3%95"><span class="toc-number">3.</span> <span class="toc-text">二、数组方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E6%95%B0%E7%BB%84%E6%89%81%E5%B9%B3%E5%8C%96"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 数组扁平化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9A%E9%80%92%E5%BD%92"><span class="toc-number">3.1.1.</span> <span class="toc-text">方法一：递归</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9Areduce"><span class="toc-number">3.1.2.</span> <span class="toc-text">方法二：reduce</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%B8%89%EF%BC%9A%E6%8C%87%E5%AE%9A%E6%B7%B1%E5%BA%A6"><span class="toc-number">3.1.3.</span> <span class="toc-text">方法三：指定深度</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E5%9B%9B%EF%BC%9A%E8%BF%AD%E4%BB%A3%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.1.4.</span> <span class="toc-text">方法四：迭代实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-push"><span class="toc-number">3.2.</span> <span class="toc-text">2.2 push</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-3"><span class="toc-number">3.2.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86-3"><span class="toc-number">3.2.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-filter"><span class="toc-number">3.3.</span> <span class="toc-text">2.3 filter</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-4"><span class="toc-number">3.3.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86-4"><span class="toc-number">3.3.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-4-map"><span class="toc-number">3.4.</span> <span class="toc-text">2.4 map</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-5"><span class="toc-number">3.4.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86-5"><span class="toc-number">3.4.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-5-repeat%EF%BC%88%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%96%B9%E6%B3%95%EF%BC%89"><span class="toc-number">3.5.</span> <span class="toc-text">2.5 repeat（字符串方法）</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-6"><span class="toc-number">3.5.1.</span> <span class="toc-text">标准实现</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%8E%9F%E7%90%86-6"><span class="toc-number">3.5.2.</span> <span class="toc-text">核心原理</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E5%85%B6%E4%BB%96%E5%AE%9E%E7%94%A8%E6%96%B9%E6%B3%95"><span class="toc-number">4.</span> <span class="toc-text">三、其他实用方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-Array-isArray"><span class="toc-number">4.1.</span> <span class="toc-text">3.1 Array.isArray</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-7"><span class="toc-number">4.1.1.</span> <span class="toc-text">标准实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-Object-is"><span class="toc-number">4.2.</span> <span class="toc-text">3.2 Object.is</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E5%AE%9E%E7%8E%B0-8"><span class="toc-number">4.2.1.</span> <span class="toc-text">标准实现</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E6%95%B0%E7%BB%84%E5%8E%BB%E9%87%8D"><span class="toc-number">4.3.</span> <span class="toc-text">3.3 数组去重</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%B8%80%EF%BC%9ASet"><span class="toc-number">4.3.1.</span> <span class="toc-text">方法一：Set</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%BA%8C%EF%BC%9Afilter-indexOf"><span class="toc-number">4.3.2.</span> <span class="toc-text">方法二：filter + indexOf</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E4%B8%89%EF%BC%9Areduce"><span class="toc-number">4.3.3.</span> <span class="toc-text">方法三：reduce</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%96%B9%E6%B3%95%E5%9B%9B%EF%BC%9A%E5%AF%B9%E8%B1%A1%E5%BC%95%E7%94%A8%E5%8E%BB%E9%87%8D"><span class="toc-number">4.3.4.</span> <span class="toc-text">方法四：对象引用去重</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-reduce%EF%BC%88%E8%A1%A5%E5%85%85%EF%BC%89"><span class="toc-number">4.4.</span> <span class="toc-text">3.4 reduce（补充）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E9%9D%A2%E8%AF%95%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">四、面试常见问题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E4%B8%BA%E4%BB%80%E4%B9%88-typeof-null-object-%EF%BC%9F"><span class="toc-number">5.1.</span> <span class="toc-text">4.1 为什么 typeof null &#x3D;&#x3D;&#x3D; &#39;object&#39;？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-instanceof-%E8%83%BD%E5%88%A4%E6%96%AD%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B%E5%90%97%EF%BC%9F"><span class="toc-number">5.2.</span> <span class="toc-text">4.2 instanceof 能判断基本类型吗？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E4%B8%BA%E4%BB%80%E4%B9%88%E6%89%8B%E5%86%99-API-%E8%A6%81%E8%80%83%E8%99%91%E8%BE%B9%E7%95%8C%E6%83%85%E5%86%B5%EF%BC%9F"><span class="toc-number">5.3.</span> <span class="toc-text">4.3 为什么手写 API 要考虑边界情况？</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">五、总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%B9%E8%B1%A1%E6%96%B9%E6%B3%95"><span class="toc-number">6.1.</span> <span class="toc-text">对象方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B0%E7%BB%84%E6%96%B9%E6%B3%95"><span class="toc-number">6.2.</span> <span class="toc-text">数组方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%97%E7%AC%A6%E4%B8%B2%E6%96%B9%E6%B3%95"><span class="toc-number">6.3.</span> <span class="toc-text">字符串方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E6%96%B9%E6%B3%95"><span class="toc-number">6.4.</span> <span class="toc-text">其他方法</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

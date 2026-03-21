@@ -1,0 +1,514 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>AIGC与大模型基础概念扫盲 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：2022年底 ChatGPT 横空出世，2025年初 DeepSeek-R1 刷爆朋友圈——短短两年多，AI 技术栈发生了翻天覆地的变化。作为一个开发者，我觉得我们更应该了解这些内容。  行业时间线   行业核心节点 事件    2022.11.30 ChatGPT 发布，全球AI竞赛开启   2023.03.14 GPT-4 发布，多模态能力初现   2023.07 Meta 开源 LL">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AIGC与大模型基础概念扫盲">
+<meta property="og:url" content="http://example.com/posts/01-AIGC%E4%B8%8E%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5%E6%89%AB%E7%9B%B2/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：2022年底 ChatGPT 横空出世，2025年初 DeepSeek-R1 刷爆朋友圈——短短两年多，AI 技术栈发生了翻天覆地的变化。作为一个开发者，我觉得我们更应该了解这些内容。  行业时间线   行业核心节点 事件    2022.11.30 ChatGPT 发布，全球AI竞赛开启   2023.03.14 GPT-4 发布，多模态能力初现   2023.07 Meta 开源 LL">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2025-01-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-19T14:52:48.000Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="LLM">
+<meta property="article:tag" content="AIGC">
+<meta property="article:tag" content="基础概念">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/01-AIGC%E4%B8%8E%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5%E6%89%AB%E7%9B%B2/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'AIGC与大模型基础概念扫盲',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 22:52:48'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">AIGC与大模型基础概念扫盲</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-01-14T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-19T14:52:48.000Z" title="更新于 2026 22:52:48">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：2022年底 ChatGPT 横空出世，2025年初 DeepSeek-R1 刷爆朋友圈——短短两年多，AI 技术栈发生了翻天覆地的变化。作为一个开发者，我觉得我们更应该了解这些内容。</p>
+</blockquote>
+<h2 id="行业时间线"><a href="#行业时间线" class="headerlink" title="行业时间线"></a>行业时间线</h2><table>
+<thead>
+<tr>
+<th>行业核心节点</th>
+<th>事件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2022.11.30</td>
+<td>ChatGPT 发布，全球AI竞赛开启</td>
+</tr>
+<tr>
+<td>2023.03.14</td>
+<td>GPT-4 发布，多模态能力初现</td>
+</tr>
+<tr>
+<td>2023.07</td>
+<td>Meta 开源 LLaMA 2，开源生态爆发</td>
+</tr>
+<tr>
+<td>2024.02</td>
+<td>Google 发布 Gemini 1.5，上下文窗口飙升至100万token</td>
+</tr>
+<tr>
+<td>2024.04</td>
+<td>Meta 发布 LLaMA 3，性能逼近GPT-4</td>
+</tr>
+<tr>
+<td>2025.01.20</td>
+<td>DeepSeek-R1 发布，开源推理模型，国产大模型崛起</td>
+</tr>
+</tbody></table>
+<p>从 ChatGPT 到 DeepSeek-R1，仅仅两年多时间，我最深的感受是——<strong>AI技术的普及速度远超我们的学习速度</strong>。如果还停留在”AI就是聊天机器人”的认知阶段，2025年的技术生态会让你完全懵圈。所以这篇文章，我会分享一下我掌握的核心概念。</p>
+<h2 id="什么是AIGC"><a href="#什么是AIGC" class="headerlink" title="什么是AIGC"></a>什么是AIGC</h2><p>AIGC（AI Generated Content）即人工智能生成内容。指的是利用人工智能技术自动生成文本、图像、音频、视频等内容。与传统的内容生成方式不同，AIGC 不是简单的检索或模板填充，而是基于深度学习的真正”创作”。</p>
+<h3 id="AIGC的核心特征"><a href="#AIGC的核心特征" class="headerlink" title="AIGC的核心特征"></a>AIGC的核心特征</h3><ol>
+<li><strong>基于大模型驱动</strong>：不是简单的检索或复制，而是真正的”理解+创作”</li>
+<li><strong>多模态</strong>：支持文本、图像、音频、视频等多种形式</li>
+<li><strong>交互式</strong>：可以根据用户反馈进行调整和优化</li>
+</ol>
+<p>典型的 AIGC 应用（2025年最新格局）：</p>
+<table>
+<thead>
+<tr>
+<th>领域</th>
+<th>代表产品</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>文本生成</td>
+<td>ChatGPT、Claude、DeepSeek</td>
+</tr>
+<tr>
+<td>图像生成</td>
+<td>Midjourney、DALL-E 3、Stable Diffusion 3</td>
+</tr>
+<tr>
+<td>视频生成</td>
+<td>Sora、Runway Gen-3、可灵</td>
+</tr>
+<tr>
+<td>代码生成</td>
+<td>GitHub Copilot、Cursor</td>
+</tr>
+</tbody></table>
+<h2 id="LLM：大语言模型"><a href="#LLM：大语言模型" class="headerlink" title="LLM：大语言模型"></a>LLM：大语言模型</h2><p>LLM（Large Language Model）即大语言模型，是 AIGC 文本生成领域的核心技术。</p>
+<h3 id="参数规模大"><a href="#参数规模大" class="headerlink" title="参数规模大"></a>参数规模大</h3><p>这里我做一个通俗的类比：如果把大模型比作人类大脑，<strong>参数就是神经元之间的突触连接</strong>。参数越多，模型能”记住”和”理解”的模式就越多。</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>参数量</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GPT-3（2020）</td>
+<td>1750亿</td>
+<td>一个百科全书式的学者</td>
+</tr>
+<tr>
+<td>GPT-4（2023）</td>
+<td>未公开，业界推测 1.8万亿（MoE架构）</td>
+<td>一个全领域的专家团队</td>
+</tr>
+<tr>
+<td>LLaMA 3 70B（2024）</td>
+<td>700亿</td>
+<td>一个某领域的资深专家</td>
+</tr>
+<tr>
+<td>DeepSeek-R1（2025）</td>
+<td>671亿（MoE架构，激活37亿）</td>
+<td>小身材大智慧，MoE的胜利</td>
+</tr>
+</tbody></table>
+<p><strong>我的整体体验</strong>：参数量不是万能指标！DeepSeek-R1 用 MoE（混合专家）架构，虽然总参数671B，但每次推理只激活37B参数，既省算力又保持了强大的推理能力。这也是为什么它能在消费级硬件上跑起来。<strong>不要迷信参数量，架构设计才是关键</strong>。</p>
+<h3 id="训练数据大"><a href="#训练数据大" class="headerlink" title="训练数据大"></a>训练数据大</h3><p>训练一个 LLM 需要海量文本数据：互联网网页、书籍、论文、代码库、对话数据等。GPT-3 的训练数据量约 45TB 文本数据，而 GPT-4 和后续模型使用的数据规模更为庞大。</p>
+<h2 id="核心名词解释"><a href="#核心名词解释" class="headerlink" title="核心名词解释"></a>核心名词解释</h2><h3 id="Token"><a href="#Token" class="headerlink" title="Token"></a>Token</h3><p>Token 是 LLM 处理文本的基本单位，可以理解为”词片段”。</p>
+<pre><code class="javascript">// Token 示例
+// 英文：&quot;Hello, world!&quot; → [&quot;Hello&quot;, &quot;,&quot;, &quot; world&quot;, &quot;!&quot;]（4个token）
+// 中文：&quot;你好世界&quot; → [&quot;你好&quot;, &quot;世界&quot;]（约2个token，取决于tokenizer）
+
+// 实际验证：使用 tiktoken 库（OpenAI 的 tokenizer）
+// npm install tiktoken
+import &#123; encoding_for_model &#125; from &#39;tiktoken&#39;;
+
+const enc = encoding_for_model(&#39;gpt-4&#39;);
+const tokens = enc.encode(&#39;Hello, world!&#39;);
+console.log(`Token数量: $&#123;tokens.length&#125;`); // 4
+console.log(`Token列表: $&#123;tokens&#125;`);
+
+const chineseTokens = enc.encode(&#39;你好世界&#39;);
+console.log(`中文Token数量: $&#123;chineseTokens.length&#125;`); // 通常2-4个
+</code></pre>
+<p>理解 Token 很重要，因为它直接关系到你的钱包：</p>
+<ol>
+<li><strong>API 计费</strong>：按 token 数量计算，输入和输出分别计价</li>
+<li><strong>上下文限制</strong>：模型一次能处理的 token 总数有上限</li>
+<li><strong>推理速度</strong>：token 越多，响应越慢、成本越高</li>
+</ol>
+<p>在实际项目中，中文每个汉字大约消耗 1-2 个 token，而一个英文单词通常是 1 个 token。这意味着**同样的语义信息，中文消耗的 token 数量比英文多 30%-50%**。所以做中文 AI 应用时，成本控制要更加注意。</p>
+<h3 id="Context-Window（上下文窗口）"><a href="#Context-Window（上下文窗口）" class="headerlink" title="Context Window（上下文窗口）"></a>Context Window（上下文窗口）</h3><p>上下文窗口是指模型一次能处理的最大 token 数量。这就是模型的”工作记忆”。</p>
+<p>2025年主流模型上下文窗口（变化非常快）：</p>
+<table>
+<thead>
+<tr>
+<th>模型</th>
+<th>上下文窗口</th>
+<th>发布时间</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GPT-3.5</td>
+<td>4K &#x2F; 16K</td>
+<td>2023.03</td>
+</tr>
+<tr>
+<td>GPT-4</td>
+<td>8K &#x2F; 32K</td>
+<td>2023.03</td>
+</tr>
+<tr>
+<td>GPT-4 Turbo</td>
+<td>128K</td>
+<td>2023.11</td>
+</tr>
+<tr>
+<td>Claude 3.5 Sonnet</td>
+<td>200K</td>
+<td>2024.06</td>
+</tr>
+<tr>
+<td>Gemini 1.5 Pro</td>
+<td>1M (100万)</td>
+<td>2024.02</td>
+</tr>
+<tr>
+<td>GPT-4o</td>
+<td>128K</td>
+<td>2024.05</td>
+</tr>
+<tr>
+<td>DeepSeek-R1</td>
+<td>128K</td>
+<td>2025.01</td>
+</tr>
+</tbody></table>
+<p>上下文窗口的竞争从”够不够用”变成了”用不用得起”。Gemini 1.5 Pro 号称100万 token，但你真用100万 token 一次调用，费用惊人。实际应用中，<strong>上下文管理能力比上下文窗口大小更重要</strong>——这就是后面我们会讲到的 RAG 技术存在的核心意义。</p>
+<h3 id="Temperature（温度）"><a href="#Temperature（温度）" class="headerlink" title="Temperature（温度）"></a>Temperature（温度）</h3><p>Temperature 控制模型输出的随机性，范围通常在 0-2 之间。</p>
+<pre><code class="javascript">// temperature = 0：确定性输出，适合事实查询、代码生成
+// 同一个问题，每次回答几乎相同
+const factualResponse = await openai.chat.completions.create(&#123;
+  model: &#39;gpt-4&#39;,
+  messages: [&#123; role: &#39;user&#39;, content: &#39;1+1等于几？&#39; &#125;],
+  temperature: 0  // 总是输出&quot;2&quot;
+&#125;);
+
+// temperature = 0.7：默认值，平衡创造性和准确性
+// 适合大多数对话场景
+
+// temperature = 1.5+：高创造性，适合头脑风暴、创意写作
+// 但可能出现&quot;胡说八道&quot;
+</code></pre>
+<ul>
+<li><strong>代码生成&#x2F;数据处理</strong>：temperature &#x3D; 0，要的是准确</li>
+<li><strong>日常对话&#x2F;客服</strong>：temperature &#x3D; 0.3-0.7</li>
+<li><strong>创意写作&#x2F;营销文案</strong>：temperature &#x3D; 0.8-1.2</li>
+<li>超过 1.2 基本就是在”掷骰子”了，慎用</li>
+</ul>
+<h3 id="Prompt-Engineering（提示词工程）"><a href="#Prompt-Engineering（提示词工程）" class="headerlink" title="Prompt Engineering（提示词工程）"></a>Prompt Engineering（提示词工程）</h3><p>Prompt Engineering 是与 LLM 交互的核心技能：</p>
+<pre><code class="markdown">&lt;!-- ❌ 模糊的prompt —— 输出质量随缘 --&gt;
+写一篇文章
+
+&lt;!-- ✅ 结构化的prompt —— 输出质量稳定可控 --&gt;
+你是一个拥有10年经验的前端架构师。请写一篇关于React Hooks的技术文章。
+
+要求：
+1. 目标读者：有1-2年React经验的开发者
+2. 核心内容：useState、useEffect、useMemo、useCallback
+3. 每个Hook附带一个实际业务场景的代码示例
+4. 重点讲解常见的性能陷阱和最佳实践
+5. 字数：1500-2000字
+6. 格式：Markdown，带代码高亮
+</code></pre>
+<h3 id="Fine-tuning（微调）vs-RAG"><a href="#Fine-tuning（微调）vs-RAG" class="headerlink" title="Fine-tuning（微调）vs RAG"></a>Fine-tuning（微调）vs RAG</h3><p>这两个概念经常被混淆。简单说：</p>
+<ul>
+<li><strong>微调</strong>：改变模型本身——“让学生学习新知识”</li>
+<li><strong>RAG</strong>：给模型提供参考资料——“让学生开卷考试”</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Fine-tuning</th>
+<th>RAG</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原理</td>
+<td>用领域数据继续训练模型</td>
+<td>检索相关文档注入prompt</td>
+</tr>
+<tr>
+<td>成本</td>
+<td>高（需要GPU训练）</td>
+<td>低（只需向量数据库）</td>
+</tr>
+<tr>
+<td>时效性</td>
+<td>差（需要重新训练）</td>
+<td>好（更新文档即可）</td>
+</tr>
+<tr>
+<td>适用场景</td>
+<td>学习特定风格&#x2F;格式</td>
+<td>基于私有知识问答</td>
+</tr>
+<tr>
+<td>数据需求</td>
+<td>高质量标注数据</td>
+<td>原始文档即可</td>
+</tr>
+</tbody></table>
+<p><strong>我的实战建议</strong>：90% 的场景应该优先考虑 RAG，成本低、见效快、可维护。微调只在需要改变模型输出风格&#x2F;格式时才值得考虑。</p>
+<h2 id="主流LLM模型对比（2025年Q1格局）"><a href="#主流LLM模型对比（2025年Q1格局）" class="headerlink" title="主流LLM模型对比（2025年Q1格局）"></a>主流LLM模型对比（2025年Q1格局）</h2><table>
+<thead>
+<tr>
+<th>模型</th>
+<th>发布方</th>
+<th>核心优势</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>GPT-4o</td>
+<td>OpenAI</td>
+<td>多模态、综合能力强</td>
+<td></td>
+</tr>
+<tr>
+<td>Claude 3.5 Sonnet</td>
+<td>Anthropic</td>
+<td>长上下文、代码能力强</td>
+<td>代码生成、长文档分析</td>
+</tr>
+<tr>
+<td>DeepSeek-R1</td>
+<td>DeepSeek</td>
+<td>开源、推理能力强、性价比极高</td>
+<td>推理密集型任务</td>
+</tr>
+<tr>
+<td>LLaMA 3.1 405B</td>
+<td>Meta</td>
+<td>开源最强、可私有化部署</td>
+<td>私有化部署、定制开发</td>
+</tr>
+<tr>
+<td>Gemini 1.5 Pro</td>
+<td>Google</td>
+<td>超长上下文（100万token）</td>
+<td>超长文档分析</td>
+</tr>
+<tr>
+<td>通义千问 Qwen2.5</td>
+<td>阿里</td>
+<td>开源、多模态、中文友好</td>
+<td>企业应用、中文场景</td>
+</tr>
+</tbody></table>
+<h2 id="从LLM到应用：技术栈演进全景"><a href="#从LLM到应用：技术栈演进全景" class="headerlink" title="从LLM到应用：技术栈演进全景"></a>从LLM到应用：技术栈演进全景</h2><h3 id="1-0-时代（2023上半年）：直接调API"><a href="#1-0-时代（2023上半年）：直接调API" class="headerlink" title="1.0 时代（2023上半年）：直接调API"></a>1.0 时代（2023上半年）：直接调API</h3><pre><code class="javascript">// 最原始的方式：一个 fetch 搞定
+const response = await fetch(&#39;https://api.openai.com/v1/chat/completions&#39;, &#123;
+  method: &#39;POST&#39;,
+  headers: &#123;
+    &#39;Authorization&#39;: `Bearer $&#123;API_KEY&#125;`,
+    &#39;Content-Type&#39;: &#39;application/json&#39;
+  &#125;,
+  body: JSON.stringify(&#123;
+    model: &#39;gpt-3.5-turbo&#39;,
+    messages: [&#123; role: &#39;user&#39;, content: &#39;Hello&#39; &#125;]
+  &#125;)
+&#125;);
+
+const data = await response.json();
+console.log(data.choices[0].message.content);
+</code></pre>
+<p>这个阶段的特点：能跑就行，但体验差（等待时间长、没有流式输出、无法访问私有数据）。</p>
+<h3 id="2-0-时代（2023下半年-2024）：工程化增强"><a href="#2-0-时代（2023下半年-2024）：工程化增强" class="headerlink" title="2.0 时代（2023下半年~2024）：工程化增强"></a>2.0 时代（2023下半年~2024）：工程化增强</h3><ul>
+<li><strong>Function Calling（2023.06）</strong>：让 LLM 调用外部工具</li>
+<li><strong>RAG</strong>：检索增强生成，让 LLM 能访问私有知识</li>
+<li><strong>SSE 流式输出</strong>：逐字输出，提升用户体验</li>
+<li><strong>LangChain&#x2F;LlamaIndex</strong>：LLM 应用开发框架</li>
+</ul>
+<h3 id="3-0-时代（2024下半年-至今）：Agent与标准化"><a href="#3-0-时代（2024下半年-至今）：Agent与标准化" class="headerlink" title="3.0 时代（2024下半年~至今）：Agent与标准化"></a>3.0 时代（2024下半年~至今）：Agent与标准化</h3><ul>
+<li><strong>AI Agent</strong>：让 AI 自主规划和执行任务</li>
+<li><strong>MCP 协议（2024.11）</strong>：标准化的 AI 工具调用接口</li>
+<li><strong>Skills</strong>：AI 能力的模块化封装</li>
+<li><strong>Vibe Coding（2025.02）</strong>：AI 编程新范式</li>
+<li><strong>OpenSpec&#x2F;OpenClaw（2025~2026）</strong>：前沿方向</li>
+</ul>
+<h2 id="开发者需要关注什么"><a href="#开发者需要关注什么" class="headerlink" title="开发者需要关注什么"></a>开发者需要关注什么</h2><p>作为开发者，在 AI 时代我认为最核心的能力排序是：</p>
+<ol>
+<li><strong>理解原理</strong>：不只要会调 API，要理解 Token、Temperature、上下文管理背后的逻辑</li>
+<li><strong>Prompt 技能</strong>：这是与 AI 沟通的核心能力，也是性价比最高的技能投资</li>
+<li><strong>工程化能力</strong>：RAG、流式调用、Agent 架构等工程化实践</li>
+<li><strong>成本意识</strong>：Token 消耗、延迟、并发——AI 应用的成本结构和传统应用完全不同</li>
+<li><strong>安全合规</strong>：提示词注入防御、数据隐私、内容审核</li>
+<li><strong>持续学习</strong>：这个领域的半衰期太短了，两个月不关注就可能错过关键技术节点</li>
+</ol>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>AIGC 和 LLM 不是炒作，而是真正改变软件开发范式的技术变革</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/LLM/">LLM</a><a class="post-meta__tags" href="/tags/AIGC/">AIGC</a><a class="post-meta__tags" href="/tags/%E5%9F%BA%E7%A1%80%E6%A6%82%E5%BF%B5/">基础概念</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/02-%E6%8F%90%E7%A4%BA%E8%AF%8D%E5%B7%A5%E7%A8%8B-System-Prompt%E4%B8%8EUser-Prompt/" title="提示词工程：System Prompt vs User Prompt 的本质差异"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">提示词工程：System Prompt vs User Prompt 的本质差异</div></div></a></div><div class="next-post pull-right"><a href="/posts/http-https-difference/" title="HTTP与HTTPS深度解析：原理、区别与安全性"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">HTTP与HTTPS深度解析：原理、区别与安全性</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%8C%E4%B8%9A%E6%97%B6%E9%97%B4%E7%BA%BF"><span class="toc-number">1.</span> <span class="toc-text">行业时间线</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AFAIGC"><span class="toc-number">2.</span> <span class="toc-text">什么是AIGC</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#AIGC%E7%9A%84%E6%A0%B8%E5%BF%83%E7%89%B9%E5%BE%81"><span class="toc-number">2.1.</span> <span class="toc-text">AIGC的核心特征</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LLM%EF%BC%9A%E5%A4%A7%E8%AF%AD%E8%A8%80%E6%A8%A1%E5%9E%8B"><span class="toc-number">3.</span> <span class="toc-text">LLM：大语言模型</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E8%A7%84%E6%A8%A1%E5%A4%A7"><span class="toc-number">3.1.</span> <span class="toc-text">参数规模大</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%AD%E7%BB%83%E6%95%B0%E6%8D%AE%E5%A4%A7"><span class="toc-number">3.2.</span> <span class="toc-text">训练数据大</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%90%8D%E8%AF%8D%E8%A7%A3%E9%87%8A"><span class="toc-number">4.</span> <span class="toc-text">核心名词解释</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Token"><span class="toc-number">4.1.</span> <span class="toc-text">Token</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Context-Window%EF%BC%88%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AA%97%E5%8F%A3%EF%BC%89"><span class="toc-number">4.2.</span> <span class="toc-text">Context Window（上下文窗口）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Temperature%EF%BC%88%E6%B8%A9%E5%BA%A6%EF%BC%89"><span class="toc-number">4.3.</span> <span class="toc-text">Temperature（温度）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Prompt-Engineering%EF%BC%88%E6%8F%90%E7%A4%BA%E8%AF%8D%E5%B7%A5%E7%A8%8B%EF%BC%89"><span class="toc-number">4.4.</span> <span class="toc-text">Prompt Engineering（提示词工程）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Fine-tuning%EF%BC%88%E5%BE%AE%E8%B0%83%EF%BC%89vs-RAG"><span class="toc-number">4.5.</span> <span class="toc-text">Fine-tuning（微调）vs RAG</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BB%E6%B5%81LLM%E6%A8%A1%E5%9E%8B%E5%AF%B9%E6%AF%94%EF%BC%882025%E5%B9%B4Q1%E6%A0%BC%E5%B1%80%EF%BC%89"><span class="toc-number">5.</span> <span class="toc-text">主流LLM模型对比（2025年Q1格局）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8ELLM%E5%88%B0%E5%BA%94%E7%94%A8%EF%BC%9A%E6%8A%80%E6%9C%AF%E6%A0%88%E6%BC%94%E8%BF%9B%E5%85%A8%E6%99%AF"><span class="toc-number">6.</span> <span class="toc-text">从LLM到应用：技术栈演进全景</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-0-%E6%97%B6%E4%BB%A3%EF%BC%882023%E4%B8%8A%E5%8D%8A%E5%B9%B4%EF%BC%89%EF%BC%9A%E7%9B%B4%E6%8E%A5%E8%B0%83API"><span class="toc-number">6.1.</span> <span class="toc-text">1.0 时代（2023上半年）：直接调API</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-0-%E6%97%B6%E4%BB%A3%EF%BC%882023%E4%B8%8B%E5%8D%8A%E5%B9%B4-2024%EF%BC%89%EF%BC%9A%E5%B7%A5%E7%A8%8B%E5%8C%96%E5%A2%9E%E5%BC%BA"><span class="toc-number">6.2.</span> <span class="toc-text">2.0 时代（2023下半年~2024）：工程化增强</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-0-%E6%97%B6%E4%BB%A3%EF%BC%882024%E4%B8%8B%E5%8D%8A%E5%B9%B4-%E8%87%B3%E4%BB%8A%EF%BC%89%EF%BC%9AAgent%E4%B8%8E%E6%A0%87%E5%87%86%E5%8C%96"><span class="toc-number">6.3.</span> <span class="toc-text">3.0 时代（2024下半年~至今）：Agent与标准化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BC%80%E5%8F%91%E8%80%85%E9%9C%80%E8%A6%81%E5%85%B3%E6%B3%A8%E4%BB%80%E4%B9%88"><span class="toc-number">7.</span> <span class="toc-text">开发者需要关注什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

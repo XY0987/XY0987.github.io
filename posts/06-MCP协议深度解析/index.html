@@ -1,0 +1,529 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>MCP协议深度解析：AI工具调用的标准化革命 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="MCP 对 AI 生态的意义，类似于 HTTP 对互联网的意义——不是某个产品，而是一个让整个生态互联互通的协议层。 为什么需要 MCP没有 MCP 的混乱世界&#x2F;&#x2F; 给 OpenAI 写工具 const openaiTools &#x3D; [&amp;#123;   type: &#39;function&#39;,   function: &amp;#123; name: &#39;get_weather&#39;,">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MCP协议深度解析：AI工具调用的标准化革命">
+<meta property="og:url" content="http://example.com/posts/06-MCP%E5%8D%8F%E8%AE%AE%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="MCP 对 AI 生态的意义，类似于 HTTP 对互联网的意义——不是某个产品，而是一个让整个生态互联互通的协议层。 为什么需要 MCP没有 MCP 的混乱世界&#x2F;&#x2F; 给 OpenAI 写工具 const openaiTools &#x3D; [&amp;#123;   type: &#39;function&#39;,   function: &amp;#123; name: &#39;get_weather&#39;,">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2025-04-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T03:05:19.000Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="MCP">
+<meta property="article:tag" content="协议标准化">
+<meta property="article:tag" content="Streamable HTTP">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/06-MCP%E5%8D%8F%E8%AE%AE%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'MCP协议深度解析：AI工具调用的标准化革命',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 11:05:19'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">MCP协议深度解析：AI工具调用的标准化革命</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-04-04T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T03:05:19.000Z" title="更新于 2026 11:05:19">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>8分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>MCP 对 AI 生态的意义，类似于 HTTP 对互联网的意义——<strong>不是某个产品，而是一个让整个生态互联互通的协议层</strong>。</p>
+<h2 id="为什么需要-MCP"><a href="#为什么需要-MCP" class="headerlink" title="为什么需要 MCP"></a>为什么需要 MCP</h2><h3 id="没有-MCP-的混乱世界"><a href="#没有-MCP-的混乱世界" class="headerlink" title="没有 MCP 的混乱世界"></a>没有 MCP 的混乱世界</h3><pre><code class="javascript">// 给 OpenAI 写工具
+const openaiTools = [&#123;
+  type: &#39;function&#39;,
+  function: &#123; name: &#39;get_weather&#39;, parameters: &#123; /* OpenAI格式 */ &#125; &#125;
+&#125;];
+
+// 给 Claude 写工具——格式不同！
+const claudeTools = [&#123;
+  name: &#39;get_weather&#39;,
+  input_schema: &#123; /* Anthropic格式 */ &#125;
+&#125;];
+
+// 给 Gemini 写工具——又不一样！
+const geminiTools = [&#123;
+  functionDeclarations: [&#123; name: &#39;get_weather&#39;, parameters: &#123; /* Google格式 */ &#125; &#125;]
+&#125;];
+
+// 同一个&quot;查天气&quot;功能，写了三遍！
+// 如果天气API变了，要改三个地方！
+</code></pre>
+<h3 id="MCP-的解决方案：一次开发，到处使用"><a href="#MCP-的解决方案：一次开发，到处使用" class="headerlink" title="MCP 的解决方案：一次开发，到处使用"></a>MCP 的解决方案：一次开发，到处使用</h3><pre><code>MCP的核心理念：
+
+┌─────────┐   ┌─────────┐   ┌─────────┐
+│ ChatGPT │   │ Claude  │   │ Cursor  │   ← AI应用（MCP Client）
+└────┬────┘   └────┬────┘   └────┬────┘
+     │             │             │
+     └─────────────┼─────────────┘
+                   │
+          ┌────────┴────────┐
+          │  MCP 标准协议    │   ← 统一的接口
+          └────────┬────────┘
+                   │
+     ┌─────────────┼─────────────┐
+     │             │             │
+┌────┴────┐  ┌────┴────┐  ┌────┴────┐
+│天气Server│  │数据库   │  │GitHub   │   ← MCP Server
+└─────────┘  │ Server  │  │ Server  │
+             └─────────┘  └─────────┘
+</code></pre>
+<h2 id="MCP-架构核心概念"><a href="#MCP-架构核心概念" class="headerlink" title="MCP 架构核心概念"></a>MCP 架构核心概念</h2><h3 id="三大能力"><a href="#三大能力" class="headerlink" title="三大能力"></a>三大能力</h3><table>
+<thead>
+<tr>
+<th>能力</th>
+<th>说明</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Tools（工具）</strong></td>
+<td>可执行的函数（主动操作）</td>
+<td>餐厅的菜单上可以点的菜</td>
+</tr>
+<tr>
+<td><strong>Resources（资源）</strong></td>
+<td>可读取的数据（被动读取）</td>
+<td>餐厅的酒水单</td>
+</tr>
+<tr>
+<td><strong>Prompts（提示词模板）</strong></td>
+<td>预定义的Prompt模板</td>
+<td>餐厅的推荐套餐</td>
+</tr>
+</tbody></table>
+<h3 id="传输层演进"><a href="#传输层演进" class="headerlink" title="传输层演进"></a>传输层演进</h3><p>这里要重点讲 2025年3月26日的重大更新：</p>
+<pre><code>初版（2024.11）：
+  ├── stdio —— 本地进程通信（通过标准输入输出）
+  └── HTTP + SSE —— 远程通信（HTTP请求 + SSE长连接）
+
+0326版（2025.03.26）：
+  ├── stdio —— 不变
+  └── Streamable HTTP —— 取代 HTTP+SSE
+      ├── 统一的 /message 端点
+      ├── 可选升级为 SSE 流
+      ├── 支持无状态模式
+      └── 原生兼容 Serverless
+</code></pre>
+<p><strong>Streamable HTTP 的核心改进</strong>：</p>
+<ol>
+<li><strong>去掉了专用的 &#x2F;sse 端点</strong>——不再需要维护长连接</li>
+<li><strong>统一 &#x2F;message 端点</strong>——所有通信走一个入口</li>
+<li><strong>按需升级为流式</strong>——简单请求用普通HTTP，复杂请求自动升级为SSE</li>
+<li><strong>支持无状态部署</strong>——完美适配 Vercel、CloudFlare Workers 等 Serverless 平台</li>
+</ol>
+<h2 id="实战：开发一个-MCP-Server"><a href="#实战：开发一个-MCP-Server" class="headerlink" title="实战：开发一个 MCP Server"></a>实战：开发一个 MCP Server</h2><h3 id="项目初始化"><a href="#项目初始化" class="headerlink" title="项目初始化"></a>项目初始化</h3><pre><code class="bash">mkdir my-mcp-server
+cd my-mcp-server
+npm init -y
+npm install @modelcontextprotocol/sdk
+</code></pre>
+<h3 id="完整的-MCP-Server-实现"><a href="#完整的-MCP-Server-实现" class="headerlink" title="完整的 MCP Server 实现"></a>完整的 MCP Server 实现</h3><pre><code class="typescript">// server.ts —— 一个提供待办事项管理能力的 MCP Server
+import &#123; Server &#125; from &#39;@modelcontextprotocol/sdk/server/index.js&#39;;
+import &#123; StdioServerTransport &#125; from &#39;@modelcontextprotocol/sdk/server/stdio.js&#39;;
+import &#123;
+  CallToolRequestSchema,
+  ListToolsRequestSchema,
+  ListResourcesRequestSchema,
+  ReadResourceRequestSchema
+&#125; from &#39;@modelcontextprotocol/sdk/types.js&#39;;
+
+// 简单的内存存储
+interface Todo &#123;
+  id: string;
+  title: string;
+  completed: boolean;
+  createdAt: string;
+&#125;
+
+const todos: Todo[] = [];
+let nextId = 1;
+
+// 创建 Server 实例
+const server = new Server(
+  &#123; name: &#39;todo-server&#39;, version: &#39;1.0.0&#39; &#125;,
+  &#123; capabilities: &#123; tools: &#123;&#125;, resources: &#123;&#125; &#125; &#125;
+);
+
+// ========== 注册工具 ==========
+server.setRequestHandler(ListToolsRequestSchema, async () =&gt; (&#123;
+  tools: [
+    &#123;
+      name: &#39;add_todo&#39;,
+      description: &#39;添加一个待办事项&#39;,
+      inputSchema: &#123;
+        type: &#39;object&#39;,
+        properties: &#123;
+          title: &#123; type: &#39;string&#39;, description: &#39;待办事项标题&#39; &#125;
+        &#125;,
+        required: [&#39;title&#39;]
+      &#125;
+    &#125;,
+    &#123;
+      name: &#39;complete_todo&#39;,
+      description: &#39;标记待办事项为完成&#39;,
+      inputSchema: &#123;
+        type: &#39;object&#39;,
+        properties: &#123;
+          id: &#123; type: &#39;string&#39;, description: &#39;待办事项ID&#39; &#125;
+        &#125;,
+        required: [&#39;id&#39;]
+      &#125;
+    &#125;,
+    &#123;
+      name: &#39;list_todos&#39;,
+      description: &#39;列出所有待办事项&#39;,
+      inputSchema: &#123;
+        type: &#39;object&#39;,
+        properties: &#123;
+          filter: &#123;
+            type: &#39;string&#39;,
+            enum: [&#39;all&#39;, &#39;active&#39;, &#39;completed&#39;],
+            description: &#39;过滤条件，默认 all&#39;
+          &#125;
+        &#125;
+      &#125;
+    &#125;
+  ]
+&#125;));
+
+// 处理工具调用
+server.setRequestHandler(CallToolRequestSchema, async (request) =&gt; &#123;
+  const &#123; name, arguments: args &#125; = request.params;
+
+  switch (name) &#123;
+    case &#39;add_todo&#39;: &#123;
+      const todo: Todo = &#123;
+        id: String(nextId++),
+        title: args.title as string,
+        completed: false,
+        createdAt: new Date().toISOString()
+      &#125;;
+      todos.push(todo);
+      return &#123;
+        content: [&#123; type: &#39;text&#39;, text: `✅ 已添加待办: [$&#123;todo.id&#125;] $&#123;todo.title&#125;` &#125;]
+      &#125;;
+    &#125;
+
+    case &#39;complete_todo&#39;: &#123;
+      const todo = todos.find(t =&gt; t.id === args.id);
+      if (!todo) &#123;
+        return &#123;
+          content: [&#123; type: &#39;text&#39;, text: `❌ 未找到ID为 $&#123;args.id&#125; 的待办事项` &#125;],
+          isError: true
+        &#125;;
+      &#125;
+      todo.completed = true;
+      return &#123;
+        content: [&#123; type: &#39;text&#39;, text: `✅ 已完成: [$&#123;todo.id&#125;] $&#123;todo.title&#125;` &#125;]
+      &#125;;
+    &#125;
+
+    case &#39;list_todos&#39;: &#123;
+      const filter = (args.filter as string) || &#39;all&#39;;
+      let filtered = todos;
+      if (filter === &#39;active&#39;) filtered = todos.filter(t =&gt; !t.completed);
+      if (filter === &#39;completed&#39;) filtered = todos.filter(t =&gt; t.completed);
+
+      const text = filtered.length === 0
+        ? &#39;📝 暂无待办事项&#39;
+        : filtered.map(t =&gt;
+            `$&#123;t.completed ? &#39;✅&#39; : &#39;⬜&#39;&#125; [$&#123;t.id&#125;] $&#123;t.title&#125;`
+          ).join(&#39;\n&#39;);
+
+      return &#123; content: [&#123; type: &#39;text&#39;, text &#125;] &#125;;
+    &#125;
+
+    default:
+      return &#123;
+        content: [&#123; type: &#39;text&#39;, text: `未知工具: $&#123;name&#125;` &#125;],
+        isError: true
+      &#125;;
+  &#125;
+&#125;);
+
+// ========== 注册资源 ==========
+server.setRequestHandler(ListResourcesRequestSchema, async () =&gt; (&#123;
+  resources: [
+    &#123;
+      uri: &#39;todo://summary&#39;,
+      name: &#39;待办事项概览&#39;,
+      mimeType: &#39;text/plain&#39;,
+      description: &#39;当前所有待办事项的统计概览&#39;
+    &#125;
+  ]
+&#125;));
+
+server.setRequestHandler(ReadResourceRequestSchema, async (request) =&gt; &#123;
+  if (request.params.uri === &#39;todo://summary&#39;) &#123;
+    const total = todos.length;
+    const completed = todos.filter(t =&gt; t.completed).length;
+    const active = total - completed;
+
+    return &#123;
+      contents: [&#123;
+        uri: &#39;todo://summary&#39;,
+        mimeType: &#39;text/plain&#39;,
+        text: `待办统计: 总计$&#123;total&#125;项, 进行中$&#123;active&#125;项, 已完成$&#123;completed&#125;项`
+      &#125;]
+    &#125;;
+  &#125;
+  throw new Error(`Unknown resource: $&#123;request.params.uri&#125;`);
+&#125;);
+
+// ========== 启动 ==========
+const transport = new StdioServerTransport();
+await server.connect(transport);
+console.error(&#39;Todo MCP Server started&#39;);  // stderr 不影响 stdio 通信
+</code></pre>
+<h3 id="配置到-Claude-Desktop"><a href="#配置到-Claude-Desktop" class="headerlink" title="配置到 Claude Desktop"></a>配置到 Claude Desktop</h3><pre><code class="json">// ~/Library/Application Support/Claude/claude_desktop_config.json
+&#123;
+  &quot;mcpServers&quot;: &#123;
+    &quot;todo&quot;: &#123;
+      &quot;command&quot;: &quot;npx&quot;,
+      &quot;args&quot;: [&quot;tsx&quot;, &quot;/path/to/server.ts&quot;]
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>配置后，在 Claude Desktop 中就可以直接说”帮我添加一个待办：写技术博客”，Claude 会自动调用你的 MCP Server。</p>
+<h2 id="MCP-vs-Function-Calling：本质区别"><a href="#MCP-vs-Function-Calling：本质区别" class="headerlink" title="MCP vs Function Calling：本质区别"></a>MCP vs Function Calling：本质区别</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Function Calling</th>
+<th>MCP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>耦合度</strong></td>
+<td>工具定义嵌在 API 调用中，紧耦合</td>
+<td>工具定义独立于AI应用，松耦合</td>
+</tr>
+<tr>
+<td><strong>标准化</strong></td>
+<td>每个平台格式不同</td>
+<td>统一标准协议</td>
+</tr>
+<tr>
+<td><strong>复用性</strong></td>
+<td>每个应用单独定义</td>
+<td>一次开发，任何 MCP Client 都能用</td>
+</tr>
+<tr>
+<td><strong>发现性</strong></td>
+<td>静态定义</td>
+<td>动态发现（Client可以查询Server的能力）</td>
+</tr>
+<tr>
+<td><strong>生态</strong></td>
+<td>各自为政</td>
+<td>共享生态（社区贡献的Server可直接使用）</td>
+</tr>
+</tbody></table>
+<p>Function Calling 是”内联工具”，MCP 是”外挂工具”。就像编程中的”硬编码”vs”配置化”——MCP 让工具真正成为了可插拔的组件。</p>
+<h2 id="Streamable-HTTP-深度解析"><a href="#Streamable-HTTP-深度解析" class="headerlink" title="Streamable HTTP 深度解析"></a>Streamable HTTP 深度解析</h2><p>这是 2025年3月26日 MCP 最重要的更新，我认为值得专门讲解。</p>
+<h3 id="为什么要替换-HTTP-SSE"><a href="#为什么要替换-HTTP-SSE" class="headerlink" title="为什么要替换 HTTP+SSE"></a>为什么要替换 HTTP+SSE</h3><p>原方案的问题：</p>
+<pre><code>原方案（HTTP+SSE）：
+Client ──POST──→ Server（发送请求）
+Client ←──SSE──── Server（接收响应，需要维持长连接）
+
+问题：
+1. SSE 长连接在 Serverless 环境下不可行（函数执行有时间限制）
+2. 断线重连时状态丢失
+3. 需要两个端点（/message + /sse），部署复杂
+</code></pre>
+<h3 id="Streamable-HTTP-如何解决"><a href="#Streamable-HTTP-如何解决" class="headerlink" title="Streamable HTTP 如何解决"></a>Streamable HTTP 如何解决</h3><pre><code>新方案（Streamable HTTP）：
+Client ──POST /message──→ Server
+         ←── 普通HTTP响应（简单请求）
+         ←── SSE流响应（复杂请求，按需升级）
+
+改进：
+1. 单一端点 /message
+2. 简单请求直接返回，不需要长连接
+3. 只在需要流式时才升级为SSE
+4. 通过 Mcp-Session-Id 管理会话状态
+5. Server可以完全无状态——适配 Serverless
+</code></pre>
+<pre><code class="javascript">// Streamable HTTP 服务端示例（概念代码）
+app.post(&#39;/message&#39;, async (req, res) =&gt; &#123;
+  const &#123; method, params &#125; = req.body;
+  const sessionId = req.headers[&#39;mcp-session-id&#39;];
+
+  // 简单请求：直接JSON响应
+  if (method === &#39;tools/list&#39;) &#123;
+    return res.json(&#123; tools: [...] &#125;);
+  &#125;
+
+  // 需要流式的请求：升级为SSE
+  if (method === &#39;tools/call&#39; &amp;&amp; isLongRunning(params)) &#123;
+    res.setHeader(&#39;Content-Type&#39;, &#39;text/event-stream&#39;);
+
+    // 流式返回进度和结果
+    res.write(`data: $&#123;JSON.stringify(&#123; type: &#39;progress&#39;, value: 30 &#125;)&#125;\n\n`);
+    // ... 执行工具 ...
+    res.write(`data: $&#123;JSON.stringify(&#123; type: &#39;result&#39;, value: result &#125;)&#125;\n\n`);
+    res.end();
+  &#125;
+&#125;);
+</code></pre>
+<h3 id="MCP-的终局会是什么？"><a href="#MCP-的终局会是什么？" class="headerlink" title="MCP 的终局会是什么？"></a>MCP 的终局会是什么？</h3><p>**MCP 正在从”工具协议”扩展为”AI 能力协议”**。</p>
+<p>最初 MCP 只是让 AI 调用工具，但随着 Resources、Prompts 等能力的加入，它实际上在定义 AI 应用如何获取上下文（Context）的通用方式——这也是它名字中”Context Protocol”的真正含义。</p>
+<h3 id="对开发者的影响"><a href="#对开发者的影响" class="headerlink" title="对开发者的影响"></a>对开发者的影响</h3><p>如果你现在还在为每个 AI 平台单独开发工具接口，<strong>是时候切换到 MCP 了</strong>。一次投入，长期受益。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>MCP 核心要点：</p>
+<ol>
+<li><strong>MCP 是 AI 工具调用的标准化协议</strong>——“一次开发，到处使用”</li>
+<li><strong>三大能力</strong>：Tools（工具）、Resources（资源）、Prompts（模板）</li>
+<li><strong>Streamable HTTP 是最新传输层</strong>——解决了远程部署和Serverless的问题</li>
+<li><strong>MCP 正在成为事实标准</strong>——主流AI平台都在跟进</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/MCP/">MCP</a><a class="post-meta__tags" href="/tags/%E5%8D%8F%E8%AE%AE%E6%A0%87%E5%87%86%E5%8C%96/">协议标准化</a><a class="post-meta__tags" href="/tags/Streamable-HTTP/">Streamable HTTP</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">AI Agent架构设计与实践</div></div></a></div><div class="next-post pull-right"><a href="/posts/05-SSE%E6%B5%81%E5%BC%8F%E8%B0%83%E7%94%A8AI%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AE%9E%E6%88%98/" title="SSE流式调用AI大模型实战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">SSE流式调用AI大模型实战</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-MCP"><span class="toc-number">1.</span> <span class="toc-text">为什么需要 MCP</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B2%A1%E6%9C%89-MCP-%E7%9A%84%E6%B7%B7%E4%B9%B1%E4%B8%96%E7%95%8C"><span class="toc-number">1.1.</span> <span class="toc-text">没有 MCP 的混乱世界</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MCP-%E7%9A%84%E8%A7%A3%E5%86%B3%E6%96%B9%E6%A1%88%EF%BC%9A%E4%B8%80%E6%AC%A1%E5%BC%80%E5%8F%91%EF%BC%8C%E5%88%B0%E5%A4%84%E4%BD%BF%E7%94%A8"><span class="toc-number">1.2.</span> <span class="toc-text">MCP 的解决方案：一次开发，到处使用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MCP-%E6%9E%B6%E6%9E%84%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-number">2.</span> <span class="toc-text">MCP 架构核心概念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E5%A4%A7%E8%83%BD%E5%8A%9B"><span class="toc-number">2.1.</span> <span class="toc-text">三大能力</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%A0%E8%BE%93%E5%B1%82%E6%BC%94%E8%BF%9B"><span class="toc-number">2.2.</span> <span class="toc-text">传输层演进</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%EF%BC%9A%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA-MCP-Server"><span class="toc-number">3.</span> <span class="toc-text">实战：开发一个 MCP Server</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">3.1.</span> <span class="toc-text">项目初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E7%9A%84-MCP-Server-%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.2.</span> <span class="toc-text">完整的 MCP Server 实现</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E5%88%B0-Claude-Desktop"><span class="toc-number">3.3.</span> <span class="toc-text">配置到 Claude Desktop</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MCP-vs-Function-Calling%EF%BC%9A%E6%9C%AC%E8%B4%A8%E5%8C%BA%E5%88%AB"><span class="toc-number">4.</span> <span class="toc-text">MCP vs Function Calling：本质区别</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Streamable-HTTP-%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90"><span class="toc-number">5.</span> <span class="toc-text">Streamable HTTP 深度解析</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E6%9B%BF%E6%8D%A2-HTTP-SSE"><span class="toc-number">5.1.</span> <span class="toc-text">为什么要替换 HTTP+SSE</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Streamable-HTTP-%E5%A6%82%E4%BD%95%E8%A7%A3%E5%86%B3"><span class="toc-number">5.2.</span> <span class="toc-text">Streamable HTTP 如何解决</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#MCP-%E7%9A%84%E7%BB%88%E5%B1%80%E4%BC%9A%E6%98%AF%E4%BB%80%E4%B9%88%EF%BC%9F"><span class="toc-number">5.3.</span> <span class="toc-text">MCP 的终局会是什么？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AF%B9%E5%BC%80%E5%8F%91%E8%80%85%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">5.4.</span> <span class="toc-text">对开发者的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

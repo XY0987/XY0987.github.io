@@ -1,0 +1,515 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Function Calling深度解析：让AI拥有双手 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：正常情况下的 AI 只能”说”不能”做”。用户问天气，它只能编一个；用户想查数据库，它无能为力。Function Calling 是让 AI 获得”双手”的关键技术—— LLM 不再只是一个聊天机器人。  Function Calling 是整个 AI 应用工程化的分水岭——它让 LLM 从”知识问答”进化为”任务执行”。理解 FC 的工作原理，是理解后续MCP协议工具调用的基础。 Fun">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Function Calling深度解析：让AI拥有双手">
+<meta property="og:url" content="http://example.com/posts/04-Function-Calling%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：正常情况下的 AI 只能”说”不能”做”。用户问天气，它只能编一个；用户想查数据库，它无能为力。Function Calling 是让 AI 获得”双手”的关键技术—— LLM 不再只是一个聊天机器人。  Function Calling 是整个 AI 应用工程化的分水岭——它让 LLM 从”知识问答”进化为”任务执行”。理解 FC 的工作原理，是理解后续MCP协议工具调用的基础。 Fun">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2025-02-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T02:25:19.000Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Function Calling">
+<meta property="article:tag" content="LLM应用">
+<meta property="article:tag" content="工具调用">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/04-Function-Calling%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Function Calling深度解析：让AI拥有双手',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 10:25:19'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Function Calling深度解析：让AI拥有双手</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-02-14T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T02:25:19.000Z" title="更新于 2026 10:25:19">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：正常情况下的 AI 只能”说”不能”做”。用户问天气，它只能编一个；用户想查数据库，它无能为力。<strong>Function Calling 是让 AI 获得”双手”的关键技术</strong>—— LLM 不再只是一个聊天机器人。</p>
+</blockquote>
+<p>Function Calling 是整个 AI 应用工程化的<strong>分水岭</strong>——它让 LLM 从”知识问答”进化为”任务执行”。理解 FC 的工作原理，是理解后续MCP协议工具调用的基础。</p>
+<h2 id="Function-Calling-是什么"><a href="#Function-Calling-是什么" class="headerlink" title="Function Calling 是什么"></a>Function Calling 是什么</h2><p>一句话：<strong>Function Calling 让 LLM 告诉你”应该调用什么函数、传什么参数”，但实际的函数执行由你的代码完成</strong>。</p>
+<pre><code>用户: &quot;北京今天天气怎么样？&quot;
+
+传统LLM: &quot;北京今天大概是晴天吧&quot;  ← 瞎猜的
+
+Function Calling:
+  LLM决策 → &quot;需要调用 get_weather 函数，参数 city=北京&quot;
+  你的代码 → 调用天气API → 获取真实数据
+  LLM生成 → &quot;北京今天晴，25℃，适合出行&quot;  ← 基于真实数据
+</code></pre>
+<p><strong>关键理解</strong>：LLM 不直接执行函数！它只负责”决策”——判断该不该调函数、调哪个、传什么参数。真正的执行在代码里。这个”决策+执行”分离的设计非常重要。</p>
+<h2 id="完整工作流程"><a href="#完整工作流程" class="headerlink" title="完整工作流程"></a>完整工作流程</h2><pre><code>                    ┌──────────────┐
+                    │   你的代码    │
+                    └──────┬───────┘
+                           │
+        ①定义工具+用户问题   │
+                           ▼
+                    ┌──────────────┐
+                    │   LLM API    │
+                    └──────┬───────┘
+                           │
+              ②返回工具调用决策（JSON结构）
+                           │
+                           ▼
+                  ┌──────────────┐
+        ③解析参数  │   你的代码    │  ④执行实际函数
+        并调用     └──────┬───────┘  （调API/查DB等）
+                         │
+      ⑤把函数结果返回给LLM │
+                         ▼
+                  ┌──────────────┐
+                  │   LLM API    │  ⑥生成最终自然语言回答
+                  └──────────────┘
+</code></pre>
+<h2 id="实战代码：完整的-Function-Calling-实现"><a href="#实战代码：完整的-Function-Calling-实现" class="headerlink" title="实战代码：完整的 Function Calling 实现"></a>实战代码：完整的 Function Calling 实现</h2><pre><code class="javascript">// fc-demo.mjs —— Function Calling 完整示例
+// 需要安装：npm install openai
+
+import OpenAI from &#39;openai&#39;;
+
+const openai = new OpenAI(&#123;
+  apiKey: process.env.OPENAI_API_KEY
+&#125;);
+
+// ========== 步骤1：定义可用的工具 ==========
+const tools = [
+  &#123;
+    type: &#39;function&#39;,
+    function: &#123;
+      name: &#39;get_weather&#39;,
+      description: &#39;获取指定城市的实时天气信息。当用户询问天气相关问题时调用此函数。&#39;,
+      parameters: &#123;
+        type: &#39;object&#39;,
+        properties: &#123;
+          city: &#123;
+            type: &#39;string&#39;,
+            description: &#39;城市名称，如：北京、上海、广州&#39;
+          &#125;,
+          unit: &#123;
+            type: &#39;string&#39;,
+            enum: [&#39;celsius&#39;, &#39;fahrenheit&#39;],
+            description: &#39;温度单位，默认celsius&#39;
+          &#125;
+        &#125;,
+        required: [&#39;city&#39;]
+      &#125;
+    &#125;
+  &#125;,
+  &#123;
+    type: &#39;function&#39;,
+    function: &#123;
+      name: &#39;search_product&#39;,
+      description: &#39;搜索商品信息。当用户想查找或购买商品时调用此函数。&#39;,
+      parameters: &#123;
+        type: &#39;object&#39;,
+        properties: &#123;
+          keyword: &#123;
+            type: &#39;string&#39;,
+            description: &#39;搜索关键词&#39;
+          &#125;,
+          max_price: &#123;
+            type: &#39;number&#39;,
+            description: &#39;最高价格（可选）&#39;
+          &#125;
+        &#125;,
+        required: [&#39;keyword&#39;]
+      &#125;
+    &#125;
+  &#125;
+];
+
+// ========== 步骤2：实现实际的函数 ==========
+// 这些是你的业务逻辑，LLM 不知道也不关心具体实现
+const functions = &#123;
+  get_weather: async (&#123; city, unit = &#39;celsius&#39; &#125;) =&gt; &#123;
+    // 实际项目中这里会调用真实天气API
+    // 这里用模拟数据演示
+    const mockData = &#123;
+      &#39;北京&#39;: &#123; temp: 22, condition: &#39;晴&#39;, humidity: 45 &#125;,
+      &#39;上海&#39;: &#123; temp: 26, condition: &#39;多云&#39;, humidity: 72 &#125;,
+      &#39;广州&#39;: &#123; temp: 30, condition: &#39;雷阵雨&#39;, humidity: 85 &#125;
+    &#125;;
+    const data = mockData[city] || &#123; temp: 20, condition: &#39;未知&#39;, humidity: 50 &#125;;
+    return JSON.stringify(&#123;
+      city,
+      temperature: data.temp,
+      unit,
+      condition: data.condition,
+      humidity: `$&#123;data.humidity&#125;%`
+    &#125;);
+  &#125;,
+
+  search_product: async (&#123; keyword, max_price &#125;) =&gt; &#123;
+    // 实际项目中这里会查询数据库或调用商品API
+    const mockProducts = [
+      &#123; name: `$&#123;keyword&#125; A款`, price: 99, rating: 4.5 &#125;,
+      &#123; name: `$&#123;keyword&#125; B款`, price: 199, rating: 4.8 &#125;,
+      &#123; name: `$&#123;keyword&#125; C款 旗舰版`, price: 399, rating: 4.9 &#125;
+    ];
+    const filtered = max_price
+      ? mockProducts.filter(p =&gt; p.price &lt;= max_price)
+      : mockProducts;
+    return JSON.stringify(filtered);
+  &#125;
+&#125;;
+
+// ========== 步骤3：核心调用流程 ==========
+async function chat(userMessage) &#123;
+  console.log(`\n👤 用户: $&#123;userMessage&#125;`);
+
+  // 第一轮：发送用户消息和工具定义
+  const messages = [
+    &#123;
+      role: &#39;system&#39;,
+      content: &#39;你是一个智能助手，可以查询天气和搜索商品。请根据用户需求选择合适的工具。&#39;
+    &#125;,
+    &#123; role: &#39;user&#39;, content: userMessage &#125;
+  ];
+
+  const firstResponse = await openai.chat.completions.create(&#123;
+    model: &#39;gpt-4&#39;,
+    messages,
+    tools,
+    tool_choice: &#39;auto&#39;  // 让模型自动决定是否调用工具
+  &#125;);
+
+  const firstMessage = firstResponse.choices[0].message;
+
+  // 判断模型是否决定调用工具
+  if (!firstMessage.tool_calls) &#123;
+    // 不需要工具，直接返回文本回答
+    console.log(`🤖 助手: $&#123;firstMessage.content&#125;`);
+    return firstMessage.content;
+  &#125;
+
+  // 有工具调用请求
+  console.log(`🔧 工具调用:`);
+  messages.push(firstMessage);  // 保留模型的决策消息
+
+  // 执行每个工具调用（可能有多个并行调用）
+  for (const toolCall of firstMessage.tool_calls) &#123;
+    const funcName = toolCall.function.name;
+    const funcArgs = JSON.parse(toolCall.function.arguments);
+
+    console.log(`   → $&#123;funcName&#125;($&#123;JSON.stringify(funcArgs)&#125;)`);
+
+    // 执行实际函数
+    const funcResult = await functions[funcName](funcArgs);
+
+    // 将结果放回消息列表
+    messages.push(&#123;
+      role: &#39;tool&#39;,
+      tool_call_id: toolCall.id,  // 必须匹配
+      content: funcResult
+    &#125;);
+  &#125;
+
+  // 第二轮：带上函数结果，让模型生成最终回答
+  const secondResponse = await openai.chat.completions.create(&#123;
+    model: &#39;gpt-4&#39;,
+    messages
+  &#125;);
+
+  const finalAnswer = secondResponse.choices[0].message.content;
+  console.log(`🤖 助手: $&#123;finalAnswer&#125;`);
+  return finalAnswer;
+&#125;
+
+// ========== 测试 ==========
+await chat(&#39;北京今天天气怎么样？&#39;);
+// 🔧 工具调用: → get_weather(&#123;&quot;city&quot;:&quot;北京&quot;&#125;)
+// 🤖 助手: 北京今天天气晴朗，气温22℃，湿度45%，非常适合出行！
+
+await chat(&#39;帮我找一下200块以内的蓝牙耳机&#39;);
+// 🔧 工具调用: → search_product(&#123;&quot;keyword&quot;:&quot;蓝牙耳机&quot;,&quot;max_price&quot;:200&#125;)
+// 🤖 助手: 为您找到以下200元以内的蓝牙耳机：
+// 1. 蓝牙耳机 A款 - ¥99，评分4.5
+// 2. 蓝牙耳机 B款 - ¥199，评分4.8
+// 推荐B款，评分更高，性价比也不错。
+
+await chat(&#39;你好，今天心情不错&#39;);
+// （不触发工具调用，直接文本回复）
+// 🤖 助手: 很高兴听到您心情不错！有什么我可以帮您的吗？
+</code></pre>
+<h2 id="Parallel-Function-Calling（并行调用）"><a href="#Parallel-Function-Calling（并行调用）" class="headerlink" title="Parallel Function Calling（并行调用）"></a>Parallel Function Calling（并行调用）</h2><p>2023年11月，OpenAI 支持了并行工具调用——模型可以一次返回多个函数调用请求：</p>
+<pre><code class="javascript">// 用户: &quot;北京和上海今天天气怎么样？&quot;
+// 模型会返回两个并行的工具调用：
+
+const response = await openai.chat.completions.create(&#123;
+  model: &#39;gpt-4&#39;,
+  messages: [&#123; role: &#39;user&#39;, content: &#39;北京和上海今天天气怎么样？&#39; &#125;],
+  tools
+&#125;);
+
+// response.choices[0].message.tool_calls 包含两个调用：
+// [
+//   &#123; id: &quot;call_1&quot;, function: &#123; name: &quot;get_weather&quot;, arguments: &#39;&#123;&quot;city&quot;:&quot;北京&quot;&#125;&#39; &#125; &#125;,
+//   &#123; id: &quot;call_2&quot;, function: &#123; name: &quot;get_weather&quot;, arguments: &#39;&#123;&quot;city&quot;:&quot;上海&quot;&#125;&#39; &#125; &#125;
+// ]
+
+// 你可以并行执行它们！
+const results = await Promise.all(
+  response.choices[0].message.tool_calls.map(async (toolCall) =&gt; &#123;
+    const args = JSON.parse(toolCall.function.arguments);
+    const result = await functions[toolCall.function.name](args);
+    return &#123; tool_call_id: toolCall.id, role: &#39;tool&#39;, content: result &#125;;
+  &#125;)
+);
+</code></pre>
+<p>并行调用在”对比类”需求中效率提升巨大。但要注意：<strong>如果函数之间有依赖关系（比如先查用户再查订单），模型通常会自动串行处理</strong>，只需要按顺序返回结果。</p>
+<h2 id="我的踩坑实录"><a href="#我的踩坑实录" class="headerlink" title="我的踩坑实录"></a>我的踩坑实录</h2><h3 id="坑1：函数描述直接影响调用准确率"><a href="#坑1：函数描述直接影响调用准确率" class="headerlink" title="坑1：函数描述直接影响调用准确率"></a>坑1：函数描述直接影响调用准确率</h3><pre><code class="javascript">// ❌ 模糊的描述 —— 模型容易误判
+&#123;
+  name: &#39;get_data&#39;,
+  description: &#39;获取数据&#39;  // 太模糊了！
+&#125;
+
+// ✅ 精确的描述
+&#123;
+  name: &#39;get_weather&#39;,
+  description: &#39;获取指定城市的实时天气信息，包括温度、天气状况和湿度。当用户询问天气、温度、是否需要带伞等问题时调用此函数。&#39;
+&#125;
+</code></pre>
+<h3 id="坑2：参数类型和枚举值要写清楚"><a href="#坑2：参数类型和枚举值要写清楚" class="headerlink" title="坑2：参数类型和枚举值要写清楚"></a>坑2：参数类型和枚举值要写清楚</h3><pre><code class="javascript">// ❌ 不清晰的参数定义
+parameters: &#123;
+  properties: &#123;
+    status: &#123; type: &#39;string&#39; &#125;  // 模型可能传任何字符串
+  &#125;
+&#125;
+
+// ✅ 使用 enum 约束取值范围
+parameters: &#123;
+  properties: &#123;
+    status: &#123;
+      type: &#39;string&#39;,
+      enum: [&#39;pending&#39;, &#39;completed&#39;, &#39;cancelled&#39;],
+      description: &#39;订单状态&#39;
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<h3 id="坑3：处理模型”幻觉”调用"><a href="#坑3：处理模型”幻觉”调用" class="headerlink" title="坑3：处理模型”幻觉”调用"></a>坑3：处理模型”幻觉”调用</h3><pre><code class="javascript">// 模型有时会编造不存在的函数名或参数
+// 必须在代码层面做防御
+
+async function executeToolCall(toolCall) &#123;
+  const funcName = toolCall.function.name;
+
+  // 检查函数是否存在
+  if (!functions[funcName]) &#123;
+    console.warn(`⚠️ 未知函数: $&#123;funcName&#125;`);
+    return JSON.stringify(&#123; error: `函数 $&#123;funcName&#125; 不存在` &#125;);
+  &#125;
+
+  // 安全解析参数
+  let args;
+  try &#123;
+    args = JSON.parse(toolCall.function.arguments);
+  &#125; catch (e) &#123;
+    console.warn(`⚠️ 参数解析失败: $&#123;toolCall.function.arguments&#125;`);
+    return JSON.stringify(&#123; error: &#39;参数格式错误&#39; &#125;);
+  &#125;
+
+  // 执行函数
+  try &#123;
+    return await functions[funcName](args);
+  &#125; catch (e) &#123;
+    return JSON.stringify(&#123; error: e.message &#125;);
+  &#125;
+&#125;
+</code></pre>
+<h2 id="Function-Calling-的局限性"><a href="#Function-Calling-的局限性" class="headerlink" title="Function Calling 的局限性"></a>Function Calling 的局限性</h2><p>理解局限性同样重要：</p>
+<table>
+<thead>
+<tr>
+<th>局限</th>
+<th>具体表现</th>
+<th>应对方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>平台绑定</strong></td>
+<td>OpenAI 格式和 Claude 格式不同</td>
+<td>MCP 协议解决了这个问题</td>
+</tr>
+<tr>
+<td><strong>每次传递</strong></td>
+<td>工具定义需要每次请求都传</td>
+<td>消耗 token，成本高</td>
+</tr>
+<tr>
+<td><strong>决策不可靠</strong></td>
+<td>复杂场景下可能选错工具</td>
+<td>细化 description，增加示例</td>
+</tr>
+<tr>
+<td><strong>无状态</strong></td>
+<td>两次调用之间没有”记忆”</td>
+<td>需要自己维护上下文</td>
+</tr>
+</tbody></table>
+<p>这些局限性，正是后来 <strong>MCP 协议</strong> 要解决的问题。</p>
+<h2 id="独家技术思考"><a href="#独家技术思考" class="headerlink" title="独家技术思考"></a>独家技术思考</h2><p><strong>Function Calling 的本质是什么？</strong></p>
+<p>我的理解是：<strong>Function Calling 本质上是”结构化输出”的一种特殊形式</strong>。</p>
+<p>模型并没有真正”理解”函数的含义——它只是被训练成：当看到某些模式的输入时，输出特定 JSON 格式的内容。这就是为什么 description 写得越精确，调用准确率越高——<strong>你在帮模型做模式匹配</strong>。</p>
+<p>我们在应用过程中，不要指望 LLM”理解”你的函数逻辑，你要做的是让 LLM 能够<strong>精确地做出”调用哪个函数”的决策</strong>，然后把执行交给确定性的代码。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Function Calling 核心要点：</p>
+<ol>
+<li><strong>LLM 负责决策，代码负责执行</strong>——这是核心设计哲学</li>
+<li><strong>函数描述的质量直接决定调用准确率</strong></li>
+<li><strong>必须在代码层面做好防御</strong>——处理未知函数、参数错误等情况</li>
+<li><strong>并行调用可以大幅提升效率</strong></li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Function-Calling/">Function Calling</a><a class="post-meta__tags" href="/tags/LLM%E5%BA%94%E7%94%A8/">LLM应用</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8/">工具调用</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/05-SSE%E6%B5%81%E5%BC%8F%E8%B0%83%E7%94%A8AI%E5%A4%A7%E6%A8%A1%E5%9E%8B%E5%AE%9E%E6%88%98/" title="SSE流式调用AI大模型实战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">SSE流式调用AI大模型实战</div></div></a></div><div class="next-post pull-right"><a href="/posts/03-Ollama%E6%9C%AC%E5%9C%B0%E9%83%A8%E7%BD%B2%E4%B8%8E%E7%A7%81%E4%BA%BA%E7%9F%A5%E8%AF%86%E5%BA%93%E6%90%AD%E5%BB%BA/" title="Ollama本地部署与私人知识库搭建"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Ollama本地部署与私人知识库搭建</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Function-Calling-%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">Function Calling 是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%8C%E6%95%B4%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">完整工作流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%E4%BB%A3%E7%A0%81%EF%BC%9A%E5%AE%8C%E6%95%B4%E7%9A%84-Function-Calling-%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.</span> <span class="toc-text">实战代码：完整的 Function Calling 实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Parallel-Function-Calling%EF%BC%88%E5%B9%B6%E8%A1%8C%E8%B0%83%E7%94%A8%EF%BC%89"><span class="toc-number">4.</span> <span class="toc-text">Parallel Function Calling（并行调用）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%9A%84%E8%B8%A9%E5%9D%91%E5%AE%9E%E5%BD%95"><span class="toc-number">5.</span> <span class="toc-text">我的踩坑实录</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%911%EF%BC%9A%E5%87%BD%E6%95%B0%E6%8F%8F%E8%BF%B0%E7%9B%B4%E6%8E%A5%E5%BD%B1%E5%93%8D%E8%B0%83%E7%94%A8%E5%87%86%E7%A1%AE%E7%8E%87"><span class="toc-number">5.1.</span> <span class="toc-text">坑1：函数描述直接影响调用准确率</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%912%EF%BC%9A%E5%8F%82%E6%95%B0%E7%B1%BB%E5%9E%8B%E5%92%8C%E6%9E%9A%E4%B8%BE%E5%80%BC%E8%A6%81%E5%86%99%E6%B8%85%E6%A5%9A"><span class="toc-number">5.2.</span> <span class="toc-text">坑2：参数类型和枚举值要写清楚</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%913%EF%BC%9A%E5%A4%84%E7%90%86%E6%A8%A1%E5%9E%8B%E2%80%9D%E5%B9%BB%E8%A7%89%E2%80%9D%E8%B0%83%E7%94%A8"><span class="toc-number">5.3.</span> <span class="toc-text">坑3：处理模型”幻觉”调用</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Function-Calling-%E7%9A%84%E5%B1%80%E9%99%90%E6%80%A7"><span class="toc-number">6.</span> <span class="toc-text">Function Calling 的局限性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%8B%AC%E5%AE%B6%E6%8A%80%E6%9C%AF%E6%80%9D%E8%80%83"><span class="toc-number">7.</span> <span class="toc-text">独家技术思考</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

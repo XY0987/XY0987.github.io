@@ -1,0 +1,830 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Skills与MCP对比解析：AI能力封装的两种路径 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="一句话区分 Skills 和 MCPMCP 是”接口协议”，Skills 是”操作手册”。 类比现实世界：  MCP &#x3D; USB 接口标准（定义了设备怎么连接） Skills &#x3D; 写给新同事的岗位手册（告诉他碰到这类事情该怎么做）  层次关系：  ┌──────────────────────────────┐ │       AI 应用 &#x2F; Agent        │  ←">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Skills与MCP对比解析：AI能力封装的两种路径">
+<meta property="og:url" content="http://example.com/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="一句话区分 Skills 和 MCPMCP 是”接口协议”，Skills 是”操作手册”。 类比现实世界：  MCP &#x3D; USB 接口标准（定义了设备怎么连接） Skills &#x3D; 写给新同事的岗位手册（告诉他碰到这类事情该怎么做）  层次关系：  ┌──────────────────────────────┐ │       AI 应用 &#x2F; Agent        │  ←">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-02-14T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T03:42:01.000Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="MCP">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="Skills">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Skills与MCP对比解析：AI能力封装的两种路径',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 11:42:01'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Skills与MCP对比解析：AI能力封装的两种路径</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T03:42:01.000Z" title="更新于 2026 11:42:01">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>17分钟</span></span></div></div></div><article class="post-content" id="article-container"><h2 id="一句话区分-Skills-和-MCP"><a href="#一句话区分-Skills-和-MCP" class="headerlink" title="一句话区分 Skills 和 MCP"></a>一句话区分 Skills 和 MCP</h2><p><strong>MCP 是”接口协议”，Skills 是”操作手册”。</strong></p>
+<p>类比现实世界：</p>
+<ul>
+<li><strong>MCP</strong> &#x3D; USB 接口标准（定义了设备怎么连接）</li>
+<li><strong>Skills</strong> &#x3D; 写给新同事的岗位手册（告诉他碰到这类事情该怎么做）</li>
+</ul>
+<pre><code>层次关系：
+
+┌──────────────────────────────┐
+│       AI 应用 / Agent        │  ← 应用层
+├──────────────────────────────┤
+│        Skills 能力层          │  ← 业务能力封装（知识+流程+脚本）
+├──────────────────────────────┤
+│        MCP 协议层             │  ← 标准化的工具/资源访问
+├──────────────────────────────┤
+│     数据源 / API / 工具       │  ← 底层资源
+└──────────────────────────────┘
+</code></pre>
+<h2 id="Skills-到底是什么"><a href="#Skills-到底是什么" class="headerlink" title="Skills 到底是什么"></a>Skills 到底是什么</h2><h3 id="不是代码，是”操作手册”"><a href="#不是代码，是”操作手册”" class="headerlink" title="不是代码，是”操作手册”"></a>不是代码，是”操作手册”</h3><p><strong>一个核心误区</strong>：很多人第一次听到 Skills，会以为它是某种代码模块或函数库。实际上——</p>
+<blockquote>
+<p><strong>Skill &#x3D; 一个说明书 + 工具</strong>，里面是写给 AI 看的”入职手册 + 参考资料库 + 工具箱”。</p>
+</blockquote>
+<p>把 AI Agent 想象成刚入职的新同事：</p>
+<ul>
+<li><strong>Skills</strong>：递给他的操作手册——“碰到这类任务，按这个流程做”</li>
+<li><strong>Rules</strong>：公司规章制度——“所有代码用 TypeScript，不许用 var”</li>
+<li><strong>MCP</strong>：外部系统的接口文档——“查数据库走这个接口，调天气API走那个接口”</li>
+</ul>
+<h3 id="标准目录结构"><a href="#标准目录结构" class="headerlink" title="标准目录结构"></a>标准目录结构</h3><p>一个 Skill 的标准结构长这样：</p>
+<pre><code>my-skill/
+├── SKILL.md          # 必需：指令 + 元数据（技能说明书）
+├── scripts/          # 可选：可执行脚本（自动化操作）
+│   ├── main.py
+├── references/       # 可选：参考文档（领域知识）
+│   ├── api-docs.md
+│   └── style-guide.md
+└── assets/           # 可选：模板、资源文件
+    └── report-template.md
+</code></pre>
+<p>每个部分的职责：</p>
+<table>
+<thead>
+<tr>
+<th>组成部分</th>
+<th>是否必需</th>
+<th>职责</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>SKILL.md</code></td>
+<td>✅ 必需</td>
+<td>定义”我是谁、什么时候用我、怎么做”</td>
+<td>岗位说明书</td>
+</tr>
+<tr>
+<td><code>scripts/</code></td>
+<td>可选</td>
+<td>确定性操作（校验、转换、上传）</td>
+<td>工具箱</td>
+</tr>
+<tr>
+<td><code>references/</code></td>
+<td>可选</td>
+<td>详细领域知识（按需加载，省Token）</td>
+<td>参考资料柜</td>
+</tr>
+<tr>
+<td><code>assets/</code></td>
+<td>可选</td>
+<td>模板、配置文件等静态资源</td>
+<td>文件模板夹</td>
+</tr>
+</tbody></table>
+<h3 id="SKILL-md：技能的灵魂"><a href="#SKILL-md：技能的灵魂" class="headerlink" title="SKILL.md：技能的灵魂"></a>SKILL.md：技能的灵魂</h3><p><code>SKILL.md</code> 是整个 Skill 的核心，由两部分组成：</p>
+<p><strong>1. YAML 元数据（给 AI 路由器看的）</strong>——Agent 扫描这部分来决定”要不要用这个 Skill”</p>
+<p><strong>2. Markdown 正文（给 AI 执行看的）</strong>——匹配成功后，Agent 读取正文来执行任务</p>
+<pre><code class="markdown">---
+# === 元数据区（YAML Front Matter）===
+name: meeting-minutes          # 技能唯一标识，kebab-case
+description:
+  当用户提供会议内容、录音转写文本，
+  或要求生成会议纪要时使用。
+  能够提取议题、结论、行动项，
+  并在涉及预算时触发财务合规检查。
+---
+
+# 会议纪要生成 Skill
+
+## 你的角色
+你是一位专业的会议记录员，擅长从会议内容中提取关键信息。
+
+## 工作流程
+1. 识别会议基本信息（时间、参会人、主题）
+2. 提取每个议题的讨论要点和结论
+3. 整理行动项（负责人 + 截止日期）
+4. 如果提到金额/预算/采购 → 读取 `references/finance-policy.md` 进行合规检查
+5. 如果用户要求上传 → 执行 `scripts/upload.py`
+
+## 输出格式
+```markdown
+# 会议纪要
+- **会议主题**: xxx
+- **时间**: xxx
+- **参会人**: xxx
+
+## 议题与结论
+| 议题 | 讨论要点 | 结论 |
+|------|---------|------|
+| ... | ... | ... |
+
+## 行动项
+| 事项 | 负责人 | 截止日期 |
+|------|--------|---------|
+| ... | ... | ... |
+
+## 风险提醒（如有）
+...
+
+## 禁止事项
+- ❌ 不得臆造未提及的议题或结论
+- ❌ 缺失信息写&quot;待确认&quot;，不要编造
+- ❌ 不要输出会议内容的原文复制
+</code></pre>
+<p>注意看 <code>description</code> 字段——这是<strong>触发的关键</strong>。Agent 通过扫描所有 Skill 的 <code>description</code> 来判断当前任务该调用哪个 Skill。写得不好，Skill 就永远不会被触发。</p>
+<h3 id="渐进式加载：三层披露机制"><a href="#渐进式加载：三层披露机制" class="headerlink" title="渐进式加载：三层披露机制"></a>渐进式加载：三层披露机制</h3><p>Skills 有一个精妙的设计：<strong>不是一股脑全部塞进上下文，而是分层按需加载</strong>。</p>
+<pre><code>┌─────────────────────────────────────────────────┐
+│  第一层：元数据（name + description）              │  ← 始终加载，用于路由匹配
+│  Token 消耗：极少（几十个Token）                   │
+├─────────────────────────────────────────────────┤
+│  第二层：SKILL.md 正文                            │  ← 匹配成功后加载
+│  Token 消耗：中等（建议500行以内）                  │
+├─────────────────────────────────────────────────┤
+│  第三层：references/ + scripts/                   │  ← 正文中指示时才加载
+│  Token 消耗：按需（可能很大，但只在需要时读取）       │
+└─────────────────────────────────────────────────┘
+</code></pre>
+<p>这就是为什么 Skill 要分层组织——**核心规则放 SKILL.md，详细知识放 references&#x2F;**。如果把所有内容都塞进 SKILL.md，每次触发都会消耗大量 Token。</p>
+<h3 id="Skill-的三种类型"><a href="#Skill-的三种类型" class="headerlink" title="Skill 的三种类型"></a>Skill 的三种类型</h3><p>根据目录内容不同，Skill 分为三类：</p>
+<p><strong>1. 纯指令型（只有 SKILL.md）</strong></p>
+<p>最轻量，没有脚本，纯靠 Prompt 指导 AI 行为。适合编码规范、写作模板等场景。</p>
+<pre><code>vue-list-page/
+└── SKILL.md    # 定义 Vue 列表页的标准写法
+</code></pre>
+<p><strong>2. 脚本型（SKILL.md + scripts&#x2F;）</strong></p>
+<p>包含可执行脚本，Agent 通过 JSON 传参调用脚本，获取确定性结果。适合需要精确计算、数据校验、外部操作的场景。</p>
+<pre><code>weather-query/
+├── SKILL.md
+└── scripts/
+    └── main.py    # 调用天气API，返回结构化天气数据
+</code></pre>
+<p><strong>3. 知识密集型（SKILL.md + references&#x2F; + scripts&#x2F;）</strong></p>
+<p>完整形态，既有执行脚本又有参考文档。适合复杂的垂直领域场景。</p>
+<pre><code>financial-audit/
+├── SKILL.md
+├── scripts/
+│   ├── check_budget.py     # 金额提取和审批规则校验
+│   └── upload.py           # 上传生成的报告
+├── references/
+│   ├── finance-policy.md   # 财务审批制度
+│   └── tax-rules.md        # 税务法规摘要
+└── assets/
+    └── report-template.md  # 审计报告模板
+</code></pre>
+<h2 id="MCP-vs-Skills-具体例子对比"><a href="#MCP-vs-Skills-具体例子对比" class="headerlink" title="MCP vs Skills 具体例子对比"></a>MCP vs Skills 具体例子对比</h2><p>以”分析 GitHub 仓库”为例，看看 MCP 和 Skills 分别怎么做：</p>
+<p><strong>用 MCP（提供原子工具）：</strong></p>
+<p>MCP Server 暴露一组独立的工具函数，AI 自行决定调用顺序：</p>
+<pre><code class="json">// MCP Server 提供的工具列表
+&#123;
+  &quot;tools&quot;: [
+    &#123; &quot;name&quot;: &quot;get_repo_info&quot;,       &quot;description&quot;: &quot;获取仓库基本信息&quot; &#125;,
+    &#123; &quot;name&quot;: &quot;list_files&quot;,          &quot;description&quot;: &quot;列出文件目录&quot; &#125;,
+    &#123; &quot;name&quot;: &quot;read_file&quot;,           &quot;description&quot;: &quot;读取文件内容&quot; &#125;,
+    &#123; &quot;name&quot;: &quot;get_issues&quot;,          &quot;description&quot;: &quot;获取Issues列表&quot; &#125;,
+    &#123; &quot;name&quot;: &quot;get_commit_history&quot;,  &quot;description&quot;: &quot;获取提交历史&quot; &#125;
+  ]
+&#125;
+
+// AI 拿到工具列表后，自主规划：
+// &quot;我应该先调 get_repo_info，再 list_files 看看结构...&quot;
+// → 调用顺序、分析策略、输出格式——全靠 AI 自己想
+// → 结果好坏取决于 AI 的推理能力
+</code></pre>
+<p><strong>用 Skill（封装完整流程）：</strong></p>
+<p>一个文件夹，把分析流程、评判标准、输出格式全部固化：</p>
+<pre><code>github-repo-analyzer/
+├── SKILL.md
+├── scripts/
+│   └── scan_structure.py      # 扫描项目结构并输出文件树
+└── references/
+    └── quality-criteria.md    # 代码质量评判标准
+</code></pre>
+<p><code>SKILL.md</code> 内容：</p>
+<pre><code class="markdown">---
+name: github-repo-analyzer
+description: 
+  当用户要求分析一个GitHub仓库的代码质量、架构设计或维护状况时使用。
+  也适用于&quot;这个项目怎么样&quot;、&quot;帮我评估这个仓库&quot;等请求。
+---
+
+# GitHub 仓库分析 Skill
+
+## 分析流程（严格按此顺序执行）
+1. 获取仓库基本信息和统计数据
+2. 执行 `scripts/scan_structure.py` 扫描项目结构
+3. 分析技术栈和核心入口文件
+4. 参考 `references/quality-criteria.md` 中的标准进行评分
+5. 生成结构化分析报告
+
+## 评分维度
+| 维度 | 权重 | 说明 |
+|------|------|------|
+| 项目规范性 | 30% | README、LICENSE、CI/CD、.gitignore |
+| 代码质量 | 30% | 函数复杂度、命名规范、错误处理 |
+| 维护活跃度 | 20% | 提交频率、Issue响应、PR处理 |
+| 文档完整性 | 20% | API文档、注释、CHANGELOG |
+
+## 输出格式
+（固定的报告模板，包含概述、技术栈、各维度评分、改进建议...）
+
+## 禁止事项
+- ❌ 不得跳过任何评分维度
+- ❌ 不得在没有数据支撑的情况下给高分
+</code></pre>
+<p><strong>关键区别</strong>：</p>
+<ul>
+<li>MCP 方式：AI 拿到5个工具，自由发挥——可能分析得很好，也可能遗漏关键维度</li>
+<li>Skill 方式：分析流程、评分标准、输出格式全部预定义——<strong>结果稳定、可复现</strong></li>
+</ul>
+<h2 id="核心差异对比"><a href="#核心差异对比" class="headerlink" title="核心差异对比"></a>核心差异对比</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Skills</th>
+<th>MCP</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>本质</strong></td>
+<td>操作手册（知识+流程+规则）</td>
+<td>接口协议（工具连接标准）</td>
+</tr>
+<tr>
+<td><strong>载体</strong></td>
+<td>文件夹（SKILL.md + scripts + references）</td>
+<td>Server&#x2F;Client + JSON-RPC 协议</td>
+</tr>
+<tr>
+<td><strong>粒度</strong></td>
+<td>粗粒度（完整业务流程）</td>
+<td>细粒度（原子操作）</td>
+</tr>
+<tr>
+<td><strong>知识承载</strong></td>
+<td>✅ 内置领域知识和评判标准</td>
+<td>❌ 不承载知识</td>
+</tr>
+<tr>
+<td><strong>执行方式</strong></td>
+<td>预定义流程，AI 按手册执行</td>
+<td>AI 自主编排工具调用</td>
+</tr>
+<tr>
+<td><strong>触发方式</strong></td>
+<td>任务匹配时按需加载</td>
+<td>显式调用工具函数</td>
+</tr>
+<tr>
+<td><strong>Token 开销</strong></td>
+<td>渐进式披露，按需加载</td>
+<td>每次对话携带完整工具定义，开销较大</td>
+</tr>
+<tr>
+<td><strong>标准化</strong></td>
+<td>平台有差异（但结构趋同）</td>
+<td>跨平台统一标准</td>
+</tr>
+<tr>
+<td><strong>灵活性</strong></td>
+<td>中等（流程相对固定）</td>
+<td>高（AI自由组合）</td>
+</tr>
+<tr>
+<td><strong>可靠性</strong></td>
+<td>高（流程确定，输出稳定）</td>
+<td>中（依赖AI决策质量）</td>
+</tr>
+<tr>
+<td><strong>适用场景</strong></td>
+<td>垂直领域深耕、团队SOP</td>
+<td>通用工具生态</td>
+</tr>
+</tbody></table>
+<p><strong>MCP 的 Token 开销问题：</strong></p>
+<p>MCP 的工具定义（每个工具的名称、描述、参数 JSON Schema）需要在<strong>每轮对话中都完整注入到 System Prompt 里</strong>，这样 LLM 才知道有哪些工具可以调用。假设你连接了 3 个 MCP Server，每个提供 10 个工具，每个工具的定义平均占 200 个 Token，那么：</p>
+<pre><code>3 × 10 × 200 = 6,000 Token（每轮对话的固定开销）
+</code></pre>
+<p>这意味着：</p>
+<ul>
+<li>你连接的 MCP Server 越多，每轮对话的<strong>固定 Token 成本</strong>越高</li>
+<li>无论这轮对话是否使用某个工具，它的定义都会被带入上下文</li>
+<li>多轮对话场景下，这个开销会被<strong>累积放大</strong></li>
+</ul>
+<p><strong>Skills 的 Token 优势：</strong></p>
+<p>Skills 的三层渐进式披露机制完美解决了这个问题：</p>
+<ul>
+<li>第一层（元数据）：只有 <code>name</code> + <code>description</code>，几十个 Token，<strong>始终加载</strong></li>
+<li>第二层（指令正文）：匹配后才加载 SKILL.md 正文，中等消耗</li>
+<li>第三层（references&#x2F;）：只在 AI 判断需要时才读取，完全按需</li>
+</ul>
+<p>一个 Skill 在未被触发时，对上下文的开销可能只有 <strong>30~50 Token</strong>（仅元数据），而一组 MCP 工具定义动辄 <strong>数千 Token</strong>，还是每轮都要带上。</p>
+<h3 id="一句话选择法"><a href="#一句话选择法" class="headerlink" title="一句话选择法"></a>一句话选择法</h3><pre><code>缺&quot;连接外部数据/系统&quot;的能力 → 选 MCP
+缺&quot;标准化流程和专业产出&quot;的能力 → 选 Skills
+两者都缺 → MCP + Skills 组合（最强形态）
+</code></pre>
+<h2 id="实战：开发一个完整的-Skill"><a href="#实战：开发一个完整的-Skill" class="headerlink" title="实战：开发一个完整的 Skill"></a>实战：开发一个完整的 Skill</h2><p>以”技术文章质量分析 Skill”为例，展示一个真实可用的 Skill 怎么开发。</p>
+<h3 id="目录结构"><a href="#目录结构" class="headerlink" title="目录结构"></a>目录结构</h3><pre><code>tech-article-analyzer/
+├── SKILL.md                        # 核心：分析流程和评分规则
+├── scripts/
+│   └── extract_stats.py            # 提取文章统计信息（字数、代码块数等）
+├── references/
+│   └── scoring-criteria.md         # 详细评分标准（五级描述）
+└── assets/
+    └── report-template.md          # 报告输出模板
+</code></pre>
+<h3 id="SKILL-md"><a href="#SKILL-md" class="headerlink" title="SKILL.md"></a>SKILL.md</h3><pre><code class="markdown">---
+name: tech-article-analyzer
+description: 
+  分析技术文章的质量、深度和实用性，给出结构化评分和改进建议。
+  当用户说&quot;分析这篇文章&quot;、&quot;文章质量怎么样&quot;、&quot;帮我评审一下&quot;时触发。
+  也适用于&quot;这篇技术博客写得好不好&quot;等请求。
+---
+
+# 技术文章质量分析 Skill
+
+## 你的角色
+你是一位资深技术编辑，擅长评估技术文章的深度、实用性和结构质量。
+
+## 分析流程
+
+### 第一步：基础信息提取
+执行 `scripts/extract_stats.py` 获取文章的统计数据：
+- 总字数、段落数
+- 代码块数量及语言分布
+- 标题层级结构
+- 外部链接数量
+
+### 第二步：四维度评分
+参考 `references/scoring-criteria.md` 中的详细评分标准，对文章进行四维度评分：
+
+| 维度 | 权重 | 核心判断点 |
+|------|------|-----------|
+| 技术深度 | 30% | 是否深入原理？有独创见解还是概念搬运？ |
+| 实用性 | 30% | 代码能跑吗？有踩坑经验吗？ |
+| 结构清晰度 | 20% | 逻辑是否递进？知识路径是否清晰？ |
+| 原创度 | 20% | 有个人思考还是纯翻译/搬运？ |
+
+每个维度打1-5分，加权计算总分（百分制）。
+
+### 第三步：生成改进建议
+基于评分结果，给出3条最关键的改进建议，每条包含：
+- 问题描述
+- 改进方向
+- 具体操作
+
+### 第四步：输出报告
+使用 `assets/report-template.md` 的格式输出最终报告。
+
+## 评分校准规则
+- 有完整可运行代码 + 踩坑经验 → 实用性至少4分
+- 只有概念解释，无代码 → 实用性最多2分
+- 标题层级超过3级且逻辑递进 → 结构至少4分
+- 全文无个人观点/经验 → 原创度最多2分
+
+## 禁止事项
+- ❌ 不得给出没有依据的高分（每个分数必须引用文章中的证据）
+- ❌ 不得遗漏任何评分维度
+- ❌ 改进建议不得空泛（如&quot;提高代码质量&quot;），必须具体可操作
+</code></pre>
+<h3 id="references-scoring-criteria-md"><a href="#references-scoring-criteria-md" class="headerlink" title="references&#x2F;scoring-criteria.md"></a>references&#x2F;scoring-criteria.md</h3><pre><code class="markdown"># 技术文章评分标准详细定义
+
+## 技术深度（weight: 30%）
+
+| 分数 | 标准 | 典型特征 |
+|------|------|---------|
+| 5 | 有独创见解，深入底层原理 | 源码分析、性能基准测试、独特的架构思考 |
+| 4 | 系统讲解，有实战经验 | 完整的技术方案、踩过的坑、解决过的问题 |
+| 3 | 概念清晰，有代码示例 | 正确解释了核心概念，附带代码演示 |
+| 2 | 表面讲解，缺乏深度 | 只说了&quot;是什么&quot;，没说&quot;为什么&quot; |
+| 1 | 纯概念搬运，无实质内容 | 官方文档翻译、百科式罗列 |
+
+## 实用性（weight: 30%）
+
+| 分数 | 标准 | 典型特征 |
+|------|------|---------|
+| 5 | 代码可直接运行，附踩坑经验 | 完整项目代码、环境配置、常见错误解决 |
+| 4 | 有完整代码示例 | 关键功能的完整实现代码 |
+| 3 | 有代码片段 | 核心逻辑的代码片段，需要读者自行补全 |
+| 2 | 只有概念，无代码 | 纯文字描述技术方案 |
+| 1 | 纯理论，脱离实践 | 与实际开发完全脱节 |
+
+## 结构清晰度（weight: 20%）
+
+| 分数 | 标准 | 典型特征 |
+|------|------|---------|
+| 5 | 逻辑递进，有清晰的知识路径 | 从简到难、前后呼应、有总结回顾 |
+| 4 | 结构合理，层次分明 | 标题有层级、段落有组织 |
+| 3 | 基本有序 | 有结构但逻辑不够紧密 |
+| 2 | 结构松散 | 内容东一块西一块 |
+| 1 | 杂乱无章 | 无法找到阅读主线 |
+
+## 原创度（weight: 20%）
+
+| 分数 | 标准 | 典型特征 |
+|------|------|---------|
+| 5 | 全新视角，独家方法论 | 首次提出的框架/思路、独特的实验 |
+| 4 | 有个人思考和经验 | 结合自身项目的反思、对比分析 |
+| 3 | 适度引用+个人理解 | 综合多方资料并加入自己的解读 |
+| 2 | 大量引用，少量原创 | 以引用为主，个人内容很少 |
+| 1 | 纯翻译/搬运 | 直接翻译或复制其他文章 |
+</code></pre>
+<h3 id="scripts-extract-stats-py"><a href="#scripts-extract-stats-py" class="headerlink" title="scripts&#x2F;extract_stats.py"></a>scripts&#x2F;extract_stats.py</h3><pre><code class="python">#!/usr/bin/env python3
+&quot;&quot;&quot;提取技术文章的统计信息&quot;&quot;&quot;
+
+import sys
+import json
+import re
+
+def extract_stats(content: str) -&gt; dict:
+    lines = content.split(&#39;\n&#39;)
+
+    # 统计字数（去除代码块和空行）
+    in_code_block = False
+    text_chars = 0
+    for line in lines:
+        if line.strip().startswith(&#39;```&#39;):
+            in_code_block = not in_code_block
+            continue
+        if not in_code_block:
+            text_chars += len(line.strip())
+
+    # 统计代码块
+    code_blocks = re.findall(r&#39;```(\w*)\n(.*?)```&#39;, content, re.DOTALL)
+    languages = &#123;&#125;
+    for lang, code in code_blocks:
+        lang = lang or &#39;unknown&#39;
+        languages[lang] = languages.get(lang, 0) + 1
+
+    # 统计标题层级
+    headings = []
+    for line in lines:
+        match = re.match(r&#39;^(#&#123;1,6&#125;)\s+(.+)&#39;, line)
+        if match:
+            headings.append(&#123;
+                &#39;level&#39;: len(match.group(1)),
+                &#39;text&#39;: match.group(2).strip()
+            &#125;)
+
+    # 统计外部链接
+    links = re.findall(r&#39;https?://[^\s\)]+&#39;, content)
+
+    return &#123;
+        &#39;total_chars&#39;: len(content),
+        &#39;text_chars&#39;: text_chars,
+        &#39;total_lines&#39;: len(lines),
+        &#39;code_blocks&#39;: len(code_blocks),
+        &#39;code_languages&#39;: languages,
+        &#39;headings&#39;: headings,
+        &#39;heading_max_depth&#39;: max((h[&#39;level&#39;] for h in headings), default=0),
+        &#39;external_links&#39;: len(links)
+    &#125;
+
+if __name__ == &#39;__main__&#39;:
+    content = sys.stdin.read()
+    stats = extract_stats(content)
+    print(json.dumps(stats, ensure_ascii=False, indent=2))
+</code></pre>
+<h3 id="这个-Skill-的工作流程"><a href="#这个-Skill-的工作流程" class="headerlink" title="这个 Skill 的工作流程"></a>这个 Skill 的工作流程</h3><pre><code>用户：&quot;帮我分析一下这篇技术文章的质量&quot;
+         │
+         ▼
+Agent 扫描所有 Skill 的 description
+         │
+         ▼ 匹配到 tech-article-analyzer
+         │
+Agent 加载 SKILL.md 正文（第二层）
+         │
+         ▼
+第一步：执行 scripts/extract_stats.py → 获取统计数据
+         │
+         ▼
+第二步：加载 references/scoring-criteria.md → 获取评分标准（第三层）
+         │
+         ▼
+第三步：按四维度评分 + 生成改进建议
+         │
+         ▼
+第四步：按模板格式输出报告
+</code></pre>
+<p>注意第三层的 <code>references/scoring-criteria.md</code> 只在需要评分时才加载——这就是渐进式披露的价值。如果这些评分标准全塞在 SKILL.md 里，每次触发都会消耗大量上下文。</p>
+<h2 id="Skills-MCP-的最佳组合"><a href="#Skills-MCP-的最佳组合" class="headerlink" title="Skills + MCP 的最佳组合"></a>Skills + MCP 的最佳组合</h2><p><strong>Skills 和 MCP 不是竞争关系，而是互补关系</strong>。最强形态是：<strong>MCP 负责连接数据，Skills 负责指挥流程</strong>。</p>
+<p>以”代码审查”场景为例：</p>
+<pre><code>code-review/
+├── SKILL.md
+├── scripts/
+│   └── complexity.py        # 计算圈复杂度
+└── references/
+    └── review-checklist.md  # 审查清单
+</code></pre>
+<pre><code class="markdown">---
+name: code-review
+description:
+  对代码进行专业审查。当用户说&quot;帮我review代码&quot;、
+  &quot;看看这段代码有什么问题&quot;、&quot;代码审查&quot;时触发。
+---
+
+# 代码审查 Skill
+
+## 工作流程
+1. 通过 MCP GitHub Server 的 `read_file` 工具获取代码
+2. 执行 `scripts/complexity.py` 计算圈复杂度
+3. 参考 `references/review-checklist.md` 逐项检查
+4. 生成审查报告
+5. 通过 MCP Slack Server 的 `send_message` 工具发送到 #code-review 频道
+
+## 审查维度
+- 命名规范
+- 错误处理
+- 性能隐患
+- 安全漏洞
+- 可测试性
+
+## 严重级别
+- 🔴 Critical：必须修复（安全漏洞、数据丢失风险）
+- 🟡 Warning：建议修复（性能问题、不规范用法）
+- 🔵 Info：可选优化（代码风格、命名建议）
+</code></pre>
+<p>在这个例子中：</p>
+<ul>
+<li><strong>MCP</strong> 提供了 GitHub 读取代码和 Slack 发送消息的能力（连接）</li>
+<li><strong>Skill</strong> 定义了审查流程、审查标准、输出格式（流程+知识）</li>
+<li>两者缺一不可</li>
+</ul>
+<pre><code>职责分工：
+
+MCP:  &quot;我能帮你读GitHub代码、发Slack消息&quot;  （能做什么）
+Skill: &quot;读到代码后，按这个标准审查，       （怎么做）
+        用这个格式输出，发到这个频道&quot;
+</code></pre>
+<h2 id="Skill-存放位置"><a href="#Skill-存放位置" class="headerlink" title="Skill 存放位置"></a>Skill 存放位置</h2><p>不同的 AI IDE 有各自的存放路径，但结构是相似的：</p>
+<table>
+<thead>
+<tr>
+<th>存放位置</th>
+<th>路径示例</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>个人级</strong></td>
+<td><code>~/.cursor/skills/</code> 或 <code>~/.codebuddy/skills/</code></td>
+<td>个人工作流，跨项目复用</td>
+</tr>
+<tr>
+<td><strong>项目级</strong></td>
+<td><code>.cursor/skills/</code> 或 <code>.codebuddy/skills/</code></td>
+<td>团队共享，随代码库版本控制</td>
+</tr>
+</tbody></table>
+<p><strong>推荐做法</strong>：</p>
+<ul>
+<li>个人习惯类（如写作风格、commit规范）→ 放个人目录</li>
+<li>团队标准类（如代码审查、API设计规范）→ 放项目目录，git 管理</li>
+</ul>
+<h2 id="选择指南"><a href="#选择指南" class="headerlink" title="选择指南"></a>选择指南</h2><pre><code>你需要 → 连接外部系统（数据库、API、文件系统等）
+  → 选择 MCP
+
+你需要 → 标准化的业务流程（代码审查、报告生成、数据分析等）
+  → 选择 Skills
+
+你需要 → Skill 指挥 MCP 工具完成底层操作
+  → Skills + MCP 组合使用
+</code></pre>
+<p>决策流程图：</p>
+<pre><code>你的需求是什么？
+      │
+      ├── &quot;AI 需要访问外部数据/系统&quot;
+      │     → MCP（提供连接能力）
+      │
+      ├── &quot;AI 需要按固定流程产出标准化结果&quot;
+      │     → Skills（提供流程+知识）
+      │
+      ├── &quot;AI 需要连接外部系统 + 按标准流程产出&quot;
+      │     → MCP + Skills（最强组合）
+      │
+      └── &quot;AI 需要遵守全局规则（代码风格等）&quot;
+            → Rules（不是 Skill 也不是 MCP）
+</code></pre>
+<h3 id="Skills-的未来：AI-能力市场"><a href="#Skills-的未来：AI-能力市场" class="headerlink" title="Skills 的未来：AI 能力市场"></a>Skills 的未来：AI 能力市场</h3><p>**Skills 正在成为 AI 时代的”App”**。</p>
+<p>就像移动互联网时代的 App Store，AI 时代正在形成 “Skill Store”：</p>
+<ul>
+<li>开发者可以发布和分享 Skill（GitHub 仓库）</li>
+<li>用户可以一键安装 Skill 扩展 AI 能力</li>
+<li>Skill 之间可以组合和协作</li>
+</ul>
+<h3 id="为什么-Skills-比”长-Prompt”好"><a href="#为什么-Skills-比”长-Prompt”好" class="headerlink" title="为什么 Skills 比”长 Prompt”好"></a>为什么 Skills 比”长 Prompt”好</h3><p>有人会问：我直接写一个很长的 System Prompt，把流程和知识都塞进去，不就行了？</p>
+<p>区别在于：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>长 Prompt</th>
+<th>Skill</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Token 消耗</td>
+<td>每次对话全量加载</td>
+<td>渐进式按需加载</td>
+</tr>
+<tr>
+<td>可维护性</td>
+<td>一个巨大的文本块</td>
+<td>分层组织，各司其职</td>
+</tr>
+<tr>
+<td>可复用性</td>
+<td>复制粘贴</td>
+<td>文件夹复制&#x2F;包管理安装</td>
+</tr>
+<tr>
+<td>团队协作</td>
+<td>无法版本管理</td>
+<td>Git 管理，可 Code Review</td>
+</tr>
+<tr>
+<td>确定性操作</td>
+<td>纯靠 AI 推理</td>
+<td>脚本执行，结果确定</td>
+</tr>
+</tbody></table>
+<p><strong>Skill 的核心价值不是”给 AI 更多信息”，而是”以工程化的方式管理 AI 的行为”。</strong></p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Skills vs MCP 核心要点：</p>
+<ol>
+<li><strong>Skill 是文件夹，不是代码模块</strong>——核心是 <code>SKILL.md</code>（元数据 + 指令），辅以 scripts、references、assets</li>
+<li><strong>MCP 是协议层</strong>——解决”AI怎么连接工具”</li>
+<li><strong>Skills 是能力层</strong>——解决”AI怎么按标准完成业务”</li>
+<li><strong>渐进式披露</strong>——三层加载机制（元数据 → 正文 → 资源），精准控制 Token 消耗</li>
+<li><strong>两者互补</strong>——MCP 负责连接，Skills 负责流程，组合使用最强</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/MCP/">MCP</a><a class="post-meta__tags" href="/tags/Agent/">Agent</a><a class="post-meta__tags" href="/tags/Skills/">Skills</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">OpenClaw：本地优先的个人AI操作系统</div></div></a></div><div class="next-post pull-right"><a href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">OpenSpec：规范驱动的AI编程</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E5%8C%BA%E5%88%86-Skills-%E5%92%8C-MCP"><span class="toc-number">1.</span> <span class="toc-text">一句话区分 Skills 和 MCP</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Skills-%E5%88%B0%E5%BA%95%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">2.</span> <span class="toc-text">Skills 到底是什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%8D%E6%98%AF%E4%BB%A3%E7%A0%81%EF%BC%8C%E6%98%AF%E2%80%9D%E6%93%8D%E4%BD%9C%E6%89%8B%E5%86%8C%E2%80%9D"><span class="toc-number">2.1.</span> <span class="toc-text">不是代码，是”操作手册”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%87%E5%87%86%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-number">2.2.</span> <span class="toc-text">标准目录结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SKILL-md%EF%BC%9A%E6%8A%80%E8%83%BD%E7%9A%84%E7%81%B5%E9%AD%82"><span class="toc-number">2.3.</span> <span class="toc-text">SKILL.md：技能的灵魂</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B8%90%E8%BF%9B%E5%BC%8F%E5%8A%A0%E8%BD%BD%EF%BC%9A%E4%B8%89%E5%B1%82%E6%8A%AB%E9%9C%B2%E6%9C%BA%E5%88%B6"><span class="toc-number">2.4.</span> <span class="toc-text">渐进式加载：三层披露机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Skill-%E7%9A%84%E4%B8%89%E7%A7%8D%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.5.</span> <span class="toc-text">Skill 的三种类型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#MCP-vs-Skills-%E5%85%B7%E4%BD%93%E4%BE%8B%E5%AD%90%E5%AF%B9%E6%AF%94"><span class="toc-number">3.</span> <span class="toc-text">MCP vs Skills 具体例子对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%B7%AE%E5%BC%82%E5%AF%B9%E6%AF%94"><span class="toc-number">4.</span> <span class="toc-text">核心差异对比</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E9%80%89%E6%8B%A9%E6%B3%95"><span class="toc-number">4.1.</span> <span class="toc-text">一句话选择法</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%9E%E6%88%98%EF%BC%9A%E5%BC%80%E5%8F%91%E4%B8%80%E4%B8%AA%E5%AE%8C%E6%95%B4%E7%9A%84-Skill"><span class="toc-number">5.</span> <span class="toc-text">实战：开发一个完整的 Skill</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84"><span class="toc-number">5.1.</span> <span class="toc-text">目录结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SKILL-md"><span class="toc-number">5.2.</span> <span class="toc-text">SKILL.md</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#references-scoring-criteria-md"><span class="toc-number">5.3.</span> <span class="toc-text">references&#x2F;scoring-criteria.md</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#scripts-extract-stats-py"><span class="toc-number">5.4.</span> <span class="toc-text">scripts&#x2F;extract_stats.py</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%99%E4%B8%AA-Skill-%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="toc-number">5.5.</span> <span class="toc-text">这个 Skill 的工作流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Skills-MCP-%E7%9A%84%E6%9C%80%E4%BD%B3%E7%BB%84%E5%90%88"><span class="toc-number">6.</span> <span class="toc-text">Skills + MCP 的最佳组合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Skill-%E5%AD%98%E6%94%BE%E4%BD%8D%E7%BD%AE"><span class="toc-number">7.</span> <span class="toc-text">Skill 存放位置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%89%E6%8B%A9%E6%8C%87%E5%8D%97"><span class="toc-number">8.</span> <span class="toc-text">选择指南</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Skills-%E7%9A%84%E6%9C%AA%E6%9D%A5%EF%BC%9AAI-%E8%83%BD%E5%8A%9B%E5%B8%82%E5%9C%BA"><span class="toc-number">8.1.</span> <span class="toc-text">Skills 的未来：AI 能力市场</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-Skills-%E6%AF%94%E2%80%9D%E9%95%BF-Prompt%E2%80%9D%E5%A5%BD"><span class="toc-number">8.2.</span> <span class="toc-text">为什么 Skills 比”长 Prompt”好</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">9.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

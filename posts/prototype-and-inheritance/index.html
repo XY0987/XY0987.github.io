@@ -1,0 +1,826 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>JavaScript原型与原型链完全指南：从原理到继承实现 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="原型与原型链是 JavaScript 面向对象编程的核心，也是面试必考知识点。理解原型机制对于掌握 JavaScript 继承、属性查找、类型判断等特性至关重要。本文将全面深入地解析原型与原型链。 一、原型对象1.1 什么是原型？每个 JavaScript 对象在创建时都会关联另一个对象，这个对象就是它的原型。对象从原型继承属性和方法。 &#x2F;&#x2F; 每个函数都有 prototype 属性 functio">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript原型与原型链完全指南：从原理到继承实现">
+<meta property="og:url" content="http://example.com/posts/prototype-and-inheritance/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="原型与原型链是 JavaScript 面向对象编程的核心，也是面试必考知识点。理解原型机制对于掌握 JavaScript 继承、属性查找、类型判断等特性至关重要。本文将全面深入地解析原型与原型链。 一、原型对象1.1 什么是原型？每个 JavaScript 对象在创建时都会关联另一个对象，这个对象就是它的原型。对象从原型继承属性和方法。 &#x2F;&#x2F; 每个函数都有 prototype 属性 functio">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2023-09-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-21T02:23:00.762Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="JavaScript">
+<meta property="article:tag" content="原型">
+<meta property="article:tag" content="原型链">
+<meta property="article:tag" content="继承">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/prototype-and-inheritance/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'JavaScript原型与原型链完全指南：从原理到继承实现',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 10:23:00'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">JavaScript原型与原型链完全指南：从原理到继承实现</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-09-04T16:00:00.000Z" title="发表于 2023 00:00:00">2023</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-21T02:23:00.762Z" title="更新于 2026 10:23:00">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/frontend-basics/">前端基础</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>15分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>原型与原型链是 JavaScript 面向对象编程的核心，也是面试必考知识点。理解原型机制对于掌握 JavaScript 继承、属性查找、类型判断等特性至关重要。本文将全面深入地解析原型与原型链。</p>
+<h2 id="一、原型对象"><a href="#一、原型对象" class="headerlink" title="一、原型对象"></a>一、原型对象</h2><h3 id="1-1-什么是原型？"><a href="#1-1-什么是原型？" class="headerlink" title="1.1 什么是原型？"></a>1.1 什么是原型？</h3><p>每个 JavaScript 对象在创建时都会关联另一个对象，这个对象就是它的<strong>原型</strong>。对象从原型继承属性和方法。</p>
+<pre><code class="javascript">// 每个函数都有 prototype 属性
+function Person(name) &#123;
+  this.name = name;
+&#125;
+
+Person.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+const person = new Person(&#39;张三&#39;);
+person.sayHi();  // &#39;Hi, I am 张三&#39;
+
+// person 从 Person.prototype 继承了 sayHi 方法
+</code></pre>
+<h3 id="1-2-prototype-与-proto"><a href="#1-2-prototype-与-proto" class="headerlink" title="1.2 prototype 与 __proto__"></a>1.2 prototype 与 __proto__</h3><pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+const person = new Person(&#39;张三&#39;);
+
+// prototype：函数特有的属性，指向原型对象
+console.log(Person.prototype);  // &#123; constructor: Person, ... &#125;
+
+// __proto__：对象特有的属性，指向它的原型
+console.log(person.__proto__);  // Person.prototype
+console.log(person.__proto__ === Person.prototype);  // true
+
+// 关系图：
+// person → person.__proto__ → Person.prototype
+// Person.prototype.constructor → Person
+</code></pre>
+<h3 id="1-3-constructor-属性"><a href="#1-3-constructor-属性" class="headerlink" title="1.3 constructor 属性"></a>1.3 constructor 属性</h3><p>原型对象有一个 <code>constructor</code> 属性，指向关联的构造函数：</p>
+<pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+console.log(Person.prototype.constructor === Person);  // true
+
+const person = new Person(&#39;张三&#39;);
+console.log(person.constructor === Person);  // true
+// person 本身没有 constructor，从原型链继承
+
+// 重写 prototype 会丢失 constructor
+Person.prototype = &#123;
+  sayHi: function() &#123;&#125;
+&#125;;
+console.log(Person.prototype.constructor === Person);  // false
+console.log(Person.prototype.constructor === Object);  // true
+
+// 修复 constructor
+Person.prototype = &#123;
+  constructor: Person,  // 手动指定
+  sayHi: function() &#123;&#125;
+&#125;;
+console.log(Person.prototype.constructor === Person);  // true
+</code></pre>
+<h2 id="二、原型链"><a href="#二、原型链" class="headerlink" title="二、原型链"></a>二、原型链</h2><h3 id="2-1-什么是原型链？"><a href="#2-1-什么是原型链？" class="headerlink" title="2.1 什么是原型链？"></a>2.1 什么是原型链？</h3><p>原型链是由对象的原型层层连接形成的链式结构。当访问对象属性时，JavaScript 会沿着原型链向上查找。</p>
+<pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+Person.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi&#39;);
+&#125;;
+
+const person = new Person(&#39;张三&#39;);
+
+// 原型链：
+// person → Person.prototype → Object.prototype → null
+
+console.log(person.__proto__);  // Person.prototype
+console.log(person.__proto__.__proto__);  // Object.prototype
+console.log(person.__proto__.__proto__.__proto__);  // null
+
+// 查找属性的过程：
+console.log(person.name);  // &#39;张三&#39;（实例属性）
+console.log(person.sayHi);  // function（原型属性）
+console.log(person.toString);  // function（Object.prototype 属性）
+console.log(person.xyz);  // undefined（不存在）
+</code></pre>
+<h3 id="2-2-原型链查找规则"><a href="#2-2-原型链查找规则" class="headerlink" title="2.2 原型链查找规则"></a>2.2 原型链查找规则</h3><pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+Person.prototype.name = &#39;原型name&#39;;
+
+const person = new Person(&#39;实例name&#39;);
+
+// 查找规则：就近原则
+console.log(person.name);  // &#39;实例name&#39;（实例属性优先）
+
+delete person.name;  // 删除实例属性
+console.log(person.name);  // &#39;原型name&#39;（查找到原型）
+
+delete Person.prototype.name;  // 删除原型属性
+console.log(person.name);  // undefined（继续向上查找）
+
+// hasOwnProperty：判断是否为实例属性
+person.name = &#39;实例name&#39;;
+console.log(person.hasOwnProperty(&#39;name&#39;));  // true
+console.log(Person.prototype.hasOwnProperty(&#39;name&#39;));  // false
+</code></pre>
+<h3 id="2-3-完整的原型链结构"><a href="#2-3-完整的原型链结构" class="headerlink" title="2.3 完整的原型链结构"></a>2.3 完整的原型链结构</h3><pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+const person = new Person(&#39;张三&#39;);
+
+/*
+完整的原型链：
+
+person（实例）
+  │
+  ├── __proto__ → Person.prototype
+  │                  │
+  │                  ├── constructor → Person
+  │                  ├── __proto__ → Object.prototype
+  │                  │                  │
+  │                  │                  ├── constructor → Object
+  │                  │                  ├── toString()
+  │                  │                  ├── hasOwnProperty()
+  │                  │                  ├── __proto__ → null
+  │                  │                  │
+  │                  │                  └── ...
+  │                  │
+  │                  └── sayHi()（自定义方法）
+  │
+  └── name: &#39;张三&#39;
+
+Person（构造函数）
+  │
+  ├── prototype → Person.prototype
+  ├── __proto__ → Function.prototype
+  │                  │
+  │                  ├── __proto__ → Object.prototype
+  │                  │
+  │                  └── ...
+  │
+  └── ...
+
+Function.prototype
+  │
+  ├── constructor → Function
+  ├── __proto__ → Object.prototype
+  └── ...
+*/
+
+console.log(Person.__proto__ === Function.prototype);  // true
+console.log(Function.__proto__ === Function.prototype);  // true（Function 是自己的实例）
+console.log(Object.__proto__ === Function.prototype);  // true
+console.log(Object.prototype.__proto__);  // null（原型链终点）
+</code></pre>
+<h2 id="三、获取原型的方法"><a href="#三、获取原型的方法" class="headerlink" title="三、获取原型的方法"></a>三、获取原型的方法</h2><h3 id="3-1-三种获取原型的方式"><a href="#3-1-三种获取原型的方式" class="headerlink" title="3.1 三种获取原型的方式"></a>3.1 三种获取原型的方式</h3><pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+const person = new Person(&#39;张三&#39;);
+
+// 方法一：__proto__（不推荐，已废弃）
+console.log(person.__proto__);
+
+// 方法二：Object.getPrototypeOf()（推荐）
+console.log(Object.getPrototypeOf(person));  // Person.prototype
+
+// 方法三：constructor.prototype（仅适用于构造函数创建的对象）
+console.log(person.constructor.prototype);  // Person.prototype
+
+// 三者相等
+console.log(person.__proto__ === Object.getPrototypeOf(person));  // true
+console.log(person.__proto__ === person.constructor.prototype);  // true
+</code></pre>
+<h3 id="3-2-设置原型的方法"><a href="#3-2-设置原型的方法" class="headerlink" title="3.2 设置原型的方法"></a>3.2 设置原型的方法</h3><pre><code class="javascript">// 方法一：Object.setPrototypeOf()（ES6，不推荐用于性能敏感场景）
+const obj = &#123; a: 1 &#125;;
+const proto = &#123; b: 2 &#125;;
+Object.setPrototypeOf(obj, proto);
+console.log(obj.b);  // 2
+
+// 方法二：Object.create()（推荐）
+const newObj = Object.create(proto);
+newObj.a = 1;
+console.log(newObj.b);  // 2
+
+// 方法三：直接赋值 __proto__（不推荐）
+const obj2 = &#123; a: 1 &#125;;
+obj2.__proto__ = proto;
+console.log(obj2.b);  // 2
+</code></pre>
+<h3 id="3-3-判断原型关系"><a href="#3-3-判断原型关系" class="headerlink" title="3.3 判断原型关系"></a>3.3 判断原型关系</h3><pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+const person = new Person(&#39;张三&#39;);
+
+// instanceof：判断原型链上是否存在构造函数的 prototype
+console.log(person instanceof Person);  // true
+console.log(person instanceof Object);  // true
+console.log(person instanceof Array);  // false
+
+// isPrototypeOf：判断对象是否在另一个对象的原型链上
+console.log(Person.prototype.isPrototypeOf(person));  // true
+console.log(Object.prototype.isPrototypeOf(person));  // true
+
+// Object.prototype.isPrototypeOf() 可以检测所有对象
+console.log(Object.prototype.isPrototypeOf(&#123;&#125;));  // true
+console.log(Object.prototype.isPrototypeOf([]));  // true
+console.log(Object.prototype.isPrototypeOf(function()&#123;&#125;));  // true
+console.log(Object.prototype.isPrototypeOf(null));  // false
+</code></pre>
+<h2 id="四、继承的实现方式"><a href="#四、继承的实现方式" class="headerlink" title="四、继承的实现方式"></a>四、继承的实现方式</h2><h3 id="4-1-原型链继承"><a href="#4-1-原型链继承" class="headerlink" title="4.1 原型链继承"></a>4.1 原型链继承</h3><pre><code class="javascript">// 原型链继承：将父类实例作为子类原型
+function Animal(name) &#123;
+  this.name = name;
+  this.colors = [&#39;black&#39;, &#39;white&#39;];
+&#125;
+
+Animal.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+function Dog(name, breed) &#123;
+  this.breed = breed;
+&#125;
+
+// 关键：将 Animal 实例作为 Dog 的原型
+Dog.prototype = new Animal(&#39;狗&#39;);
+Dog.prototype.constructor = Dog;
+
+const dog1 = new Dog(&#39;旺财&#39;, &#39;金毛&#39;);
+const dog2 = new Dog(&#39;来福&#39;, &#39;哈士奇&#39;);
+
+dog1.sayHi();  // &#39;Hi, I am 狗&#39;
+console.log(dog1.breed);  // &#39;金毛&#39;
+
+// 问题一：引用类型属性被所有实例共享
+dog1.colors.push(&#39;brown&#39;);
+console.log(dog2.colors);  // [&#39;black&#39;, &#39;white&#39;, &#39;brown&#39;]
+
+// 问题二：无法向父类构造函数传参
+console.log(dog1.name);  // &#39;狗&#39;（所有实例共享）
+</code></pre>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>引用类型属性被所有实例共享</li>
+<li>无法向父类构造函数传参</li>
+</ul>
+<h3 id="4-2-借用构造函数继承"><a href="#4-2-借用构造函数继承" class="headerlink" title="4.2 借用构造函数继承"></a>4.2 借用构造函数继承</h3><pre><code class="javascript">// 借用构造函数：在子类构造函数中调用父类构造函数
+function Animal(name) &#123;
+  this.name = name;
+  this.colors = [&#39;black&#39;, &#39;white&#39;];
+&#125;
+
+Animal.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+function Dog(name, breed) &#123;
+  Animal.call(this, name);  // 关键：借用构造函数
+  this.breed = breed;
+&#125;
+
+const dog1 = new Dog(&#39;旺财&#39;, &#39;金毛&#39;);
+const dog2 = new Dog(&#39;来福&#39;, &#39;哈士奇&#39;);
+
+dog1.colors.push(&#39;brown&#39;);
+console.log(dog1.colors);  // [&#39;black&#39;, &#39;white&#39;, &#39;brown&#39;]
+console.log(dog2.colors);  // [&#39;black&#39;, &#39;white&#39;]
+
+// 问题：无法继承父类原型上的方法
+// dog1.sayHi();  // TypeError: dog1.sayHi is not a function
+</code></pre>
+<p><strong>优点</strong>：</p>
+<ul>
+<li>解决了引用类型共享问题</li>
+<li>可以向父类传参</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>无法继承父类原型上的方法</li>
+<li>每个实例都有一份父类构造函数的副本，浪费内存</li>
+</ul>
+<h3 id="4-3-组合继承"><a href="#4-3-组合继承" class="headerlink" title="4.3 组合继承"></a>4.3 组合继承</h3><pre><code class="javascript">// 组合继承：原型链继承 + 借用构造函数继承
+function Animal(name) &#123;
+  this.name = name;
+  this.colors = [&#39;black&#39;, &#39;white&#39;];
+&#125;
+
+Animal.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+function Dog(name, breed) &#123;
+  Animal.call(this, name);  // 第二次调用 Animal
+  this.breed = breed;
+&#125;
+
+Dog.prototype = new Animal();  // 第一次调用 Animal
+Dog.prototype.constructor = Dog;
+
+const dog1 = new Dog(&#39;旺财&#39;, &#39;金毛&#39;);
+const dog2 = new Dog(&#39;来福&#39;, &#39;哈士奇&#39;);
+
+dog1.colors.push(&#39;brown&#39;);
+console.log(dog1.colors);  // [&#39;black&#39;, &#39;white&#39;, &#39;brown&#39;]
+console.log(dog2.colors);  // [&#39;black&#39;, &#39;white&#39;]
+
+dog1.sayHi();  // &#39;Hi, I am 旺财&#39;
+dog2.sayHi();  // &#39;Hi, I am 来福&#39;
+
+// 问题：调用了两次父类构造函数
+</code></pre>
+<p><strong>优点</strong>：</p>
+<ul>
+<li>既继承了原型方法，又解决了引用类型共享问题</li>
+</ul>
+<p><strong>缺点</strong>：</p>
+<ul>
+<li>调用了两次父类构造函数</li>
+</ul>
+<h3 id="4-4-寄生组合式继承（最优解）"><a href="#4-4-寄生组合式继承（最优解）" class="headerlink" title="4.4 寄生组合式继承（最优解）"></a>4.4 寄生组合式继承（最优解）</h3><pre><code class="javascript">// 寄生组合式继承：优化组合继承
+function Animal(name) &#123;
+  this.name = name;
+  this.colors = [&#39;black&#39;, &#39;white&#39;];
+&#125;
+
+Animal.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+function Dog(name, breed) &#123;
+  Animal.call(this, name);  // 只调用一次父类构造函数
+  this.breed = breed;
+&#125;
+
+// 关键：使用 Object.create() 创建原型
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog;
+
+const dog1 = new Dog(&#39;旺财&#39;, &#39;金毛&#39;);
+const dog2 = new Dog(&#39;来福&#39;, &#39;哈士奇&#39;);
+
+dog1.colors.push(&#39;brown&#39;);
+console.log(dog1.colors);  // [&#39;black&#39;, &#39;white&#39;, &#39;brown&#39;]
+console.log(dog2.colors);  // [&#39;black&#39;, &#39;white&#39;]
+
+dog1.sayHi();  // &#39;Hi, I am 旺财&#39;
+dog2.sayHi();  // &#39;Hi, I am 来福&#39;
+
+console.log(dog1 instanceof Animal);  // true
+console.log(dog1 instanceof Dog);  // true
+</code></pre>
+<p><strong>封装继承函数</strong>：</p>
+<pre><code class="javascript">function inherit(Child, Parent) &#123;
+  // 创建一个原型为 Parent.prototype 的对象
+  Child.prototype = Object.create(Parent.prototype);
+  // 修复 constructor
+  Child.prototype.constructor = Child;
+  // 保存对父类的引用
+  Child.super = Parent;
+  
+  // 如果需要继承静态属性
+  Object.setPrototypeOf(Child, Parent);
+&#125;
+
+// 使用
+function Animal(name) &#123;
+  this.name = name;
+&#125;
+
+Animal.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+function Dog(name, breed) &#123;
+  Dog.super.call(this, name);
+  this.breed = breed;
+&#125;
+
+inherit(Dog, Animal);
+</code></pre>
+<h3 id="4-5-ES6-class-继承"><a href="#4-5-ES6-class-继承" class="headerlink" title="4.5 ES6 class 继承"></a>4.5 ES6 class 继承</h3><pre><code class="javascript">// ES6 class 继承（语法糖，底层仍是原型链）
+class Animal &#123;
+  constructor(name) &#123;
+    this.name = name;
+    this.colors = [&#39;black&#39;, &#39;white&#39;];
+  &#125;
+  
+  sayHi() &#123;
+    console.log(&#39;Hi, I am &#39; + this.name);
+  &#125;
+&#125;
+
+class Dog extends Animal &#123;
+  constructor(name, breed) &#123;
+    super(name);  // 调用父类构造函数
+    this.breed = breed;
+  &#125;
+  
+  // 重写父类方法
+  sayHi() &#123;
+    super.sayHi();  // 调用父类方法
+    console.log(&#39;I am a &#39; + this.breed);
+  &#125;
+&#125;
+
+const dog = new Dog(&#39;旺财&#39;, &#39;金毛&#39;);
+dog.sayHi();  
+// Hi, I am 旺财
+// I am a 金毛
+</code></pre>
+<h2 id="五、继承方式对比"><a href="#五、继承方式对比" class="headerlink" title="五、继承方式对比"></a>五、继承方式对比</h2><table>
+<thead>
+<tr>
+<th>继承方式</th>
+<th>关键代码</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原型链继承</td>
+<td><code>Child.prototype = new Parent()</code></td>
+<td>简单</td>
+<td>引用共享、无法传参</td>
+</tr>
+<tr>
+<td>借用构造函数</td>
+<td><code>Parent.call(this)</code></td>
+<td>可传参、无引用共享</td>
+<td>无法继承原型方法</td>
+</tr>
+<tr>
+<td>组合继承</td>
+<td>原型链 + 借用构造函数</td>
+<td>兼具两者优点</td>
+<td>调用两次父类构造函数</td>
+</tr>
+<tr>
+<td>寄生组合式</td>
+<td><code>Object.create(Parent.prototype)</code></td>
+<td>最优方案</td>
+<td>代码稍复杂</td>
+</tr>
+<tr>
+<td>ES6 class</td>
+<td><code>extends</code> + <code>super</code></td>
+<td>语法简洁、语义清晰</td>
+<td>本质仍是原型链</td>
+</tr>
+</tbody></table>
+<h2 id="六、实战应用"><a href="#六、实战应用" class="headerlink" title="六、实战应用"></a>六、实战应用</h2><h3 id="6-1-判断数组类型"><a href="#6-1-判断数组类型" class="headerlink" title="6.1 判断数组类型"></a>6.1 判断数组类型</h3><pre><code class="javascript">const arr = [1, 2, 3];
+
+// 方法一：instanceof
+console.log(arr instanceof Array);  // true
+
+// 方法二：constructor
+console.log(arr.constructor === Array);  // true
+
+// 方法三：Object.prototype.toString
+console.log(Object.prototype.toString.call(arr));  // &#39;[object Array]&#39;
+
+// 方法四：Array.isArray（推荐）
+console.log(Array.isArray(arr));  // true
+
+// 方法五：原型链判断
+console.log(Array.prototype.isPrototypeOf(arr));  // true
+</code></pre>
+<h3 id="6-2-实现-instanceof"><a href="#6-2-实现-instanceof" class="headerlink" title="6.2 实现 instanceof"></a>6.2 实现 instanceof</h3><pre><code class="javascript">function myInstanceof(obj, Constructor) &#123;
+  // 基本类型直接返回 false
+  if (typeof obj !== &#39;object&#39; || obj === null) &#123;
+    return false;
+  &#125;
+  
+  // 获取对象的原型
+  let proto = Object.getPrototypeOf(obj);
+  
+  // 沿着原型链查找
+  while (proto !== null) &#123;
+    if (proto === Constructor.prototype) &#123;
+      return true;
+    &#125;
+    proto = Object.getPrototypeOf(proto);
+  &#125;
+  
+  return false;
+&#125;
+
+// 测试
+console.log(myInstanceof([], Array));  // true
+console.log(myInstanceof([], Object));  // true
+console.log(myInstanceof(&#123;&#125;, Array));  // false
+</code></pre>
+<h3 id="6-3-实现-new-操作符"><a href="#6-3-实现-new-操作符" class="headerlink" title="6.3 实现 new 操作符"></a>6.3 实现 new 操作符</h3><pre><code class="javascript">function myNew(Constructor, ...args) &#123;
+  // 1. 创建一个新对象，原型指向构造函数的 prototype
+  const obj = Object.create(Constructor.prototype);
+  
+  // 2. 执行构造函数，绑定 this
+  const result = Constructor.apply(obj, args);
+  
+  // 3. 如果构造函数返回对象，则返回该对象；否则返回新对象
+  return result !== null &amp;&amp; typeof result === &#39;object&#39; ? result : obj;
+&#125;
+
+// 测试
+function Person(name, age) &#123;
+  this.name = name;
+  this.age = age;
+&#125;
+
+Person.prototype.sayHi = function() &#123;
+  console.log(&#39;Hi, I am &#39; + this.name);
+&#125;;
+
+const person = myNew(Person, &#39;张三&#39;, 18);
+person.sayHi();  // &#39;Hi, I am 张三&#39;
+console.log(person instanceof Person);  // true
+</code></pre>
+<h3 id="6-4-实现-Object-create"><a href="#6-4-实现-Object-create" class="headerlink" title="6.4 实现 Object.create()"></a>6.4 实现 Object.create()</h3><pre><code class="javascript">function myCreate(proto) &#123;
+  if (proto === null || typeof proto !== &#39;object&#39;) &#123;
+    throw new TypeError(&#39;Object prototype may only be an Object or null&#39;);
+  &#125;
+  
+  function F() &#123;&#125;  // 创建临时构造函数
+  F.prototype = proto;  // 原型指向传入的对象
+  return new F();  // 返回新实例
+&#125;
+
+// 测试
+const proto = &#123;
+  sayHi: function() &#123;
+    console.log(&#39;Hi&#39;);
+  &#125;
+&#125;;
+
+const obj = myCreate(proto);
+obj.sayHi();  // &#39;Hi&#39;
+console.log(Object.getPrototypeOf(obj) === proto);  // true
+</code></pre>
+<h2 id="七、常见面试题"><a href="#七、常见面试题" class="headerlink" title="七、常见面试题"></a>七、常见面试题</h2><h3 id="7-1-题目一：原型链输出"><a href="#7-1-题目一：原型链输出" class="headerlink" title="7.1 题目一：原型链输出"></a>7.1 题目一：原型链输出</h3><pre><code class="javascript">function Foo() &#123;
+  this.a = 1;
+&#125;
+
+Foo.prototype.a = 2;
+Foo.prototype.b = 3;
+
+const foo = new Foo();
+
+console.log(foo.a);  // 1（实例属性优先）
+console.log(foo.b);  // 3（原型属性）
+console.log(foo.c);  // undefined（不存在）
+
+console.log(Foo.a);  // undefined（Foo 是函数，没有 a 实例属性）
+console.log(Foo.b);  // undefined
+console.log(Foo.prototype.a);  // 2
+console.log(Foo.prototype.b);  // 3
+</code></pre>
+<h3 id="7-2-题目二：构造函数与原型"><a href="#7-2-题目二：构造函数与原型" class="headerlink" title="7.2 题目二：构造函数与原型"></a>7.2 题目二：构造函数与原型</h3><pre><code class="javascript">function Person(name) &#123;
+  this.name = name;
+&#125;
+
+Person.prototype.name = &#39;原型name&#39;;
+
+const person = new Person(&#39;实例name&#39;);
+
+console.log(person.name);  // &#39;实例name&#39;
+console.log(Person.prototype.name);  // &#39;原型name&#39;
+console.log(person.__proto__.name);  // &#39;原型name&#39;
+
+delete person.name;
+console.log(person.name);  // &#39;原型name&#39;
+
+delete Person.prototype.name;
+console.log(person.name);  // undefined
+</code></pre>
+<h3 id="7-3-题目三：原型链终点"><a href="#7-3-题目三：原型链终点" class="headerlink" title="7.3 题目三：原型链终点"></a>7.3 题目三：原型链终点</h3><pre><code class="javascript">console.log(Object.prototype.__proto__);  // null
+
+function Fn() &#123;&#125;
+console.log(Fn.prototype.__proto__ === Object.prototype);  // true
+console.log(Fn.__proto__ === Function.prototype);  // true
+console.log(Function.prototype.__proto__ === Object.prototype);  // true
+console.log(Object.__proto__ === Function.prototype);  // true
+console.log(Function.__proto__ === Function.prototype);  // true
+</code></pre>
+<h3 id="7-4-题目四：修改原型的影响"><a href="#7-4-题目四：修改原型的影响" class="headerlink" title="7.4 题目四：修改原型的影响"></a>7.4 题目四：修改原型的影响</h3><pre><code class="javascript">function A() &#123;&#125;
+function B() &#123;&#125;
+
+A.prototype = new B();
+
+const a = new A();
+
+console.log(a instanceof A);  // true
+console.log(a instanceof B);  // true
+
+A.prototype = &#123;&#125;;
+console.log(a instanceof A);  // false（原型已改变）
+console.log(a instanceof B);  // true（旧原型仍是 B 实例）
+
+const a2 = new A();
+console.log(a2 instanceof A);  // true
+console.log(a2 instanceof B);  // false
+</code></pre>
+<h2 id="八、总结"><a href="#八、总结" class="headerlink" title="八、总结"></a>八、总结</h2><h3 id="8-1-核心概念"><a href="#8-1-核心概念" class="headerlink" title="8.1 核心概念"></a>8.1 核心概念</h3><table>
+<thead>
+<tr>
+<th>概念</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>prototype</td>
+<td>函数特有的属性，指向原型对象</td>
+</tr>
+<tr>
+<td>__proto__</td>
+<td>对象特有的属性，指向其原型</td>
+</tr>
+<tr>
+<td>constructor</td>
+<td>原型对象的属性，指向构造函数</td>
+</tr>
+<tr>
+<td>原型链</td>
+<td>由 __proto__ 连接形成的链式结构</td>
+</tr>
+</tbody></table>
+<h3 id="8-2-原型链结构"><a href="#8-2-原型链结构" class="headerlink" title="8.2 原型链结构"></a>8.2 原型链结构</h3><pre><code>实例
+  ↓ __proto__
+构造函数.prototype
+  ↓ __proto__
+Object.prototype
+  ↓ __proto__
+null
+</code></pre>
+<h3 id="8-3-继承实现要点"><a href="#8-3-继承实现要点" class="headerlink" title="8.3 继承实现要点"></a>8.3 继承实现要点</h3><ol>
+<li><strong>原型链继承</strong>：<code>Child.prototype = new Parent()</code></li>
+<li><strong>借用构造函数</strong>：<code>Parent.call(this)</code></li>
+<li><strong>寄生组合式</strong>：<code>Child.prototype = Object.create(Parent.prototype)</code></li>
+<li><strong>ES6 class</strong>：<code>extends</code> + <code>super</code></li>
+</ol>
+<h3 id="8-4-最佳实践"><a href="#8-4-最佳实践" class="headerlink" title="8.4 最佳实践"></a>8.4 最佳实践</h3><ol>
+<li><strong>优先使用 ES6 class</strong>：语法简洁、语义清晰</li>
+<li>**避免直接使用 __proto__**：使用 <code>Object.getPrototypeOf()</code> 和 <code>Object.create()</code></li>
+<li><strong>注意 constructor 指向</strong>：重写 prototype 后需要修复</li>
+<li><strong>理解原型链终点</strong>：<code>Object.prototype.__proto__ === null</code></li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/JavaScript/">JavaScript</a><a class="post-meta__tags" href="/tags/%E5%8E%9F%E5%9E%8B/">原型</a><a class="post-meta__tags" href="/tags/%E5%8E%9F%E5%9E%8B%E9%93%BE/">原型链</a><a class="post-meta__tags" href="/tags/%E7%BB%A7%E6%89%BF/">继承</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/nuxt-study/" title="nuxt"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">nuxt</div></div></a></div><div class="next-post pull-right"><a href="/posts/ssr-nuxt-from-scratch/" title="从零搭建SSR及Nxut配置和踩坑记录"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">从零搭建SSR及Nxut配置和踩坑记录</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">74</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">129</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E5%8E%9F%E5%9E%8B%E5%AF%B9%E8%B1%A1"><span class="toc-number">1.</span> <span class="toc-text">一、原型对象</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%8E%9F%E5%9E%8B%EF%BC%9F"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 什么是原型？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-prototype-%E4%B8%8E-proto"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 prototype 与 __proto__</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-3-constructor-%E5%B1%9E%E6%80%A7"><span class="toc-number">1.3.</span> <span class="toc-text">1.3 constructor 属性</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%8E%9F%E5%9E%8B%E9%93%BE"><span class="toc-number">2.</span> <span class="toc-text">二、原型链</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%BB%80%E4%B9%88%E6%98%AF%E5%8E%9F%E5%9E%8B%E9%93%BE%EF%BC%9F"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 什么是原型链？</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%8E%9F%E5%9E%8B%E9%93%BE%E6%9F%A5%E6%89%BE%E8%A7%84%E5%88%99"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 原型链查找规则</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-%E5%AE%8C%E6%95%B4%E7%9A%84%E5%8E%9F%E5%9E%8B%E9%93%BE%E7%BB%93%E6%9E%84"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 完整的原型链结构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81%E8%8E%B7%E5%8F%96%E5%8E%9F%E5%9E%8B%E7%9A%84%E6%96%B9%E6%B3%95"><span class="toc-number">3.</span> <span class="toc-text">三、获取原型的方法</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E4%B8%89%E7%A7%8D%E8%8E%B7%E5%8F%96%E5%8E%9F%E5%9E%8B%E7%9A%84%E6%96%B9%E5%BC%8F"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 三种获取原型的方式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E8%AE%BE%E7%BD%AE%E5%8E%9F%E5%9E%8B%E7%9A%84%E6%96%B9%E6%B3%95"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 设置原型的方法</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E5%88%A4%E6%96%AD%E5%8E%9F%E5%9E%8B%E5%85%B3%E7%B3%BB"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 判断原型关系</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E7%BB%A7%E6%89%BF%E7%9A%84%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="toc-number">4.</span> <span class="toc-text">四、继承的实现方式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%8E%9F%E5%9E%8B%E9%93%BE%E7%BB%A7%E6%89%BF"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 原型链继承</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%80%9F%E7%94%A8%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E7%BB%A7%E6%89%BF"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 借用构造函数继承</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E7%BB%84%E5%90%88%E7%BB%A7%E6%89%BF"><span class="toc-number">4.3.</span> <span class="toc-text">4.3 组合继承</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E5%AF%84%E7%94%9F%E7%BB%84%E5%90%88%E5%BC%8F%E7%BB%A7%E6%89%BF%EF%BC%88%E6%9C%80%E4%BC%98%E8%A7%A3%EF%BC%89"><span class="toc-number">4.4.</span> <span class="toc-text">4.4 寄生组合式继承（最优解）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-ES6-class-%E7%BB%A7%E6%89%BF"><span class="toc-number">4.5.</span> <span class="toc-text">4.5 ES6 class 继承</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81%E7%BB%A7%E6%89%BF%E6%96%B9%E5%BC%8F%E5%AF%B9%E6%AF%94"><span class="toc-number">5.</span> <span class="toc-text">五、继承方式对比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%AE%9E%E6%88%98%E5%BA%94%E7%94%A8"><span class="toc-number">6.</span> <span class="toc-text">六、实战应用</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E5%88%A4%E6%96%AD%E6%95%B0%E7%BB%84%E7%B1%BB%E5%9E%8B"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 判断数组类型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E5%AE%9E%E7%8E%B0-instanceof"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 实现 instanceof</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-%E5%AE%9E%E7%8E%B0-new-%E6%93%8D%E4%BD%9C%E7%AC%A6"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 实现 new 操作符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E5%AE%9E%E7%8E%B0-Object-create"><span class="toc-number">6.4.</span> <span class="toc-text">6.4 实现 Object.create()</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E5%B8%B8%E8%A7%81%E9%9D%A2%E8%AF%95%E9%A2%98"><span class="toc-number">7.</span> <span class="toc-text">七、常见面试题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E9%A2%98%E7%9B%AE%E4%B8%80%EF%BC%9A%E5%8E%9F%E5%9E%8B%E9%93%BE%E8%BE%93%E5%87%BA"><span class="toc-number">7.1.</span> <span class="toc-text">7.1 题目一：原型链输出</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E9%A2%98%E7%9B%AE%E4%BA%8C%EF%BC%9A%E6%9E%84%E9%80%A0%E5%87%BD%E6%95%B0%E4%B8%8E%E5%8E%9F%E5%9E%8B"><span class="toc-number">7.2.</span> <span class="toc-text">7.2 题目二：构造函数与原型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E9%A2%98%E7%9B%AE%E4%B8%89%EF%BC%9A%E5%8E%9F%E5%9E%8B%E9%93%BE%E7%BB%88%E7%82%B9"><span class="toc-number">7.3.</span> <span class="toc-text">7.3 题目三：原型链终点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E9%A2%98%E7%9B%AE%E5%9B%9B%EF%BC%9A%E4%BF%AE%E6%94%B9%E5%8E%9F%E5%9E%8B%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">7.4.</span> <span class="toc-text">7.4 题目四：修改原型的影响</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%80%BB%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">八、总结</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5"><span class="toc-number">8.1.</span> <span class="toc-text">8.1 核心概念</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%8E%9F%E5%9E%8B%E9%93%BE%E7%BB%93%E6%9E%84"><span class="toc-number">8.2.</span> <span class="toc-text">8.2 原型链结构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E7%BB%A7%E6%89%BF%E5%AE%9E%E7%8E%B0%E8%A6%81%E7%82%B9"><span class="toc-number">8.3.</span> <span class="toc-text">8.3 继承实现要点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">8.4.</span> <span class="toc-text">8.4 最佳实践</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
