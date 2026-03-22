@@ -1,0 +1,911 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 2;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>HTTP状态码详解：常见错误码及其含义 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言HTTP 状态码是服务器对客户端请求的响应状态标识，理解这些状态码对于 Web 开发、调试和运维都至关重要。本文将系统性地介绍 HTTP 状态码的分类和常见状态码的含义、原因及解决方案。 一、状态码分类HTTP 状态码由三位数字组成，第一位数字表示响应类型：    类别 状态码范围 含义    1xx 100-199 信息性响应，表示请求已接收，继续处理   2xx 200-299 成功，请求">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP状态码详解：常见错误码及其含义">
+<meta property="og:url" content="http://example.com/posts/http-status-codes/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言HTTP 状态码是服务器对客户端请求的响应状态标识，理解这些状态码对于 Web 开发、调试和运维都至关重要。本文将系统性地介绍 HTTP 状态码的分类和常见状态码的含义、原因及解决方案。 一、状态码分类HTTP 状态码由三位数字组成，第一位数字表示响应类型：    类别 状态码范围 含义    1xx 100-199 信息性响应，表示请求已接收，继续处理   2xx 200-299 成功，请求">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2025-05-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-03-22T01:13:39.072Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="HTTP">
+<meta property="article:tag" content="状态码">
+<meta property="article:tag" content="网络协议">
+<meta property="article:tag" content="Web开发">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/http-status-codes/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'HTTP状态码详解：常见错误码及其含义',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 09:13:39'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">160</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">HTTP状态码详解：常见错误码及其含义</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-05-11T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-03-22T01:13:39.072Z" title="更新于 2026 09:13:39">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cs-fundamentals/">基础知识</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>14分钟</span></span></div></div></div><article class="post-content" id="article-container"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>HTTP 状态码是服务器对客户端请求的响应状态标识，理解这些状态码对于 Web 开发、调试和运维都至关重要。本文将系统性地介绍 HTTP 状态码的分类和常见状态码的含义、原因及解决方案。</p>
+<h2 id="一、状态码分类"><a href="#一、状态码分类" class="headerlink" title="一、状态码分类"></a>一、状态码分类</h2><p>HTTP 状态码由三位数字组成，第一位数字表示响应类型：</p>
+<table>
+<thead>
+<tr>
+<th>类别</th>
+<th>状态码范围</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1xx</td>
+<td>100-199</td>
+<td>信息性响应，表示请求已接收，继续处理</td>
+</tr>
+<tr>
+<td>2xx</td>
+<td>200-299</td>
+<td>成功，请求已成功接收、理解、接受</td>
+</tr>
+<tr>
+<td>3xx</td>
+<td>300-399</td>
+<td>重定向，需要进一步操作以完成请求</td>
+</tr>
+<tr>
+<td>4xx</td>
+<td>400-499</td>
+<td>客户端错误，请求包含语法错误或无法完成</td>
+</tr>
+<tr>
+<td>5xx</td>
+<td>500-599</td>
+<td>服务器错误，服务器无法完成有效请求</td>
+</tr>
+</tbody></table>
+<pre><code>状态码分类记忆：
+- 1xx: 信息（Informational）- &quot;请稍等&quot;
+- 2xx: 成功（Success）- &quot;成功了&quot;
+- 3xx: 重定向（Redirection）- &quot;去别的地方&quot;
+- 4xx: 客户端错误（Client Error）- &quot;你错了&quot;
+- 5xx: 服务器错误（Server Error）- &quot;我错了&quot;
+</code></pre>
+<hr>
+<h2 id="二、1xx-信息性响应"><a href="#二、1xx-信息性响应" class="headerlink" title="二、1xx 信息性响应"></a>二、1xx 信息性响应</h2><h3 id="2-1-100-Continue"><a href="#2-1-100-Continue" class="headerlink" title="2.1 100 Continue"></a>2.1 100 Continue</h3><pre><code class="javascript">// 含义：客户端应继续发送请求体
+// 场景：客户端发送 Expect: 100-continue 头时
+
+// 客户端请求
+POST /upload HTTP/1.1
+Host: example.com
+Expect: 100-continue
+Content-Length: 10000
+
+// 服务端响应（允许继续发送）
+HTTP/1.1 100 Continue
+
+// 客户端继续发送请求体
+// 服务端最终响应
+HTTP/1.1 200 OK
+</code></pre>
+<h3 id="2-2-101-Switching-Protocols"><a href="#2-2-101-Switching-Protocols" class="headerlink" title="2.2 101 Switching Protocols"></a>2.2 101 Switching Protocols</h3><pre><code class="javascript">// 含义：服务器同意切换协议
+// 场景：WebSocket 连接建立
+
+// 客户端请求
+GET /ws HTTP/1.1
+Host: example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+
+// 服务端响应
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+</code></pre>
+<hr>
+<h2 id="三、2xx-成功响应"><a href="#三、2xx-成功响应" class="headerlink" title="三、2xx 成功响应"></a>三、2xx 成功响应</h2><h3 id="3-1-200-OK"><a href="#3-1-200-OK" class="headerlink" title="3.1 200 OK"></a>3.1 200 OK</h3><pre><code class="javascript">// 含义：请求成功
+// 场景：最常见的成功响应
+
+// GET 请求：返回请求的资源
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+&#123;
+  &quot;id&quot;: 1,
+  &quot;name&quot;: &quot;张三&quot;
+&#125;
+
+// POST 请求：返回创建结果
+HTTP/1.1 200 OK
+
+&#123;
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;创建成功&quot;
+&#125;
+</code></pre>
+<h3 id="3-2-201-Created"><a href="#3-2-201-Created" class="headerlink" title="3.2 201 Created"></a>3.2 201 Created</h3><pre><code class="javascript">// 含义：创建成功
+// 场景：POST 请求创建新资源
+
+HTTP/1.1 201 Created
+Location: /users/123
+Content-Type: application/json
+
+&#123;
+  &quot;id&quot;: 123,
+  &quot;name&quot;: &quot;张三&quot;
+&#125;
+
+// 最佳实践：创建资源后返回 201 而非 200
+</code></pre>
+<h3 id="3-3-204-No-Content"><a href="#3-3-204-No-Content" class="headerlink" title="3.3 204 No Content"></a>3.3 204 No Content</h3><pre><code class="javascript">// 含义：成功但无返回内容
+// 场景：DELETE 请求、PUT 更新
+
+// 删除资源
+DELETE /users/123
+HTTP/1.1 204 No Content
+
+// 更新资源
+PUT /users/123
+&#123;
+  &quot;name&quot;: &quot;李四&quot;
+&#125;
+HTTP/1.1 204 No Content
+
+// 注意：204 响应不能有消息体
+</code></pre>
+<h3 id="3-4-206-Partial-Content"><a href="#3-4-206-Partial-Content" class="headerlink" title="3.4 206 Partial Content"></a>3.4 206 Partial Content</h3><pre><code class="javascript">// 含义：部分内容
+// 场景：断点续传、分片下载
+
+// 客户端请求
+GET /video.mp4 HTTP/1.1
+Range: bytes=0-1023
+
+// 服务端响应
+HTTP/1.1 206 Partial Content
+Content-Range: bytes 0-1023/10240
+Content-Length: 1024
+Content-Type: video/mp4
+
+// 二进制数据...
+</code></pre>
+<hr>
+<h2 id="四、3xx-重定向"><a href="#四、3xx-重定向" class="headerlink" title="四、3xx 重定向"></a>四、3xx 重定向</h2><h3 id="4-1-301-Moved-Permanently"><a href="#4-1-301-Moved-Permanently" class="headerlink" title="4.1 301 Moved Permanently"></a>4.1 301 Moved Permanently</h3><pre><code class="javascript">// 含义：永久重定向
+// 场景：网站迁移、URL 结构变更
+
+HTTP/1.1 301 Moved Permanently
+Location: https://new-domain.com/page
+
+// 特点：
+// - 浏览器会缓存新的 URL
+// - 搜索引擎会将权重转移到新 URL
+// - 后续请求直接访问新地址
+
+// 应用示例：HTTP 转 HTTPS
+app.use((req, res, next) =&gt; &#123;
+  if (req.protocol === &#39;http&#39;) &#123;
+    return res.redirect(301, `https://$&#123;req.headers.host&#125;$&#123;req.url&#125;`);
+  &#125;
+  next();
+&#125;);
+</code></pre>
+<h3 id="4-2-302-Found-307-Temporary-Redirect"><a href="#4-2-302-Found-307-Temporary-Redirect" class="headerlink" title="4.2 302 Found &#x2F; 307 Temporary Redirect"></a>4.2 302 Found &#x2F; 307 Temporary Redirect</h3><pre><code class="javascript">// 302 Found: 临时重定向（可能改变方法）
+// 307 Temporary Redirect: 临时重定向（保持方法）
+
+// 场景：临时维护页面、A/B 测试
+
+// 302 示例
+HTTP/1.1 302 Found
+Location: /maintenance
+
+// 307 示例（保持 POST 方法）
+// POST /submit → 307 → POST /new-submit
+HTTP/1.1 307 Temporary Redirect
+Location: /new-submit
+
+// 区别：
+// - 302: 客户端可能将 POST 改为 GET
+// - 307: 保证请求方法不变
+</code></pre>
+<h3 id="4-3-304-Not-Modified"><a href="#4-3-304-Not-Modified" class="headerlink" title="4.3 304 Not Modified"></a>4.3 304 Not Modified</h3><pre><code class="javascript">// 含义：资源未修改，使用缓存
+// 场景：协商缓存
+
+// 客户端请求（带缓存验证）
+GET /style.css HTTP/1.1
+If-Modified-Since: Wed, 21 Oct 2015 07:28:00 GMT
+If-None-Match: &quot;abc123&quot;
+
+// 服务端响应（资源未变）
+HTTP/1.1 304 Not Modified
+ETag: &quot;abc123&quot;
+Cache-Control: max-age=3600
+
+// 304 响应没有消息体，节省带宽
+</code></pre>
+<hr>
+<h2 id="五、4xx-客户端错误"><a href="#五、4xx-客户端错误" class="headerlink" title="五、4xx 客户端错误"></a>五、4xx 客户端错误</h2><h3 id="5-1-400-Bad-Request"><a href="#5-1-400-Bad-Request" class="headerlink" title="5.1 400 Bad Request"></a>5.1 400 Bad Request</h3><pre><code class="javascript">// 含义：请求语法错误
+// 原因：
+// - 参数格式错误
+// - JSON 解析失败
+// - 缺少必填字段
+
+// 示例响应
+HTTP/1.1 400 Bad Request
+Content-Type: application/json
+
+&#123;
+  &quot;error&quot;: &quot;Bad Request&quot;,
+  &quot;message&quot;: &quot;Invalid JSON syntax&quot;
+&#125;
+
+// 服务端处理
+app.post(&#39;/api/users&#39;, (req, res) =&gt; &#123;
+  const &#123; name, email &#125; = req.body;
+  
+  if (!name || !email) &#123;
+    return res.status(400).json(&#123;
+      error: &#39;Bad Request&#39;,
+      message: &#39;name and email are required&#39;
+    &#125;);
+  &#125;
+  
+  // 处理逻辑
+&#125;);
+</code></pre>
+<h3 id="5-2-401-Unauthorized"><a href="#5-2-401-Unauthorized" class="headerlink" title="5.2 401 Unauthorized"></a>5.2 401 Unauthorized</h3><pre><code class="javascript">// 含义：未认证（需要登录）
+// 场景：访问需要认证的资源
+
+HTTP/1.1 401 Unauthorized
+WWW-Authenticate: Bearer realm=&quot;api&quot;
+
+&#123;
+  &quot;error&quot;: &quot;Unauthorized&quot;,
+  &quot;message&quot;: &quot;Authentication required&quot;
+&#125;
+
+// 客户端处理
+fetch(&#39;/api/profile&#39;, &#123;
+  headers: &#123;
+    &#39;Authorization&#39;: &#39;Bearer &#39; + token
+  &#125;
+&#125;)
+.then(response =&gt; &#123;
+  if (response.status === 401) &#123;
+    // 跳转登录页
+    window.location.href = &#39;/login&#39;;
+  &#125;
+&#125;);
+</code></pre>
+<h3 id="5-3-403-Forbidden"><a href="#5-3-403-Forbidden" class="headerlink" title="5.3 403 Forbidden"></a>5.3 403 Forbidden</h3><pre><code class="javascript">// 含义：已认证但无权限
+// 场景：权限不足
+
+HTTP/1.1 403 Forbidden
+
+&#123;
+  &quot;error&quot;: &quot;Forbidden&quot;,
+  &quot;message&quot;: &quot;You don&#39;t have permission to access this resource&quot;
+&#125;
+
+// 401 vs 403
+// 401: 不知道你是谁（需要登录）
+// 403: 知道你是谁，但你不能访问（权限不足）
+
+// 示例：用户访问管理员资源
+app.delete(&#39;/admin/users/:id&#39;, auth, (req, res) =&gt; &#123;
+  if (req.user.role !== &#39;admin&#39;) &#123;
+    return res.status(403).json(&#123;
+      error: &#39;Forbidden&#39;,
+      message: &#39;Admin access required&#39;
+    &#125;);
+  &#125;
+  
+  // 删除用户
+&#125;);
+</code></pre>
+<h3 id="5-4-404-Not-Found"><a href="#5-4-404-Not-Found" class="headerlink" title="5.4 404 Not Found"></a>5.4 404 Not Found</h3><pre><code class="javascript">// 含义：资源不存在
+// 场景：URL 错误、资源已删除
+
+HTTP/1.1 404 Not Found
+
+&#123;
+  &quot;error&quot;: &quot;Not Found&quot;,
+  &quot;message&quot;: &quot;The requested resource was not found&quot;
+&#125;
+
+// 常见原因：
+// 1. URL 拼写错误
+// 2. 资源已被删除
+// 3. 路由配置错误
+
+// SPA 应用处理（Vue Router 示例）
+const router = createRouter(&#123;
+  routes: [
+    // ...其他路由
+    &#123;
+      path: &#39;/:pathMatch(.*)*&#39;,
+      component: NotFound
+    &#125;
+  ]
+&#125;);
+</code></pre>
+<h3 id="5-5-405-Method-Not-Allowed"><a href="#5-5-405-Method-Not-Allowed" class="headerlink" title="5.5 405 Method Not Allowed"></a>5.5 405 Method Not Allowed</h3><pre><code class="javascript">// 含义：请求方法不允许
+// 场景：使用错误的 HTTP 方法
+
+// 客户端请求
+POST /users/123  // 用户详情页只支持 GET
+
+// 服务端响应
+HTTP/1.1 405 Method Not Allowed
+Allow: GET, PUT, DELETE
+
+&#123;
+  &quot;error&quot;: &quot;Method Not Allowed&quot;,
+  &quot;message&quot;: &quot;POST method is not supported for this resource&quot;
+&#125;
+</code></pre>
+<h3 id="5-6-408-Request-Timeout"><a href="#5-6-408-Request-Timeout" class="headerlink" title="5.6 408 Request Timeout"></a>5.6 408 Request Timeout</h3><pre><code class="javascript">// 含义：请求超时
+// 场景：服务器等待请求体超时
+
+HTTP/1.1 408 Request Timeout
+
+&#123;
+  &quot;error&quot;: &quot;Request Timeout&quot;,
+  &quot;message&quot;: &quot;Server timed out waiting for the request&quot;
+&#125;
+
+// 常见原因：
+// - 网络问题导致请求发送缓慢
+// - 客户端发送大量数据但网络带宽不足
+</code></pre>
+<h3 id="5-7-409-Conflict"><a href="#5-7-409-Conflict" class="headerlink" title="5.7 409 Conflict"></a>5.7 409 Conflict</h3><pre><code class="javascript">// 含义：请求冲突
+// 场景：并发修改、重复创建
+
+HTTP/1.1 409 Conflict
+
+&#123;
+  &quot;error&quot;: &quot;Conflict&quot;,
+  &quot;message&quot;: &quot;Email already exists&quot;
+&#125;
+
+// 示例：并发更新检测（乐观锁）
+app.put(&#39;/articles/:id&#39;, (req, res) =&gt; &#123;
+  const &#123; version &#125; = req.body;
+  const article = getArticle(req.params.id);
+  
+  if (article.version !== version) &#123;
+    return res.status(409).json(&#123;
+      error: &#39;Conflict&#39;,
+      message: &#39;Article has been modified by another user&#39;
+    &#125;);
+  &#125;
+  
+  // 更新文章
+&#125;);
+</code></pre>
+<h3 id="5-8-410-Gone"><a href="#5-8-410-Gone" class="headerlink" title="5.8 410 Gone"></a>5.8 410 Gone</h3><pre><code class="javascript">// 含义：资源已永久删除
+// 场景：资源曾经存在但已删除
+
+HTTP/1.1 410 Gone
+
+&#123;
+  &quot;error&quot;: &quot;Gone&quot;,
+  &quot;message&quot;: &quot;This resource is no longer available&quot;
+&#125;
+
+// 404 vs 410
+// 404: 资源不存在（可能从未存在）
+// 410: 资源曾经存在但已永久删除
+</code></pre>
+<h3 id="5-9-413-Payload-Too-Large"><a href="#5-9-413-Payload-Too-Large" class="headerlink" title="5.9 413 Payload Too Large"></a>5.9 413 Payload Too Large</h3><pre><code class="javascript">// 含义：请求体过大
+// 场景：上传文件超过限制
+
+HTTP/1.1 413 Payload Too Large
+
+&#123;
+  &quot;error&quot;: &quot;Payload Too Large&quot;,
+  &quot;message&quot;: &quot;Maximum file size is 10MB&quot;
+&#125;
+
+// Node.js 示例
+app.post(&#39;/upload&#39;, (req, res) =&gt; &#123;
+  const contentLength = parseInt(req.headers[&#39;content-length&#39;]);
+  const MAX_SIZE = 10 * 1024 * 1024; // 10MB
+  
+  if (contentLength &gt; MAX_SIZE) &#123;
+    return res.status(413).json(&#123;
+      error: &#39;Payload Too Large&#39;,
+      message: `Maximum file size is $&#123;MAX_SIZE / 1024 / 1024&#125;MB`
+    &#125;);
+  &#125;
+  
+  // 处理上传
+&#125;);
+</code></pre>
+<h3 id="5-10-429-Too-Many-Requests"><a href="#5-10-429-Too-Many-Requests" class="headerlink" title="5.10 429 Too Many Requests"></a>5.10 429 Too Many Requests</h3><pre><code class="javascript">// 含义：请求过于频繁
+// 场景：API 限流
+
+HTTP/1.1 429 Too Many Requests
+Retry-After: 60
+
+&#123;
+  &quot;error&quot;: &quot;Too Many Requests&quot;,
+  &quot;message&quot;: &quot;Rate limit exceeded. Please try again later.&quot;
+&#125;
+
+// 限流实现示例
+const rateLimit = require(&#39;express-rate-limit&#39;);
+
+const limiter = rateLimit(&#123;
+  windowMs: 15 * 60 * 1000, // 15 分钟
+  max: 100, // 每个 IP 最多 100 次请求
+  message: &#123;
+    error: &#39;Too Many Requests&#39;,
+    message: &#39;Too many requests from this IP, please try again later&#39;
+  &#125;
+&#125;);
+
+app.use(&#39;/api/&#39;, limiter);
+</code></pre>
+<hr>
+<h2 id="六、5xx-服务器错误"><a href="#六、5xx-服务器错误" class="headerlink" title="六、5xx 服务器错误"></a>六、5xx 服务器错误</h2><h3 id="6-1-500-Internal-Server-Error"><a href="#6-1-500-Internal-Server-Error" class="headerlink" title="6.1 500 Internal Server Error"></a>6.1 500 Internal Server Error</h3><pre><code class="javascript">// 含义：服务器内部错误
+// 场景：未捕获的异常
+
+HTTP/1.1 500 Internal Server Error
+
+&#123;
+  &quot;error&quot;: &quot;Internal Server Error&quot;,
+  &quot;message&quot;: &quot;An unexpected error occurred&quot;
+&#125;
+
+// 常见原因：
+// - 代码异常未捕获
+// - 数据库连接失败
+// - 配置错误
+
+// 全局错误处理
+app.use((err, req, res, next) =&gt; &#123;
+  console.error(err.stack);
+  
+  res.status(500).json(&#123;
+    error: &#39;Internal Server Error&#39;,
+    message: process.env.NODE_ENV === &#39;production&#39; 
+      ? &#39;An unexpected error occurred&#39;
+      : err.message
+  &#125;);
+&#125;);
+</code></pre>
+<h3 id="6-2-502-Bad-Gateway"><a href="#6-2-502-Bad-Gateway" class="headerlink" title="6.2 502 Bad Gateway"></a>6.2 502 Bad Gateway</h3><pre><code class="javascript">// 含义：网关错误
+// 场景：反向代理无法从上游服务器获取响应
+
+HTTP/1.1 502 Bad Gateway
+
+&#123;
+  &quot;error&quot;: &quot;Bad Gateway&quot;,
+  &quot;message&quot;: &quot;Received an invalid response from the upstream server&quot;
+&#125;
+
+// 常见原因：
+// - Nginx 无法连接到 Node.js 服务
+// - 上游服务未启动
+// - 上游服务响应超时
+
+// Nginx 配置排查
+upstream backend &#123;
+  server 127.0.0.1:3000;
+  keepalive 64;
+&#125;
+
+server &#123;
+  location /api &#123;
+    proxy_pass http://backend;
+    proxy_connect_timeout 60s;
+    proxy_read_timeout 60s;
+  &#125;
+&#125;
+</code></pre>
+<h3 id="6-3-503-Service-Unavailable"><a href="#6-3-503-Service-Unavailable" class="headerlink" title="6.3 503 Service Unavailable"></a>6.3 503 Service Unavailable</h3><pre><code class="javascript">// 含义：服务不可用
+// 场景：服务器过载、维护中
+
+HTTP/1.1 503 Service Unavailable
+Retry-After: 3600
+
+&#123;
+  &quot;error&quot;: &quot;Service Unavailable&quot;,
+  &quot;message&quot;: &quot;Server is temporarily unavailable due to maintenance&quot;
+&#125;
+
+// 常见原因：
+// - 服务器维护
+// - 流量过大
+// - 资源耗尽
+
+// 维护模式示例
+app.use((req, res, next) =&gt; &#123;
+  if (process.env.MAINTENANCE_MODE === &#39;true&#39;) &#123;
+    return res.status(503).json(&#123;
+      error: &#39;Service Unavailable&#39;,
+      message: &#39;System is under maintenance. Please try again later.&#39;,
+      retryAfter: 3600
+    &#125;);
+  &#125;
+  next();
+&#125;);
+</code></pre>
+<h3 id="6-4-504-Gateway-Timeout"><a href="#6-4-504-Gateway-Timeout" class="headerlink" title="6.4 504 Gateway Timeout"></a>6.4 504 Gateway Timeout</h3><pre><code class="javascript">// 含义：网关超时
+// 场景：上游服务器响应超时
+
+HTTP/1.1 504 Gateway Timeout
+
+&#123;
+  &quot;error&quot;: &quot;Gateway Timeout&quot;,
+  &quot;message&quot;: &quot;The upstream server did not respond in time&quot;
+&#125;
+
+// 502 vs 504
+// 502: 上游服务器返回无效响应
+// 504: 上游服务器没有响应（超时）
+
+// Nginx 配置超时时间
+location /api &#123;
+  proxy_pass http://backend;
+  proxy_read_timeout 300s;  # 5 分钟
+  proxy_send_timeout 300s;
+&#125;
+</code></pre>
+<hr>
+<h2 id="七、状态码速查表"><a href="#七、状态码速查表" class="headerlink" title="七、状态码速查表"></a>七、状态码速查表</h2><h3 id="7-1-常用状态码"><a href="#7-1-常用状态码" class="headerlink" title="7.1 常用状态码"></a>7.1 常用状态码</h3><table>
+<thead>
+<tr>
+<th>状态码</th>
+<th>名称</th>
+<th>含义</th>
+<th>典型场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>200</td>
+<td>OK</td>
+<td>成功</td>
+<td>正常请求</td>
+</tr>
+<tr>
+<td>201</td>
+<td>Created</td>
+<td>创建成功</td>
+<td>POST 创建资源</td>
+</tr>
+<tr>
+<td>204</td>
+<td>No Content</td>
+<td>无内容</td>
+<td>DELETE&#x2F;PUT</td>
+</tr>
+<tr>
+<td>301</td>
+<td>Moved Permanently</td>
+<td>永久重定向</td>
+<td>域名迁移</td>
+</tr>
+<tr>
+<td>302</td>
+<td>Found</td>
+<td>临时重定向</td>
+<td>临时跳转</td>
+</tr>
+<tr>
+<td>304</td>
+<td>Not Modified</td>
+<td>未修改</td>
+<td>缓存命中</td>
+</tr>
+<tr>
+<td>400</td>
+<td>Bad Request</td>
+<td>请求错误</td>
+<td>参数错误</td>
+</tr>
+<tr>
+<td>401</td>
+<td>Unauthorized</td>
+<td>未认证</td>
+<td>需要登录</td>
+</tr>
+<tr>
+<td>403</td>
+<td>Forbidden</td>
+<td>禁止访问</td>
+<td>权限不足</td>
+</tr>
+<tr>
+<td>404</td>
+<td>Not Found</td>
+<td>未找到</td>
+<td>资源不存在</td>
+</tr>
+<tr>
+<td>405</td>
+<td>Method Not Allowed</td>
+<td>方法不允许</td>
+<td>HTTP 方法错误</td>
+</tr>
+<tr>
+<td>408</td>
+<td>Request Timeout</td>
+<td>请求超时</td>
+<td>发送超时</td>
+</tr>
+<tr>
+<td>409</td>
+<td>Conflict</td>
+<td>冲突</td>
+<td>并发修改</td>
+</tr>
+<tr>
+<td>410</td>
+<td>Gone</td>
+<td>已删除</td>
+<td>资源已移除</td>
+</tr>
+<tr>
+<td>413</td>
+<td>Payload Too Large</td>
+<td>内容过大</td>
+<td>文件超限</td>
+</tr>
+<tr>
+<td>429</td>
+<td>Too Many Requests</td>
+<td>请求过多</td>
+<td>限流</td>
+</tr>
+<tr>
+<td>500</td>
+<td>Internal Server Error</td>
+<td>服务器错误</td>
+<td>代码异常</td>
+</tr>
+<tr>
+<td>502</td>
+<td>Bad Gateway</td>
+<td>网关错误</td>
+<td>代理错误</td>
+</tr>
+<tr>
+<td>503</td>
+<td>Service Unavailable</td>
+<td>服务不可用</td>
+<td>维护&#x2F;过载</td>
+</tr>
+<tr>
+<td>504</td>
+<td>Gateway Timeout</td>
+<td>网关超时</td>
+<td>上游超时</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="八、最佳实践"><a href="#八、最佳实践" class="headerlink" title="八、最佳实践"></a>八、最佳实践</h2><h3 id="8-1-API-设计规范"><a href="#8-1-API-设计规范" class="headerlink" title="8.1 API 设计规范"></a>8.1 API 设计规范</h3><pre><code class="javascript">// RESTful API 状态码使用规范
+
+// 创建资源 → 201 Created
+app.post(&#39;/users&#39;, (req, res) =&gt; &#123;
+  const user = createUser(req.body);
+  res.status(201).json(user);
+&#125;);
+
+// 获取资源 → 200 OK
+app.get(&#39;/users/:id&#39;, (req, res) =&gt; &#123;
+  const user = getUser(req.params.id);
+  if (!user) &#123;
+    return res.status(404).json(&#123; error: &#39;User not found&#39; &#125;);
+  &#125;
+  res.json(user);
+&#125;);
+
+// 更新资源 → 200 OK 或 204 No Content
+app.put(&#39;/users/:id&#39;, (req, res) =&gt; &#123;
+  updateUser(req.params.id, req.body);
+  res.status(204).end();
+&#125;);
+
+// 删除资源 → 204 No Content
+app.delete(&#39;/users/:id&#39;, (req, res) =&gt; &#123;
+  deleteUser(req.params.id);
+  res.status(204).end();
+&#125;);
+</code></pre>
+<h3 id="8-2-错误响应格式"><a href="#8-2-错误响应格式" class="headerlink" title="8.2 错误响应格式"></a>8.2 错误响应格式</h3><pre><code class="javascript">// 统一的错误响应格式
+&#123;
+  &quot;error&quot;: &#123;
+    &quot;code&quot;: &quot;VALIDATION_ERROR&quot;,
+    &quot;message&quot;: &quot;Validation failed&quot;,
+    &quot;details&quot;: [
+      &#123;
+        &quot;field&quot;: &quot;email&quot;,
+        &quot;message&quot;: &quot;Invalid email format&quot;
+      &#125;,
+      &#123;
+        &quot;field&quot;: &quot;password&quot;,
+        &quot;message&quot;: &quot;Password must be at least 8 characters&quot;
+      &#125;
+    ],
+    &quot;requestId&quot;: &quot;req-abc123&quot;,
+    &quot;timestamp&quot;: &quot;2025-05-12T10:30:00Z&quot;
+  &#125;
+&#125;
+
+// 实现
+app.use((err, req, res, next) =&gt; &#123;
+  const statusCode = err.statusCode || 500;
+  
+  res.status(statusCode).json(&#123;
+    error: &#123;
+      code: err.code || &#39;INTERNAL_ERROR&#39;,
+      message: err.message,
+      details: err.details || [],
+      requestId: req.id,
+      timestamp: new Date().toISOString()
+    &#125;
+  &#125;);
+&#125;);
+</code></pre>
+<hr>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>理解 HTTP 状态码是 Web 开发的基础技能：</p>
+<ol>
+<li><strong>2xx</strong> 表示成功，不同场景选择不同状态码（200&#x2F;201&#x2F;204）</li>
+<li><strong>3xx</strong> 表示重定向，理解 301&#x2F;302&#x2F;304 的区别</li>
+<li><strong>4xx</strong> 表示客户端错误，正确区分 401&#x2F;403&#x2F;404</li>
+<li><strong>5xx</strong> 表示服务器错误，做好错误处理和日志记录</li>
+</ol>
+<p>选择正确的状态码可以让 API 更规范，帮助客户端更好地处理响应。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/HTTP/">HTTP</a><a class="post-meta__tags" href="/tags/%E7%8A%B6%E6%80%81%E7%A0%81/">状态码</a><a class="post-meta__tags" href="/tags/%E7%BD%91%E7%BB%9C%E5%8D%8F%E8%AE%AE/">网络协议</a><a class="post-meta__tags" href="/tags/Web%E5%BC%80%E5%8F%91/">Web开发</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/typescript-type-system-deep-dive/" title="TypeScript类型系统深度解析：any、unknown、never与协变逆变"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">TypeScript类型系统深度解析：any、unknown、never与协变逆变</div></div></a></div><div class="next-post pull-right"><a href="/posts/tcp-udp/" title="TCP与UDP协议详解：传输层的两大核心协议"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">TCP与UDP协议详解：传输层的两大核心协议</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">81</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">160</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E7%8A%B6%E6%80%81%E7%A0%81%E5%88%86%E7%B1%BB"><span class="toc-number">2.</span> <span class="toc-text">一、状态码分类</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%811xx-%E4%BF%A1%E6%81%AF%E6%80%A7%E5%93%8D%E5%BA%94"><span class="toc-number">3.</span> <span class="toc-text">二、1xx 信息性响应</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-100-Continue"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 100 Continue</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-101-Switching-Protocols"><span class="toc-number">3.2.</span> <span class="toc-text">2.2 101 Switching Protocols</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%812xx-%E6%88%90%E5%8A%9F%E5%93%8D%E5%BA%94"><span class="toc-number">4.</span> <span class="toc-text">三、2xx 成功响应</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-200-OK"><span class="toc-number">4.1.</span> <span class="toc-text">3.1 200 OK</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-201-Created"><span class="toc-number">4.2.</span> <span class="toc-text">3.2 201 Created</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-204-No-Content"><span class="toc-number">4.3.</span> <span class="toc-text">3.3 204 No Content</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-206-Partial-Content"><span class="toc-number">4.4.</span> <span class="toc-text">3.4 206 Partial Content</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%813xx-%E9%87%8D%E5%AE%9A%E5%90%91"><span class="toc-number">5.</span> <span class="toc-text">四、3xx 重定向</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-301-Moved-Permanently"><span class="toc-number">5.1.</span> <span class="toc-text">4.1 301 Moved Permanently</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-302-Found-307-Temporary-Redirect"><span class="toc-number">5.2.</span> <span class="toc-text">4.2 302 Found &#x2F; 307 Temporary Redirect</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-304-Not-Modified"><span class="toc-number">5.3.</span> <span class="toc-text">4.3 304 Not Modified</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%814xx-%E5%AE%A2%E6%88%B7%E7%AB%AF%E9%94%99%E8%AF%AF"><span class="toc-number">6.</span> <span class="toc-text">五、4xx 客户端错误</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-400-Bad-Request"><span class="toc-number">6.1.</span> <span class="toc-text">5.1 400 Bad Request</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-401-Unauthorized"><span class="toc-number">6.2.</span> <span class="toc-text">5.2 401 Unauthorized</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-403-Forbidden"><span class="toc-number">6.3.</span> <span class="toc-text">5.3 403 Forbidden</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-4-404-Not-Found"><span class="toc-number">6.4.</span> <span class="toc-text">5.4 404 Not Found</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-5-405-Method-Not-Allowed"><span class="toc-number">6.5.</span> <span class="toc-text">5.5 405 Method Not Allowed</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-6-408-Request-Timeout"><span class="toc-number">6.6.</span> <span class="toc-text">5.6 408 Request Timeout</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-7-409-Conflict"><span class="toc-number">6.7.</span> <span class="toc-text">5.7 409 Conflict</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-8-410-Gone"><span class="toc-number">6.8.</span> <span class="toc-text">5.8 410 Gone</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-9-413-Payload-Too-Large"><span class="toc-number">6.9.</span> <span class="toc-text">5.9 413 Payload Too Large</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-10-429-Too-Many-Requests"><span class="toc-number">6.10.</span> <span class="toc-text">5.10 429 Too Many Requests</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%815xx-%E6%9C%8D%E5%8A%A1%E5%99%A8%E9%94%99%E8%AF%AF"><span class="toc-number">7.</span> <span class="toc-text">六、5xx 服务器错误</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-500-Internal-Server-Error"><span class="toc-number">7.1.</span> <span class="toc-text">6.1 500 Internal Server Error</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-502-Bad-Gateway"><span class="toc-number">7.2.</span> <span class="toc-text">6.2 502 Bad Gateway</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-503-Service-Unavailable"><span class="toc-number">7.3.</span> <span class="toc-text">6.3 503 Service Unavailable</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-504-Gateway-Timeout"><span class="toc-number">7.4.</span> <span class="toc-text">6.4 504 Gateway Timeout</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E7%8A%B6%E6%80%81%E7%A0%81%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="toc-number">8.</span> <span class="toc-text">七、状态码速查表</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%B8%B8%E7%94%A8%E7%8A%B6%E6%80%81%E7%A0%81"><span class="toc-number">8.1.</span> <span class="toc-text">7.1 常用状态码</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">9.</span> <span class="toc-text">八、最佳实践</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-API-%E8%AE%BE%E8%AE%A1%E8%A7%84%E8%8C%83"><span class="toc-number">9.1.</span> <span class="toc-text">8.1 API 设计规范</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E9%94%99%E8%AF%AF%E5%93%8D%E5%BA%94%E6%A0%BC%E5%BC%8F"><span class="toc-number">9.2.</span> <span class="toc-text">8.2 错误响应格式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%BB%E7%BB%93"><span class="toc-number">10.</span> <span class="toc-text">总结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-OpenClaw%E4%B8%8E%E4%B8%AA%E4%BA%BAAI%E6%93%8D%E4%BD%9C%E7%B3%BB%E7%BB%9F/" title="OpenClaw：本地优先的个人AI操作系统">OpenClaw：本地优先的个人AI操作系统</a><time datetime="2026-03-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/10-Skills%E4%B8%8EMCP%E5%AF%B9%E6%AF%94%E8%A7%A3%E6%9E%90/" title="Skills与MCP对比解析：AI能力封装的两种路径">Skills与MCP对比解析：AI能力封装的两种路径</a><time datetime="2026-02-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/09-OpenSpec%E4%B8%8E%E8%A7%84%E8%8C%83%E9%A9%B1%E5%8A%A8AI%E7%BC%96%E7%A8%8B/" title="OpenSpec：规范驱动的AI编程">OpenSpec：规范驱动的AI编程</a><time datetime="2025-11-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-Vibe-Coding-AI%E7%BC%96%E7%A8%8B%E6%96%B0%E8%8C%83%E5%BC%8F/" title="Vibe Coding：AI编程新范式">Vibe Coding：AI编程新范式</a><time datetime="2025-10-09T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-AI-Agent%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%E4%B8%8E%E5%AE%9E%E8%B7%B5/" title="AI Agent架构设计与实践">AI Agent架构设计与实践</a><time datetime="2025-09-24T16:00:00.000Z" title="发表于 2025 00:00:00">2025</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
