@@ -1,0 +1,2696 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 92;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>ClaudeCode 源码架构分析 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="📦 Claude Code 源码全景分析项目概述这是 Claude Code —— Anthropic 的 AI 编程助手 CLI 工具的完整源码。它是一个基于终端的交互式 AI 编程工具，用户在终端中与 Claude 模型对话，Claude 可以读写文件、执行命令、搜索代码库，完成各种软件开发任务。 技术栈 语言: TypeScript (~1900 文件) 运行时: Bun (带 bun:b">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ClaudeCode 源码架构分析">
+<meta property="og:url" content="http://example.com/posts/14_Claude_Code_%E6%BA%90%E7%A0%81%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="📦 Claude Code 源码全景分析项目概述这是 Claude Code —— Anthropic 的 AI 编程助手 CLI 工具的完整源码。它是一个基于终端的交互式 AI 编程工具，用户在终端中与 Claude 模型对话，Claude 可以读写文件、执行命令、搜索代码库，完成各种软件开发任务。 技术栈 语言: TypeScript (~1900 文件) 运行时: Bun (带 bun:b">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-04-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-06T06:03:59.272Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="AI编程">
+<meta property="article:tag" content="软件工程">
+<meta property="article:tag" content="工程能力">
+<meta property="article:tag" content="Claude Code">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/14_Claude_Code_%E6%BA%90%E7%A0%81%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ClaudeCode 源码架构分析',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 14:03:59'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">168</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">ClaudeCode 源码架构分析</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-06T06:03:59.272Z" title="更新于 2026 14:03:59">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">19.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>71分钟</span></span></div></div></div><article class="post-content" id="article-container"><h1 id="📦-Claude-Code-源码全景分析"><a href="#📦-Claude-Code-源码全景分析" class="headerlink" title="📦 Claude Code 源码全景分析"></a>📦 Claude Code 源码全景分析</h1><h2 id="项目概述"><a href="#项目概述" class="headerlink" title="项目概述"></a>项目概述</h2><p>这是 <strong>Claude Code</strong> —— Anthropic 的 AI 编程助手 CLI 工具的完整源码。它是一个基于终端的交互式 AI 编程工具，用户在终端中与 Claude 模型对话，Claude 可以读写文件、执行命令、搜索代码库，完成各种软件开发任务。</p>
+<h2 id="技术栈"><a href="#技术栈" class="headerlink" title="技术栈"></a>技术栈</h2><ul>
+<li><strong>语言</strong>: TypeScript (~1900 文件)</li>
+<li><strong>运行时</strong>: Bun (带 <code>bun:bundle</code> 特性门控和死代码消除)</li>
+<li><strong>UI 框架</strong>: React + Ink (深度定制的终端 UI 框架)</li>
+<li><strong>AI 模型</strong>: Anthropic Claude API (流式调用 + 工具使用)</li>
+<li><strong>构建</strong>: Bun bundler (feature flag 条件编译)</li>
+<li><strong>包管理</strong>: npm&#x2F;pnpm</li>
+</ul>
+<hr>
+<h2 id="🔄-核心运行流程"><a href="#🔄-核心运行流程" class="headerlink" title="🔄 核心运行流程"></a>🔄 核心运行流程</h2><p>以 <strong>“用户输入一条消息并获取 Claude 响应”</strong> 为例，端到端流程如下：</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  graph TD
+    A[&quot;cli.tsx&lt;br&#x2F;&gt;CLI 入口&quot;] --&gt; B[&quot;init.ts&lt;br&#x2F;&gt;配置&#x2F;遥测&#x2F;代理初始化&quot;]
+    B --&gt; C[&quot;main.tsx&lt;br&#x2F;&gt;CLI 参数解析 + 会话配置&quot;]
+    C --&gt; D[&quot;setup.ts&lt;br&#x2F;&gt;运行时环境初始化&quot;]
+    D --&gt; E[&quot;interactiveHelpers.tsx&lt;br&#x2F;&gt;启动对话框流&quot;]
+    E --&gt; F[&quot;replLauncher.tsx&lt;br&#x2F;&gt;REPL 启动器&quot;]
+    F --&gt; G[&quot;REPL.tsx&lt;br&#x2F;&gt;主交互界面渲染&quot;]
+    G --&gt; H[&quot;用户输入消息&quot;]
+    H --&gt; I[&quot;onSubmit&lt;br&#x2F;&gt;输入分流处理&quot;]
+    I --&gt;|&quot;斜杠命令&quot;| I2[&quot;Command Handler&lt;br&#x2F;&gt;命令分发执行&quot;]
+    I --&gt;|&quot;普通消息&quot;| I3[&quot;handlePromptSubmit&lt;br&#x2F;&gt;消息构造&quot;]
+    I3 --&gt; J0[&quot;onQuery&lt;br&#x2F;&gt;并发保护 + 消息入队&quot;]
+    J0 --&gt; J1[&quot;onQueryImpl&lt;br&#x2F;&gt;上下文准备&quot;]
+    J1 --&gt; J2[&quot;构建 systemPrompt&lt;br&#x2F;&gt;+ userContext + systemContext&quot;]
+    J2 --&gt; J[&quot;query.ts → queryLoop&lt;br&#x2F;&gt;核心 Agentic 循环&quot;]
+    J --&gt; J3[&quot;snipCompact → microcompact&lt;br&#x2F;&gt;→ contextCollapse → autocompact&quot;]
+    J3 --&gt; K[&quot;claude.ts: queryModelWithStreaming&lt;br&#x2F;&gt;流式 API 调用&quot;]
+    K --&gt; K2[&quot;handleMessageFromStream&lt;br&#x2F;&gt;流式事件分发到 UI&quot;]
+    K2 --&gt; L[&quot;StreamingToolExecutor&lt;br&#x2F;&gt;边接收边执行工具&quot;]
+    L --&gt; L2[&quot;toolOrchestration.ts: runTools&lt;br&#x2F;&gt;工具批次编排&quot;]
+    L2 --&gt; L3[&quot;toolExecution.ts: runToolUse&lt;br&#x2F;&gt;单个工具执行管线&quot;]
+    L3 --&gt; L4[&quot;permissions.ts&lt;br&#x2F;&gt;多层权限决策&quot;]
+    L4 --&gt;|&quot;允许&quot;| M[&quot;Tool.call()&lt;br&#x2F;&gt;工具实际执行&quot;]
+    L4 --&gt;|&quot;询问用户&quot;| L5[&quot;PermissionRequest.tsx&lt;br&#x2F;&gt;权限对话框&quot;]
+    L5 --&gt;|&quot;批准&quot;| M
+    L5 --&gt;|&quot;拒绝&quot;| L6[&quot;返回拒绝结果&quot;]
+    M --&gt; N{&quot;stop_reason?&quot;}
+    N --&gt;|&quot;tool_use&quot;| O[&quot;收集工具结果&quot;]
+    O --&gt; P[&quot;注入附件&#x2F;记忆&#x2F;技能发现&quot;]
+    P --&gt; P2[&quot;sessionStorage.ts&lt;br&#x2F;&gt;JSONL 持久化&quot;]
+    P2 --&gt; J
+    N --&gt;|&quot;end_turn&quot;| Q[&quot;handleStopHooks&lt;br&#x2F;&gt;停止钩子检查&quot;]
+    N --&gt;|&quot;max_output_tokens&quot;| Q2[&quot;恢复机制&lt;br&#x2F;&gt;escalate → 64k → 多轮恢复&quot;]
+    Q2 --&gt; J
+    N --&gt;|&quot;prompt_too_long&quot;| Q3[&quot;reactiveCompact&lt;br&#x2F;&gt;响应式压缩&quot;]
+    Q3 --&gt; J
+    Q --&gt; R[&quot;返回完成 → UI 重置&quot;]
+
+    style A fill:#e8f5e9
+    style C fill:#fff3e0
+    style G fill:#e3f2fd
+    style J fill:#ffebee
+    style K fill:#ffebee
+    style L4 fill:#fff9c4
+    style M fill:#fce4ec
+    style P2 fill:#e8eaf6
+  </pre></div>
+
+<h3 id="逐步拆解"><a href="#逐步拆解" class="headerlink" title="逐步拆解"></a>逐步拆解</h3><table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>负责模块</th>
+<th>做了什么</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>1. CLI 入口</strong></td>
+<td><code>entrypoints/cli.tsx</code></td>
+<td>解析 <code>process.argv</code>，对特殊参数做快速路径短路：<code>--version</code> 零导入直接输出版本号；<code>--daemon-worker</code>&#x2F;<code>remote-control</code>&#x2F;<code>ps</code>&#x2F;<code>logs</code> 等直接分发到独立入口。环境预设包括 <code>COREPACK_ENABLE_AUTO_PIN=0</code>、CCR 远程环境 heap size 设置、ablation baseline 实验变量。如果无特殊参数，加载 <code>startupProfiler</code> 并 <code>startCapturingEarlyInput()</code>，然后动态 <code>import(&#39;../main.js&#39;)</code> 进入主流程</td>
+<td>决定进入哪个运行模式（正常&#x2F;daemon&#x2F;bridge&#x2F;bg 等），正常模式进入 <code>main()</code></td>
+</tr>
+<tr>
+<td><strong>2. 核心初始化</strong></td>
+<td><code>entrypoints/init.ts</code> 的 <code>init()</code></td>
+<td><strong>memoize 幂等函数</strong>，只执行一次。依次执行：① <code>enableConfigs()</code> 启用配置系统 → ② <code>applySafeConfigEnvironmentVariables()</code> 在信任对话前仅应用安全环境变量 → ③ <code>applyExtraCACertsFromConfig()</code> 加载自定义 CA 证书（Bun TLS 要求早于首次 TLS 握手）→ ④ <code>setupGracefulShutdown()</code> 注册优雅退出 → ⑤ <code>configureGlobalMTLS()</code> mTLS 配置 → ⑥ <code>configureGlobalAgents()</code> HTTP&#x2F;HTTPS 代理 → ⑦ <code>preconnectAnthropicApi()</code> 预建 TCP 连接 → ⑧ <code>populateOAuthAccountInfoIfNeeded()</code> OAuth 认证信息（异步）→ ⑨ <code>initializePolicyLimitsLoadingPromise()</code> &#x2F; <code>initializeRemoteManagedSettingsLoadingPromise()</code> 策略限制加载 → ⑩ <code>detectCurrentRepository()</code> 检测当前仓库（异步）</td>
+<td>全局运行环境就绪：配置已加载、网络代理&#x2F;TLS&#x2F;mTLS 已配置、API 预连接已建立、策略限制已开始加载</td>
+</tr>
+<tr>
+<td><strong>3. CLI 编排</strong></td>
+<td><code>main.tsx</code> 的 <code>main()</code> (4684行)</td>
+<td><strong>文件开头有严格顺序的副作用</strong>：<code>profileCheckpoint(&#39;main_tsx_entry&#39;)</code> → <code>startMdmRawRead()</code> 启动 MDM 子进程并行读取 → <code>startKeychainPrefetch()</code> 并行预取 macOS Keychain。接下来：① <code>initializeWarningHandler()</code> + 注册 SIGINT → ② <code>Commander</code> 解析所有 CLI 参数（<code>--model</code>&#x2F;<code>--permission-mode</code>&#x2F;<code>--resume</code>&#x2F;<code>--print</code> 等）→ ③ <code>preAction</code> Hook 中 <code>await init()</code> + <code>runMigrations()</code> + <code>loadRemoteManagedSettings()</code> + <code>loadPolicyLimits()</code> → ④ 模型解析验证（<code>parseUserSpecifiedModel</code>）→ ⑤ MCP 服务器配置收集合并 → ⑥ 权限上下文初始化（<code>initializeToolPermissionContext</code>）→ ⑦ GrowthBook 特性门控初始化 → ⑧ 工具注册（<code>getTools()</code>）→ ⑨ 非交互模式走 <code>ask()</code>&#x2F;<code>QueryEngine</code>，交互模式走 <code>launchRepl()</code></td>
+<td>完整的会话配置对象：模型选择、MCP 客户端列表、权限上下文、工具集合、初始消息</td>
+</tr>
+<tr>
+<td><strong>4. 环境初始化</strong></td>
+<td><code>setup.ts</code> 的 <code>setup()</code> (478行)</td>
+<td>在 CLI 参数解析后、REPL 渲染前执行：① Node.js 版本检查（≥18）→ ② <code>switchSession()</code> 分配会话 ID → ③ <code>startUdsMessaging()</code> 启动 Unix Domain Socket 消息服务 → ④ <code>captureTeammateModeSnapshot()</code> 团队模式快照 → ⑤ 终端备份恢复检查 → ⑥ <code>setCwd()</code> 设置工作目录 → ⑦ <code>captureHooksConfigSnapshot()</code> Hooks 配置快照 → ⑧ <code>initializeFileChangedWatcher()</code> 文件变更监听 → ⑨ 条件创建 worktree → ⑩ 启动后台服务（<code>initSessionMemory</code>、<code>initContextCollapse</code>、commit attribution）→ ⑪ <code>prefetchApiKeyFromApiKeyHelper()</code> API Key 预取 → ⑫ <code>--dangerously-skip-permissions</code> 安全验证（容器&#x2F;网络检查）</td>
+<td>工作环境就绪：会话 ID 已分配、CWD 已设置、后台服务已启动、文件监听器就绪</td>
+</tr>
+<tr>
+<td><strong>5. 启动对话框</strong></td>
+<td><code>interactiveHelpers.tsx</code></td>
+<td>按顺序展示一系列启动屏幕（都是 React&#x2F;Ink 组件）：① <strong>Onboarding</strong> — 首次使用引导 → ② <strong>TrustDialog</strong> — 工作区信任确认（信任后才运行 git 命令）→ ③ <strong>MCP 审批</strong> — 未审批的 MCP 服务器确认 → ④ <strong>API Key 验证</strong> — 检查&#x2F;设置 API Key → ⑤ <strong>权限模式选择</strong> — 初始权限模式确认。信任建立后调用 <code>applyConfigEnvironmentVariables()</code> 应用完整环境变量</td>
+<td>用户信任已建立、API Key 可用、权限模式已确定、MCP 服务器已审批</td>
+</tr>
+<tr>
+<td><strong>6. REPL 启动</strong></td>
+<td><code>replLauncher.tsx</code> → <code>REPL.tsx</code></td>
+<td><code>launchRepl()</code> 动态导入 <code>App</code> 组件和 <code>REPL</code> 组件，通过 <code>renderAndRun()</code> 启动 React&#x2F;Ink TUI 应用。<code>App</code> 提供全局 <code>AppState</code> Context，<code>REPL</code> (5006行, 875KB) 是核心交互组件，包含：消息列表（<code>&lt;Messages&gt;</code>）、输入框（<code>&lt;PromptInput&gt;</code>）、权限对话框队列（<code>&lt;PermissionRequest&gt;</code>）、Spinner（<code>&lt;SpinnerWithVerb&gt;</code>）、全局快捷键处理、状态管理（messages&#x2F;streamingToolUses&#x2F;streamingText&#x2F;streamMode）。启动后调用 <code>startDeferredPrefetches()</code> 执行延迟预取（用户信息、tips、文件计数等）</td>
+<td>终端交互界面渲染完成，等待用户输入</td>
+</tr>
+<tr>
+<td><strong>7. 用户输入处理</strong></td>
+<td><code>REPL.tsx: onSubmit → onQuery → onQueryImpl</code></td>
+<td><strong>onSubmit</strong> (L3142)：接收用户输入文本 → 检测斜杠命令（<code>/help</code>、<code>/compact</code>、<code>/commit</code> 等）分发到 Command Handler → 普通文本走 <code>handlePromptSubmit()</code> 构造 <code>UserMessage</code>（处理图片粘贴、IDE 选择、bash 模式 <code>!cmd</code>）→ 加入历史记录。<strong>onQuery</strong> (L2855)：通过 <code>QueryGuard</code> 做并发保护（<code>tryStart()</code> 原子 idle→running 转换），如果已有查询运行则入队；追加新消息到 <code>messages</code> 状态。<strong>onQueryImpl</strong> (L2661)：① 提取会话标题 → ② 从 store 获取最新 tools&#x2F;mcpClients → ③ <code>Promise.all</code> 并行加载 systemPrompt + userContext + systemContext → ④ <code>buildEffectiveSystemPrompt()</code> 构建最终系统提示 → ⑤ 进入 <code>for await (const event of query(&#123;...&#125;))</code> 消费流式事件</td>
+<td><code>QueryParams</code> 对象（包含 messages、systemPrompt、userContext、systemContext、canUseTool、toolUseContext）交给 <code>query()</code></td>
+</tr>
+<tr>
+<td><strong>8. 核心查询循环</strong></td>
+<td><code>query.ts: query() → queryLoop()</code> (1730行)</td>
+<td><code>query()</code> 是 <code>AsyncGenerator</code>，内部调用 <code>queryLoop()</code> 的 <code>while(true)</code> 循环。每次迭代：① <strong>Snip compact</strong> — 裁剪被标记的历史消息 → ② <strong>Microcompact</strong> — 微压缩缓存编辑结果 → ③ <strong>Context collapse</strong> — 上下文折叠（token 过多时压缩历史）→ ④ <strong>Autocompact</strong> — 自动压缩（token 接近上限时触发）→ ⑤ <code>yield &#123; type: &#39;stream_request_start&#39; &#125;</code> 通知 UI → ⑥ <code>normalizeMessagesForAPI()</code> 消息标准化 → ⑦ 注入 <code>userContext</code>&#x2F;<code>systemContext</code> → ⑧ <strong>调用模型</strong> <code>deps.callModel()</code> → <code>queryModelWithStreaming()</code> → ⑨ <strong>StreamingToolExecutor</strong> 边接收流式响应边执行工具 → ⑩ 根据 <code>stop_reason</code> 决定下一步（见步骤 12）</td>
+<td>每次迭代 yield 流式事件（StreamEvent&#x2F;Message），最终返回 <code>Terminal</code></td>
+</tr>
+<tr>
+<td><strong>9. 流式 API 调用</strong></td>
+<td><code>services/api/claude.ts: queryModelWithStreaming()</code></td>
+<td>① 构建 API 请求参数：模型选择、betas 头、cache_control 配置、tool schemas（通过 <code>toolToAPISchema()</code> 转换）、thinking 配置、effort 配置 → ② 处理 prompt caching（三层缓存控制点+全局缓存 scope）→ ③ 通过 Anthropic SDK 创建流式请求 → ④ 消费 <code>Stream&lt;BetaRawMessageStreamEvent&gt;</code>，将原始事件转换为内部 <code>StreamEvent</code>（包含 <code>text_delta</code>、<code>thinking_delta</code>、<code>tool_use</code> blocks）→ ⑤ 模型回退机制（<code>FallbackTriggeredError</code> → 切换到 fallback model）→ ⑥ 重试逻辑（429&#x2F;529&#x2F;5xx 自动重试 + 指数退避）→ ⑦ 计费&#x2F;token 统计（<code>calculateUSDCost</code>、<code>tokenCountFromLastAPIResponse</code>）</td>
+<td>异步生成器，yield <code>StreamEvent</code>（text&#x2F;thinking&#x2F;tool_use deltas）和最终的 <code>AssistantMessage</code></td>
+</tr>
+<tr>
+<td><strong>10. 流式渲染</strong></td>
+<td><code>utils/messages.ts: handleMessageFromStream()</code> + <code>REPL.tsx</code></td>
+<td>REPL 的 <code>onQueryEvent</code> 调用 <code>handleMessageFromStream()</code> 处理每个流式事件：① <code>stream_request_start</code> → 设置 <code>streamMode = &#39;requesting&#39;</code> → ② <code>stream_event</code> + <code>content_block_start(tool_use)</code> → 更新 <code>streamingToolUses</code> 状态 → ③ <code>stream_event</code> + <code>content_block_delta(text_delta)</code> → 更新 <code>streamingText</code>，<code>streamMode = &#39;responding&#39;</code> → ④ <code>stream_event</code> + <code>content_block_delta(thinking_delta)</code> → 更新 <code>streamingThinking</code> → ⑤ 完整消息 → 通过 <code>onMessage</code> 追加到 <code>messages</code> 数组。React 组件根据状态实时渲染：<code>&lt;SpinnerWithVerb&gt;</code> 显示不同 mode 的加载状态，<code>&lt;Messages&gt;</code> 组件渲染消息列表，每种消息&#x2F;工具结果有对应的渲染器（<code>tool.renderToolResultMessage()</code>）</td>
+<td>UI 实时显示：正在生成的文本、思考过程、工具调用状态、加载动画</td>
+</tr>
+<tr>
+<td><strong>11. 工具执行</strong></td>
+<td><code>toolOrchestration.ts</code> → <code>toolExecution.ts</code> → <code>Tool.call()</code></td>
+<td><strong>编排层</strong>（<code>runTools</code>）：<code>partitionToolCalls()</code> 将工具调用分为批次 — 连续的并发安全工具合为一个并发批次（<code>runToolsConcurrently</code>，最大并发 10），非并发安全工具独立串行批次（<code>runToolsSerially</code>）。<strong>执行层</strong>（<code>runToolUse</code>，AsyncGenerator）：① <code>findToolByName()</code> 查找工具定义 → ② <code>inputSchema.safeParse()</code> 输入验证 → ③ <code>tool.validateInput()</code> 工具特定验证 → ④ <code>runPreToolUseHooks()</code> 前置钩子 → ⑤ <strong>权限决策</strong>（见步骤 11a）→ ⑥ <code>tool.call()</code> 实际执行 → ⑦ <code>runPostToolUseHooks()</code> 后置钩子 → ⑧ <code>mapToolResultToToolResultBlockParam()</code> 结果映射 → ⑨ yield 结果消息</td>
+<td>每个工具的 <code>ToolResult</code>（包含 data、可选的 newMessages、可选的 contextModifier）</td>
+</tr>
+<tr>
+<td><strong>11a. 权限检查</strong></td>
+<td><code>permissions/permissions.ts</code> + <code>PermissionContext.ts</code></td>
+<td>多层权限决策流水线：① <strong>Step 1a</strong> — <code>getDenyRuleForTool()</code> 检查整体拒绝规则（如 <code>Bash</code> 被全局禁止）→ ② <strong>Step 1b</strong> — <code>toolAlwaysAllowedRule()</code> 检查整体允许规则 → ③ <strong>Step 2</strong> — <code>tool.checkPermissions(input, context)</code> 工具特定权限逻辑（如 BashTool 分析命令，检查 <code>Bash(prefix:*)</code> 规则）→ ④ <strong>Step 3</strong> — <code>getRuleByContentsForTool()</code> 内容级 allow&#x2F;deny&#x2F;ask 规则匹配 → ⑤ <strong>Step 4</strong>（如果 behavior&#x3D;ask）：先运行 PreToolUse hooks → auto 模式运行分类器（<code>classifierDecision</code>）→ 否则通过 <code>PermissionContext.ts</code> 创建 Promise push 到 <code>toolUseConfirmQueue</code> → REPL 渲染 <code>&lt;PermissionRequest&gt;</code> → 用户选择允许&#x2F;拒绝&#x2F;始终允许 → resolve Promise 返回决策</td>
+<td><code>PermissionDecision</code>：allow（执行工具）、deny（返回拒绝消息给模型）、ask（等待用户确认）</td>
+</tr>
+<tr>
+<td><strong>12. 循环决策与恢复</strong></td>
+<td><code>query.ts</code> 循环尾部</td>
+<td>根据 API 返回的 <code>stop_reason</code> 和当前状态决定：① <strong><code>tool_use</code></strong> → 收集所有工具结果 → 注入附件（内存预取 <code>pendingMemoryPrefetch</code>、技能发现 <code>pendingSkillPrefetch</code>、队列命令 <code>getCommandsByMaxPriority</code>）→ 刷新 MCP tools → <strong>continue</strong> 回到循环顶部 → ② <strong><code>end_turn</code></strong> → <code>handleStopHooks()</code> 检查停止钩子（自定义 hooks 可 block 并 retry）→ 返回 <code>Terminal</code> → ③ <strong><code>max_output_tokens</code></strong> → escalate 到 64k → 最多 3 次多轮恢复（<code>MAX_OUTPUT_TOKENS_RECOVERY_LIMIT</code>）→ ④ <strong>prompt_too_long (413)</strong> → context collapse drain → reactive compact → 错误上报 → ⑤ <strong>token budget</strong> → <code>checkTokenBudget()</code> 检查 +500k 自动续接 → ⑥ <strong>max_turns</strong> → 达到上限退出</td>
+<td><code>Terminal</code>（结束）或 <code>Continue</code>（继续循环，附带原因）</td>
+</tr>
+<tr>
+<td><strong>13. 会话持久化</strong></td>
+<td><code>utils/sessionStorage.ts</code> (176KB)</td>
+<td>全程实时持久化：① 每条消息通过 <code>appendFile</code> 写入 JSONL 文件到 <code>~/.claude/projects/&lt;cwd&gt;/</code> → ② <code>cacheSessionTitle()</code> 缓存会话标题 → ③ <code>saveCurrentSessionCosts()</code> 保存费用数据 → ④ <code>saveMode()</code> &#x2F; <code>saveAgentSetting()</code> 保存设置。<strong>会话恢复</strong>（<code>sessionRestore.ts</code>）：通过 <code>--resume &lt;id&gt;</code> 或 <code>--continue</code> 触发 → <code>loadTranscriptFromFile()</code> 从 JSONL 加载 → <code>processResumedConversation()</code> 重建消息列表、文件历史快照、归因快照 → <code>restoreSessionStateFromLog()</code> 恢复会话状态</td>
+<td>会话 transcript（JSONL 文件），支持跨进程恢复和 <code>searchSessionsByCustomTitle()</code> 搜索</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="步骤详细拆解"><a href="#步骤详细拆解" class="headerlink" title="步骤详细拆解"></a>步骤详细拆解</h3><p>代理初始化是 Claude Code 启动时的核心流程，采用<strong>多阶段</strong>、<strong>memoize 幂等</strong>、<strong>并行预取优化</strong>的设计模式。</p>
+<h4 id="阶段-1-CLI-入口-cli-tsx-302行"><a href="#阶段-1-CLI-入口-cli-tsx-302行" class="headerlink" title="阶段 1: CLI 入口 (cli.tsx, 302行)"></a>阶段 1: CLI 入口 (<code>cli.tsx</code>, 302行)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1.1</td>
+<td><code>COREPACK_ENABLE_AUTO_PIN=0</code></td>
+<td>设置环境变量，阻止 corepack 向 <code>package.json</code> 自动注入 yarnpkg</td>
+<td>防止用户项目的 <code>package.json</code> 被意外修改</td>
+<td>环境变量已设置</td>
+</tr>
+<tr>
+<td>1.2</td>
+<td>CCR 远程环境 heap size</td>
+<td>当 <code>CLAUDE_CODE_REMOTE=true</code> 时设置 <code>NODE_OPTIONS=--max-old-space-size=8192</code></td>
+<td>CCR 容器有 16GB 内存，子进程默认 heap 太小</td>
+<td>子进程内存上限 8GB</td>
+</tr>
+<tr>
+<td>1.3</td>
+<td>ABLATION_BASELINE 实验</td>
+<td><code>feature(&#39;ABLATION_BASELINE&#39;)</code> 条件下批量设置实验环境变量（禁用 thinking&#x2F;compact&#x2F;auto-memory&#x2F;background-tasks 等）</td>
+<td>科学实验的 L0 消融基线。**必须在 <code>cli.tsx</code> 而非 <code>init.ts</code>**，因为 BashTool&#x2F;AgentTool 在模块加载时捕获 <code>DISABLE_BACKGROUND_TASKS</code> 到模块级常量</td>
+<td>实验变量已设置（或外部构建中被 DCE 消除）</td>
+</tr>
+<tr>
+<td>1.4</td>
+<td>快速路径分发</td>
+<td>解析 <code>process.argv</code>，按优先级检查：<code>--version</code> → <code>--dump-system-prompt</code> → <code>--claude-in-chrome-mcp</code> → <code>--daemon-worker</code> → <code>remote-control</code> → <code>daemon</code> → <code>ps/logs/attach/kill/--bg</code> → <code>new/list/reply</code> → <code>environment-runner</code> → <code>self-hosted-runner</code> → <code>--worktree --tmux</code></td>
+<td>所有 <code>import</code> 都是动态的（<code>await import()</code>），确保快速路径零模块加载。<code>--version</code> 最极端：除自身外零导入</td>
+<td>分支到对应的独立入口，或进入主流程</td>
+</tr>
+<tr>
+<td>1.5</td>
+<td><code>startCapturingEarlyInput()</code></td>
+<td>开始捕获用户在 CLI 启动期间的早期键盘输入</td>
+<td>用户可能在 REPL 渲染前就开始打字，不能丢失</td>
+<td>早期输入缓冲区开始收集</td>
+</tr>
+<tr>
+<td>1.6</td>
+<td><code>import(&#39;../main.js&#39;)</code></td>
+<td>动态导入完整的 <code>main.tsx</code>（触发 ~135ms 的模块评估，包括副作用）</td>
+<td>主流程的所有依赖在此时加载</td>
+<td>进入 <code>cliMain()</code> → <code>main()</code></td>
+</tr>
+</tbody></table>
+<h4 id="阶段-2-Main-模块加载-main-tsx-文件头部-L1-210"><a href="#阶段-2-Main-模块加载-main-tsx-文件头部-L1-210" class="headerlink" title="阶段 2: Main 模块加载 (main.tsx 文件头部, L1-210)"></a>阶段 2: Main 模块加载 (<code>main.tsx</code> 文件头部, L1-210)</h4><blockquote>
+<p><strong>关键设计</strong>：文件头部的三个副作用有<strong>严格顺序要求</strong>，利用 ESM 模块评估时的同步执行保证。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2.1</td>
+<td><code>profileCheckpoint(&#39;main_tsx_entry&#39;)</code></td>
+<td>记录 main.tsx 模块评估开始时间点</td>
+<td>启动性能 profiling 的基准点</td>
+<td>时间戳记录</td>
+</tr>
+<tr>
+<td>2.2</td>
+<td><code>startMdmRawRead()</code></td>
+<td>启动 MDM (Mobile Device Management) 子进程读取：macOS 用 <code>plutil</code>、Windows 用 <code>reg query</code></td>
+<td><strong>I&#x2F;O 并行化</strong>：子进程在后续 ~135ms 的模块导入期间并行执行，完成后 <code>ensureMdmSettingsLoaded()</code> 几乎免费</td>
+<td>MDM 子进程已启动（后台运行中）</td>
+</tr>
+<tr>
+<td>2.3</td>
+<td><code>startKeychainPrefetch()</code></td>
+<td>并行启动两个 macOS Keychain 读取（OAuth token + 旧版 API Key）</td>
+<td><code>isRemoteManagedSettingsEligible()</code> 否则会在 <code>applySafeConfigEnvironmentVariables()</code> 中同步 spawn 读取（每次 ~65ms），并行预取节省 ~65ms</td>
+<td>Keychain 读取 Promise 已启动</td>
+</tr>
+<tr>
+<td>2.4</td>
+<td>~135ms 模块导入</td>
+<td>加载 Commander、chalk、React、所有 utils&#x2F;services&#x2F;hooks&#x2F;components 等</td>
+<td>ESM 模块树评估，这段时间 2.2 和 2.3 的子进程在并行执行</td>
+<td>所有模块就绪</td>
+</tr>
+<tr>
+<td>2.5</td>
+<td>Commander 初始化</td>
+<td>使用 <code>@commander-js/extra-typings</code> 定义所有 CLI 选项：<code>--model</code>&#x2F;<code>--permission-mode</code>&#x2F;<code>--resume</code>&#x2F;<code>--continue</code>&#x2F;<code>--print</code>&#x2F;<code>--worktree</code>&#x2F;<code>--mcp-config</code> 等数十个选项</td>
+<td>类型安全的 CLI 参数解析</td>
+<td><code>program</code> 命令对象</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-3-preAction-Hook-main-tsx-L907-957"><a href="#阶段-3-preAction-Hook-main-tsx-L907-957" class="headerlink" title="阶段 3: preAction Hook (main.tsx, L907-957)"></a>阶段 3: preAction Hook (<code>main.tsx</code>, L907-957)</h4><blockquote>
+<p><strong>关键设计</strong>：Commander 的 <code>program.hook(&#39;preAction&#39;, ...)</code> 在每个命令执行前运行，是初始化的”闸口”。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3.1</td>
+<td><code>ensureMdmSettingsLoaded()</code></td>
+<td>await 阶段 2.2 启动的 MDM 子进程完成</td>
+<td>几乎免费（子进程在 ~135ms 导入期间已完成），但必须在 <code>init()</code> 前确认完成</td>
+<td>MDM 设置已加载到内存</td>
+</tr>
+<tr>
+<td>3.2</td>
+<td><code>ensureKeychainPrefetchCompleted()</code></td>
+<td>await 阶段 2.3 启动的 Keychain 读取完成</td>
+<td>必须在 <code>applySafeConfigEnvironmentVariables()</code> 前完成，否则后者会退化为同步 spawn（~65ms）</td>
+<td>Keychain 数据已缓存</td>
+</tr>
+<tr>
+<td>3.3</td>
+<td><code>await init()</code></td>
+<td>调用阶段 4 的核心初始化（memoize 幂等）</td>
+<td>所有网络&#x2F;安全&#x2F;配置初始化的统一入口</td>
+<td>全局运行环境就绪</td>
+</tr>
+<tr>
+<td>3.4</td>
+<td><code>process.title = &#39;claude&#39;</code></td>
+<td>设置进程标题（Windows 设置控制台标题，POSIX 影响终端 tab 标题）</td>
+<td>用户在任务管理器&#x2F;终端 tab 中可识别进程</td>
+<td>进程标题已设置</td>
+</tr>
+<tr>
+<td>3.5</td>
+<td><code>initSinks()</code></td>
+<td>附加日志 sink（错误日志 + 分析事件），排空之前排队的事件</td>
+<td>子命令（<code>doctor</code>、<code>mcp</code>、<code>plugin</code>、<code>auth</code>）不走 <code>setup()</code>，如果不在此附加 sink，事件会在 <code>process.exit()</code> 时被丢弃</td>
+<td>日志系统就绪</td>
+</tr>
+<tr>
+<td>3.6</td>
+<td><code>setInlinePlugins(pluginDir)</code></td>
+<td>如果有 <code>--plugin-dir</code> 选项，注册内联插件并清除插件缓存</td>
+<td><code>--plugin-dir</code> 是顶级 program 选项，子命令的 action 看不到它，需要在 hook 中全局注入</td>
+<td>内联插件已注册</td>
+</tr>
+<tr>
+<td>3.7</td>
+<td><code>runMigrations()</code></td>
+<td>执行同步数据迁移（当前版本 11）：auto-updater 设置迁移、bypass-permissions 迁移、MCP 服务器迁移、模型名称迁移（Sonnet 4.5→4.6、Opus 迁移）、release channel 迁移等</td>
+<td>确保旧版本的配置数据兼容新版本</td>
+<td>配置数据已迁移到最新版本</td>
+</tr>
+<tr>
+<td>3.8</td>
+<td><code>loadRemoteManagedSettings()</code></td>
+<td>异步加载企业远程管理设置（非阻塞，fail-open）</td>
+<td>企业客户的远程策略设置，到达后通过 hot-reload 应用</td>
+<td>远程设置加载 Promise（后台运行）</td>
+</tr>
+<tr>
+<td>3.9</td>
+<td><code>loadPolicyLimits()</code></td>
+<td>异步加载策略限制（非阻塞）</td>
+<td>企业策略限制（限速、功能开关等）</td>
+<td>策略限制加载 Promise（后台运行）</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-4-init-核心初始化-init-ts-L57-238"><a href="#阶段-4-init-核心初始化-init-ts-L57-238" class="headerlink" title="阶段 4: init() 核心初始化 (init.ts, L57-238)"></a>阶段 4: <code>init()</code> 核心初始化 (<code>init.ts</code>, L57-238)</h4><blockquote>
+<p><strong>关键设计</strong>：<code>memoize</code> 包装，保证整个进程只执行一次。内部使用大量 <code>void</code> fire-and-forget 异步操作 + 关键路径同步操作。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>4.1</td>
+<td><code>enableConfigs()</code></td>
+<td>启用配置系统，允许 <code>getGlobalConfig()</code>&#x2F;<code>getProjectConfig()</code> 等读取配置</td>
+<td>配置系统是后续所有操作的基础</td>
+<td>配置系统可用</td>
+</tr>
+<tr>
+<td>4.2</td>
+<td><code>applySafeConfigEnvironmentVariables()</code></td>
+<td>仅应用<strong>安全的</strong>环境变量（不包含用户自定义的可能危险变量）</td>
+<td>信任对话前只应用安全变量，完整变量在 <code>showSetupScreens()</code> 后的 <code>applyConfigEnvironmentVariables()</code> 中应用</td>
+<td>安全环境变量已设置</td>
+</tr>
+<tr>
+<td>4.3</td>
+<td><code>applyExtraCACertsFromConfig()</code></td>
+<td>从 <code>settings.json</code> 的 <code>NODE_EXTRA_CA_CERTS</code> 加载自定义 CA 证书到 <code>process.env</code></td>
+<td><strong>必须早于首次 TLS 握手</strong>：Bun 在启动时通过 BoringSSL 缓存 TLS 证书存储，之后修改无效</td>
+<td>CA 证书已配置</td>
+</tr>
+<tr>
+<td>4.4</td>
+<td><code>setupGracefulShutdown()</code></td>
+<td>注册 <code>SIGTERM</code>&#x2F;<code>SIGINT</code>&#x2F;<code>exit</code> 处理器，确保退出时刷新日志、关闭连接</td>
+<td>防止数据丢失，确保会话 transcript 完整写入</td>
+<td>优雅退出处理器已注册</td>
+</tr>
+<tr>
+<td>4.5</td>
+<td><code>initialize1PEventLogging()</code></td>
+<td>🔥异步：动态 <code>import()</code> 加载 OpenTelemetry sdk-logs + firstPartyEventLogger，注册 GrowthBook 刷新回调</td>
+<td><strong>延迟加载</strong>：OTel + protobuf 模块 ~400KB，不在关键路径上加载</td>
+<td>1P 事件日志系统（后台初始化中）</td>
+</tr>
+<tr>
+<td>4.6</td>
+<td><code>populateOAuthAccountInfoIfNeeded()</code></td>
+<td>🔥异步：如果 OAuth 账户信息未缓存，从 API 获取并缓存到配置</td>
+<td>VSCode 扩展登录后可能缺少账户信息</td>
+<td>OAuth 账户信息（后台填充中）</td>
+</tr>
+<tr>
+<td>4.7</td>
+<td><code>initJetBrainsDetection()</code></td>
+<td>🔥异步：检测 JetBrains IDE 环境，填充缓存供后续同步访问</td>
+<td>IDE 检测需要文件系统操作，异步不阻塞启动</td>
+<td>IDE 检测结果缓存</td>
+</tr>
+<tr>
+<td>4.8</td>
+<td><code>detectCurrentRepository()</code></td>
+<td>🔥异步：检测 GitHub 仓库信息，填充缓存供 <code>gitDiff</code> PR 链接</td>
+<td>仓库检测需要 git 操作，异步不阻塞启动</td>
+<td>仓库信息缓存</td>
+</tr>
+<tr>
+<td>4.9</td>
+<td><code>initializeRemoteManagedSettingsLoadingPromise()</code></td>
+<td>初始化远程管理设置的加载 Promise（带超时防死锁）</td>
+<td>其他系统（如插件 hooks）可以 <code>await</code> 此 Promise 等待远程设置加载完成</td>
+<td>Promise 已就绪（等待 <code>loadRemoteManagedSettings()</code> 填充）</td>
+</tr>
+<tr>
+<td>4.10</td>
+<td><code>initializePolicyLimitsLoadingPromise()</code></td>
+<td>初始化策略限制的加载 Promise</td>
+<td>与 4.9 类似的模式</td>
+<td>Promise 已就绪</td>
+</tr>
+<tr>
+<td>4.11</td>
+<td><code>recordFirstStartTime()</code></td>
+<td>记录首次启动时间</td>
+<td>用于遥测&#x2F;分析</td>
+<td>首次启动时间已记录</td>
+</tr>
+<tr>
+<td>4.12</td>
+<td><code>configureGlobalMTLS()</code></td>
+<td>配置全局 mTLS (mutual TLS) 设置：从配置读取客户端证书&#x2F;密钥</td>
+<td>企业环境可能需要双向 TLS 认证</td>
+<td>mTLS 已配置</td>
+</tr>
+<tr>
+<td>4.13</td>
+<td><code>configureGlobalAgents()</code></td>
+<td>配置全局 HTTP&#x2F;HTTPS 代理：读取 <code>HTTP_PROXY</code>&#x2F;<code>HTTPS_PROXY</code>&#x2F;<code>NO_PROXY</code> 及配置中的代理设置</td>
+<td>企业网络环境可能需要代理访问外网</td>
+<td>HTTP agents 已配置（含代理和&#x2F;或 mTLS）</td>
+</tr>
+<tr>
+<td>4.14</td>
+<td><code>preconnectAnthropicApi()</code></td>
+<td>🔥预连接：向 Anthropic API 发起 TCP+TLS 握手（~100-200ms）</td>
+<td><strong>连接池预热</strong>：与后续 ~100ms 的 action-handler 工作重叠，减少首次 API 请求延迟。仅在直连 Anthropic 时有效（跳过代理&#x2F;mTLS&#x2F;unix&#x2F;cloud provider）</td>
+<td>TCP+TLS 连接已建立（连接池中）</td>
+</tr>
+<tr>
+<td>4.15</td>
+<td>CCR upstream proxy</td>
+<td>当 <code>CLAUDE_CODE_REMOTE</code> 时启动本地 CONNECT 中继代理</td>
+<td>CCR 环境中子进程需要通过组织配置的上游代理访问网络，需要凭证注入</td>
+<td>本地代理服务已启动（CCR 环境）</td>
+</tr>
+<tr>
+<td>4.16</td>
+<td><code>setShellIfWindows()</code></td>
+<td>Windows 环境设置 git-bash 路径</td>
+<td>Windows 上需要正确的 shell 路径才能执行 bash 命令</td>
+<td>Shell 路径已配置</td>
+</tr>
+<tr>
+<td>4.17</td>
+<td><code>registerCleanup()</code></td>
+<td>注册清理回调：LSP 服务器管理器关闭 + 会话团队清理</td>
+<td>进程退出时清理资源（LSP 进程、子代理创建的临时团队目录）</td>
+<td>清理回调已注册</td>
+</tr>
+<tr>
+<td>4.18</td>
+<td><code>ensureScratchpadDir()</code></td>
+<td>如果 scratchpad 功能启用，创建 scratchpad 目录</td>
+<td>为工具执行提供隔离的临时目录</td>
+<td>scratchpad 目录就绪</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-5-setup-会话初始化-setup-ts-478行"><a href="#阶段-5-setup-会话初始化-setup-ts-478行" class="headerlink" title="阶段 5: setup() 会话初始化 (setup.ts, 478行)"></a>阶段 5: <code>setup()</code> 会话初始化 (<code>setup.ts</code>, 478行)</h4><blockquote>
+<p><strong>关键设计</strong>：在 CLI 参数解析后、REPL 渲染前执行。每个步骤有严格的依赖顺序。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5.1</td>
+<td>Node.js 版本检查</td>
+<td>检查 <code>process.version</code>，要求 &gt;&#x3D; 18</td>
+<td>Node.js 18 是最低支持版本（ES2022 特性、fetch API 等）</td>
+<td>通过或退出</td>
+</tr>
+<tr>
+<td>5.2</td>
+<td><code>switchSession(customSessionId)</code></td>
+<td>如果提供了自定义 session ID（<code>--resume</code>），切换到该会话</td>
+<td>支持会话恢复</td>
+<td>会话 ID 已设置</td>
+</tr>
+<tr>
+<td>5.3</td>
+<td><code>startUdsMessaging()</code></td>
+<td>在 tmpdir 创建 Unix Domain Socket 服务器，导出 <code>$CLAUDE_CODE_MESSAGING_SOCKET</code></td>
+<td>支持进程间消息传递（团队成员间通信、外部注入消息）。<strong>必须在 SessionStart hook 前完成</strong>，因为 hook 可能 spawn 子进程并 snapshot <code>process.env</code></td>
+<td>UDS 服务器已绑定，socket 路径已导出</td>
+</tr>
+<tr>
+<td>5.4</td>
+<td><code>captureTeammateModeSnapshot()</code></td>
+<td>捕获当前团队模式的快照</td>
+<td>防止 teammate 配置在会话期间被意外修改</td>
+<td>快照已保存</td>
+</tr>
+<tr>
+<td>5.5</td>
+<td>终端备份恢复</td>
+<td>检查 iTerm2 和 Terminal.app 的中断备份，如果存在则恢复原始设置</td>
+<td>worktree 模式会修改终端 profile，如果上次异常退出可能留下修改后的设置</td>
+<td>终端设置已恢复（如需要）</td>
+</tr>
+<tr>
+<td>5.6</td>
+<td><code>setCwd(cwd)</code></td>
+<td>设置工作目录（<strong>必须在所有依赖 CWD 的操作之前</strong>）</td>
+<td>后续的 hooks 加载、worktree 创建、文件监听等都依赖正确的 CWD</td>
+<td>CWD 已设置</td>
+</tr>
+<tr>
+<td>5.7</td>
+<td><code>captureHooksConfigSnapshot()</code></td>
+<td>捕获当前目录下的 hooks 配置快照（<strong>必须在 <code>setCwd()</code> 之后</strong>）</td>
+<td>检测运行期间 hooks 配置是否被篡改</td>
+<td>Hooks 快照已保存</td>
+</tr>
+<tr>
+<td>5.8</td>
+<td><code>initializeFileChangedWatcher()</code></td>
+<td>初始化 FileChanged hook 的文件变更监听器</td>
+<td>支持 <code>FileChanged</code> hook：当文件变化时触发用户自定义脚本</td>
+<td>文件监听器已启动</td>
+</tr>
+<tr>
+<td>5.9</td>
+<td>Worktree 创建</td>
+<td>如果 <code>--worktree</code> 启用：解析主仓库根 → <code>createWorktreeForSession()</code> → 可选创建 tmux 会话 → <code>process.chdir()</code> + <code>setCwd()</code> + <code>setProjectRoot()</code> → 保存 worktree 状态 → 更新 hooks 快照</td>
+<td>Git worktree 模式：每个会话在独立分支工作，支持并行开发</td>
+<td>新 worktree 已创建，CWD 已切换，tmux 会话已创建（可选）</td>
+</tr>
+<tr>
+<td>5.10</td>
+<td><code>initSessionMemory()</code></td>
+<td>同步注册 session memory hook（gate check 延迟执行）</td>
+<td>自动记忆系统：在对话过程中自动提取有价值的记忆</td>
+<td>Hook 已注册</td>
+</tr>
+<tr>
+<td>5.11</td>
+<td><code>initContextCollapse()</code></td>
+<td>初始化上下文折叠系统</td>
+<td>当对话 token 过多时自动折叠历史上下文</td>
+<td>上下文折叠系统就绪</td>
+</tr>
+<tr>
+<td>5.12</td>
+<td>后台注册</td>
+<td>并行启动多个后台服务：① commit attribution hooks（<code>setImmediate</code> 延迟到下一 tick）→ ② session file access hooks → ③ team memory sync watcher → ④ <code>lockCurrentVersion()</code> 防止其他进程删除当前版本</td>
+<td>**不阻塞 setup()**：后台服务通过 <code>void</code> fire-and-forget，commit attribution 特意用 <code>setImmediate</code> 推迟到首次渲染后</td>
+<td>后台服务已启动</td>
+</tr>
+<tr>
+<td>5.13</td>
+<td><code>initSinks()</code></td>
+<td>附加错误日志 + 分析事件 sink，排空排队事件</td>
+<td>确保此后的 <code>logEvent()</code>&#x2F;<code>logError()</code> 有效</td>
+<td>日志 sink 已附加</td>
+</tr>
+<tr>
+<td>5.14</td>
+<td><code>logEvent(&#39;tengu_started&#39;, &#123;&#125;)</code></td>
+<td>发射”进程已启动”信标</td>
+<td><strong>会话成功率分母</strong>：这是最早的可靠”进程启动”信号，在任何 I&#x2F;O&#x2F;解析操作之前发出，用于发布健康监控</td>
+<td>启动事件已记录</td>
+</tr>
+<tr>
+<td>5.15</td>
+<td><code>prefetchApiKeyFromApiKeyHelperIfSafe()</code></td>
+<td>安全地预取 API Key（仅在信任已确认时执行）</td>
+<td>减少首次 API 调用时的 Key 获取延迟</td>
+<td>API Key 已缓存（如果可用）</td>
+</tr>
+<tr>
+<td>5.16</td>
+<td><code>checkForReleaseNotes()</code></td>
+<td>检查是否有新版本发布说明，有则预取最近活动数据</td>
+<td>Logo v2 需要在渲染前准备好发布说明和最近活动数据</td>
+<td>发布说明数据就绪</td>
+</tr>
+<tr>
+<td>5.17</td>
+<td>bypass-permissions 安全验证</td>
+<td>如果 <code>--dangerously-skip-permissions</code>：检查是否以 root 运行 → 内部版本额外检查是否在 Docker&#x2F;sandbox 中且无网络访问</td>
+<td><strong>安全闸口</strong>：防止在不安全环境中跳过权限检查。Docker+无网络是唯一允许的 bypass 场景（用于自动化测试）</td>
+<td>验证通过或退出</td>
+</tr>
+<tr>
+<td>5.18</td>
+<td>上次会话 <code>tengu_exit</code> 日志</td>
+<td>读取项目配置中保存的上次会话统计（cost&#x2F;duration&#x2F;tokens&#x2F;lines），发射 <code>tengu_exit</code> 事件</td>
+<td>上次会话可能异常退出未发射退出事件，在下次启动时补发</td>
+<td>上次会话遥测数据已上报</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-5b-启动对话框流-interactiveHelpers-tsx-showSetupScreens"><a href="#阶段-5b-启动对话框流-interactiveHelpers-tsx-showSetupScreens" class="headerlink" title="阶段 5b: 启动对话框流 (interactiveHelpers.tsx: showSetupScreens())"></a>阶段 5b: 启动对话框流 (<code>interactiveHelpers.tsx: showSetupScreens()</code>)</h4><blockquote>
+<p><strong>关键设计</strong>：每个对话框都是 React&#x2F;Ink 组件，通过 <code>showSetupDialog()</code> 渲染后 <code>await</code> 用户操作。</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5b.1</td>
+<td><code>&lt;Onboarding&gt;</code></td>
+<td>首次使用时展示欢迎界面（主题选择、功能介绍），完成后调用 <code>completeOnboarding()</code></td>
+<td>首次用户引导，仅显示一次</td>
+<td>主题已选择，<code>hasCompletedOnboarding=true</code></td>
+</tr>
+<tr>
+<td>5b.2</td>
+<td><code>&lt;TrustDialog&gt;</code></td>
+<td>工作区信任确认：警告未信任仓库的风险、检查 CLAUDE.md 外部 include</td>
+<td><strong>安全边界</strong>：信任对话是工作区安全屏障，与 <code>bypassPermissions</code> 模式无关。非交互模式（<code>-p</code>）不显示</td>
+<td><code>setSessionTrustAccepted(true)</code>，CWD 已信任</td>
+</tr>
+<tr>
+<td>5b.3</td>
+<td>GrowthBook 重初始化</td>
+<td><code>resetGrowthBook()</code> → <code>initializeGrowthBook()</code>，信任后带 auth headers 重新初始化</td>
+<td>信任前 GrowthBook 无用户上下文，返回的是 stale&#x2F;default 值。信任后需要带认证信息重新获取特性标志</td>
+<td>GrowthBook 特性标志已刷新</td>
+</tr>
+<tr>
+<td>5b.4</td>
+<td><code>getSystemContext()</code></td>
+<td>预取系统上下文（git status 等）</td>
+<td>信任后才安全执行 git 命令（git hooks&#x2F;config 可能执行任意代码）</td>
+<td>系统上下文缓存已预热</td>
+</tr>
+<tr>
+<td>5b.5</td>
+<td>MCP 服务器审批</td>
+<td>检查 <code>mcp.json</code> 中未审批的 MCP 服务器，展示审批对话框</td>
+<td>用户需要明确授权每个 MCP 服务器</td>
+<td>MCP 服务器审批状态已更新</td>
+</tr>
+<tr>
+<td>5b.6</td>
+<td>CLAUDE.md 外部 include 审批</td>
+<td>检查 CLAUDE.md 中引用的外部路径，展示审批对话框</td>
+<td>防止恶意仓库通过 CLAUDE.md include 注入不受信任的内容</td>
+<td>外部 include 已审批&#x2F;拒绝</td>
+</tr>
+<tr>
+<td>5b.7</td>
+<td><code>initializeTelemetryAfterTrust()</code></td>
+<td>信任后初始化遥测：等待远程管理设置加载 → <code>applyConfigEnvironmentVariables()</code> 应用完整环境变量 → <code>setMeterState()</code> 初始化 OpenTelemetry</td>
+<td><strong>信任后才初始化遥测</strong>：完整环境变量（包括用户自定义变量）只在信任后应用</td>
+<td>OpenTelemetry 指标收集就绪</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-6-REPL-启动-replLauncher-tsx-→-REPL-tsx-5006行-875KB"><a href="#步骤-6-REPL-启动-replLauncher-tsx-→-REPL-tsx-5006行-875KB" class="headerlink" title="步骤 6: REPL 启动 (replLauncher.tsx → REPL.tsx, 5006行, 875KB)"></a>步骤 6: REPL 启动 (<code>replLauncher.tsx</code> → <code>REPL.tsx</code>, 5006行, 875KB)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>6.1</td>
+<td><code>launchRepl()</code></td>
+<td>动态 <code>import</code> <code>App</code> 和 <code>REPL</code> 组件，通过 <code>renderAndRun()</code> 挂载到 Ink root</td>
+<td>延迟加载 875KB 的 REPL 模块，只在交互模式下加载</td>
+<td>React&#x2F;Ink TUI 应用已挂载</td>
+</tr>
+<tr>
+<td>6.2</td>
+<td><code>&lt;App&gt;</code> 组件</td>
+<td>提供全局 <code>AppState</code> Context（通过 <code>AppStateProvider</code>），含 <code>toolPermissionContext</code>、<code>mcp</code> 客户端&#x2F;工具、<code>effortValue</code>、<code>todos</code>、<code>spinnerTip</code> 等</td>
+<td>组件树共享状态的单一来源</td>
+<td>Context 已注入</td>
+</tr>
+<tr>
+<td>6.3</td>
+<td><code>&lt;REPL&gt;</code> 核心状态</td>
+<td>初始化关键 state：<code>messages</code>（对话消息列表）、<code>streamMode</code>（’requesting’&#x2F;‘responding’&#x2F;‘tool-use’）、<code>streamingToolUses</code>&#x2F;<code>streamingText</code>&#x2F;<code>streamingThinking</code>（流式中间状态）、<code>toolUseConfirmQueue</code>（待确认权限队列）、<code>isLoading</code>（从 <code>QueryGuard</code> 状态派生）</td>
+<td>驱动整个 TUI 的渲染和交互</td>
+<td>React state 已初始化</td>
+</tr>
+<tr>
+<td>6.4</td>
+<td><code>&lt;PromptInput&gt;</code></td>
+<td>渲染命令行输入框，支持 Vim 模式、自动补全（<code>useTypeahead</code>）、粘贴内容处理、IDE 选择注入、bash 模式（<code>!cmd</code>）</td>
+<td>用户输入的入口</td>
+<td>输入框已渲染</td>
+</tr>
+<tr>
+<td>6.5</td>
+<td><code>&lt;Messages&gt;</code></td>
+<td>渲染消息列表（支持虚拟滚动 <code>VirtualMessageList</code>），每种消息类型有对应渲染器：文本、thinking、工具调用&#x2F;结果、错误、系统消息</td>
+<td>展示对话历史和实时流式内容</td>
+<td>消息列表已渲染</td>
+</tr>
+<tr>
+<td>6.6</td>
+<td><code>&lt;SpinnerWithVerb&gt;</code></td>
+<td>根据 <code>streamMode</code> 显示不同加载状态动画和提示文字</td>
+<td>用户感知系统活动状态</td>
+<td>加载指示器就绪</td>
+</tr>
+<tr>
+<td>6.7</td>
+<td>Hooks 初始化</td>
+<td>挂载大量 React Hooks：<code>useReplBridge</code>（IDE 桥接）、<code>useVoiceIntegration</code>（语音）、<code>useGlobalKeybindings</code>（全局快捷键）、<code>useInboxPoller</code>（收件箱轮询）、<code>useSwarmInitialization</code>（团队初始化）、<code>useMergedTools</code>（合并内置+MCP 工具）、<code>useMergedCommands</code>（合并内置+插件命令）、<code>useApiKeyVerification</code>（API Key 验证）</td>
+<td>每个 Hook 负责一个独立的功能域</td>
+<td>所有交互功能就绪</td>
+</tr>
+<tr>
+<td>6.8</td>
+<td><code>startDeferredPrefetches()</code></td>
+<td>在首次渲染后启动延迟预取：<code>initUser()</code>、<code>getUserContext()</code>、tips 缓存、<code>countFilesRoundedRg()</code>、<code>refreshModelCapabilities()</code>、<code>settingsChangeDetector</code>、<code>skillChangeDetector</code>。**<code>--bare</code> 模式全部跳过**</td>
+<td>预取不阻塞首次渲染，利用”用户正在打字”的窗口隐藏预取延迟</td>
+<td>缓存预热（后台运行中）</td>
+</tr>
+<tr>
+<td>6.9</td>
+<td><code>consumeEarlyInput()</code></td>
+<td>将阶段 1.5 捕获的早期键盘输入注入到 <code>&lt;PromptInput&gt;</code></td>
+<td>用户在 CLI 启动期间打的字不会丢失</td>
+<td>早期输入已回放</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-7-用户输入处理-REPL-tsx-onSubmit-→-onQuery-→-onQueryImpl"><a href="#步骤-7-用户输入处理-REPL-tsx-onSubmit-→-onQuery-→-onQueryImpl" class="headerlink" title="步骤 7: 用户输入处理 (REPL.tsx: onSubmit → onQuery → onQueryImpl)"></a>步骤 7: 用户输入处理 (<code>REPL.tsx: onSubmit</code> → <code>onQuery</code> → <code>onQueryImpl</code>)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>7.1</td>
+<td><code>onSubmit</code> 入口 (L3142)</td>
+<td>接收用户文本输入 + <code>PromptInputHelpers</code>。首先 <code>repinScroll()</code> 滚动到底部，恢复 loop 模式（<code>resumeProactive()</code>）</td>
+<td>确保用户总能看到新消息</td>
+<td>滚动位置已重置</td>
+</tr>
+<tr>
+<td>7.2</td>
+<td>即时命令检测</td>
+<td>如果输入以 <code>/</code> 开头且当前有查询运行中（<code>queryGuard.isActive</code>），检测是否为 <code>immediate: true</code> 的命令（如 <code>/clear</code>、<code>/compact</code>）或通过快捷键触发。匹配的 <code>local-jsx</code> 命令直接渲染 React 组件（如 <code>/status</code> 弹出状态面板）不阻塞当前查询</td>
+<td>即时命令可在 Claude 响应期间执行，不中断流</td>
+<td>即时命令已执行（如适用）</td>
+</tr>
+<tr>
+<td>7.3</td>
+<td>常规命令分流</td>
+<td>非即时模式下，匹配到命令时区分三种类型：① <code>local-jsx</code> — 渲染 React 组件 → ② <code>local</code> — 执行本地逻辑（如 <code>/compact</code> 触发压缩）→ ③ <code>prompt</code> — 将命令文本作为用户消息发送给 Claude（如 <code>/commit</code>）。命令的 <code>load()</code> 是动态 <code>import()</code>，未使用的命令不加载</td>
+<td>延迟加载 + 三种命令类型覆盖所有交互场景</td>
+<td>命令已执行或转为消息</td>
+</tr>
+<tr>
+<td>7.4</td>
+<td><code>handlePromptSubmit()</code></td>
+<td>普通文本消息处理：展开 <code>[Pasted text #N]</code> 引用 → 处理 IDE 选择内容注入 → 处理图片粘贴内容（构造 <code>ImageBlockParam</code>）→ 处理 bash 模式（<code>!cmd</code> → 包装为 <code>&lt;bash-input&gt;</code> XML）→ 构造 <code>UserMessage</code></td>
+<td>将各种输入源统一为 API 可消费的消息格式</td>
+<td><code>UserMessage</code> + <code>newMessages[]</code></td>
+</tr>
+<tr>
+<td>7.5</td>
+<td>历史记录</td>
+<td><code>addToHistory()</code> 保存输入到历史记录（跳过快捷键触发的命令），支持上下箭头回溯</td>
+<td>用户体验：命令历史</td>
+<td>历史已更新</td>
+</tr>
+<tr>
+<td>7.6</td>
+<td><code>onQuery</code> (L2855)</td>
+<td><code>QueryGuard.tryStart()</code> 原子检查并发状态（idle→running）。如果已有查询运行，将消息 <code>enqueue()</code> 入队等待。否则：追加 <code>newMessages</code> 到 <code>messages</code> 状态 → 重置流式状态（<code>streamingToolUses</code>&#x2F;<code>streamingText</code>&#x2F;<code>apiMetrics</code>）→ 解析 token budget（<code>parseTokenBudget</code>）</td>
+<td><code>QueryGuard</code> 是一个状态机，防止并发查询竞争，保证一次只有一个活跃查询</td>
+<td>消息已追加，流式状态已重置</td>
+</tr>
+<tr>
+<td>7.7</td>
+<td><code>onQueryImpl</code> (L2661)</td>
+<td>① 从 store 获取最新 tools&#x2F;mcpClients（<code>mergeClients</code>&#x2F;<code>computeTools</code>，绕过 closure capture 的 stale 值）→ ② <code>getToolUseContext()</code> 构建完整上下文 → ③ <code>Promise.all</code> 并行加载：<code>getSystemPrompt(freshTools, model, additionalDirs, mcpClients)</code> + <code>getUserContext()</code> + <code>getSystemContext()</code> → ④ <code>buildEffectiveSystemPrompt()</code> 合并自定义&#x2F;追加系统提示 → ⑤ 设置 <code>renderedSystemPrompt</code> 到 context</td>
+<td>并行加载三种上下文最大化利用 I&#x2F;O 等待时间</td>
+<td><code>QueryParams</code> 对象就绪</td>
+</tr>
+<tr>
+<td>7.8</td>
+<td>进入查询循环</td>
+<td><code>for await (const event of query(&#123;...&#125;)) &#123; onQueryEvent(event) &#125;</code> — 消费 <code>query()</code> 异步生成器的每个事件，通过 <code>onQueryEvent</code> → <code>handleMessageFromStream()</code> 分发到 UI</td>
+<td>流式事件驱动的 UI 更新</td>
+<td>进入步骤 8</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-8-核心查询循环-query-ts-query-→-queryLoop-1730行"><a href="#步骤-8-核心查询循环-query-ts-query-→-queryLoop-1730行" class="headerlink" title="步骤 8: 核心查询循环 (query.ts: query() → queryLoop(), 1730行)"></a>步骤 8: 核心查询循环 (<code>query.ts: query()</code> → <code>queryLoop()</code>, 1730行)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>8.1</td>
+<td><code>query()</code> 包装器 (L219)</td>
+<td>异步生成器，内部 <code>yield*</code> 委托给 <code>queryLoop()</code>。完成后遍历 <code>consumedCommandUuids</code> 通知 <code>notifyCommandLifecycle(&#39;completed&#39;)</code></td>
+<td>统一管理命令生命周期通知（成功才标记 completed，失败&#x2F;abort 则不标记）</td>
+<td>委托给 <code>queryLoop()</code></td>
+</tr>
+<tr>
+<td>8.2</td>
+<td>状态初始化 (L268)</td>
+<td>初始化 <code>State</code> 对象：<code>messages</code>、<code>toolUseContext</code>、<code>maxOutputTokensRecoveryCount=0</code>、<code>hasAttemptedReactiveCompact=false</code>、<code>turnCount=1</code>。创建 <code>budgetTracker</code>（token budget）、<code>buildQueryConfig()</code>（快照 env&#x2F;statsig&#x2F;session 配置）、<code>startRelevantMemoryPrefetch()</code>（内存预取，<code>using</code> 语法自动 dispose）</td>
+<td><code>State</code> 是 mutable 跨迭代状态，每次 <code>continue</code> 时通过 <code>state = &#123;...&#125;</code> 原子更新</td>
+<td>循环状态就绪</td>
+</tr>
+<tr>
+<td>8.3</td>
+<td><code>applyToolResultBudget()</code></td>
+<td>对消息中超大工具结果应用预算限制：超过 <code>maxResultSizeChars</code> 的结果持久化到磁盘，消息中替换为预览+文件路径</td>
+<td>防止 context window 被单个巨大工具结果撑爆</td>
+<td>工具结果已按预算裁剪</td>
+</tr>
+<tr>
+<td>8.4</td>
+<td><strong>Snip compact</strong></td>
+<td><code>snipModule.snipCompactIfNeeded()</code> — 移除被 <code>SnipTool</code> 标记为可裁剪的历史消息段落</td>
+<td>用户通过 <code>/snip</code> 命令手动标记不需要的上下文</td>
+<td>被标记的消息已移除，<code>snipTokensFreed</code> 计入</td>
+</tr>
+<tr>
+<td>8.5</td>
+<td><strong>Microcompact</strong></td>
+<td><code>deps.microcompact()</code> — 微压缩：缓存编辑优化（<code>CACHED_MICROCOMPACT</code>），合并连续的小型编辑结果，减少 token 消耗</td>
+<td>减少重复编辑操作的 context 占用</td>
+<td>微压缩后的消息列表</td>
+</tr>
+<tr>
+<td>8.6</td>
+<td><strong>Context collapse</strong></td>
+<td><code>contextCollapse.applyCollapsesIfNeeded()</code> — 将旧的消息段折叠为摘要。基于 commit log 的投影视图（不修改 REPL 消息数组，摘要存在 collapse store 中）。<strong>运行在 autocompact 之前</strong>，如果 collapse 将 token 降到阈值以下，autocompact 就不触发</td>
+<td>比 autocompact 更细粒度的上下文管理，保留更多有用信息</td>
+<td>投影后的消息视图</td>
+</tr>
+<tr>
+<td>8.7</td>
+<td><strong>Autocompact</strong></td>
+<td><code>deps.autocompact()</code> — 当 token 接近模型上下文窗口上限时触发全量压缩：fork 一个 sideQuery 让模型总结对话历史，用摘要替换全部旧消息</td>
+<td>防止 context window 溢出，自动保持对话可继续</td>
+<td>压缩后的摘要消息（或不触发时跳过）</td>
+</tr>
+<tr>
+<td>8.8</td>
+<td>阻塞限制检查</td>
+<td>如果未触发压缩且 auto-compact 关闭，<code>calculateTokenWarningState()</code> 检查是否到达硬限制。到达则 yield 错误消息并返回 <code>&#123; reason: &#39;blocking_limit&#39; &#125;</code></td>
+<td>预留空间让用户手动执行 <code>/compact</code></td>
+<td>继续或终止</td>
+</tr>
+<tr>
+<td>8.9</td>
+<td><code>StreamingToolExecutor</code> 创建</td>
+<td>根据 <code>config.gates.streamingToolExecution</code> 决定是否启用流式工具执行器。确定当前模型（<code>getRuntimeMainLoopModel</code>，考虑权限模式、plan 模式超 200k token 自动升级）</td>
+<td>流式执行可在 API 响应尚未完全到达时就开始执行工具</td>
+<td>执行器已就绪</td>
+</tr>
+<tr>
+<td>8.10</td>
+<td><strong>流式 API 调用</strong></td>
+<td><code>for await (const message of deps.callModel(&#123;...&#125;))</code> — 进入 <code>queryModelWithStreaming()</code>，传入：<code>prependUserContext(messages)</code>、<code>fullSystemPrompt</code>、<code>thinkingConfig</code>、tools、model、fallbackModel、fastMode、querySource、taskBudget 等完整参数</td>
+<td>核心 API 交互</td>
+<td>流式 <code>StreamEvent</code> 序列</td>
+</tr>
+<tr>
+<td>8.11</td>
+<td>流式事件处理</td>
+<td>消费 API 流中每条消息：① assistant 消息 → 检测 <code>tool_use</code> blocks → 如有则设 <code>needsFollowUp=true</code> → 如果 <code>StreamingToolExecutor</code> 启用则 <code>addTool()</code> 立即开始执行 → ② 流式回退（<code>streamingFallbackOccured</code>）→ tombstone 孤立消息 → 切换到 fallback model → ③ <code>backfillObservableInput</code> 回填工具输入的 legacy 字段 → ④ 检测可恢复错误（prompt-too-long&#x2F;max-output-tokens&#x2F;media-size-error）并暂扣（withheld）</td>
+<td>边接收边处理，流式执行最大化并行度</td>
+<td>assistant 消息列表 + tool_use blocks + 工具结果</td>
+</tr>
+<tr>
+<td>8.12</td>
+<td>流完成后处理</td>
+<td>① <code>executePostSamplingHooks()</code> 后采样钩子（fire-and-forget）→ ② 如果 abort → 消费 <code>StreamingToolExecutor</code> 剩余结果（生成 synthetic tool_results）→ yield 中断消息 → 返回 → ③ yield 上一轮的 <code>pendingToolUseSummary</code>（haiku 在模型流式期间 ~1s 已完成）</td>
+<td>确保 tool_use&#x2F;tool_result 配对完整，abort 时不丢结果</td>
+<td>后处理完成</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-9-流式-API-调用-services-api-claude-ts-queryModelWithStreaming"><a href="#步骤-9-流式-API-调用-services-api-claude-ts-queryModelWithStreaming" class="headerlink" title="步骤 9: 流式 API 调用 (services/api/claude.ts: queryModelWithStreaming())"></a>步骤 9: 流式 API 调用 (<code>services/api/claude.ts: queryModelWithStreaming()</code>)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>9.1</td>
+<td>参数构建</td>
+<td>构建 <code>BetaMessageStreamParams</code>：模型选择、betas 头（prompt caching、structured outputs、effort、task budgets、tool search 等）、<code>max_tokens</code>（默认 CAPPED_DEFAULT_MAX_TOKENS 或 ESCALATED_MAX_TOKENS&#x3D;64k）、thinking 配置（<code>max_thinking_length</code>）、effort 配置、advisor 模型</td>
+<td>精确控制 API 行为的参数组合</td>
+<td>API 请求参数</td>
+</tr>
+<tr>
+<td>9.2</td>
+<td>Tool schema 转换</td>
+<td><code>toolToAPISchema()</code> 将内部 <code>Tool</code> 定义转为 API 格式的 <code>BetaToolUnion</code>。支持 ToolSearch deferred 模式：非发现的工具只发送名称（<code>defer_loading: true</code>），节省 token</td>
+<td>智能工具加载：只有模型实际需要的工具才发送完整 schema</td>
+<td><code>BetaToolUnion[]</code></td>
+</tr>
+<tr>
+<td>9.3</td>
+<td>Prompt caching</td>
+<td>三层缓存控制：① 消息级 <code>cache_control: &#123; type: &#39;ephemeral&#39;, ttl?: &#39;1h&#39;, scope?: &#39;global&#39; &#125;</code> → ② 系统提示前缀分离（<code>splitSysPromptPrefix</code>）→ ③ 全局缓存 scope（<code>shouldUseGlobalCacheScope</code>，跨用户共享）</td>
+<td>最大化 prompt cache 命中率，减少 API 成本和延迟</td>
+<td>缓存控制标注已添加</td>
+</tr>
+<tr>
+<td>9.4</td>
+<td>SDK 创建流</td>
+<td>通过 <code>getAnthropicClient()</code> 获取 SDK 客户端 → <code>client.beta.messages.stream(params)</code> 创建流 → 消费 <code>Stream&lt;BetaRawMessageStreamEvent&gt;</code></td>
+<td>流式接收 API 响应</td>
+<td>原始流事件序列</td>
+</tr>
+<tr>
+<td>9.5</td>
+<td>事件转换</td>
+<td>将 SDK 原始事件转为内部 <code>StreamEvent</code>：① <code>content_block_start(tool_use)</code> → 工具调用开始 → ② <code>content_block_delta(text_delta)</code> → 文本增量 → ③ <code>content_block_delta(thinking_delta)</code> → 思考增量 → ④ <code>message_stop</code> → 组装完整 <code>AssistantMessage</code>（含 usage 统计）</td>
+<td>内部事件模型与 API 协议解耦</td>
+<td><code>StreamEvent</code>&#x2F;<code>AssistantMessage</code></td>
+</tr>
+<tr>
+<td>9.6</td>
+<td>模型回退</td>
+<td><code>FallbackTriggeredError</code> → 切换到 <code>fallbackModel</code> 重试。回退时：strip thinking signature blocks（防 400 错误）、tombstone 孤立消息、yield 系统通知</td>
+<td>高负载时自动降级到备选模型</td>
+<td>回退后重试或直接使用</td>
+</tr>
+<tr>
+<td>9.7</td>
+<td>重试逻辑</td>
+<td><code>withRetry()</code> 包装：429 (rate limit) &#x2F; 529 (overloaded) &#x2F; 5xx → 指数退避重试。502&#x2F;连接超时可触发非流式 fallback（<code>executeNonStreamingRequest</code>）</td>
+<td>弹性恢复网络和服务端瞬态错误</td>
+<td>最终成功或抛出错误</td>
+</tr>
+<tr>
+<td>9.8</td>
+<td>计费统计</td>
+<td><code>calculateUSDCost()</code> &#x2F; <code>addToTotalSessionCost()</code> &#x2F; <code>tokenCountFromLastAPIResponse()</code> — 按模型计算 token 费用并累加</td>
+<td>用户可通过 <code>/cost</code> 查看会话费用</td>
+<td>费用数据已累加</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-10-流式渲染-utils-messages-ts-handleMessageFromStream-REPL-tsx"><a href="#步骤-10-流式渲染-utils-messages-ts-handleMessageFromStream-REPL-tsx" class="headerlink" title="步骤 10: 流式渲染 (utils/messages.ts: handleMessageFromStream() + REPL.tsx)"></a>步骤 10: 流式渲染 (<code>utils/messages.ts: handleMessageFromStream()</code> + <code>REPL.tsx</code>)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10.1</td>
+<td><code>stream_request_start</code></td>
+<td>设置 <code>streamMode = &#39;requesting&#39;</code>，<code>&lt;SpinnerWithVerb&gt;</code> 显示”Thinking…”</td>
+<td>用户看到请求已发出</td>
+<td>UI: “Thinking…”</td>
+</tr>
+<tr>
+<td>10.2</td>
+<td><code>stream_event</code> + <code>content_block_start(tool_use)</code></td>
+<td>更新 <code>streamingToolUses</code> 状态（追加新工具），<code>streamMode = &#39;tool-use&#39;</code></td>
+<td>在工具参数完全流入前就显示工具名称</td>
+<td>UI: 工具名称已显示</td>
+</tr>
+<tr>
+<td>10.3</td>
+<td><code>stream_event</code> + <code>content_block_delta(text_delta)</code></td>
+<td>更新 <code>streamingText</code>（追加增量文本），<code>streamMode = &#39;responding&#39;</code>，调用 <code>onUpdateLength</code> 更新响应长度</td>
+<td>实时逐字显示生成的文本</td>
+<td>UI: 文本逐字出现</td>
+</tr>
+<tr>
+<td>10.4</td>
+<td><code>stream_event</code> + <code>content_block_delta(thinking_delta)</code></td>
+<td>更新 <code>streamingThinking</code>（追加思考增量）</td>
+<td>显示模型的思考过程（extended thinking）</td>
+<td>UI: 思考过程实时显示</td>
+</tr>
+<tr>
+<td>10.5</td>
+<td><code>stream_event</code> + <code>input_json_delta</code></td>
+<td>更新对应 <code>streamingToolUse</code> 的 <code>input</code> 字段（流式 JSON 拼接）</td>
+<td>在参数完全到达前就开始显示工具输入</td>
+<td>UI: 工具参数逐渐完整</td>
+</tr>
+<tr>
+<td>10.6</td>
+<td>完整消息到达</td>
+<td><code>onMessage(message)</code> → <code>setMessages(prev =&gt; [...prev, message])</code>，React 触发重渲染。<code>&lt;Messages&gt;</code> 组件根据消息类型选择渲染器：<code>tool.renderToolUseMessage()</code>（工具调用）、<code>tool.renderToolResultMessage()</code>（工具结果，支持 condensed&#x2F;verbose 两种模式）</td>
+<td>流式中间状态切换为完整的消息展示</td>
+<td>UI: 完整消息已渲染</td>
+</tr>
+<tr>
+<td>10.7</td>
+<td>tombstone 消息</td>
+<td><code>onTombstone(message)</code> → 从消息列表中移除指定消息</td>
+<td>模型回退时清理孤立的部分消息（thinking blocks 等）</td>
+<td>UI: 孤立消息已移除</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-11-工具执行-toolOrchestration-ts-→-toolExecution-ts-→-Tool-call"><a href="#步骤-11-工具执行-toolOrchestration-ts-→-toolExecution-ts-→-Tool-call" class="headerlink" title="步骤 11: 工具执行 (toolOrchestration.ts → toolExecution.ts → Tool.call())"></a>步骤 11: 工具执行 (<code>toolOrchestration.ts</code> → <code>toolExecution.ts</code> → <code>Tool.call()</code>)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>11.1</td>
+<td><code>partitionToolCalls()</code></td>
+<td>将所有 <code>ToolUseBlock[]</code> 分成批次：连续的 <code>isConcurrencySafe=true</code> 工具合为并发批次，其余每个独立串行批次。判断依据：<code>tool.isConcurrencySafe(parsedInput.data)</code>，如果 <code>safeParse</code> 失败或 <code>isConcurrencySafe</code> 抛异常（如 shell-quote 解析失败），保守地视为不安全</td>
+<td>安全的工具（如 Read、Glob、Grep）可并行执行节省时间，写入工具（Bash、Edit、Write）必须串行保证一致性</td>
+<td><code>Batch[]</code> 分区列表</td>
+</tr>
+<tr>
+<td>11.2</td>
+<td><code>runToolsConcurrently()</code></td>
+<td>使用 <code>all()</code> 工具函数（基于 <code>AsyncGenerator</code>）并发执行最多 <code>MAX_CONCURRENCY=10</code> 个工具。每个工具调用 <code>runToolUse()</code> 并标记 <code>setInProgressToolUseIDs</code></td>
+<td>并发加速只读操作</td>
+<td>并发工具结果</td>
+</tr>
+<tr>
+<td>11.3</td>
+<td><code>runToolsSerially()</code></td>
+<td>依次执行每个非并发安全工具，每完成一个更新 <code>currentContext</code>（通过 <code>contextModifier</code>）</td>
+<td>写入工具的 context modifier 可能影响后续工具（如 CWD 变更）</td>
+<td>串行工具结果</td>
+</tr>
+<tr>
+<td>11.4</td>
+<td><code>runToolUse()</code> (L337)</td>
+<td>AsyncGenerator，单个工具的完整生命周期：① <code>findToolByName()</code> 查找（支持 alias 回退，如已废弃的 “KillShell” → “TaskStop”）→ ② abort 信号检查 → ③ 委托 <code>streamedCheckPermissionsAndCallTool()</code></td>
+<td>统一处理工具查找失败、abort、执行异常的兜底</td>
+<td>yield <code>MessageUpdateLazy</code></td>
+</tr>
+<tr>
+<td>11.5</td>
+<td><code>inputSchema.safeParse()</code></td>
+<td>Zod schema 验证工具输入。失败时生成详细错误消息（含 <code>buildSchemaNotSentHint</code>：如果工具是 deferred 且未被 ToolSearch 发现，提示模型先 <code>select:toolName</code>）</td>
+<td>模型生成的输入不一定合法，早期拦截</td>
+<td>解析后的 <code>parsedInput</code> 或错误</td>
+</tr>
+<tr>
+<td>11.6</td>
+<td><code>tool.validateInput()</code></td>
+<td>工具特定的业务验证（如 BashTool 检查命令安全性、FileEditTool 检查文件路径）</td>
+<td>超出 schema 的语义级验证</td>
+<td>验证通过或错误</td>
+</tr>
+<tr>
+<td>11.7</td>
+<td><code>startSpeculativeClassifierCheck()</code></td>
+<td><strong>仅 BashTool</strong>：在权限检查前投机性地启动 auto-mode 分类器（与后续的 PreToolUse hooks、deny&#x2F;ask 检查并行运行）。不设置 UI 指示器（避免为 prefix-rule 自动允许的命令闪烁”classifier running”）</td>
+<td>并行化分类器调用，减少用户等待时间</td>
+<td>分类器 Promise（后台运行）</td>
+</tr>
+<tr>
+<td>11.8</td>
+<td><code>runPreToolUseHooks()</code></td>
+<td>执行用户配置的 PreToolUse hooks（外部脚本），可以 <code>approve</code>&#x2F;<code>deny</code>&#x2F;<code>passthrough</code>&#x2F;<code>modify input</code></td>
+<td>用户可编程的工具拦截点</td>
+<td>hook 结果（approve&#x2F;deny&#x2F;modify&#x2F;passthrough）</td>
+</tr>
+<tr>
+<td>11.9</td>
+<td><strong>权限决策</strong></td>
+<td>见步骤 11a（独立展开）</td>
+<td>—</td>
+<td><code>PermissionDecision</code></td>
+</tr>
+<tr>
+<td>11.10</td>
+<td><code>tool.call()</code></td>
+<td>执行工具核心逻辑。<code>onProgress</code> 回调实时上报进度（如 Bash 的 stdout 流、Agent 的子代理状态）</td>
+<td>工具的实际功能执行</td>
+<td><code>ToolResult&lt;Output&gt;</code>（含 data、可选 newMessages、contextModifier）</td>
+</tr>
+<tr>
+<td>11.11</td>
+<td><code>runPostToolUseHooks()</code></td>
+<td>执行 PostToolUse hooks，可审计&#x2F;修改工具输出</td>
+<td>工具执行后的用户自定义处理</td>
+<td>hook 结果</td>
+</tr>
+<tr>
+<td>11.12</td>
+<td><code>mapToolResultToToolResultBlockParam()</code></td>
+<td>将工具输出映射为 API 格式的 <code>ToolResultBlockParam</code></td>
+<td>API 要求的标准格式</td>
+<td><code>ToolResultBlockParam</code></td>
+</tr>
+<tr>
+<td>11.13</td>
+<td><code>processToolResultBlock()</code></td>
+<td>如果工具结果超过 <code>maxResultSizeChars</code>，持久化到磁盘文件，返回预览+文件路径</td>
+<td>防止单个工具结果撑爆 context window</td>
+<td>可能被截断的工具结果</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-11a-权限检查-permissions-permissions-ts-PermissionContext-ts"><a href="#步骤-11a-权限检查-permissions-permissions-ts-PermissionContext-ts" class="headerlink" title="步骤 11a: 权限检查 (permissions/permissions.ts + PermissionContext.ts)"></a>步骤 11a: 权限检查 (<code>permissions/permissions.ts</code> + <code>PermissionContext.ts</code>)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>11a.1</td>
+<td><strong>Step 1a: 整体拒绝</strong></td>
+<td><code>getDenyRuleForTool()</code> — 在 <code>alwaysDenyRules</code> 中查找整体拒绝规则（无 <code>ruleContent</code> 的规则，如 <code>&quot;Bash&quot;</code> 拒绝所有 Bash 调用）。支持 MCP 服务器级别拒绝（规则 <code>&quot;mcp__server1&quot;</code> 匹配该服务器所有工具）</td>
+<td>最高优先级的安全屏障</td>
+<td>匹配 → 直接拒绝</td>
+</tr>
+<tr>
+<td>11a.2</td>
+<td><strong>Step 1b: 整体允许</strong></td>
+<td><code>toolAlwaysAllowedRule()</code> — 在 <code>alwaysAllowRules</code> 中查找整体允许规则</td>
+<td>用户明确信任的工具跳过后续检查</td>
+<td>匹配 → 直接允许</td>
+</tr>
+<tr>
+<td>11a.3</td>
+<td><strong>Step 2: 工具特定权限</strong></td>
+<td><code>tool.checkPermissions(input, context)</code> — 每个工具实现自己的权限逻辑。如 BashTool 分析命令，拆解为子命令，逐个检查 <code>Bash(prefix:git *)</code> 等内容级规则；FileEditTool 检查路径是否在工作目录内</td>
+<td>工具级别的细粒度权限控制</td>
+<td><code>PermissionResult &#123; behavior: &#39;allow&#39;/&#39;deny&#39;/&#39;ask&#39;, updatedInput &#125;</code></td>
+</tr>
+<tr>
+<td>11a.4</td>
+<td><strong>Step 3: 内容级规则</strong></td>
+<td><code>getRuleByContentsForTool()</code> — 在 allow&#x2F;deny&#x2F;ask 规则中按 <code>ruleContent</code> 匹配。使用 <code>tool.preparePermissionMatcher()</code> 预编译匹配器（一次解析，多次匹配）</td>
+<td>如 <code>Bash(prefix:npm test)</code> 允许特定命令前缀</td>
+<td>匹配的规则或 null</td>
+</tr>
+<tr>
+<td>11a.5</td>
+<td><strong>Step 4a: PreToolUse hooks 决策</strong></td>
+<td><code>resolveHookPermissionDecision()</code> — hooks 返回的 <code>approve</code>&#x2F;<code>deny</code> 直接作为决策。<code>permanent: true</code> 的 approve 持久化为 always-allow 规则</td>
+<td>用户自定义脚本可自动批准&#x2F;拒绝</td>
+<td>hook 决策或 passthrough</td>
+</tr>
+<tr>
+<td>11a.6</td>
+<td><strong>Step 4b: Auto 模式分类器</strong></td>
+<td><code>classifierDecision()</code> — 当权限模式为 <code>auto</code> 时，基于对话 transcript 运行安全分类器判断操作是否安全。<code>awaitClassifierAutoApproval()</code> 等待步骤 11.7 启动的投机检查结果。如果分类器不可用或超时，按 <code>fail-closed</code> 策略退化为用户询问</td>
+<td>无需用户确认的自动批准安全操作</td>
+<td>分类器决策或退化为 ask</td>
+</tr>
+<tr>
+<td>11a.7</td>
+<td><strong>Step 4c: 用户交互式确认</strong></td>
+<td>通过 <code>PermissionContext.ts</code>：创建 Promise → push 到 <code>toolUseConfirmQueue</code> → REPL 渲染 <code>&lt;PermissionRequest&gt;</code> 组件 → 用户选择：① “Allow once” → 本次允许 → ② “Allow always” → 持久化为 always-allow 规则（<code>persistPermissionUpdates()</code>）→ ③ “Deny” → 拒绝并可附加反馈 → resolve Promise</td>
+<td>用户是最终安全决策者</td>
+<td><code>PermissionDecision</code></td>
+</tr>
+<tr>
+<td>11a.8</td>
+<td>denial 追踪</td>
+<td><code>recordDenial()</code> &#x2F; <code>shouldFallbackToPrompting()</code> — 连续拒绝超过阈值时，退化为始终提示而非自动拒绝</td>
+<td>防止模型反复尝试被拒绝的操作</td>
+<td>拒绝计数更新</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-12-循环决策与恢复-query-ts-循环尾部-L1062-1250"><a href="#步骤-12-循环决策与恢复-query-ts-循环尾部-L1062-1250" class="headerlink" title="步骤 12: 循环决策与恢复 (query.ts 循环尾部, L1062-1250+)"></a>步骤 12: 循环决策与恢复 (<code>query.ts</code> 循环尾部, L1062-1250+)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>12.1</td>
+<td><strong><code>needsFollowUp=false</code>（无 tool_use）</strong></td>
+<td>进入 stop&#x2F;recovery 路径</td>
+<td>模型没有调用工具，可能是最终回复或错误</td>
+<td>—</td>
+</tr>
+<tr>
+<td>12.2</td>
+<td>prompt-too-long 恢复</td>
+<td>① <strong>Context collapse drain</strong>（首次尝试）：<code>contextCollapse.recoverFromOverflow()</code> 提交所有暂存的 collapse → <code>continue</code> 重试 → ② <strong>Reactive compact</strong>（collapse drain 失败后）：<code>tryReactiveCompact()</code> 执行紧急全量压缩 → <code>continue</code> 重试 → ③ 两者都失败：yield 暂扣的错误消息 → <code>executeStopFailureHooks()</code> → 返回 <code>&#123; reason: &#39;prompt_too_long&#39; &#125;</code></td>
+<td>多级递进恢复策略：先尝试轻量操作（drain），再尝试重量操作（compact）</td>
+<td><code>Continue(collapse_drain_retry)</code> 或 <code>Continue(reactive_compact_retry)</code> 或 <code>Terminal</code></td>
+</tr>
+<tr>
+<td>12.3</td>
+<td>max_output_tokens 恢复</td>
+<td>① <strong>Escalate</strong>（首次，<code>maxOutputTokensOverride=undefined</code>）：将 <code>maxOutputTokens</code> 从默认 8k 提升到 <code>ESCALATED_MAX_TOKENS=64k</code> → <code>continue</code> → ② <strong>Multi-turn recovery</strong>（最多 3 次）：注入 meta 消息 “Output token limit hit. Resume directly…” → <code>continue</code> → ③ 超过 3 次：yield 暂扣的错误 → 返回</td>
+<td>渐进式恢复：先提升限额，再让模型分段输出</td>
+<td><code>Continue(max_output_tokens_escalate)</code> 或 <code>Continue(max_output_tokens_recovery)</code> 或 <code>Terminal</code></td>
+</tr>
+<tr>
+<td>12.4</td>
+<td><code>handleStopHooks()</code></td>
+<td>执行用户配置的 Stop hooks。hooks 可 <code>block</code>（阻止结束，注入消息让模型继续）或 <code>allow</code></td>
+<td>用户可定义自动”继续”条件（如 lint 未通过时自动让 Claude 修复）</td>
+<td><code>continue</code>（hooks blocking）或进入 12.5</td>
+</tr>
+<tr>
+<td>12.5</td>
+<td>Token budget 检查</td>
+<td><code>checkTokenBudget()</code> — 如果用户通过 <code>+500k</code> 等语法设置了 token 预算，检查是否还有剩余。有剩余 → 注入 “Continue” 消息 → <code>incrementBudgetContinuationCount()</code> → <code>continue</code></td>
+<td>用户可让 Claude 自动续接更多工作</td>
+<td><code>Continue(budget_continuation)</code> 或返回</td>
+</tr>
+<tr>
+<td>12.6</td>
+<td>正常结束</td>
+<td><code>return &#123; reason: &#39;end_turn&#39; &#125;</code> — 返回 <code>Terminal</code>，<code>query()</code> 异步生成器完成</td>
+<td>一次用户交互回合结束</td>
+<td><code>Terminal</code></td>
+</tr>
+<tr>
+<td>12.7</td>
+<td><strong><code>needsFollowUp=true</code>（有 tool_use）</strong></td>
+<td>收集工具结果 + 注入附件 + 继续循环</td>
+<td>—</td>
+<td>—</td>
+</tr>
+<tr>
+<td>12.8</td>
+<td>收集工具结果</td>
+<td>① 如果 <code>StreamingToolExecutor</code> 启用：<code>getRemainingResults()</code> 消费所有剩余结果 → ② 否则：<code>runTools()</code> 通过 <code>toolOrchestration</code> 执行 → 收集 <code>toolResults[]</code></td>
+<td>两种路径最终收集到相同格式的结果</td>
+<td><code>toolResults: (UserMessage|AttachmentMessage)[]</code></td>
+</tr>
+<tr>
+<td>12.9</td>
+<td>MCP 工具刷新</td>
+<td><code>toolUseContext.options.refreshTools?.()</code> — 重新获取最新的工具列表（MCP 服务器可能在 mid-query 连接）</td>
+<td>动态工具发现</td>
+<td>更新后的 tools</td>
+</tr>
+<tr>
+<td>12.10</td>
+<td>内存附件注入</td>
+<td><code>pendingMemoryPrefetch.consume()</code> — 消费 turn 开始时启动的内存预取结果 → <code>filterDuplicateMemoryAttachments()</code> 去重 → <code>createAttachmentMessage()</code> 创建附件消息</td>
+<td>自动注入相关的 CLAUDE.md 记忆和嵌套记忆文件</td>
+<td><code>AttachmentMessage[]</code></td>
+</tr>
+<tr>
+<td>12.11</td>
+<td>技能发现注入</td>
+<td><code>pendingSkillPrefetch?.consume()</code> — 消费技能发现预取结果（与模型流式和工具执行并行运行）</td>
+<td>自动发现并推荐相关技能</td>
+<td>技能附件（如有匹配）</td>
+</tr>
+<tr>
+<td>12.12</td>
+<td>队列命令消费</td>
+<td><code>getCommandsByMaxPriority()</code> — 消费优先级队列中的等待命令（如用户在 Claude 响应期间提交的消息）</td>
+<td>不丢失用户在工具执行期间的新输入</td>
+<td>队列命令消息</td>
+</tr>
+<tr>
+<td>12.13</td>
+<td>工具使用摘要</td>
+<td><code>generateToolUseSummary()</code> — 异步生成本轮工具使用的摘要（使用 haiku ~1s），存为 <code>pendingToolUseSummary</code> 在下一轮 yield</td>
+<td>摘要在模型流式期间完成，零阻塞</td>
+<td>摘要 Promise（下轮使用）</td>
+</tr>
+<tr>
+<td>12.14</td>
+<td>max_turns 检查</td>
+<td>如果 <code>turnCount &gt;= maxTurns</code>，返回 <code>&#123; reason: &#39;max_turns&#39; &#125;</code></td>
+<td>防止无限工具循环</td>
+<td><code>Terminal</code> 或继续</td>
+</tr>
+<tr>
+<td>12.15</td>
+<td><code>state = &#123; ... &#125;; continue</code></td>
+<td>用新的 messages（原消息 + assistant + toolResults + attachments + 队列命令）、更新后的 toolUseContext、递增的 turnCount 构建新 <code>State</code>，<code>continue</code> 回到循环顶部</td>
+<td>带着工具结果和附件继续下一轮 API 调用</td>
+<td>回到步骤 8.3</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-13-会话持久化-utils-sessionStorage-ts-176KB"><a href="#步骤-13-会话持久化-utils-sessionStorage-ts-176KB" class="headerlink" title="步骤 13: 会话持久化 (utils/sessionStorage.ts, 176KB)"></a>步骤 13: 会话持久化 (<code>utils/sessionStorage.ts</code>, 176KB)</h4><table>
+<thead>
+<tr>
+<th>序号</th>
+<th>操作</th>
+<th>做了什么</th>
+<th>设计意图</th>
+<th>产出</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>13.1</td>
+<td>JSONL 实时写入</td>
+<td>每条消息（user&#x2F;assistant&#x2F;system&#x2F;attachment&#x2F;progress）通过 <code>fsAppendFile</code> 实时追加到 <code>~/.claude/projects/&lt;cwd&gt;/&lt;sessionId&gt;.jsonl</code>。使用 <code>registerCleanup</code> 注册 <code>gracefulShutdownSync</code> 确保退出时刷新</td>
+<td>实时持久化防止异常退出丢失数据</td>
+<td>JSONL transcript 文件</td>
+</tr>
+<tr>
+<td>13.2</td>
+<td>会话标题缓存</td>
+<td><code>cacheSessionTitle()</code> — 将 haiku 生成的会话标题写入 JSONL 文件头部和 <code>searchSessionsByCustomTitle()</code> 索引</td>
+<td>支持 <code>/session</code> 命令按标题搜索历史会话</td>
+<td>标题已缓存</td>
+</tr>
+<tr>
+<td>13.3</td>
+<td>费用数据保存</td>
+<td><code>saveCurrentSessionCosts()</code> — 将 token 使用量、费用、API 延迟等写入项目配置（<code>lastCost</code>&#x2F;<code>lastDuration</code>&#x2F;<code>lastTotalInputTokens</code> 等）</td>
+<td>下次启动时补发 <code>tengu_exit</code> 事件（步骤 5.18），<code>/cost</code> 命令显示</td>
+<td>费用数据已保存</td>
+</tr>
+<tr>
+<td>13.4</td>
+<td>模式&#x2F;设置保存</td>
+<td><code>saveMode()</code>&#x2F;<code>saveAgentSetting()</code> — 保存当前权限模式、agent 类型到 JSONL，供 <code>--resume</code> 恢复</td>
+<td>恢复时还原用户的完整配置</td>
+<td>设置已持久化</td>
+</tr>
+<tr>
+<td>13.5</td>
+<td>文件历史快照</td>
+<td><code>fileHistoryMakeSnapshot()</code> → <code>recordAttributionSnapshot()</code> — 记录文件变更历史和归因信息</td>
+<td><code>/rewind</code> 命令可回退文件变更，commit attribution 可追踪哪些变更是 Claude 做的</td>
+<td>快照已保存</td>
+</tr>
+<tr>
+<td>13.6</td>
+<td>Context collapse 快照</td>
+<td><code>contextCollapseCommit</code> &#x2F; <code>contextCollapseSnapshot</code> entries — 保存 collapse 的 commit log 和当前快照</td>
+<td><code>--resume</code> 时可重建 collapse 视图，不需要重新执行压缩</td>
+<td>collapse 数据已持久化</td>
+</tr>
+<tr>
+<td>13.7</td>
+<td>工具结果持久化</td>
+<td><code>recordContentReplacement()</code> — 保存工具结果被 budget 截断的映射关系（tool_use_id → 磁盘文件路径）</td>
+<td><code>--resume</code> 时可重建 contentReplacementState，恢复被截断结果的引用</td>
+<td>替换记录已保存</td>
+</tr>
+<tr>
+<td>13.8</td>
+<td><strong>会话恢复</strong>（<code>sessionRestore.ts</code>）</td>
+<td><code>--resume &lt;id&gt;</code> 或 <code>--continue</code> 触发：① <code>loadTranscriptFromFile()</code> — 从 JSONL 加载（使用 <code>readHeadAndTail</code> 优化大文件，跳过 pre-compact 部分）→ ② <code>deserializeMessages()</code> 重建消息列表 → ③ <code>restoreSessionStateFromLog()</code> 恢复：会话 ID、CWD、权限模式、agent 类型、worktree 状态 → ④ <code>fileHistoryRestoreStateFromLog()</code> 恢复文件历史 → ⑤ <code>attributionRestoreStateFromLog()</code> 恢复归因状态 → ⑥ <code>reconstructContentReplacementState()</code> 重建工具结果替换状态 → ⑦ <code>restoreWorktreeForResume()</code> 恢复 worktree（如有）</td>
+<td>完整恢复上一次会话的所有状态</td>
+<td>完整的会话状态（messages + fileHistory + attribution + contentReplacement + worktree）</td>
+</tr>
+<tr>
+<td>13.9</td>
+<td>会话搜索</td>
+<td><code>searchSessionsByCustomTitle()</code> — 按用户自定义标题模糊搜索 → <code>getSessionIdFromLog()</code> — 从日志提取会话 ID → <code>loadTranscriptFromFile()</code> → <code>sortLogs()</code> 按时间排序</td>
+<td><code>/session</code> 命令和 <code>--resume</code> 的 tab 补全</td>
+<td>匹配的会话列表</td>
+</tr>
+</tbody></table>
+<hr>
+<h3 id="各步骤优秀实现方式汇总"><a href="#各步骤优秀实现方式汇总" class="headerlink" title="各步骤优秀实现方式汇总"></a>各步骤优秀实现方式汇总</h3><h4 id="阶段-1-2-启动性能优化"><a href="#阶段-1-2-启动性能优化" class="headerlink" title="阶段 1-2: 启动性能优化"></a>阶段 1-2: 启动性能优化</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>零导入快速路径</strong></td>
+<td><code>--version</code> 直接 <code>console.log(MACRO.VERSION)</code> 返回，不触发任何 <code>import</code>。所有快速路径（daemon&#x2F;bridge&#x2F;bg）也用动态 <code>await import()</code> 按需加载</td>
+<td><code>--version</code> 耗时 ~0ms，对比完整启动 ~500ms</td>
+<td>任何 CLI 工具的高频子命令应极力避免全量导入</td>
+</tr>
+<tr>
+<td><strong>副作用顺序编排</strong></td>
+<td><code>main.tsx</code> 头三行 <code>profileCheckpoint → startMdmRawRead → startKeychainPrefetch</code> 利用 ESM 模块同步评估，在后续 ~135ms 模块导入期间并行跑 I&#x2F;O 子进程</td>
+<td>MDM + Keychain 读取与模块导入完全重叠，<code>await</code> 时几乎免费（~0ms）</td>
+<td>启动时有多个独立 I&#x2F;O 的应用，可将 I&#x2F;O 提前到 import 阶段</td>
+</tr>
+<tr>
+<td><strong><code>feature()</code> + DCE</strong></td>
+<td><code>bun:bundle</code> 的 <code>feature(&#39;XXX&#39;)</code> 构建时求值为 <code>true/false</code>，触发死代码消除。条件 <code>require()</code> 确保未使用模块不被加载</td>
+<td>同一份源码编译出内部版本（含调试工具）和外部版本（精简），零运行时开销</td>
+<td>需要同一代码库支撑多 SKU&#x2F;渠道的项目</td>
+</tr>
+<tr>
+<td><strong>早期输入捕获</strong></td>
+<td><code>startCapturingEarlyInput()</code> 在 CLI 入口就开始缓冲 stdin，REPL 渲染后 <code>consumeEarlyInput()</code> 回放</td>
+<td>用户在 ~500ms 启动期间的打字不丢失</td>
+<td>任何有明显启动延迟的交互式 CLI</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-3-preAction-Hook-模式"><a href="#阶段-3-preAction-Hook-模式" class="headerlink" title="阶段 3: preAction Hook 模式"></a>阶段 3: preAction Hook 模式</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Commander preAction 统一闸口</strong></td>
+<td>用 <code>program.hook(&#39;preAction&#39;, ...)</code> 拦截所有子命令，执行共享初始化（<code>init()</code>、<code>initSinks()</code>、<code>runMigrations()</code>）</td>
+<td>子命令（doctor&#x2F;mcp&#x2F;plugin&#x2F;auth）无需各自重复初始化逻辑，同时保证日志 sink 在 <code>process.exit()</code> 前已附加</td>
+<td>任何有多个子命令的 CLI，共享初始化逻辑不宜分散到各 action</td>
+</tr>
+<tr>
+<td><strong>版本化迁移</strong></td>
+<td><code>CURRENT_MIGRATION_VERSION = 11</code>，只有版本不匹配才跑迁移，完成后写入版本号</td>
+<td>幂等、增量，不会重复执行已跑过的迁移</td>
+<td>需要跨版本升级配置&#x2F;数据的桌面应用或 CLI</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-4-init-初始化"><a href="#阶段-4-init-初始化" class="headerlink" title="阶段 4: init() 初始化"></a>阶段 4: init() 初始化</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong><code>memoize</code> 幂等</strong></td>
+<td><code>init = memoize(async () =&gt; &#123;...&#125;)</code>，整个进程只执行一次，多处 <code>await init()</code> 安全</td>
+<td>多个入口路径（交互&#x2F;headless&#x2F;子命令）都可 <code>await init()</code> 而不担心重复初始化</td>
+<td>任何有多入口的应用的全局初始化</td>
+</tr>
+<tr>
+<td><strong><code>void</code> fire-and-forget 异步</strong></td>
+<td>非关键路径操作（OAuth 填充、JetBrains 检测、仓库检测）用 <code>void fn()</code> 不 <code>await</code>，错误静默</td>
+<td>关键路径不被非核心异步操作阻塞</td>
+<td>启动时需要执行”最好有但不必须”的预热操作</td>
+</tr>
+<tr>
+<td><strong>API 预连接</strong></td>
+<td><code>preconnectAnthropicApi()</code> 在 CA 证书 + 代理配置完成后发起 TCP+TLS 握手，与后续 ~100ms 的 action-handler 重叠</td>
+<td>首次 API 请求延迟减少 100-200ms</td>
+<td>应用启动后必然要请求某个 API 时，可提前预热连接池</td>
+</tr>
+<tr>
+<td><strong>延迟加载大模块</strong></td>
+<td>OTel + protobuf ~400KB 通过 <code>Promise.all([import(...)])</code> 异步加载，gRPC ~700KB 更进一步延迟到 <code>instrumentation.ts</code> 内部</td>
+<td>不在关键路径上加载约 1.1MB 的遥测模块</td>
+<td>任何可选的大型依赖（monitoring&#x2F;tracing&#x2F;analytics SDK）</td>
+</tr>
+<tr>
+<td><strong>分层环境变量</strong></td>
+<td><code>applySafeConfigEnvironmentVariables()</code>（信任前）vs <code>applyConfigEnvironmentVariables()</code>（信任后）。只有信任对话通过后才应用用户自定义变量</td>
+<td>恶意仓库的 <code>.claude/settings.json</code> 中的危险环境变量无法在信任前生效</td>
+<td>需要在”不可信→可信”转换中逐步释放能力的安全模型</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-5-setup-会话初始化"><a href="#阶段-5-setup-会话初始化" class="headerlink" title="阶段 5: setup() 会话初始化"></a>阶段 5: setup() 会话初始化</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>UDS 消息总线</strong></td>
+<td><code>startUdsMessaging()</code> 在 tmpdir 创建 Unix Domain Socket，导出 <code>$CLAUDE_CODE_MESSAGING_SOCKET</code>，子进程可通过此 socket 注入消息</td>
+<td>解耦的进程间通信：团队成员、外部脚本、IDE 扩展都可通过 socket 发送消息给当前会话</td>
+<td>任何需要接受外部输入的长驻进程</td>
+</tr>
+<tr>
+<td><strong>Hooks 配置快照</strong></td>
+<td><code>captureHooksConfigSnapshot()</code> 捕获 hooks 配置哈希，运行时 <code>updateHooksConfigSnapshot()</code> 比对检测篡改</td>
+<td>防止恶意代码在会话运行期间注入新的 hooks</td>
+<td>安全敏感的插件&#x2F;钩子系统</td>
+</tr>
+<tr>
+<td><strong><code>setImmediate</code> 延迟后台任务</strong></td>
+<td>commit attribution hooks 用 <code>setImmediate(() =&gt; void import(...))</code> 推迟到首次渲染后再 spawn git 子进程</td>
+<td>git subprocess spawn 不与首次渲染竞争 CPU 和事件循环</td>
+<td>启动时有多个子进程需要 spawn 的应用</td>
+</tr>
+<tr>
+<td><strong><code>tengu_started</code> 成功率分母</strong></td>
+<td>在所有 I&#x2F;O 之前发射”进程已启动”信标，作为 session success rate 的分母</td>
+<td>即使后续代码崩溃，发布健康监控也能捕获此次启动</td>
+<td>任何需要 reliability 指标的应用，”启动即计数”</td>
+</tr>
+<tr>
+<td><strong>bypass-permissions 安全验证</strong></td>
+<td>必须同时满足 Docker&#x2F;sandbox + 无网络访问 才允许跳过权限，root 用户直接拒绝</td>
+<td>防止在不安全环境中使用危险的 <code>--dangerously-skip-permissions</code></td>
+<td>任何有”超级管理员模式”的工具，需要环境级别的安全门槛</td>
+</tr>
+</tbody></table>
+<h4 id="阶段-5b-启动对话框流"><a href="#阶段-5b-启动对话框流" class="headerlink" title="阶段 5b: 启动对话框流"></a>阶段 5b: 启动对话框流</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>信任后 GrowthBook 重初始化</strong></td>
+<td>信任前 GrowthBook 无 auth headers → 返回 stale&#x2F;default 值。信任后 <code>resetGrowthBook() → initializeGrowthBook()</code> 带认证重新拉取</td>
+<td>信任前的特性标志不暴露用户身份，信任后获得正确的个性化标志</td>
+<td>有”匿名→登录”状态转换的特性标志系统</td>
+</tr>
+<tr>
+<td><strong>git 命令延迟到信任后</strong></td>
+<td><code>getSystemContext()</code>（含 git status）仅在 <code>setSessionTrustAccepted(true)</code> 后调用</td>
+<td>git hooks 和 config 可执行任意代码（<code>core.fsmonitor</code>、<code>diff.external</code>），不可在未信任仓库中执行</td>
+<td>任何需要在用户仓库中执行第三方代码的工具</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-6-REPL-启动"><a href="#步骤-6-REPL-启动" class="headerlink" title="步骤 6: REPL 启动"></a>步骤 6: REPL 启动</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>延迟预取窗口</strong></td>
+<td><code>startDeferredPrefetches()</code> 在首次渲染后执行，利用”用户正在打字”的窗口隐藏 I&#x2F;O 延迟。<code>--bare</code> 模式全部跳过</td>
+<td>缓存预热不阻塞首次渲染，也不浪费脚本模式的时间</td>
+<td>交互式应用在”用户空闲”时段做预热</td>
+</tr>
+<tr>
+<td><strong>动态导入 REPL</strong></td>
+<td><code>launchRepl()</code> 中 <code>await import(&#39;./screens/REPL.js&#39;)</code> 延迟加载 875KB 的核心组件</td>
+<td>非交互模式（<code>-p</code>）不加载 REPL，节省 ~200ms</td>
+<td>大型组件按使用场景延迟加载</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-7-用户输入处理"><a href="#步骤-7-用户输入处理" class="headerlink" title="步骤 7: 用户输入处理"></a>步骤 7: 用户输入处理</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>QueryGuard 状态机</strong></td>
+<td><code>tryStart()</code> 原子检查 idle→running + 生成 generation number，<code>end(generation)</code> 原子检查 generation + running→idle。并发提交自动入队</td>
+<td>完全无锁的并发保护，防止 cancel+resubmit 竞态下 stale finally 错误重置状态</td>
+<td>任何有 async cancel+retry 语义的查询系统</td>
+</tr>
+<tr>
+<td><strong>即时命令</strong></td>
+<td><code>immediate: true</code> 的命令（<code>/clear</code>、<code>/status</code>）可在 Claude 响应期间执行，不中断当前查询</td>
+<td>用户可随时查看状态或清屏，无需等待 Claude 完成</td>
+<td>长时间运行的后台任务 + 需要即时反馈的 UI</td>
+</tr>
+<tr>
+<td><strong>Ref 镜像避免 deps 膨胀</strong></td>
+<td><code>streamModeRef.current = streamMode</code>，<code>onSubmit</code> 的 deps 中不包含 <code>streamMode</code>（每轮 ~10 次翻转），只读 ref 获取最新值</td>
+<td>避免每次 <code>streamMode</code> 变化重建 <code>onSubmit</code> → 级联重建 PromptInput → 级联重建下游 hooks</td>
+<td>React 高频变化 state 不应出现在回调 deps 中</td>
+</tr>
+<tr>
+<td><strong>并行上下文加载</strong></td>
+<td><code>Promise.all([getSystemPrompt(), getUserContext(), getSystemContext()])</code> 三路并行</td>
+<td>三者互不依赖，并行比串行快约 2-3 倍</td>
+<td>多个独立异步操作应始终并行</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-8-核心查询循环"><a href="#步骤-8-核心查询循环" class="headerlink" title="步骤 8: 核心查询循环"></a>步骤 8: 核心查询循环</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>四级压缩流水线</strong></td>
+<td>Snip → Microcompact → Context Collapse → Autocompact，按成本递增排列。Collapse 运行在 Autocompact 之前：如果 collapse 将 token 降到阈值以下，autocompact（需要一次完整 API 调用）就不触发</td>
+<td>用最小代价管理 context window，避免不必要的高成本压缩</td>
+<td>多级缓存淘汰策略（L1→L2→L3 的设计理念）</td>
+</tr>
+<tr>
+<td><strong><code>using</code> 语法自动 dispose</strong></td>
+<td><code>using pendingMemoryPrefetch = startRelevantMemoryPrefetch(...)</code> — 利用 TC39 显式资源管理提案，generator 任何退出路径（return&#x2F;throw&#x2F;<code>.return()</code>）都自动 dispose</td>
+<td>不可能遗漏清理逻辑，即使有复杂的多路 <code>continue</code>&#x2F;<code>return</code></td>
+<td>任何有”预取→消费→清理”生命周期的资源管理</td>
+</tr>
+<tr>
+<td><strong>State 原子更新</strong></td>
+<td>每个 <code>continue</code> 站点通过 <code>state = &#123; ...state, newValues &#125;</code> 一次性更新全部跨迭代状态，而非 9 个独立赋值</td>
+<td>不可能只更新部分字段导致状态不一致</td>
+<td>复杂状态机中有多个 transition 的循环</td>
+</tr>
+<tr>
+<td><strong>错误暂扣（withheld）</strong></td>
+<td>prompt-too-long &#x2F; max-output-tokens &#x2F; media-size-error 检测到后不立即 yield，而是标记 <code>withheld=true</code>，等恢复逻辑判断是否可以自动修复</td>
+<td>避免向 SDK 消费者泄露可自动恢复的中间错误（桌面端收到 error 就终止会话）</td>
+<td>任何有自动恢复机制的流式系统，错误应暂扣到恢复逻辑判决后</td>
+</tr>
+<tr>
+<td><strong>流式工具执行</strong></td>
+<td><code>StreamingToolExecutor</code> 在 API 响应流式接收期间就开始执行工具（<code>addTool()</code> 边收边跑），不等流完成</td>
+<td>工具执行与模型流式响应重叠，减少端到端延迟</td>
+<td>流式处理管道中下游可以提前启动的场景</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-9-流式-API-调用"><a href="#步骤-9-流式-API-调用" class="headerlink" title="步骤 9: 流式 API 调用"></a>步骤 9: 流式 API 调用</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>ToolSearch 延迟加载</strong></td>
+<td>未被 <code>ToolSearch</code> 发现的工具只发送名称（<code>defer_loading: true</code>），不发送完整 schema</td>
+<td>40+ 工具的 schema 全发送消耗大量 token，延迟加载按需发送</td>
+<td>API 参数量大时的”schema-on-demand”模式</td>
+</tr>
+<tr>
+<td><strong>三层 prompt caching</strong></td>
+<td>消息级 <code>cache_control: ephemeral</code> → 系统提示前缀分离（跨 turn 不变的部分）→ 全局 scope（跨用户共享）</td>
+<td>最大化 cache 命中率，每次 API 调用节省数千 token</td>
+<td>多轮对话 API 调用中系统提示和历史消息的缓存策略</td>
+</tr>
+<tr>
+<td><strong>流式回退</strong></td>
+<td><code>FallbackTriggeredError</code> 触发后：tombstone 孤立消息 → strip thinking signatures → 切换 fallback model → 重试</td>
+<td>高负载时透明降级，用户看到一条通知而非错误</td>
+<td>任何有主&#x2F;备模型或主&#x2F;备服务的系统</td>
+</tr>
+<tr>
+<td><strong>非流式 fallback</strong></td>
+<td>502&#x2F;连接超时时自动切换到 <code>executeNonStreamingRequest</code>（单次完整返回）</td>
+<td>流式连接不稳定时退化为更可靠的非流式模式</td>
+<td>流式 API 的可靠性兜底</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-10-流式渲染"><a href="#步骤-10-流式渲染" class="headerlink" title="步骤 10: 流式渲染"></a>步骤 10: 流式渲染</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>增量 UI 更新</strong></td>
+<td>每个 <code>content_block_delta</code> 只更新对应的 state slice（<code>streamingText</code>&#x2F;<code>streamingThinking</code>&#x2F;<code>streamingToolUses</code>），React 按需重渲染</td>
+<td>避免每个 delta 触发全量消息列表重渲染</td>
+<td>高频更新的实时 UI，应拆分 state 粒度</td>
+</tr>
+<tr>
+<td><strong>tombstone 消息清理</strong></td>
+<td>模型回退时 yield <code>&#123; type: &#39;tombstone&#39;, message &#125;</code> 让 UI 移除孤立的部分消息（含无效 thinking signatures）</td>
+<td>避免无效 thinking blocks 导致后续 API 400 错误（”thinking blocks cannot be modified”）</td>
+<td>流式处理中需要撤回已发出内容的场景</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-11-工具执行"><a href="#步骤-11-工具执行" class="headerlink" title="步骤 11: 工具执行"></a>步骤 11: 工具执行</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>并发&#x2F;串行自动分区</strong></td>
+<td><code>partitionToolCalls()</code> 根据 <code>isConcurrencySafe</code> 将工具分为并发批次和串行批次，并发最大 10</td>
+<td>只读工具（Read&#x2F;Glob&#x2F;Grep）并行提速，写入工具保证顺序一致性</td>
+<td>混合读写操作的批处理系统</td>
+</tr>
+<tr>
+<td><strong>投机性分类器</strong></td>
+<td>Bash 工具在权限检查前就 <code>startSpeculativeClassifierCheck()</code>，与 PreToolUse hooks 并行运行。UI 指示器仅在确实需要 ask 时才设置</td>
+<td>分类器延迟被 hooks 执行时间掩盖，用户等待时间缩短</td>
+<td>任何有”先判断后决策”两步流程的场景，判断可提前开始</td>
+</tr>
+<tr>
+<td><strong><code>buildTool()</code> fail-closed 默认值</strong></td>
+<td><code>isConcurrencySafe=false</code>（假设不安全）、<code>isReadOnly=false</code>（假设写入）、<code>isDestructive=false</code></td>
+<td>新工具忘记声明属性时，走最保守的路径</td>
+<td>安全敏感系统的默认值策略</td>
+</tr>
+<tr>
+<td><strong>Alias 回退</strong></td>
+<td><code>findToolByName</code> 先查主名，再查已废弃的 alias（如 <code>KillShell → TaskStop</code>）。只对 alias 匹配生效，防止工具改名后旧 transcript resume 失败</td>
+<td>工具重命名不破坏已有会话的恢复</td>
+<td>任何有公开 API&#x2F;接口重命名需求的系统</td>
+</tr>
+<tr>
+<td><strong><code>backfillObservableInput</code></strong></td>
+<td>在 yield 给外部观察者前，浅克隆 tool_use input 并注入 legacy 字段。原始 input 不突变（保护 prompt cache）</td>
+<td>SDK stream、transcript、hooks 看到完整字段，API 请求保持字节一致（cache 不 bust）</td>
+<td>需要同时满足”向后兼容”和”缓存一致性”的数据管道</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-11a-权限检查"><a href="#步骤-11a-权限检查" class="headerlink" title="步骤 11a: 权限检查"></a>步骤 11a: 权限检查</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>多层权限流水线</strong></td>
+<td>deny rules → tool-level allow → tool.checkPermissions → content-level rules → hooks → classifier → 用户确认。每层短路，早期匹配不执行后续层</td>
+<td>覆盖从”组织策略全局禁止”到”用户单次授权”的全部粒度</td>
+<td>企业级权限系统的分层设计</td>
+</tr>
+<tr>
+<td><strong>MCP 服务器级规则</strong></td>
+<td>规则 <code>&quot;mcp__server1&quot;</code> 匹配该服务器所有工具（通过 <code>mcpInfoFromString</code> 解析 server&#x2F;tool 前缀）</td>
+<td>一条规则管控整个 MCP 服务器的所有工具</td>
+<td>前缀匹配的批量权限管理</td>
+</tr>
+<tr>
+<td><strong>Denial 追踪 + 退化</strong></td>
+<td><code>recordDenial() / shouldFallbackToPrompting()</code> — 连续拒绝超阈值后退化为始终提示而非自动拒绝</td>
+<td>防止 auto 模式分类器反复误判导致模型死循环调用被拒绝的工具</td>
+<td>任何有自动决策的系统需要”连续失败→人工介入”的熔断机制</td>
+</tr>
+<tr>
+<td><strong><code>preparePermissionMatcher</code></strong></td>
+<td>一次解析 pattern（如 <code>&quot;git *&quot;</code>），返回闭包供多个 hook pattern 复用</td>
+<td>避免对同一 input 反复解析（O(rules × parse) → O(parse + rules × match)）</td>
+<td>正则&#x2F;glob 匹配的预编译优化</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-12-循环决策与恢复"><a href="#步骤-12-循环决策与恢复" class="headerlink" title="步骤 12: 循环决策与恢复"></a>步骤 12: 循环决策与恢复</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>多级递进恢复</strong></td>
+<td>prompt-too-long: collapse drain（轻量，保留细粒度上下文）→ reactive compact（重量，全量摘要）→ surface error。max_output_tokens: escalate 8k→64k → multi-turn recovery ×3 → surface error</td>
+<td>先尝试低成本方案，逐步升级到高成本方案，最后才暴露错误</td>
+<td>任何错误恢复场景的成本递增策略</td>
+</tr>
+<tr>
+<td><strong>异步工具摘要</strong></td>
+<td><code>generateToolUseSummary()</code> 用 haiku（~1s）在当前轮的模型流式期间并行生成，存为 <code>pendingToolUseSummary</code>，下一轮迭代开头 yield</td>
+<td>摘要生成完全被模型 5-30s 的流式响应掩盖，零用户可感知延迟</td>
+<td>“当前轮的低优先级任务”可在”下一轮的高优先级任务”期间异步执行</td>
+</tr>
+<tr>
+<td><strong>Stop hooks blocking + retry</strong></td>
+<td>用户自定义 Stop hooks 可返回 <code>block</code>（如 lint 未通过），注入提示消息让模型继续修复</td>
+<td>用户可编程”自动不满意→继续”循环，无需手动干预</td>
+<td>自动化工作流中的”质量门”机制</td>
+</tr>
+<tr>
+<td><strong>Token budget 自动续接</strong></td>
+<td>用户输入 <code>+500k</code> 设置 token 预算，循环尾部 <code>checkTokenBudget()</code> 检查剩余，有余量则注入 “Continue” 并 <code>incrementBudgetContinuationCount()</code></td>
+<td>用户一次指令触发持续工作，无需反复输入”继续”</td>
+<td>长时间自动化任务的”燃料”模型</td>
+</tr>
+</tbody></table>
+<h4 id="步骤-13-会话持久化"><a href="#步骤-13-会话持久化" class="headerlink" title="步骤 13: 会话持久化"></a>步骤 13: 会话持久化</h4><table>
+<thead>
+<tr>
+<th>技术</th>
+<th>实现方式</th>
+<th>效果</th>
+<th>可借鉴场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>JSONL 追加写入</strong></td>
+<td><code>fsAppendFile</code> 逐条追加而非整文件重写，<code>gracefulShutdownSync</code> 注册确保退出时刷新</td>
+<td>写入性能 O(1)，异常退出最多丢失最后一条消息</td>
+<td>高频写入的日志&#x2F;事件存储</td>
+</tr>
+<tr>
+<td><strong><code>readHeadAndTail</code> 优化</strong></td>
+<td>恢复大文件时只读头部（session meta）+ 尾部（post-compact 消息），跳过 pre-compact 部分（<code>SKIP_PRECOMPACT_THRESHOLD</code>）</td>
+<td>大 transcript 文件（数 MB）的恢复时间从秒级降到毫秒级</td>
+<td>大型 append-only 日志的快速加载</td>
+</tr>
+<tr>
+<td><strong>8 步完整状态恢复</strong></td>
+<td>messages → sessionState → fileHistory → attribution → contentReplacement → contextCollapse → worktree → costState</td>
+<td><code>--resume</code> 后用户获得和上次退出时完全一致的状态，包括文件历史和 worktree</td>
+<td>需要”暂停→恢复”语义的长时间任务</td>
+</tr>
+<tr>
+<td><strong>补发 <code>tengu_exit</code></strong></td>
+<td>下次启动时检查项目配置中的上次会话统计（<code>lastCost/lastDuration</code>），如果存在则发射 <code>tengu_exit</code> 事件</td>
+<td>异常退出的会话仍能上报指标，不影响成功率统计</td>
+<td>需要可靠退出指标的 SaaS 应用</td>
+</tr>
+</tbody></table>
+<p>文件历史快照</p>
+<hr>
+<h2 id="📊-包-模块关系图"><a href="#📊-包-模块关系图" class="headerlink" title="📊 包&#x2F;模块关系图"></a>📊 包&#x2F;模块关系图</h2><div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  graph TD
+    subgraph 入口层
+        CLI[&quot;entrypoints&#x2F;&lt;br&#x2F;&gt;CLI&#x2F;MCP&#x2F;SDK 入口&quot;]
+    end
+
+    subgraph 编排层
+        MAIN[&quot;main.tsx&lt;br&#x2F;&gt;CLI 主程序编排&quot;]
+        SETUP[&quot;setup.ts&lt;br&#x2F;&gt;环境初始化&quot;]
+        HELPERS[&quot;interactiveHelpers.tsx&lt;br&#x2F;&gt;启动流&quot;]
+    end
+
+    subgraph 核心引擎
+        QUERY[&quot;query.ts&lt;br&#x2F;&gt;查询循环 (1730行)&quot;]
+        QE[&quot;QueryEngine.ts&lt;br&#x2F;&gt;会话生命周期&quot;]
+        TOOL_DEF[&quot;Tool.ts&lt;br&#x2F;&gt;工具接口&quot;]
+    end
+
+    subgraph 注册中心
+        CMDS[&quot;commands.ts&lt;br&#x2F;&gt;100+ 斜杠命令&quot;]
+        TOOLS[&quot;tools.ts&lt;br&#x2F;&gt;40+ 工具&quot;]
+        TASKS[&quot;tasks.ts&lt;br&#x2F;&gt;后台任务&quot;]
+    end
+
+    subgraph UI层
+        REPL[&quot;screens&#x2F;REPL.tsx&lt;br&#x2F;&gt;主界面 (875KB)&quot;]
+        COMPS[&quot;components&#x2F;&lt;br&#x2F;&gt;144 个 UI 组件&quot;]
+        HOOKS[&quot;hooks&#x2F;&lt;br&#x2F;&gt;85 个 React Hooks&quot;]
+        INK[&quot;ink&#x2F;&lt;br&#x2F;&gt;终端渲染引擎&quot;]
+    end
+
+    subgraph 服务层
+        API[&quot;services&#x2F;api&#x2F;&lt;br&#x2F;&gt;Claude API&quot;]
+        MCP[&quot;services&#x2F;mcp&#x2F;&lt;br&#x2F;&gt;MCP 协议&quot;]
+        COMPACT[&quot;services&#x2F;compact&#x2F;&lt;br&#x2F;&gt;上下文压缩&quot;]
+        ANALYTICS[&quot;services&#x2F;analytics&#x2F;&lt;br&#x2F;&gt;遥测分析&quot;]
+    end
+
+    subgraph 基础设施
+        UTILS[&quot;utils&#x2F;&lt;br&#x2F;&gt;330+ 工具文件&quot;]
+        TYPES[&quot;types&#x2F;&lt;br&#x2F;&gt;类型定义&quot;]
+        STATE[&quot;state&#x2F;&lt;br&#x2F;&gt;状态管理&quot;]
+        BOOT[&quot;bootstrap&#x2F;state.ts&lt;br&#x2F;&gt;全局状态&quot;]
+    end
+
+    subgraph 扩展系统
+        SKILLS[&quot;skills&#x2F;&lt;br&#x2F;&gt;技能系统&quot;]
+        PLUGINS[&quot;plugins&#x2F;&lt;br&#x2F;&gt;插件系统&quot;]
+        BRIDGE[&quot;bridge&#x2F;&lt;br&#x2F;&gt;IDE 桥接&quot;]
+        REMOTE[&quot;remote&#x2F;&lt;br&#x2F;&gt;远程会话&quot;]
+    end
+
+    CLI --&gt; MAIN
+    MAIN --&gt; SETUP
+    MAIN --&gt; HELPERS
+    MAIN --&gt; REPL
+    REPL --&gt; HOOKS
+    HOOKS --&gt; COMPS
+    COMPS --&gt; INK
+    REPL --&gt; QE
+    QE --&gt; QUERY
+    QUERY --&gt; API
+    QUERY --&gt; COMPACT
+    QUERY --&gt; TOOLS
+    TOOLS --&gt; TOOL_DEF
+    MAIN --&gt; CMDS
+    MAIN --&gt; TASKS
+    CMDS --&gt; SKILLS
+    CMDS --&gt; PLUGINS
+    REPL --&gt; BRIDGE
+    REPL --&gt; MCP
+    API --&gt; BOOT
+    STATE --&gt; BOOT
+    UTILS --&gt; TYPES
+
+    style QUERY fill:#ffebee
+    style REPL fill:#e3f2fd
+    style UTILS fill:#f3e5f5
+    style BOOT fill:#e8f5e9
+  </pre></div>
+
+<hr>
+<h2 id="核心模块速查表"><a href="#核心模块速查表" class="headerlink" title="核心模块速查表"></a>核心模块速查表</h2><table>
+<thead>
+<tr>
+<th>模块</th>
+<th>职责</th>
+<th>优先级</th>
+<th>复杂度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>query.ts</code> (1730行)</td>
+<td><strong>AI 对话心脏</strong> — 查询循环、工具执行、压缩、恢复</td>
+<td>⭐必读</td>
+<td>🔴复杂</td>
+</tr>
+<tr>
+<td><code>QueryEngine.ts</code> (1296行)</td>
+<td>会话级生命周期管理、SDK 消息映射</td>
+<td>⭐必读</td>
+<td>🔴复杂</td>
+</tr>
+<tr>
+<td><code>main.tsx</code> (4684行)</td>
+<td>CLI 主程序、参数解析、会话配置编排</td>
+<td>⭐必读</td>
+<td>🔴复杂</td>
+</tr>
+<tr>
+<td><code>Tool.ts</code> (793行)</td>
+<td>工具接口定义、权限模型、构建器</td>
+<td>⭐必读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>tools.ts</code> &#x2F; <code>commands.ts</code></td>
+<td>工具和命令注册中心</td>
+<td>⭐必读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>screens/REPL.tsx</code> (875KB)</td>
+<td>主交互终端界面</td>
+<td>⭐必读</td>
+<td>🔴复杂</td>
+</tr>
+<tr>
+<td><code>bootstrap/state.ts</code> (55KB)</td>
+<td>全局状态 singleton</td>
+<td>🟢先扫</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>context.ts</code></td>
+<td>系统&#x2F;用户上下文构建</td>
+<td>🟢先扫</td>
+<td>🟢简单</td>
+</tr>
+<tr>
+<td><code>services/api/</code></td>
+<td>Claude API 调用、重试、流式处理</td>
+<td>⭐必读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>services/compact/</code></td>
+<td>自动&#x2F;微&#x2F;响应式&#x2F;snip 压缩</td>
+<td>⭐必读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>services/mcp/</code></td>
+<td>MCP 协议客户端</td>
+<td>📖选读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>ink/</code> (96文件)</td>
+<td>深度定制的终端 UI 渲染引擎</td>
+<td>📖选读</td>
+<td>🔴复杂</td>
+</tr>
+<tr>
+<td><code>utils/</code> (330+文件)</td>
+<td>配置&#x2F;认证&#x2F;Shell&#x2F;权限&#x2F;文件&#x2F;Git…</td>
+<td>🟢先扫</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>hooks/</code> (85文件)</td>
+<td>React Hooks 状态逻辑</td>
+<td>📖选读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>components/</code> (144文件)</td>
+<td>TUI React 组件</td>
+<td>📖选读</td>
+<td>🟡中等</td>
+</tr>
+<tr>
+<td><code>bridge/</code> (31文件)</td>
+<td>IDE&#x2F;桌面&#x2F;远程 桥接通信</td>
+<td>📖选读</td>
+<td>🔴复杂</td>
+</tr>
+<tr>
+<td><code>skills/</code></td>
+<td>可扩展技能系统</td>
+<td>📖选读</td>
+<td>🟢简单</td>
+</tr>
+<tr>
+<td><code>plugins/</code></td>
+<td>插件管理</td>
+<td>📖选读</td>
+<td>🟢简单</td>
+</tr>
+<tr>
+<td><code>types/</code></td>
+<td>核心类型定义</td>
+<td>🟢先扫</td>
+<td>🟢简单</td>
+</tr>
+<tr>
+<td><code>constants/</code></td>
+<td>常量和系统提示词</td>
+<td>🟢先扫</td>
+<td>🟢简单</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="核心入口文件详解"><a href="#核心入口文件详解" class="headerlink" title="核心入口文件详解"></a>核心入口文件详解</h2><h3 id="1-src-entrypoints-cli-tsx-—-最外层引导入口"><a href="#1-src-entrypoints-cli-tsx-—-最外层引导入口" class="headerlink" title="1. src/entrypoints/cli.tsx — 最外层引导入口"></a>1. <code>src/entrypoints/cli.tsx</code> — 最外层引导入口</h3><ul>
+<li><strong>快速路径</strong>: <code>--version</code> 零导入直接输出版本号</li>
+<li><strong>环境预设</strong>: CCR 远程环境设置 heap size、ablation baseline 实验</li>
+<li><strong>特殊模式路由</strong>: <code>--claude-in-chrome-mcp</code>, <code>--chrome-native-host</code>, <code>--dump-system-prompt</code> 等直接分支</li>
+<li><strong>主流程</strong>: 加载 <code>main.tsx</code> 的完整 CLI 逻辑</li>
+</ul>
+<h3 id="2-src-entrypoints-init-ts-—-配置系统与遥测初始化"><a href="#2-src-entrypoints-init-ts-—-配置系统与遥测初始化" class="headerlink" title="2. src/entrypoints/init.ts — 配置系统与遥测初始化"></a>2. <code>src/entrypoints/init.ts</code> — 配置系统与遥测初始化</h3><ul>
+<li><strong>配置启用</strong>: <code>enableConfigs()</code> 启用配置系统</li>
+<li><strong>安全环境变量</strong>: 在信任对话前只应用安全的环境变量</li>
+<li><strong>CA 证书</strong>: 加载自定义 CA 证书（Bun TLS 要求早于首次 TLS 握手）</li>
+<li><strong>代理配置</strong>: <code>configureGlobalAgents()</code> 设置 HTTP&#x2F;HTTPS 代理</li>
+<li><strong>mTLS 配置</strong>: <code>configureGlobalMTLS()</code></li>
+<li><strong>遥测</strong>: OpenTelemetry 指标与追踪初始化（延迟加载 ~400KB 的 OTel 模块）</li>
+<li><strong>策略限制</strong>: <code>initializePolicyLimitsLoadingPromise</code></li>
+<li><strong>远程管理设置</strong>: <code>initializeRemoteManagedSettingsLoadingPromise</code></li>
+<li><strong>API 预连接</strong>: <code>preconnectAnthropicApi</code></li>
+</ul>
+<h3 id="3-src-main-tsx-4684行-—-CLI-主程序-交互式-REPL-的入口编排器"><a href="#3-src-main-tsx-4684行-—-CLI-主程序-交互式-REPL-的入口编排器" class="headerlink" title="3. src/main.tsx (4684行) — CLI 主程序 &amp; 交互式 REPL 的入口编排器"></a>3. <code>src/main.tsx</code> (4684行) — CLI 主程序 &amp; 交互式 REPL 的入口编排器</h3><p>最核心文件，主要职责包括：</p>
+<ul>
+<li><strong>CLI 参数解析</strong>: 使用 <code>@commander-js/extra-typings</code> 解析所有命令行选项</li>
+<li><strong>启动性能优化</strong>: 文件开头按严格顺序执行副作用 — <code>profileCheckpoint</code> → <code>startMdmRawRead</code> → <code>startKeychainPrefetch</code></li>
+<li><strong>模块预加载</strong>: 大量使用 <code>feature(&#39;xxx&#39;)</code> 条件导入</li>
+<li><strong>会话初始化</strong>: MCP 客户端、工具注册、权限模式、GrowthBook 特性门控</li>
+<li><strong>REPL 启动</strong>: 通过 <code>launchRepl()</code> 渲染 React&#x2F;Ink 的交互式终端 UI</li>
+<li><strong>非交互模式</strong>: 通过 <code>ask()</code> &#x2F; <code>QueryEngine</code> 执行一次性查询</li>
+</ul>
+<h3 id="4-src-setup-ts-478行-—-运行时环境初始化"><a href="#4-src-setup-ts-478行-—-运行时环境初始化" class="headerlink" title="4. src/setup.ts (478行) — 运行时环境初始化"></a>4. <code>src/setup.ts</code> (478行) — 运行时环境初始化</h3><p><code>setup()</code> 函数在 CLI 参数解析后、REPL 渲染前执行：</p>
+<ul>
+<li>Node.js 版本检查（要求 &gt;&#x3D; 18）</li>
+<li>会话 ID 管理</li>
+<li>UDS 消息服务（Unix Domain Socket）</li>
+<li>终端备份恢复</li>
+<li>CWD 设置</li>
+<li>Hooks 配置快照</li>
+<li>Worktree 处理</li>
+<li>后台服务启动（session memory、context collapse、commit attribution）</li>
+<li>API Key 预取</li>
+<li><code>--dangerously-skip-permissions</code> 的安全验证</li>
+</ul>
+<hr>
+<h2 id="核心引擎详解"><a href="#核心引擎详解" class="headerlink" title="核心引擎详解"></a>核心引擎详解</h2><h3 id="src-query-ts-1730行-—-核心查询循环"><a href="#src-query-ts-1730行-—-核心查询循环" class="headerlink" title="src/query.ts (1730行) — 核心查询循环"></a><code>src/query.ts</code> (1730行) — 核心查询循环</h3><p>这是 Claude Code 最复杂的文件之一，实现了 <strong>模型调用 → 工具执行 → 继续循环</strong> 的核心机制：</p>
+<ul>
+<li><strong>query()</strong>: 异步生成器，对外主 API</li>
+<li><strong>queryLoop()</strong>: 内部 while(true) 循环，每次迭代包含：<ol>
+<li><strong>Snip compaction</strong>: 裁剪历史消息</li>
+<li><strong>Microcompact</strong>: 微压缩（缓存编辑）</li>
+<li><strong>Context collapse</strong>: 上下文折叠</li>
+<li><strong>Autocompact</strong>: 自动压缩（token 接近上限时）</li>
+<li><strong>API 调用</strong>: <code>deps.callModel()</code> 流式调用模型</li>
+<li><strong>Streaming tool execution</strong>: 流式工具执行（边接收边执行）</li>
+<li><strong>Fallback model</strong>: 模型回退机制</li>
+<li><strong>Stop hooks</strong>: 停止钩子检查</li>
+<li><strong>Max output tokens recovery</strong>: 输出 token 限制恢复（最多 3 次）</li>
+<li><strong>Reactive compact</strong>: 响应式压缩（413 错误恢复）</li>
+<li><strong>Token budget</strong>: token 预算管理</li>
+<li><strong>Attachment 注入</strong>: 内存预取、技能发现、队列命令</li>
+</ol>
+</li>
+</ul>
+<h3 id="src-QueryEngine-ts-1296行-—-会话级查询生命周期管理"><a href="#src-QueryEngine-ts-1296行-—-会话级查询生命周期管理" class="headerlink" title="src/QueryEngine.ts (1296行) — 会话级查询生命周期管理"></a><code>src/QueryEngine.ts</code> (1296行) — 会话级查询生命周期管理</h3><ul>
+<li><strong>QueryEngine 类</strong>: 封装单个对话的完整生命周期<ul>
+<li>持有 messages、file cache、usage、permission denials 等状态</li>
+<li><code>submitMessage()</code> 异步生成器：处理用户输入 → 调用 query() → 产出 SDK 消息</li>
+<li>处理 slash commands、transcript 持久化、structured output、budget 限制</li>
+</ul>
+</li>
+<li><strong>ask() 函数</strong>: <code>QueryEngine</code> 的便捷包装器，用于一次性查询</li>
+</ul>
+<h3 id="src-Tool-ts-793行-—-工具接口定义与构建器"><a href="#src-Tool-ts-793行-—-工具接口定义与构建器" class="headerlink" title="src/Tool.ts (793行) — 工具接口定义与构建器"></a><code>src/Tool.ts</code> (793行) — 工具接口定义与构建器</h3><p>每个工具必须实现的完整契约：</p>
+<ul>
+<li><code>call()</code> — 工具执行逻辑</li>
+<li><code>inputSchema</code> &#x2F; <code>outputSchema</code> — Zod schema 验证</li>
+<li><code>checkPermissions()</code> — 权限检查</li>
+<li><code>prompt()</code> — 系统提示生成</li>
+<li><code>isEnabled()</code> &#x2F; <code>isReadOnly()</code> &#x2F; <code>isDestructive()</code> &#x2F; <code>isConcurrencySafe()</code></li>
+<li><code>renderToolUseMessage()</code> &#x2F; <code>renderToolResultMessage()</code> — React&#x2F;Ink UI 渲染</li>
+<li><code>validateInput()</code> — 输入验证</li>
+<li><code>buildTool()</code> — 工具构建器函数，提供安全的默认值（fail-closed 原则）</li>
+</ul>
+<hr>
+<h2 id="目录结构详解"><a href="#目录结构详解" class="headerlink" title="目录结构详解"></a>目录结构详解</h2><h3 id="src-commands-—-斜杠命令-100个"><a href="#src-commands-—-斜杠命令-100个" class="headerlink" title="src/commands/ — 斜杠命令 (~100个)"></a><code>src/commands/</code> — 斜杠命令 (~100个)</h3><table>
+<thead>
+<tr>
+<th>命令分类</th>
+<th>命令</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>会话管理</strong></td>
+<td><code>clear/</code>, <code>compact/</code>, <code>resume/</code>, <code>session/</code>, <code>rename/</code>, <code>rewind/</code></td>
+</tr>
+<tr>
+<td><strong>代码操作</strong></td>
+<td><code>commit.ts</code>, <code>commit-push-pr.ts</code>, <code>diff/</code>, <code>review.ts</code>, <code>security-review.ts</code></td>
+</tr>
+<tr>
+<td><strong>配置</strong></td>
+<td><code>config/</code>, <code>model/</code>, <code>permissions/</code>, <code>hooks/</code>, <code>privacy-settings/</code></td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td><code>mcp/</code></td>
+</tr>
+<tr>
+<td><strong>技能&#x2F;插件</strong></td>
+<td><code>skills/</code>, <code>plugin/</code>, <code>reload-plugins/</code></td>
+</tr>
+<tr>
+<td><strong>UI&#x2F;显示</strong></td>
+<td><code>color/</code>, <code>theme/</code>, <code>vim/</code>, <code>keybindings/</code>, <code>stickers/</code></td>
+</tr>
+<tr>
+<td><strong>信息查看</strong></td>
+<td><code>help/</code>, <code>status/</code>, <code>cost/</code>, <code>usage/</code>, <code>doctor/</code>, <code>stats/</code></td>
+</tr>
+<tr>
+<td><strong>认证</strong></td>
+<td><code>login/</code>, <code>logout/</code>, <code>oauth-refresh/</code></td>
+</tr>
+<tr>
+<td><strong>高级功能</strong></td>
+<td><code>plan/</code>, <code>agents/</code>, <code>branch/</code>, <code>tasks/</code>, <code>bridge/</code>, <code>ultraplan.tsx</code></td>
+</tr>
+</tbody></table>
+<h3 id="src-tools-—-工具实现-43个子目录"><a href="#src-tools-—-工具实现-43个子目录" class="headerlink" title="src/tools/ — 工具实现 (43个子目录)"></a><code>src/tools/</code> — 工具实现 (43个子目录)</h3><table>
+<thead>
+<tr>
+<th>工具分类</th>
+<th>工具</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>核心文件操作</strong></td>
+<td><code>FileReadTool/</code>, <code>FileEditTool/</code>, <code>FileWriteTool/</code></td>
+</tr>
+<tr>
+<td><strong>命令执行</strong></td>
+<td><code>BashTool/</code>, <code>PowerShellTool/</code></td>
+</tr>
+<tr>
+<td><strong>搜索</strong></td>
+<td><code>GlobTool/</code>, <code>GrepTool/</code></td>
+</tr>
+<tr>
+<td><strong>Agent&#x2F;Task</strong></td>
+<td><code>AgentTool/</code>, <code>TaskCreateTool/</code>, <code>TaskGetTool/</code>, <code>TaskUpdateTool/</code>, <code>TaskListTool/</code>, <code>TaskStopTool/</code>, <code>TaskOutputTool/</code></td>
+</tr>
+<tr>
+<td><strong>计划模式</strong></td>
+<td><code>EnterPlanModeTool/</code>, <code>ExitPlanModeTool/</code></td>
+</tr>
+<tr>
+<td><strong>Web</strong></td>
+<td><code>WebFetchTool/</code>, <code>WebSearchTool/</code>, <code>WebBrowserTool/</code></td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td><code>MCPTool/</code>, <code>ListMcpResourcesTool/</code>, <code>ReadMcpResourceTool/</code></td>
+</tr>
+<tr>
+<td><strong>Worktree</strong></td>
+<td><code>EnterWorktreeTool/</code>, <code>ExitWorktreeTool/</code></td>
+</tr>
+<tr>
+<td><strong>团队协作</strong></td>
+<td><code>TeamCreateTool/</code>, <code>TeamDeleteTool/</code>, <code>SendMessageTool/</code>, <code>ListPeersTool/</code></td>
+</tr>
+<tr>
+<td><strong>特殊</strong></td>
+<td><code>SkillTool/</code>, <code>ToolSearchTool/</code>, <code>BriefTool/</code>, <code>SleepTool/</code>, <code>SnipTool/</code>, <code>NotebookEditTool/</code>, <code>TodoWriteTool/</code></td>
+</tr>
+</tbody></table>
+<h3 id="src-services-—-后端服务层"><a href="#src-services-—-后端服务层" class="headerlink" title="src/services/ — 后端服务层"></a><code>src/services/</code> — 后端服务层</h3><table>
+<thead>
+<tr>
+<th>服务分类</th>
+<th>服务</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>API</strong></td>
+<td><code>api/</code> — Claude API 调用、重试、日志、bootstrap</td>
+</tr>
+<tr>
+<td><strong>分析</strong></td>
+<td><code>analytics/</code> — 事件追踪、GrowthBook 特性门控</td>
+</tr>
+<tr>
+<td><strong>MCP</strong></td>
+<td><code>mcp/</code> — MCP 协议客户端、配置、服务器管理</td>
+</tr>
+<tr>
+<td><strong>压缩</strong></td>
+<td><code>compact/</code> — 自动压缩、微压缩、snip 压缩、响应式压缩</td>
+</tr>
+<tr>
+<td><strong>LSP</strong></td>
+<td><code>lsp/</code> — 语言服务器协议集成</td>
+</tr>
+<tr>
+<td><strong>插件</strong></td>
+<td><code>plugins/</code> — 插件服务</td>
+</tr>
+<tr>
+<td><strong>内存</strong></td>
+<td><code>SessionMemory/</code>, <code>extractMemories/</code>, <code>teamMemorySync/</code></td>
+</tr>
+<tr>
+<td><strong>限制</strong></td>
+<td><code>claudeAiLimits.ts</code>, <code>policyLimits/</code>, <code>mockRateLimits.ts</code></td>
+</tr>
+<tr>
+<td><strong>其他</strong></td>
+<td><code>voice.ts</code>, <code>vcr.ts</code>, <code>oauth/</code>, <code>tips/</code>, <code>tokenEstimation.ts</code></td>
+</tr>
+</tbody></table>
+<h3 id="src-state-—-应用状态管理"><a href="#src-state-—-应用状态管理" class="headerlink" title="src/state/ — 应用状态管理"></a><code>src/state/</code> — 应用状态管理</h3><table>
+<thead>
+<tr>
+<th>文件</th>
+<th>功能</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AppState.tsx</code></td>
+<td>AppState 类型定义与 React Context Provider</td>
+</tr>
+<tr>
+<td><code>AppStateStore.ts</code></td>
+<td>AppState 的状态存储实现与默认值</td>
+</tr>
+<tr>
+<td><code>onChangeAppState.ts</code></td>
+<td>状态变更的副作用处理</td>
+</tr>
+<tr>
+<td><code>store.ts</code></td>
+<td>通用 store 创建工具</td>
+</tr>
+<tr>
+<td><code>selectors.ts</code></td>
+<td>状态选择器</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="辅助模块详解"><a href="#辅助模块详解" class="headerlink" title="辅助模块详解"></a>辅助模块详解</h2><h3 id="src-utils-—-核心工具库-330-文件"><a href="#src-utils-—-核心工具库-330-文件" class="headerlink" title="src/utils/ — 核心工具库 (330+文件)"></a><code>src/utils/</code> — 核心工具库 (330+文件)</h3><p>最庞大的工具层，提供几乎所有基础设施能力：</p>
+<ul>
+<li><strong>认证与API</strong>: <code>auth.ts</code> (64KB), <code>api.ts</code>, <code>aws.ts</code>, <code>billing.ts</code></li>
+<li><strong>配置管理</strong>: <code>config.ts</code> (62KB), <code>configConstants.ts</code>, <code>cliArgs.ts</code></li>
+<li><strong>Shell与命令执行</strong>: <code>Shell.ts</code>, <code>ShellCommand.ts</code>, <code>bash/</code></li>
+<li><strong>上下文分析</strong>: <code>analyzeContext.ts</code> (42KB), <code>contextAnalysis.ts</code></li>
+<li><strong>文件操作</strong>: <code>attachments.ts</code> (124KB), <code>diff.ts</code>, <code>file.ts</code>, <code>fsOperations.ts</code></li>
+<li><strong>CLAUDE.md处理</strong>: <code>claudemd.ts</code> (45KB)</li>
+<li><strong>模型管理</strong>: <code>model/</code>, <code>modelCost.ts</code>, <code>effort.ts</code></li>
+<li><strong>权限系统</strong>: <code>permissions/</code> 相关文件</li>
+<li><strong>会话恢复</strong>: <code>conversationRecovery.ts</code>, <code>sessionStorage.ts</code> (176KB)</li>
+<li><strong>Git集成</strong>: <code>git.ts</code> (30KB), <code>gitDiff.ts</code>, <code>worktree.ts</code> (49KB)</li>
+</ul>
+<h3 id="src-hooks-—-React-Hooks-库-85文件"><a href="#src-hooks-—-React-Hooks-库-85文件" class="headerlink" title="src/hooks/ — React Hooks 库 (85文件)"></a><code>src/hooks/</code> — React Hooks 库 (85文件)</h3><p>关键 Hooks：</p>
+<ul>
+<li><code>useReplBridge.tsx</code> (113KB) — REPL 桥接核心逻辑</li>
+<li><code>useTypeahead.tsx</code> (208KB) — 自动补全&#x2F;类型提示</li>
+<li><code>useVoiceIntegration.tsx</code> (97KB) — 语音集成</li>
+<li><code>useCanUseTool.tsx</code> (39KB) — 工具使用权限判断</li>
+<li><code>useGlobalKeybindings.tsx</code> (30KB) — 全局快捷键</li>
+<li><code>useVirtualScroll.ts</code> (34KB) — 虚拟滚动</li>
+<li><code>useInboxPoller.ts</code> (34KB) — 收件箱轮询</li>
+</ul>
+<h3 id="src-components-—-UI组件层-144文件"><a href="#src-components-—-UI组件层-144文件" class="headerlink" title="src/components/ — UI组件层 (144文件)"></a><code>src/components/</code> — UI组件层 (144文件)</h3><p>关键组件：</p>
+<ul>
+<li><code>Messages.tsx</code> (144KB), <code>VirtualMessageList.tsx</code> (145KB) — 消息列表</li>
+<li><code>ScrollKeybindingHandler.tsx</code> (146KB) — 滚动快捷键</li>
+<li><code>LogSelector.tsx</code> (196KB) — 日志选择器</li>
+<li><code>MessageSelector.tsx</code> (113KB) — 消息选择器</li>
+<li><code>FullscreenLayout.tsx</code> (83KB) — 全屏布局</li>
+<li><code>Spinner.tsx</code> (86KB) — 加载动画</li>
+<li><code>Stats.tsx</code> (149KB) — 统计信息</li>
+</ul>
+<h3 id="src-ink-—-终端渲染引擎-96文件"><a href="#src-ink-—-终端渲染引擎-96文件" class="headerlink" title="src/ink/ — 终端渲染引擎 (96文件)"></a><code>src/ink/</code> — 终端渲染引擎 (96文件)</h3><p>深度定制的 Ink (React 终端 UI 框架) 实现：</p>
+<ul>
+<li><code>ink.tsx</code> (246KB) — Ink 框架核心</li>
+<li><code>screen.ts</code> (48KB) — 屏幕缓冲管理</li>
+<li><code>render-node-to-output.ts</code> (62KB) — 节点渲染</li>
+<li><code>parse-keypress.ts</code> (23KB) — 键盘解析</li>
+<li><code>selection.ts</code> (34KB) — 文本选择</li>
+<li><strong>渲染管线</strong>: Yoga 布局 → 屏幕缓冲 → diff → 优化 → stdout 输出</li>
+</ul>
+<h3 id="src-bridge-—-IDE-桌面桥接-31文件"><a href="#src-bridge-—-IDE-桌面桥接-31文件" class="headerlink" title="src/bridge/ — IDE&#x2F;桌面桥接 (31文件)"></a><code>src/bridge/</code> — IDE&#x2F;桌面桥接 (31文件)</h3><ul>
+<li><code>bridgeMain.ts</code> (113KB), <code>replBridge.ts</code> (98KB) — 核心桥接逻辑</li>
+<li><code>remoteBridgeCore.ts</code> (39KB) — 远程桥接</li>
+<li><code>jwtUtils.ts</code>, <code>trustedDevice.ts</code> — 安全认证</li>
+</ul>
+<p>实现 Claude Code CLI 与外部环境（VS Code 扩展、桌面应用、远程会话）之间的双向通信。</p>
+<h3 id="src-skills-—-技能系统-21文件"><a href="#src-skills-—-技能系统-21文件" class="headerlink" title="src/skills/ — 技能系统 (21文件)"></a><code>src/skills/</code> — 技能系统 (21文件)</h3><p>内置技能：<code>batch</code>, <code>claudeApi</code>, <code>debug</code>, <code>keybindings</code>, <code>loop</code>, <code>remember</code>, <code>scheduleRemoteAgents</code>, <code>simplify</code>, <code>skillify</code>, <code>stuck</code>, <code>updateConfig</code>, <code>verify</code> 等。</p>
+<h3 id="src-memdir-—-记忆目录系统-8文件"><a href="#src-memdir-—-记忆目录系统-8文件" class="headerlink" title="src/memdir/ — 记忆目录系统 (8文件)"></a><code>src/memdir/</code> — 记忆目录系统 (8文件)</h3><p>CLAUDE.md 记忆文件系统 — 管理用户&#x2F;项目&#x2F;团队级别的持久化记忆。</p>
+<h3 id="src-vim-—-Vim-模式-5文件"><a href="#src-vim-—-Vim-模式-5文件" class="headerlink" title="src/vim/ — Vim 模式 (5文件)"></a><code>src/vim/</code> — Vim 模式 (5文件)</h3><p>完整的 Vim 编辑模式实现 — 操作符、光标移动、文本对象、模式转换。</p>
+<h3 id="src-keybindings-—-快捷键系统-14文件"><a href="#src-keybindings-—-快捷键系统-14文件" class="headerlink" title="src/keybindings/ — 快捷键系统 (14文件)"></a><code>src/keybindings/</code> — 快捷键系统 (14文件)</h3><p>完整的快捷键管理 — 解析用户自定义绑定、内置默认绑定、冲突检测。</p>
+<h3 id="src-types-—-类型定义-21文件"><a href="#src-types-—-类型定义-21文件" class="headerlink" title="src/types/ — 类型定义 (21文件)"></a><code>src/types/</code> — 类型定义 (21文件)</h3><ul>
+<li><code>command.ts</code> — 命令系统类型 (prompt&#x2F;local&#x2F;local-jsx 三种命令类型)</li>
+<li><code>permissions.ts</code> — 权限系统类型 (权限模式、规则、决策)</li>
+<li><code>ids.ts</code> — 品牌类型 (SessionId, AgentId)</li>
+<li><code>logs.ts</code> — 日志&#x2F;转录类型</li>
+<li><code>plugin.ts</code> — 插件系统类型 (25+ 种错误类型的联合类型)</li>
+</ul>
+<h3 id="src-constants-—-常量定义-21文件"><a href="#src-constants-—-常量定义-21文件" class="headerlink" title="src/constants/ — 常量定义 (21文件)"></a><code>src/constants/</code> — 常量定义 (21文件)</h3><ul>
+<li><code>prompts.ts</code> (53KB) — 系统提示词模板（最大）</li>
+<li><code>oauth.ts</code> — OAuth 配置</li>
+<li><code>apiLimits.ts</code> — API 限制</li>
+<li><code>tools.ts</code> — 工具常量</li>
+</ul>
+<hr>
+<h2 id="推荐学习路径"><a href="#推荐学习路径" class="headerlink" title="推荐学习路径"></a>推荐学习路径</h2><pre><code>第一步：types/ + constants/ + bootstrap/state.ts
+  ↓  （了解基础类型、常量、全局状态结构）
+
+第二步：Tool.ts + context.ts + 几个简单工具 (GlobTool, GrepTool)
+  ↓  （理解工具系统如何定义和工作）
+
+第三步：query.ts — 核心查询循环
+  ↓  （理解 AI 对话的核心引擎）
+
+第四步：tools.ts + commands.ts — 注册中心
+  ↓  （理解工具和命令如何装配）
+
+第五步：main.tsx + setup.ts + entrypoints/
+  ↓  （理解完整的启动流程）
+
+第六步：REPL.tsx + hooks/ — UI 交互层
+  ↓  （理解终端交互如何实现）
+
+可选：ink/ (渲染引擎) | bridge/ (IDE集成) | services/ (API/MCP/压缩)
+</code></pre>
+<hr>
+<h2 id="核心设计理念"><a href="#核心设计理念" class="headerlink" title="核心设计理念"></a>核心设计理念</h2><h3 id="1-极致的启动性能优化"><a href="#1-极致的启动性能优化" class="headerlink" title="1. 极致的启动性能优化"></a>1. 极致的启动性能优化</h3><ul>
+<li>副作用严格排序 (<code>profileCheckpoint</code> → <code>startMdmRawRead</code> → <code>startKeychainPrefetch</code>)</li>
+<li>I&#x2F;O 并行化（MDM 子进程、Keychain 读取并行）</li>
+<li>延迟导入（<code>feature()</code> + 动态 <code>import()</code> + <code>require()</code>）</li>
+<li><code>bun:bundle</code> 的 <code>feature()</code> 实现死代码消除</li>
+</ul>
+<h3 id="2-Fail-closed-安全模型"><a href="#2-Fail-closed-安全模型" class="headerlink" title="2. Fail-closed 安全模型"></a>2. Fail-closed 安全模型</h3><ul>
+<li>多层权限检查：deny rules → tool permissions → hooks → 用户确认</li>
+<li><code>buildTool()</code> 默认值：<code>isConcurrencySafe=false</code>、<code>isReadOnly=false</code></li>
+<li>工作区信任对话 (TrustDialog)</li>
+<li>CLAUDE.md 外部包含审批</li>
+<li><code>--dangerously-skip-permissions</code> 的容器&#x2F;网络安全检查</li>
+</ul>
+<h3 id="3-弹性恢复的查询循环"><a href="#3-弹性恢复的查询循环" class="headerlink" title="3. 弹性恢复的查询循环"></a>3. 弹性恢复的查询循环</h3><ul>
+<li>prompt-too-long → context collapse drain → reactive compact → 错误上报</li>
+<li>max_output_tokens → escalate to 64k → multi-turn recovery (最多 3 次)</li>
+<li>模型回退 (fallback model) 机制</li>
+<li>streaming abort 处理</li>
+<li>stop hook blocking → retry</li>
+</ul>
+<h3 id="4-双模式运行"><a href="#4-双模式运行" class="headerlink" title="4. 双模式运行"></a>4. 双模式运行</h3><ul>
+<li><strong>交互式 REPL</strong>: React&#x2F;Ink TUI，完整终端交互</li>
+<li><strong>Headless SDK</strong>: QueryEngine，适用于 CI&#x2F;CD、cowork、desktop 集成</li>
+</ul>
+<h3 id="5-四层扩展机制"><a href="#5-四层扩展机制" class="headerlink" title="5. 四层扩展机制"></a>5. 四层扩展机制</h3><ol>
+<li><strong>Tool</strong> — 模型可调用的原子操作 (Bash, Read, Edit…)</li>
+<li><strong>Command</strong> — 用户斜杠命令 (&#x2F;compact, &#x2F;resume, &#x2F;config…)</li>
+<li><strong>Skill</strong> — Prompt 模板命令 (bundled + 用户自定义)</li>
+<li><strong>Plugin</strong> — 外部插件 (MCP servers, hooks, agents, commands)</li>
+</ol>
+<h3 id="6-Feature-Flag-条件编译"><a href="#6-Feature-Flag-条件编译" class="headerlink" title="6. Feature Flag 条件编译"></a>6. Feature Flag 条件编译</h3><ul>
+<li><code>feature(&#39;XXX&#39;)</code> + <code>bun:bundle</code> 实现按环境剪裁代码</li>
+<li>内部版本 (<code>USER_TYPE=ant</code>) 和外部版本共享同一代码库</li>
+<li><code>INTERNAL_ONLY_COMMANDS</code> 在外部构建中被消除</li>
+<li>条件 <code>require()</code> 确保未使用的模块不被加载</li>
+</ul>
+<h3 id="7-状态管理双层架构"><a href="#7-状态管理双层架构" class="headerlink" title="7. 状态管理双层架构"></a>7. 状态管理双层架构</h3><ul>
+<li><strong>bootstrap&#x2F;state.ts</strong> — 全局 singleton，进程级状态 (session ID, CWD, 遥测计数器, OTel meter)</li>
+<li><strong>AppState (React Context)</strong> — 组件级状态 (权限、MCP 客户端、工具、消息)</li>
+</ul>
+<hr>
+<h2 id="关键数据流"><a href="#关键数据流" class="headerlink" title="关键数据流"></a>关键数据流</h2><pre><code>用户终端输入
+    │
+    ▼
+REPL.tsx (React/Ink UI)
+    │
+    ├── processUserInput() — 解析斜杠命令/普通消息
+    │
+    ▼
+QueryEngine.submitMessage()
+    │
+    ├── 构建 systemPrompt + userContext + systemContext
+    ├── 注册 structured output enforcement
+    │
+    ▼
+query() → queryLoop()  [while(true)]
+    │
+    ├── snipCompact → microcompact → contextCollapse → autocompact
+    │
+    ├── callModel() — 流式 API 调用
+    │   ├── 流式接收 assistant messages
+    │   ├── StreamingToolExecutor — 边接收边执行工具
+    │   └── 模型回退 (fallback)
+    │
+    ├── 工具执行完成
+    │   ├── 收集 tool results
+    │   ├── 注入 attachments (内存/技能/队列命令)
+    │   └── 刷新 MCP tools
+    │
+    ├── 检查退出条件
+    │   ├── 无 tool_use → stop hooks → 完成
+    │   ├── prompt-too-long → collapse/reactive compact
+    │   ├── max_output_tokens → escalate/recovery
+    │   ├── max_turns → 退出
+    │   └── token_budget → continue/stop
+    │
+    └── continue → 下一轮迭代
+</code></pre>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/AI%E7%BC%96%E7%A8%8B/">AI编程</a><a class="post-meta__tags" href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/">软件工程</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E7%A8%8B%E8%83%BD%E5%8A%9B/">工程能力</a><a class="post-meta__tags" href="/tags/Claude-Code/">Claude Code</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/17_%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F/" title="记忆系统 — Claude Code 源码深度分析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">记忆系统 — Claude Code 源码深度分析</div></div></a></div><div class="next-post pull-right"><a href="/posts/19_%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E7%B3%BB%E7%BB%9F/" title="工具调用系统 — Claude Code 源码深度分析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">工具调用系统 — Claude Code 源码深度分析</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">92</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">168</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%F0%9F%93%A6-Claude-Code-%E6%BA%90%E7%A0%81%E5%85%A8%E6%99%AF%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">📦 Claude Code 源码全景分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%A1%B9%E7%9B%AE%E6%A6%82%E8%BF%B0"><span class="toc-number">1.1.</span> <span class="toc-text">项目概述</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%80%E6%9C%AF%E6%A0%88"><span class="toc-number">1.2.</span> <span class="toc-text">技术栈</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%94%84-%E6%A0%B8%E5%BF%83%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">1.3.</span> <span class="toc-text">🔄 核心运行流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%80%90%E6%AD%A5%E6%8B%86%E8%A7%A3"><span class="toc-number">1.3.1.</span> <span class="toc-text">逐步拆解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4%E8%AF%A6%E7%BB%86%E6%8B%86%E8%A7%A3"><span class="toc-number">1.3.2.</span> <span class="toc-text">步骤详细拆解</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-1-CLI-%E5%85%A5%E5%8F%A3-cli-tsx-302%E8%A1%8C"><span class="toc-number">1.3.2.1.</span> <span class="toc-text">阶段 1: CLI 入口 (cli.tsx, 302行)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-2-Main-%E6%A8%A1%E5%9D%97%E5%8A%A0%E8%BD%BD-main-tsx-%E6%96%87%E4%BB%B6%E5%A4%B4%E9%83%A8-L1-210"><span class="toc-number">1.3.2.2.</span> <span class="toc-text">阶段 2: Main 模块加载 (main.tsx 文件头部, L1-210)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-3-preAction-Hook-main-tsx-L907-957"><span class="toc-number">1.3.2.3.</span> <span class="toc-text">阶段 3: preAction Hook (main.tsx, L907-957)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-4-init-%E6%A0%B8%E5%BF%83%E5%88%9D%E5%A7%8B%E5%8C%96-init-ts-L57-238"><span class="toc-number">1.3.2.4.</span> <span class="toc-text">阶段 4: init() 核心初始化 (init.ts, L57-238)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-5-setup-%E4%BC%9A%E8%AF%9D%E5%88%9D%E5%A7%8B%E5%8C%96-setup-ts-478%E8%A1%8C"><span class="toc-number">1.3.2.5.</span> <span class="toc-text">阶段 5: setup() 会话初始化 (setup.ts, 478行)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-5b-%E5%90%AF%E5%8A%A8%E5%AF%B9%E8%AF%9D%E6%A1%86%E6%B5%81-interactiveHelpers-tsx-showSetupScreens"><span class="toc-number">1.3.2.6.</span> <span class="toc-text">阶段 5b: 启动对话框流 (interactiveHelpers.tsx: showSetupScreens())</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-6-REPL-%E5%90%AF%E5%8A%A8-replLauncher-tsx-%E2%86%92-REPL-tsx-5006%E8%A1%8C-875KB"><span class="toc-number">1.3.2.7.</span> <span class="toc-text">步骤 6: REPL 启动 (replLauncher.tsx → REPL.tsx, 5006行, 875KB)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-7-%E7%94%A8%E6%88%B7%E8%BE%93%E5%85%A5%E5%A4%84%E7%90%86-REPL-tsx-onSubmit-%E2%86%92-onQuery-%E2%86%92-onQueryImpl"><span class="toc-number">1.3.2.8.</span> <span class="toc-text">步骤 7: 用户输入处理 (REPL.tsx: onSubmit → onQuery → onQueryImpl)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-8-%E6%A0%B8%E5%BF%83%E6%9F%A5%E8%AF%A2%E5%BE%AA%E7%8E%AF-query-ts-query-%E2%86%92-queryLoop-1730%E8%A1%8C"><span class="toc-number">1.3.2.9.</span> <span class="toc-text">步骤 8: 核心查询循环 (query.ts: query() → queryLoop(), 1730行)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-9-%E6%B5%81%E5%BC%8F-API-%E8%B0%83%E7%94%A8-services-api-claude-ts-queryModelWithStreaming"><span class="toc-number">1.3.2.10.</span> <span class="toc-text">步骤 9: 流式 API 调用 (services&#x2F;api&#x2F;claude.ts: queryModelWithStreaming())</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-10-%E6%B5%81%E5%BC%8F%E6%B8%B2%E6%9F%93-utils-messages-ts-handleMessageFromStream-REPL-tsx"><span class="toc-number">1.3.2.11.</span> <span class="toc-text">步骤 10: 流式渲染 (utils&#x2F;messages.ts: handleMessageFromStream() + REPL.tsx)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-11-%E5%B7%A5%E5%85%B7%E6%89%A7%E8%A1%8C-toolOrchestration-ts-%E2%86%92-toolExecution-ts-%E2%86%92-Tool-call"><span class="toc-number">1.3.2.12.</span> <span class="toc-text">步骤 11: 工具执行 (toolOrchestration.ts → toolExecution.ts → Tool.call())</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-11a-%E6%9D%83%E9%99%90%E6%A3%80%E6%9F%A5-permissions-permissions-ts-PermissionContext-ts"><span class="toc-number">1.3.2.13.</span> <span class="toc-text">步骤 11a: 权限检查 (permissions&#x2F;permissions.ts + PermissionContext.ts)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-12-%E5%BE%AA%E7%8E%AF%E5%86%B3%E7%AD%96%E4%B8%8E%E6%81%A2%E5%A4%8D-query-ts-%E5%BE%AA%E7%8E%AF%E5%B0%BE%E9%83%A8-L1062-1250"><span class="toc-number">1.3.2.14.</span> <span class="toc-text">步骤 12: 循环决策与恢复 (query.ts 循环尾部, L1062-1250+)</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-13-%E4%BC%9A%E8%AF%9D%E6%8C%81%E4%B9%85%E5%8C%96-utils-sessionStorage-ts-176KB"><span class="toc-number">1.3.2.15.</span> <span class="toc-text">步骤 13: 会话持久化 (utils&#x2F;sessionStorage.ts, 176KB)</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%90%84%E6%AD%A5%E9%AA%A4%E4%BC%98%E7%A7%80%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F%E6%B1%87%E6%80%BB"><span class="toc-number">1.3.3.</span> <span class="toc-text">各步骤优秀实现方式汇总</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-1-2-%E5%90%AF%E5%8A%A8%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-number">1.3.3.1.</span> <span class="toc-text">阶段 1-2: 启动性能优化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-3-preAction-Hook-%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.3.3.2.</span> <span class="toc-text">阶段 3: preAction Hook 模式</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-4-init-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.3.3.3.</span> <span class="toc-text">阶段 4: init() 初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-5-setup-%E4%BC%9A%E8%AF%9D%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.3.3.4.</span> <span class="toc-text">阶段 5: setup() 会话初始化</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E9%98%B6%E6%AE%B5-5b-%E5%90%AF%E5%8A%A8%E5%AF%B9%E8%AF%9D%E6%A1%86%E6%B5%81"><span class="toc-number">1.3.3.5.</span> <span class="toc-text">阶段 5b: 启动对话框流</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-6-REPL-%E5%90%AF%E5%8A%A8"><span class="toc-number">1.3.3.6.</span> <span class="toc-text">步骤 6: REPL 启动</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-7-%E7%94%A8%E6%88%B7%E8%BE%93%E5%85%A5%E5%A4%84%E7%90%86"><span class="toc-number">1.3.3.7.</span> <span class="toc-text">步骤 7: 用户输入处理</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-8-%E6%A0%B8%E5%BF%83%E6%9F%A5%E8%AF%A2%E5%BE%AA%E7%8E%AF"><span class="toc-number">1.3.3.8.</span> <span class="toc-text">步骤 8: 核心查询循环</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-9-%E6%B5%81%E5%BC%8F-API-%E8%B0%83%E7%94%A8"><span class="toc-number">1.3.3.9.</span> <span class="toc-text">步骤 9: 流式 API 调用</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-10-%E6%B5%81%E5%BC%8F%E6%B8%B2%E6%9F%93"><span class="toc-number">1.3.3.10.</span> <span class="toc-text">步骤 10: 流式渲染</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-11-%E5%B7%A5%E5%85%B7%E6%89%A7%E8%A1%8C"><span class="toc-number">1.3.3.11.</span> <span class="toc-text">步骤 11: 工具执行</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-11a-%E6%9D%83%E9%99%90%E6%A3%80%E6%9F%A5"><span class="toc-number">1.3.3.12.</span> <span class="toc-text">步骤 11a: 权限检查</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-12-%E5%BE%AA%E7%8E%AF%E5%86%B3%E7%AD%96%E4%B8%8E%E6%81%A2%E5%A4%8D"><span class="toc-number">1.3.3.13.</span> <span class="toc-text">步骤 12: 循环决策与恢复</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%AD%A5%E9%AA%A4-13-%E4%BC%9A%E8%AF%9D%E6%8C%81%E4%B9%85%E5%8C%96"><span class="toc-number">1.3.3.14.</span> <span class="toc-text">步骤 13: 会话持久化</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%F0%9F%93%8A-%E5%8C%85-%E6%A8%A1%E5%9D%97%E5%85%B3%E7%B3%BB%E5%9B%BE"><span class="toc-number">1.4.</span> <span class="toc-text">📊 包&#x2F;模块关系图</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%A8%A1%E5%9D%97%E9%80%9F%E6%9F%A5%E8%A1%A8"><span class="toc-number">1.5.</span> <span class="toc-text">核心模块速查表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%85%A5%E5%8F%A3%E6%96%87%E4%BB%B6%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.6.</span> <span class="toc-text">核心入口文件详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-src-entrypoints-cli-tsx-%E2%80%94-%E6%9C%80%E5%A4%96%E5%B1%82%E5%BC%95%E5%AF%BC%E5%85%A5%E5%8F%A3"><span class="toc-number">1.6.1.</span> <span class="toc-text">1. src&#x2F;entrypoints&#x2F;cli.tsx — 最外层引导入口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-src-entrypoints-init-ts-%E2%80%94-%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F%E4%B8%8E%E9%81%A5%E6%B5%8B%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.6.2.</span> <span class="toc-text">2. src&#x2F;entrypoints&#x2F;init.ts — 配置系统与遥测初始化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-src-main-tsx-4684%E8%A1%8C-%E2%80%94-CLI-%E4%B8%BB%E7%A8%8B%E5%BA%8F-%E4%BA%A4%E4%BA%92%E5%BC%8F-REPL-%E7%9A%84%E5%85%A5%E5%8F%A3%E7%BC%96%E6%8E%92%E5%99%A8"><span class="toc-number">1.6.3.</span> <span class="toc-text">3. src&#x2F;main.tsx (4684行) — CLI 主程序 &amp; 交互式 REPL 的入口编排器</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-src-setup-ts-478%E8%A1%8C-%E2%80%94-%E8%BF%90%E8%A1%8C%E6%97%B6%E7%8E%AF%E5%A2%83%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">1.6.4.</span> <span class="toc-text">4. src&#x2F;setup.ts (478行) — 运行时环境初始化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%BC%95%E6%93%8E%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.7.</span> <span class="toc-text">核心引擎详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#src-query-ts-1730%E8%A1%8C-%E2%80%94-%E6%A0%B8%E5%BF%83%E6%9F%A5%E8%AF%A2%E5%BE%AA%E7%8E%AF"><span class="toc-number">1.7.1.</span> <span class="toc-text">src&#x2F;query.ts (1730行) — 核心查询循环</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-QueryEngine-ts-1296%E8%A1%8C-%E2%80%94-%E4%BC%9A%E8%AF%9D%E7%BA%A7%E6%9F%A5%E8%AF%A2%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E7%AE%A1%E7%90%86"><span class="toc-number">1.7.2.</span> <span class="toc-text">src&#x2F;QueryEngine.ts (1296行) — 会话级查询生命周期管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-Tool-ts-793%E8%A1%8C-%E2%80%94-%E5%B7%A5%E5%85%B7%E6%8E%A5%E5%8F%A3%E5%AE%9A%E4%B9%89%E4%B8%8E%E6%9E%84%E5%BB%BA%E5%99%A8"><span class="toc-number">1.7.3.</span> <span class="toc-text">src&#x2F;Tool.ts (793行) — 工具接口定义与构建器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9B%AE%E5%BD%95%E7%BB%93%E6%9E%84%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.8.</span> <span class="toc-text">目录结构详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#src-commands-%E2%80%94-%E6%96%9C%E6%9D%A0%E5%91%BD%E4%BB%A4-100%E4%B8%AA"><span class="toc-number">1.8.1.</span> <span class="toc-text">src&#x2F;commands&#x2F; — 斜杠命令 (~100个)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-tools-%E2%80%94-%E5%B7%A5%E5%85%B7%E5%AE%9E%E7%8E%B0-43%E4%B8%AA%E5%AD%90%E7%9B%AE%E5%BD%95"><span class="toc-number">1.8.2.</span> <span class="toc-text">src&#x2F;tools&#x2F; — 工具实现 (43个子目录)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-services-%E2%80%94-%E5%90%8E%E7%AB%AF%E6%9C%8D%E5%8A%A1%E5%B1%82"><span class="toc-number">1.8.3.</span> <span class="toc-text">src&#x2F;services&#x2F; — 后端服务层</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-state-%E2%80%94-%E5%BA%94%E7%94%A8%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86"><span class="toc-number">1.8.4.</span> <span class="toc-text">src&#x2F;state&#x2F; — 应用状态管理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BE%85%E5%8A%A9%E6%A8%A1%E5%9D%97%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.9.</span> <span class="toc-text">辅助模块详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#src-utils-%E2%80%94-%E6%A0%B8%E5%BF%83%E5%B7%A5%E5%85%B7%E5%BA%93-330-%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.1.</span> <span class="toc-text">src&#x2F;utils&#x2F; — 核心工具库 (330+文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-hooks-%E2%80%94-React-Hooks-%E5%BA%93-85%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.2.</span> <span class="toc-text">src&#x2F;hooks&#x2F; — React Hooks 库 (85文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-components-%E2%80%94-UI%E7%BB%84%E4%BB%B6%E5%B1%82-144%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.3.</span> <span class="toc-text">src&#x2F;components&#x2F; — UI组件层 (144文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-ink-%E2%80%94-%E7%BB%88%E7%AB%AF%E6%B8%B2%E6%9F%93%E5%BC%95%E6%93%8E-96%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.4.</span> <span class="toc-text">src&#x2F;ink&#x2F; — 终端渲染引擎 (96文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-bridge-%E2%80%94-IDE-%E6%A1%8C%E9%9D%A2%E6%A1%A5%E6%8E%A5-31%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.5.</span> <span class="toc-text">src&#x2F;bridge&#x2F; — IDE&#x2F;桌面桥接 (31文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-skills-%E2%80%94-%E6%8A%80%E8%83%BD%E7%B3%BB%E7%BB%9F-21%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.6.</span> <span class="toc-text">src&#x2F;skills&#x2F; — 技能系统 (21文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-memdir-%E2%80%94-%E8%AE%B0%E5%BF%86%E7%9B%AE%E5%BD%95%E7%B3%BB%E7%BB%9F-8%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.7.</span> <span class="toc-text">src&#x2F;memdir&#x2F; — 记忆目录系统 (8文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-vim-%E2%80%94-Vim-%E6%A8%A1%E5%BC%8F-5%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.8.</span> <span class="toc-text">src&#x2F;vim&#x2F; — Vim 模式 (5文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-keybindings-%E2%80%94-%E5%BF%AB%E6%8D%B7%E9%94%AE%E7%B3%BB%E7%BB%9F-14%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.9.</span> <span class="toc-text">src&#x2F;keybindings&#x2F; — 快捷键系统 (14文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-types-%E2%80%94-%E7%B1%BB%E5%9E%8B%E5%AE%9A%E4%B9%89-21%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.10.</span> <span class="toc-text">src&#x2F;types&#x2F; — 类型定义 (21文件)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#src-constants-%E2%80%94-%E5%B8%B8%E9%87%8F%E5%AE%9A%E4%B9%89-21%E6%96%87%E4%BB%B6"><span class="toc-number">1.9.11.</span> <span class="toc-text">src&#x2F;constants&#x2F; — 常量定义 (21文件)</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E8%8D%90%E5%AD%A6%E4%B9%A0%E8%B7%AF%E5%BE%84"><span class="toc-number">1.10.</span> <span class="toc-text">推荐学习路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E8%AE%BE%E8%AE%A1%E7%90%86%E5%BF%B5"><span class="toc-number">1.11.</span> <span class="toc-text">核心设计理念</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E6%9E%81%E8%87%B4%E7%9A%84%E5%90%AF%E5%8A%A8%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-number">1.11.1.</span> <span class="toc-text">1. 极致的启动性能优化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-Fail-closed-%E5%AE%89%E5%85%A8%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.11.2.</span> <span class="toc-text">2. Fail-closed 安全模型</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%BC%B9%E6%80%A7%E6%81%A2%E5%A4%8D%E7%9A%84%E6%9F%A5%E8%AF%A2%E5%BE%AA%E7%8E%AF"><span class="toc-number">1.11.3.</span> <span class="toc-text">3. 弹性恢复的查询循环</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E5%8F%8C%E6%A8%A1%E5%BC%8F%E8%BF%90%E8%A1%8C"><span class="toc-number">1.11.4.</span> <span class="toc-text">4. 双模式运行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E5%9B%9B%E5%B1%82%E6%89%A9%E5%B1%95%E6%9C%BA%E5%88%B6"><span class="toc-number">1.11.5.</span> <span class="toc-text">5. 四层扩展机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-Feature-Flag-%E6%9D%A1%E4%BB%B6%E7%BC%96%E8%AF%91"><span class="toc-number">1.11.6.</span> <span class="toc-text">6. Feature Flag 条件编译</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-%E7%8A%B6%E6%80%81%E7%AE%A1%E7%90%86%E5%8F%8C%E5%B1%82%E6%9E%B6%E6%9E%84"><span class="toc-number">1.11.7.</span> <span class="toc-text">7. 状态管理双层架构</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="toc-number">1.12.</span> <span class="toc-text">关键数据流</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/15_%E6%9D%83%E9%99%90%E4%B8%8E%E5%AE%89%E5%85%A8%E7%B3%BB%E7%BB%9F/" title="权限与安全系统 — Claude Code 源码深度分析">权限与安全系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/18_%E6%9F%A5%E8%AF%A2%E4%B8%8E%E5%BE%AA%E7%8E%AF%E6%A8%A1%E5%9D%97/" title="查询与循环模块 — Claude Code 源码深度分析">查询与循环模块 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/16_%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/" title="上下文管理系统 — Claude Code 源码深度分析">上下文管理系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/17_%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F/" title="记忆系统 — Claude Code 源码深度分析">记忆系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/14_Claude_Code_%E6%BA%90%E7%A0%81%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90/" title="ClaudeCode 源码架构分析">ClaudeCode 源码架构分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

@@ -1,0 +1,816 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 92;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>工具调用系统 — Claude Code 源码深度分析 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="工具调用系统 — Claude Code 源码深度分析 一句话理解 LLM 返回”我要调用工具”，系统先检查你有没有权限，再决定并行还是串行跑，跑完把结果塞回给 LLM 继续思考。整个过程有 Hook 可以拦截，有 ToolSearch 可以按需加载工具 schema，节省 token。   白话版运行流程整体一条线LLM 返回 ToolUseBlock[]         │         ▼">
+<meta property="og:type" content="article">
+<meta property="og:title" content="工具调用系统 — Claude Code 源码深度分析">
+<meta property="og:url" content="http://example.com/posts/19_%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="工具调用系统 — Claude Code 源码深度分析 一句话理解 LLM 返回”我要调用工具”，系统先检查你有没有权限，再决定并行还是串行跑，跑完把结果塞回给 LLM 继续思考。整个过程有 Hook 可以拦截，有 ToolSearch 可以按需加载工具 schema，节省 token。   白话版运行流程整体一条线LLM 返回 ToolUseBlock[]         │         ▼">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-04-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-06T06:06:23.125Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="AI编程">
+<meta property="article:tag" content="软件工程">
+<meta property="article:tag" content="工程能力">
+<meta property="article:tag" content="Claude Code">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/19_%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E7%B3%BB%E7%BB%9F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '工具调用系统 — Claude Code 源码深度分析',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 14:06:23'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">168</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">工具调用系统 — Claude Code 源码深度分析</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-06T06:06:23.125Z" title="更新于 2026 14:06:23">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>18分钟</span></span></div></div></div><article class="post-content" id="article-container"><h1 id="工具调用系统-—-Claude-Code-源码深度分析"><a href="#工具调用系统-—-Claude-Code-源码深度分析" class="headerlink" title="工具调用系统 — Claude Code 源码深度分析"></a>工具调用系统 — Claude Code 源码深度分析</h1><hr>
+<h2 id="一句话理解"><a href="#一句话理解" class="headerlink" title="一句话理解"></a>一句话理解</h2><blockquote>
+<p>LLM 返回”我要调用工具”，系统先<strong>检查你有没有权限</strong>，再<strong>决定并行还是串行跑</strong>，跑完把结果塞回给 LLM 继续思考。整个过程有 Hook 可以拦截，有 ToolSearch 可以按需加载工具 schema，节省 token。</p>
+</blockquote>
+<hr>
+<h2 id="白话版运行流程"><a href="#白话版运行流程" class="headerlink" title="白话版运行流程"></a>白话版运行流程</h2><h3 id="整体一条线"><a href="#整体一条线" class="headerlink" title="整体一条线"></a>整体一条线</h3><pre><code>LLM 返回 ToolUseBlock[]
+        │
+        ▼
+  partitionToolCalls()
+  &quot;这些工具能不能一起跑？&quot;
+        │
+   ┌────┴────┐
+   ▼         ▼
+并行跑     串行跑
+(只读工具)  (写入工具)
+   │         │
+   └────┬────┘
+        ▼
+  runToolUse() × N
+  &quot;跑单个工具&quot;
+        │
+   ┌────┴──────────────┐
+   ▼                   ▼
+权限检查通过         权限不够
+   │                   │
+tool.call()         拒绝/弹确认框
+   │
+   ▼
+结果 → 塞回 LLM
+</code></pre>
+<h3 id="权限检查-—-“你能不能干这件事”"><a href="#权限检查-—-“你能不能干这件事”" class="headerlink" title="权限检查 — “你能不能干这件事”"></a>权限检查 — “你能不能干这件事”</h3><p><strong>类比</strong>：公司门禁系统。进门要刷卡，但有些区域还要额外审批，有些区域任何人都进不去。</p>
+<p><strong>三道关卡</strong>（按顺序，任一拦截就停）：</p>
+<ol>
+<li><p><strong>第一关：规则检查</strong>（最高优先级，<code>bypassPermissions</code> 也绕不过）</p>
+<ul>
+<li>有 deny 规则 → 直接拒绝</li>
+<li>有 ask 规则 → 弹确认框</li>
+<li>操作 <code>.git/</code>、<code>.claude/</code> 等安全路径 → 弹确认框</li>
+</ul>
+</li>
+<li><p><strong>第二关：模式检查</strong></p>
+<ul>
+<li><code>bypassPermissions</code> 模式 → 直接放行</li>
+<li>工具在白名单里 → 直接放行</li>
+</ul>
+</li>
+<li><p><strong>第三关：AI 分类器</strong>（<code>auto</code> 模式下）</p>
+<ul>
+<li>调用 <code>classifyYoloAction()</code> 让 AI 判断这个操作危不危险</li>
+<li>危险 → 拒绝；安全 → 放行</li>
+</ul>
+</li>
+</ol>
+<h3 id="ToolSearch-—-“按需加载工具说明书”"><a href="#ToolSearch-—-“按需加载工具说明书”" class="headerlink" title="ToolSearch — “按需加载工具说明书”"></a>ToolSearch — “按需加载工具说明书”</h3><p><strong>类比</strong>：图书馆的书目索引。你不需要把所有书都搬到桌上，先看目录，需要哪本再去取。</p>
+<p><strong>为什么需要</strong>：Claude Code 有 40+ 个 MCP 工具，每个工具的 schema（参数说明）都很长。如果每次请求都把所有工具的完整 schema 发给 API，会浪费大量 token。</p>
+<p><strong>怎么运作</strong>：</p>
+<ol>
+<li>初始请求：只发工具名称（<code>defer_loading: true</code>），不发完整 schema</li>
+<li>LLM 看到工具名列表，觉得需要某个工具</li>
+<li>LLM 调用 <code>ToolSearch(&quot;select:mcp__github__create_issue&quot;)</code> 查询</li>
+<li>系统返回该工具的完整 schema，注入上下文</li>
+<li>LLM 现在可以正常调用这个工具了</li>
+</ol>
+<h3 id="并发-vs-串行-—-“哪些工具可以一起跑”"><a href="#并发-vs-串行-—-“哪些工具可以一起跑”" class="headerlink" title="并发 vs 串行 — “哪些工具可以一起跑”"></a>并发 vs 串行 — “哪些工具可以一起跑”</h3><p><strong>类比</strong>：厨房里同时炒几个菜。只读操作（看菜谱、量食材）可以同时做；写入操作（切菜、炒菜）要一步一步来，不然乱套。</p>
+<ul>
+<li><code>isConcurrencySafe = true</code>（只读工具）→ 最多 10 个并行</li>
+<li><code>isConcurrencySafe = false</code>（写入工具）→ 串行执行</li>
+</ul>
+<hr>
+<blockquote>
+<p>以下是源码级别的详细分析，如果你只想了解整体思路，上面的部分已经足够。</p>
+</blockquote>
+<hr>
+<h2 id="架构总览（源码视角）"><a href="#架构总览（源码视角）" class="headerlink" title="架构总览（源码视角）"></a>架构总览（源码视角）</h2><p>Claude Code 的工具调用系统是一个完整的<strong>定义→注册→发现→权限→执行→结果处理</strong>管线。核心设计采用 fail-closed 安全模型、并发&#x2F;串行自动分区、以及 ToolSearch 延迟加载来优化 token 使用。</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  graph TD
+    subgraph &quot;定义层&quot;
+        BT[&quot;buildTool()&lt;br&#x2F;&gt;工厂函数 + 安全默认值&quot;]
+        TD[&quot;Tool 接口&lt;br&#x2F;&gt;~40个字段&#x2F;方法&quot;]
+    end
+    
+    subgraph &quot;注册层&quot;
+        GAB[&quot;getAllBaseTools()&lt;br&#x2F;&gt;所有内置工具&quot;]
+        GT[&quot;getTools(permissionCtx)&lt;br&#x2F;&gt;过滤 deny + 启用&quot;]
+        ATP[&quot;assembleToolPool()&lt;br&#x2F;&gt;内置 + MCP 合并&quot;]
+    end
+    
+    subgraph &quot;API 转换层&quot;
+        TAS[&quot;toolToAPISchema()&lt;br&#x2F;&gt;Zod → JSON Schema&quot;]
+        TS[&quot;ToolSearch&lt;br&#x2F;&gt;defer_loading: true&quot;]
+    end
+    
+    subgraph &quot;执行管线&quot;
+        RTS[&quot;runTools() — 编排&quot;]
+        PART[&quot;partitionToolCalls()&lt;br&#x2F;&gt;并发&#x2F;串行分区&quot;]
+        RTU[&quot;runToolUse() — 单工具&quot;]
+        CPCT[&quot;checkPermissionsAndCallTool()&quot;]
+    end
+    
+    subgraph &quot;权限管线&quot;
+        HP[&quot;hasPermissionsToUseTool()&lt;br&#x2F;&gt;多层决策&quot;]
+        CRP[&quot;checkRuleBasedPermissions()&quot;]
+        CLF[&quot;classifyYoloAction()&lt;br&#x2F;&gt;AI 分类器&quot;]
+    end
+    
+    subgraph &quot;Hook 系统&quot;
+        PRE[&quot;runPreToolUseHooks&quot;]
+        POST[&quot;runPostToolUseHooks&quot;]
+        FAIL[&quot;runPostToolUseFailureHooks&quot;]
+    end
+    
+    BT --&gt; GAB --&gt; GT --&gt; ATP
+    ATP --&gt; TAS --&gt; API[&quot;Anthropic API&quot;]
+    API --&gt; RTS --&gt; PART
+    PART --&gt;|&quot;concurrent&quot;| RC[&quot;runToolsConcurrently&lt;br&#x2F;&gt;最多10并行&quot;]
+    PART --&gt;|&quot;serial&quot;| RS[&quot;runToolsSerially&quot;]
+    RC --&gt; RTU
+    RS --&gt; RTU
+    RTU --&gt; PRE --&gt; CPCT --&gt; POST
+    CPCT --&gt; HP --&gt; CLF
+  </pre></div>
+
+<h2 id="关键文件表"><a href="#关键文件表" class="headerlink" title="关键文件表"></a>关键文件表</h2><table>
+<thead>
+<tr>
+<th>文件路径</th>
+<th>大小</th>
+<th>核心职责</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>src/Tool.ts</code></td>
+<td>~793行</td>
+<td>工具接口定义、buildTool()、类型系统</td>
+</tr>
+<tr>
+<td><code>src/tools.ts</code></td>
+<td>~390行</td>
+<td>工具注册、getTools()、assembleToolPool()</td>
+</tr>
+<tr>
+<td><code>src/services/tools/toolOrchestration.ts</code></td>
+<td>5.4 KB</td>
+<td>工具编排 runTools()、分区并发&#x2F;串行</td>
+</tr>
+<tr>
+<td><code>src/services/tools/toolExecution.ts</code></td>
+<td>59 KB</td>
+<td>工具执行 runToolUse()、权限检查、Hook</td>
+</tr>
+<tr>
+<td><code>src/services/tools/toolHooks.ts</code></td>
+<td>22 KB</td>
+<td>Pre&#x2F;PostToolUse Hook 执行层</td>
+</tr>
+<tr>
+<td><code>src/utils/permissions/permissions.ts</code></td>
+<td>51 KB</td>
+<td>权限决策管线核心 (1487行)</td>
+</tr>
+<tr>
+<td><code>src/types/permissions.ts</code></td>
+<td>~442行</td>
+<td>权限纯类型定义</td>
+</tr>
+<tr>
+<td><code>src/tools/MCPTool/MCPTool.ts</code></td>
+<td>2.1 KB</td>
+<td>MCP 工具模板对象</td>
+</tr>
+<tr>
+<td><code>src/services/mcp/client.ts</code></td>
+<td>116 KB</td>
+<td>MCP 客户端、fetchToolsForClient</td>
+</tr>
+<tr>
+<td><code>src/services/mcp/types.ts</code></td>
+<td>6.8 KB</td>
+<td>MCP 配置类型</td>
+</tr>
+<tr>
+<td><code>src/tools/ToolSearchTool/ToolSearchTool.ts</code></td>
+<td>14 KB</td>
+<td>ToolSearch 工具实现</td>
+</tr>
+<tr>
+<td><code>src/tools/ToolSearchTool/prompt.ts</code></td>
+<td>5.1 KB</td>
+<td>isDeferredTool() 判定逻辑</td>
+</tr>
+<tr>
+<td><code>src/utils/toolSearch.ts</code></td>
+<td>~757行</td>
+<td>ToolSearch 启用&#x2F;阈值&#x2F;模式判定</td>
+</tr>
+<tr>
+<td><code>src/hooks/useMergedTools.ts</code></td>
+<td>1.6 KB</td>
+<td>React Hook 工具合并</td>
+</tr>
+<tr>
+<td><code>src/utils/api.ts</code></td>
+<td>大</td>
+<td>toolToAPISchema()、上下文注入</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="核心函数详解-—-“它到底做了什么”"><a href="#核心函数详解-—-“它到底做了什么”" class="headerlink" title="核心函数详解 — “它到底做了什么”"></a>核心函数详解 — “它到底做了什么”</h2><h3 id="1-buildTool-—-工具工厂函数"><a href="#1-buildTool-—-工具工厂函数" class="headerlink" title="1. buildTool() — 工具工厂函数"></a>1. <code>buildTool()</code> — 工具工厂函数</h3><p><strong>文件</strong>: <code>src/Tool.ts</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><p><strong>注入安全默认值</strong>: 所有未显式声明的字段都走最保守路径：</p>
+<ul>
+<li><code>isConcurrencySafe = false</code>（串行，防止并发写冲突）</li>
+<li><code>isReadOnly = false</code>（视为写操作，需要更严格权限）</li>
+<li><code>isEnabled = () =&gt; true</code>（默认启用）</li>
+<li><code>validateInput = () =&gt; null</code>（默认不做额外校验）</li>
+</ul>
+</li>
+<li><p><strong>Zod schema 绑定</strong>: 将工具的 <code>inputSchema</code>（Zod 类型）与工具定义绑定，后续 <code>toolToAPISchema()</code> 会把它转成 JSON Schema 发给 API。</p>
+</li>
+<li><p><strong>返回冻结对象</strong>: 防止运行时意外修改工具定义。</p>
+</li>
+</ol>
+<p><strong>为什么这样设计</strong>: 新工具开发者如果忘记声明某个字段，系统自动走最保守路径，而不是走最宽松路径。这是 fail-closed 原则的体现。</p>
+<hr>
+<h3 id="2-assembleToolPool-—-组装工具池"><a href="#2-assembleToolPool-—-组装工具池" class="headerlink" title="2. assembleToolPool() — 组装工具池"></a>2. <code>assembleToolPool()</code> — 组装工具池</h3><p><strong>文件</strong>: <code>src/tools.ts</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><p><strong>获取内置工具</strong>: 调用 <code>getTools(permissionContext)</code> → 内部调用 <code>getAllBaseTools()</code> 获取 43+ 个内置工具，再用 <code>filterToolsByDenyRules()</code> 根据用户配置的 deny 规则移除被禁用的工具，最后用 <code>isEnabled()</code> 过滤。</p>
+</li>
+<li><p><strong>获取 MCP 工具</strong>: 从 <code>appState.mcp.tools</code> 读取已连接的 MCP 服务器工具，同样经过 <code>filterToolsByDenyRules()</code> 过滤。</p>
+</li>
+<li><p><strong>合并去重</strong>: <code>uniqBy([...builtInSorted, ...mcpSorted], &#39;name&#39;)</code> — 内置工具在前，MCP 工具在后，按名称去重（内置优先）。</p>
+</li>
+<li><p><strong>内置工具排在前面的原因</strong>: 保持 API 请求中工具列表的顺序稳定，最大化 prompt cache 命中率。如果 MCP 工具排在前面，每次 MCP 工具变化都会导致整个工具列表的 cache 失效。</p>
+</li>
+</ol>
+<hr>
+<h3 id="3-runTools-—-工具编排入口"><a href="#3-runTools-—-工具编排入口" class="headerlink" title="3. runTools() — 工具编排入口"></a>3. <code>runTools()</code> — 工具编排入口</h3><p><strong>文件</strong>: <code>src/services/tools/toolOrchestration.ts</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><p><strong>接收 <code>ToolUseBlock[]</code></strong>: LLM 一次可能返回多个工具调用请求。</p>
+</li>
+<li><p><strong>调用 <code>partitionToolCalls()</code></strong>: 把工具调用列表分成若干批次：</p>
+<ul>
+<li>扫描列表，遇到 <code>isConcurrencySafe = false</code> 的工具就”切一刀”</li>
+<li>切出来的每一段：如果全是 <code>concurrencySafe</code> 的 → 并行批；否则 → 串行批</li>
+<li>例：<code>[Read, Read, Bash, Read]</code> → <code>[[Read, Read], [Bash], [Read]]</code></li>
+</ul>
+</li>
+<li><p><strong>按批次执行</strong>: 并行批用 <code>Promise.all()</code> 同时跑（最多 10 个），串行批逐个跑。</p>
+</li>
+<li><p><strong>收集结果</strong>: 所有 <code>ToolResultBlock</code> 汇总后返回，顺序与输入的 <code>ToolUseBlock[]</code> 一致。</p>
+</li>
+</ol>
+<hr>
+<h3 id="4-runToolUse-—-单工具执行"><a href="#4-runToolUse-—-单工具执行" class="headerlink" title="4. runToolUse() — 单工具执行"></a>4. <code>runToolUse()</code> — 单工具执行</h3><p><strong>文件</strong>: <code>src/services/tools/toolExecution.ts</code></p>
+<p>这是执行单个工具调用的核心函数，包含完整的校验→Hook→权限→执行→结果处理链路。</p>
+<p><strong>具体做了什么（逐步）</strong>:</p>
+<ol>
+<li><p><strong>查找工具</strong>: <code>findToolByName(name)</code> — 先按主名查找，找不到再查 alias（工具重命名后旧 transcript 仍可用）。</p>
+</li>
+<li><p><strong>解析输入</strong>: <code>inputSchema.safeParse(rawInput)</code> — 用 Zod 校验 LLM 传来的参数。如果校验失败，返回 <code>buildSchemaNotSentHint</code>（提示 LLM 先用 ToolSearch 加载完整 schema）。</p>
+</li>
+<li><p><strong>自定义校验</strong>: <code>tool.validateInput(parsedInput)</code> — 工具自己的业务逻辑校验（如路径合法性）。</p>
+</li>
+<li><p><strong>backfillObservableInput()</strong>: 浅克隆输入对象，注入衍生字段（如从路径推断出的文件类型）。原始 input 不突变，保证 prompt cache 稳定。</p>
+</li>
+<li><p><strong>投机性分类器启动</strong>（仅 Bash 工具）: 在 Pre-Hook 运行前就启动 <code>classifyYoloAction()</code>，与 hooks 并行执行，用 hooks 的运行时间掩盖分类器的延迟。</p>
+</li>
+<li><p><strong>运行 Pre-Hook</strong>: <code>runPreToolUseHooks()</code> — 外部 Hook 可以在这里 allow&#x2F;deny&#x2F;ask&#x2F;修改 input。</p>
+</li>
+<li><p><strong>解析 Hook 决策</strong>: <code>resolveHookPermissionDecision()</code> — 根据 Hook 结果决定是否继续走完整权限管线（详见下文）。</p>
+</li>
+<li><p><strong>执行工具</strong>: <code>tool.call(input, context)</code> — 实际执行工具逻辑。</p>
+</li>
+<li><p><strong>运行 Post-Hook</strong>: <code>runPostToolUseHooks()</code> — 可审计&#x2F;修改工具输出（常用于 MCP 工具的输出过滤）。</p>
+</li>
+<li><p><strong>处理结果</strong>: <code>processToolResultBlock()</code> — 截断超大输出（<code>maxResultSizeChars</code>），持久化到 transcript。</p>
+</li>
+<li><p><strong>错误处理</strong>: 执行失败 → <code>runPostToolUseFailureHooks()</code> → 返回错误信息给 LLM（不抛出，让 LLM 自己决定如何处理）。</p>
+</li>
+</ol>
+<hr>
+<h3 id="5-hasPermissionsToUseTool-—-权限决策管线"><a href="#5-hasPermissionsToUseTool-—-权限决策管线" class="headerlink" title="5. hasPermissionsToUseTool() — 权限决策管线"></a>5. <code>hasPermissionsToUseTool()</code> — 权限决策管线</h3><p><strong>文件</strong>: <code>src/utils/permissions/permissions.ts</code></p>
+<p><strong>这是整个权限系统的核心</strong>，三层决策，任一层拦截就短路返回。</p>
+<p><strong>具体做了什么（逐步）</strong>:</p>
+<p><strong>第零步</strong>: 检查 <code>abortController.signal.aborted</code> → 如果已中止，立即抛 <code>AbortError</code>。</p>
+<p><strong>第一层：规则检查</strong>（<code>bypassPermissions</code> 也无法跳过）:</p>
+<ul>
+<li><code>getDenyRuleForTool()</code> — 检查 <code>settings.json</code> 中的 deny 规则，匹配则直接拒绝</li>
+<li><code>getAskRuleForTool()</code> — 检查 ask 规则，匹配则弹确认框</li>
+<li><code>tool.checkPermissions()</code> — 工具自定义权限逻辑（如 Bash 工具检查命令是否在白名单）</li>
+<li><code>safetyCheck()</code> — 检查是否操作 <code>.git/</code>、<code>.claude/</code> 等安全关键路径，是则弹确认框（<code>bypassPermissions</code> 对此免疫）</li>
+</ul>
+<p><strong>第二层：模式快速放行</strong>:</p>
+<ul>
+<li><code>bypassPermissions</code> 或 <code>plan+bypass</code> 模式 → 直接 ALLOW</li>
+<li><code>toolAlwaysAllowedRule()</code> — 工具在白名单 → 直接 ALLOW</li>
+</ul>
+<p><strong>第三层：模式相关处理</strong>（passthrough 到这里的请求）:</p>
+<ul>
+<li><code>dontAsk</code> 模式: ask → 直接 DENY（无头环境不能弹框）</li>
+<li><code>auto</code> 模式:<ul>
+<li><code>requiresUserInteraction</code> → ASK</li>
+<li><code>acceptEdits</code> 快速路径 → ALLOW（用户已接受所有编辑）</li>
+<li>安全工具白名单 → ALLOW</li>
+<li><code>classifyYoloAction()</code> AI 分类器 → <code>shouldBlock=true</code> 则 DENY，否则 ALLOW</li>
+</ul>
+</li>
+<li><code>shouldAvoidPermissionPrompts</code>（无头代理）: 先跑 <code>runPermissionRequestHooksForHeadlessAgent()</code>，没有 Hook 决策则 DENY</li>
+</ul>
+<hr>
+<h3 id="6-resolveHookPermissionDecision-—-Hook-安全屏障"><a href="#6-resolveHookPermissionDecision-—-Hook-安全屏障" class="headerlink" title="6. resolveHookPermissionDecision() — Hook 安全屏障"></a>6. <code>resolveHookPermissionDecision()</code> — Hook 安全屏障</h3><p><strong>文件</strong>: <code>src/services/tools/toolExecution.ts</code></p>
+<p><strong>这是 Hook 系统的安全不变量</strong>：Hook 的 allow 决策不能绕过用户配置的 deny&#x2F;ask 规则。</p>
+<p><strong>具体做了什么</strong>:</p>
+<ul>
+<li><p><strong>Hook 返回 <code>allow</code></strong>:</p>
+<ol>
+<li>如果工具 <code>requiresUserInteraction</code> 且 Hook 没有修改 input → 走完整权限管线（不能绕过）</li>
+<li>调用 <code>checkRuleBasedPermissions()</code>:<ul>
+<li>无规则冲突 → 允许（跳过弹框，但 deny&#x2F;ask 规则仍然检查过了）</li>
+<li>有 deny 规则 → 拒绝（<strong>deny 规则覆盖 Hook 的 allow！</strong>）</li>
+<li>有 ask 规则 → 走完整权限管线（ask 规则要求用户确认）</li>
+</ul>
+</li>
+</ol>
+</li>
+<li><p><strong>Hook 返回 <code>deny</code></strong>: 直接拒绝，不再走后续流程。</p>
+</li>
+<li><p><strong>Hook 返回 <code>ask</code> 或未返回</strong>: 走完整权限管线（<code>canUseTool()</code>），可能带 <code>forceDecision</code>。</p>
+</li>
+</ul>
+<hr>
+<h3 id="7-ToolSearchTool-call-—-按需加载工具-Schema"><a href="#7-ToolSearchTool-call-—-按需加载工具-Schema" class="headerlink" title="7. ToolSearchTool.call() — 按需加载工具 Schema"></a>7. <code>ToolSearchTool.call()</code> — 按需加载工具 Schema</h3><p><strong>文件</strong>: <code>src/tools/ToolSearchTool/ToolSearchTool.ts</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><p><strong>解析查询</strong>: 检查是否有 <code>select:</code> 前缀：</p>
+<ul>
+<li><code>select:mcp__github__create_issue</code> → 精确查找，直接返回该工具的完整 schema</li>
+<li>普通关键词 → <code>searchToolsWithKeywords()</code> 评分排序</li>
+</ul>
+</li>
+<li><p><strong>关键词评分搜索</strong>:</p>
+<ul>
+<li>工具名称部分匹配 → 加分</li>
+<li>description 词边界匹配 → 加分</li>
+<li><code>searchHint</code> 字段匹配 → 加分</li>
+<li>按分数降序返回 Top-N 结果</li>
+</ul>
+</li>
+<li><p><strong>返回 <code>tool_reference</code> 块</strong>:</p>
+<pre><code class="json">&#123; &quot;type&quot;: &quot;tool_result&quot;, &quot;content&quot;: [
+  &#123; &quot;type&quot;: &quot;tool_reference&quot;, &quot;tool_name&quot;: &quot;mcp__github__create_issue&quot; &#125;
+]&#125;
+</code></pre>
+<p>API 层面会把 <code>tool_reference</code> 展开为完整 schema，注入到上下文中。</p>
+</li>
+<li><p><strong>追踪已发现工具</strong>: <code>extractDiscoveredToolNames(messages)</code> 扫描消息历史，把已经通过 ToolSearch 发现的工具名记录下来。后续 API 请求中，这些工具的完整 schema 会自动包含（不再 defer）。</p>
+</li>
+<li><p>工具调用时Zod验证不通过（如：缺少必需参数、意外参数、类型不匹配），会将错误信息传递给大模型，让大模型自己修正</p>
+</li>
+</ol>
+<hr>
+<h2 id="核心流程图"><a href="#核心流程图" class="headerlink" title="核心流程图"></a>核心流程图</h2><h3 id="工具执行管线"><a href="#工具执行管线" class="headerlink" title="工具执行管线"></a>工具执行管线</h3><p><code>runTools()</code> 是整个工具执行的”调度中心”。LLM 每次返回工具调用请求，都要经过这里的分区→并发&#x2F;串行→单工具执行链路。下面用文字走一遍完整决策链路：</p>
+<p><strong>第一步：分区</strong></p>
+<p><code>partitionToolCalls()</code> 把工具调用列表切成若干批次。规则很简单：遇到 <code>isConcurrencySafe = false</code> 的工具就切一刀。切出来的每一段，如果全是并发安全的就并行跑，否则串行跑。</p>
+<p><strong>第二步：执行</strong></p>
+<ul>
+<li>并行批：<code>Promise.all()</code> 同时跑，最多 10 个</li>
+<li>串行批：逐个跑，等上一个完成再跑下一个</li>
+</ul>
+<p><strong>第三步：单工具执行</strong></p>
+<p>每个工具调用经过：查找 → 解析 → 校验 → backfill → 投机分类器 → Pre-Hook → 权限检查 → 执行 → Post-Hook → 结果处理。</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  flowchart TD
+    BLOCKS[&quot;ToolUseBlock[]&quot;] --&gt; PART[&quot;partitionToolCalls()&quot;]
+    PART --&gt; |&quot;连续 concurrency-safe&quot;| CONC[&quot;runToolsConcurrently&lt;br&#x2F;&gt;all() 最多10并行&quot;]
+    PART --&gt; |&quot;非 concurrency-safe&quot;| SER[&quot;runToolsSerially&quot;]
+    
+    CONC --&gt; RTU[&quot;runToolUse()&quot;]
+    SER --&gt; RTU
+    
+    RTU --&gt; FIND[&quot;findToolByName()&lt;br&#x2F;&gt;+ alias 回退&quot;]
+    FIND --&gt; PARSE[&quot;inputSchema.safeParse()&quot;]
+    PARSE --&gt;|&quot;失败&quot;| HINT[&quot;buildSchemaNotSentHint&lt;br&#x2F;&gt;提示先 ToolSearch&quot;]
+    PARSE --&gt;|&quot;成功&quot;| VALID[&quot;tool.validateInput()&quot;]
+    VALID --&gt; BACKFILL[&quot;backfillObservableInput()&lt;br&#x2F;&gt;浅克隆+衍生字段&quot;]
+    
+    BACKFILL --&gt; SPEC[&quot;startSpeculativeClassifierCheck&lt;br&#x2F;&gt;(仅Bash, 投机性并行)&quot;]
+    SPEC --&gt; PRE[&quot;runPreToolUseHooks&quot;]
+    PRE --&gt; RESOLVE[&quot;resolveHookPermissionDecision()&quot;]
+    
+    RESOLVE --&gt; |&quot;hook allow&quot;| RULE[&quot;checkRuleBasedPermissions&lt;br&#x2F;&gt;deny&#x2F;ask 规则仍然生效!&quot;]
+    RESOLVE --&gt; |&quot;hook deny&quot;| DENY[&quot;拒绝&quot;]
+    RESOLVE --&gt; |&quot;passthrough&quot;| CAN[&quot;canUseTool()&lt;br&#x2F;&gt;完整权限管线&quot;]
+    RULE --&gt; |&quot;无规则冲突&quot;| ALLOW[&quot;允许&quot;]
+    RULE --&gt; |&quot;有 deny&#x2F;ask&quot;| CAN
+    
+    ALLOW --&gt; EXEC[&quot;tool.call()&quot;]
+    CAN --&gt; |&quot;allow&quot;| EXEC
+    CAN --&gt; |&quot;deny&quot;| DENY
+    
+    EXEC --&gt; POST[&quot;runPostToolUseHooks&quot;]
+    POST --&gt; RESULT[&quot;processToolResultBlock()&lt;br&#x2F;&gt;大小限制&#x2F;持久化&quot;]
+    
+    EXEC --&gt; |&quot;错误&quot;| PFAIL[&quot;runPostToolUseFailureHooks&quot;]
+  </pre></div>
+
+<h3 id="权限决策管线"><a href="#权限决策管线" class="headerlink" title="权限决策管线"></a>权限决策管线</h3><pre><code>hasPermissionsToUseTool(tool, input, context, assistantMessage, toolUseID)
+│
+├─ 0. abortController 检查 → AbortError
+│
+╔═══════════════════════════════════════════════════════╗
+║ 第一层: 规则检查 (bypassPermissions 也不能跳过)       ║
+╠═══════════════════════════════════════════════════════╣
+║ 1a. getDenyRuleForTool()        → DENY               ║
+║ 1b. getAskRuleForTool()         → ASK                ║
+║     (sandbox 自动允许可跳过)                           ║
+║ 1c. tool.checkPermissions()     → 工具自定义逻辑      ║
+║ 1d. 工具返回 deny              → DENY                ║
+║ 1e. requiresUserInteraction + ask → ASK              ║
+║ 1f. content-级 ask 规则         → ASK                ║
+║ 1g. safetyCheck (.git/.claude/) → ASK (bypass免疫)    ║
+╚═══════════════════════════════════════════════════════╝
+│
+╔═══════════════════════════════════════════════════════╗
+║ 第二层: 模式检查                                      ║
+║ 2a. bypassPermissions/plan+bypass → ALLOW            ║
+║ 2b. toolAlwaysAllowedRule()      → ALLOW             ║
+╚═══════════════════════════════════════════════════════╝
+│
+╔═══════════════════════════════════════════════════════╗
+║ 第三层: passthrough → ask + 模式处理                  ║
+║                                                       ║
+║ dontAsk: ask → DENY                                  ║
+║ auto:                                                 ║
+║   ├─ safetyCheck 不可分类器审批? → ASK/DENY          ║
+║   ├─ requiresUserInteraction? → ASK                  ║
+║   ├─ acceptEdits 快速路径? → ALLOW                   ║
+║   ├─ 安全工具白名单? → ALLOW                        ║
+║   └─ classifyYoloAction() AI分类器:                  ║
+║       ├─ shouldBlock=true → DENY + 拒绝追踪          ║
+║       ├─ unavailable → fail-open/fail-closed         ║
+║       └─ shouldBlock=false → ALLOW                   ║
+║                                                       ║
+║ shouldAvoidPermissionPrompts (无头代理):              ║
+║   → runPermissionRequestHooksForHeadlessAgent()      ║
+║   → 没有 Hook 决策 → DENY                            ║
+╚═══════════════════════════════════════════════════════╝
+</code></pre>
+<h3 id="ToolSearch-延迟加载流程"><a href="#ToolSearch-延迟加载流程" class="headerlink" title="ToolSearch 延迟加载流程"></a>ToolSearch 延迟加载流程</h3><pre><code>初始 API 请求:
+├─ 所有 isDeferredTool() = true 的工具:
+│   → 只发送 name (defer_loading: true)
+│   → 不发送完整 schema → 节省大量 token
+├─ 非 deferred 工具: 完整 schema
+└─ ToolSearchTool: 完整 schema (自身不 defer)
+
+模型需要工具时:
+  1. 看到 &lt;system-reminder&gt; 中的 deferred 工具名列表
+  2. 调用 ToolSearch(query: &quot;select:mcp__github__create_issue&quot;)
+  3. ToolSearchTool.call():
+     ├─ &quot;select:&quot; 前缀 → 精确查找
+     └─ 关键词 → searchToolsWithKeywords() 评分排序
+  4. 返回 tool_reference 块:
+     &#123; type: &#39;tool_result&#39;, content: [
+       &#123; type: &#39;tool_reference&#39;, tool_name: &#39;mcp__...&#39; &#125;
+     ]&#125;
+  5. API 展开 tool_reference → 完整 schema 注入上下文
+  6. 模型现在可以正常调用该工具
+
+后续请求:
+  extractDiscoveredToolNames(messages) 追踪已发现工具
+  → 已发现工具的完整 schema 在后续请求中自动包含
+</code></pre>
+<hr>
+<h2 id="数据流"><a href="#数据流" class="headerlink" title="数据流"></a>数据流</h2><h3 id="工具池组装链"><a href="#工具池组装链" class="headerlink" title="工具池组装链"></a>工具池组装链</h3><pre><code>MCP servers connect → fetchToolsForClient()
+│                      ├─ ...MCPTool (继承模板)
+│                      ├─ name: mcp__&lt;server&gt;__&lt;tool&gt;
+│                      ├─ isMcp: true, searchHint, alwaysLoad
+│                      ├─ inputJSONSchema: 直接用 MCP 的
+│                      └─ checkPermissions: passthrough
+│
+└─ appState.mcp.tools 积累
+       │
+assembleToolPool(permissionContext, mcpTools)
+  ├─ getTools(permissionContext)
+  │   ├─ getAllBaseTools() — 43+ 内置工具
+  │   ├─ filterToolsByDenyRules() — 根据 deny 规则移除
+  │   └─ isEnabled() 过滤
+  ├─ filterToolsByDenyRules(mcpTools) — 允许的 MCP 工具
+  └─ uniqBy([...builtInSorted, ...mcpSorted], &#39;name&#39;)
+      → 去重（内置优先）, 内置在前保持 cache 稳定
+</code></pre>
+<h3 id="Hook-安全不变量"><a href="#Hook-安全不变量" class="headerlink" title="Hook 安全不变量"></a>Hook 安全不变量</h3><pre><code>resolveHookPermissionDecision(hookResult, tool, input, context, canUseTool):
+
+hookResult.behavior === &#39;allow&#39;:
+  ├─ requiresUserInteraction &amp;&amp; !updatedInput → canUseTool() (完整管线)
+  ├─ checkRuleBasedPermissions():
+  │   ├─ null (无规则冲突) → 允许 (bypass prompt)
+  │   ├─ deny → 拒绝 (deny 规则覆盖 hook!)
+  │   └─ ask → canUseTool() (ask 规则要求对话)
+  └─ 关键: Hook 的 allow 不能绕过 settings.json 的 deny/ask 规则
+
+hookResult.behavior === &#39;deny&#39;:
+  └─ 直接拒绝
+
+hookResult.behavior === &#39;ask&#39; | undefined:
+  └─ canUseTool() (正常权限流, 可能带 forceDecision)
+</code></pre>
+<hr>
+<h2 id="设计模式总结"><a href="#设计模式总结" class="headerlink" title="设计模式总结"></a>设计模式总结</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>实现细节</th>
+<th>为什么这样设计</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>Fail-closed 默认</strong></td>
+<td><code>buildTool()</code>: <code>isConcurrencySafe=false</code>, <code>isReadOnly=false</code></td>
+<td>新工具开发者忘记声明属性时走最保守路径，而不是最宽松路径。安全漏洞比性能损失更难接受。</td>
+</tr>
+<tr>
+<td><strong>并发&#x2F;串行自动分区</strong></td>
+<td><code>partitionToolCalls()</code> 根据 <code>isConcurrencySafe</code> 分批，并行批最多 10 个</td>
+<td>只读工具并行提速，写入工具串行保序。调用方无需手动管理并发，系统自动做最优决策。</td>
+</tr>
+<tr>
+<td><strong>投机性分类器</strong></td>
+<td>Bash 工具在权限检查前启动 <code>classifyYoloAction()</code>，与 hooks 并行</td>
+<td>AI 分类器有网络延迟，提前启动让延迟被 hooks 的运行时间掩盖，用户感知不到等待。</td>
+</tr>
+<tr>
+<td><strong>ToolSearch 延迟加载</strong></td>
+<td><code>defer_loading: true</code> → 只发名称，按需加载完整 schema</td>
+<td>40+ MCP 工具的完整 schema 可能占数千 token。延迟加载让初始请求极轻量，只有真正用到的工具才消耗 token。</td>
+</tr>
+<tr>
+<td><strong>多层权限流水线</strong></td>
+<td>deny → tool-level → checkPermissions → rules → hooks → classifier → user</td>
+<td>每层短路，覆盖全粒度。规则检查（纯内存）排在 AI 分类器（网络请求）前面，大多数请求在前两层就能决策。</td>
+</tr>
+<tr>
+<td><strong>Alias 回退</strong></td>
+<td><code>findToolByName</code> 先查主名再查 alias</td>
+<td>工具重命名后，旧 transcript 中记录的工具名仍然可以找到对应实现，保证历史记录可回放。</td>
+</tr>
+<tr>
+<td><strong>backfillObservableInput</strong></td>
+<td>浅克隆 + 注入衍生字段，原始 input 不突变</td>
+<td>原始 input 保持不变，prompt cache 不会因为衍生字段的注入而失效。同时向后兼容旧版本的 input 格式。</td>
+</tr>
+<tr>
+<td><strong>Mark-after-filter 去重</strong></td>
+<td>Tool Result Budget 的 <code>seenIds</code> + <code>replacements</code></td>
+<td>决策一旦做出不可逆，同一 tool_use_id 的结果不会被重复处理，prompt cache 稳定。</td>
+</tr>
+<tr>
+<td><strong>Hook 安全屏障</strong></td>
+<td><code>resolveHookPermissionDecision</code> 中 hook allow 仍检查 rules</td>
+<td>Hook 是第三方扩展点，不能让第三方 Hook 绕过用户在 <code>settings.json</code> 中配置的 deny&#x2F;ask 规则。这是硬编码的安全不变量。</td>
+</tr>
+<tr>
+<td><strong>关键词评分搜索</strong></td>
+<td>ToolSearch 的 name 部分匹配 + description 词边界匹配 + searchHint 加权</td>
+<td>精准工具发现，避免返回不相关工具浪费 token。<code>searchHint</code> 让工具作者可以自定义搜索关键词。</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="对-Agent-开发的参考价值"><a href="#对-Agent-开发的参考价值" class="headerlink" title="对 Agent 开发的参考价值"></a>对 Agent 开发的参考价值</h2><h3 id="1-工具定义最佳实践"><a href="#1-工具定义最佳实践" class="headerlink" title="1. 工具定义最佳实践"></a>1. 工具定义最佳实践</h3><ul>
+<li><strong><code>buildTool()</code></strong> 提供安全默认值，减少遗漏风险。新工具至少要显式声明 <code>isConcurrencySafe</code> 和 <code>isReadOnly</code>，否则走最保守路径（串行 + 写操作权限）。</li>
+<li><strong><code>isConcurrencySafe = true</code></strong>: 只读操作设 true 可大幅提速，多个只读工具可以并行执行。</li>
+<li><strong><code>maxResultSizeChars</code></strong>: 控制工具输出大小，防止上下文膨胀。大输出工具（如文件读取）必须设置。</li>
+<li><strong><code>shouldDefer + searchHint</code></strong>: MCP 工具设延迟加载，节省 token。<code>searchHint</code> 填写工具的使用场景关键词，提升 ToolSearch 的召回率。</li>
+</ul>
+<h3 id="2-权限系统设计"><a href="#2-权限系统设计" class="headerlink" title="2. 权限系统设计"></a>2. 权限系统设计</h3><ul>
+<li><strong>分层短路</strong>是高效设计：每层检查完立即返回，不走后续层。规则检查（纯内存）排在 AI 分类器（网络请求）前面，大多数请求在前两层就能决策。</li>
+<li><strong><code>safetyCheck</code> bypass 免疫</strong>：<code>.git/</code>、<code>.claude/</code> 等安全关键路径即使 <code>bypassPermissions</code> 也要确认，这是不可绕过的硬编码保护。</li>
+<li><strong>Denial 追踪 + 熔断</strong>：连续拒绝超阈值后退化为人工确认，防止 AI 分类器误判导致的无限循环。</li>
+<li><strong>投机性并行</strong>：分类器可在 hooks 运行时同步启动，用 hooks 的运行时间掩盖分类器延迟。</li>
+</ul>
+<h3 id="3-MCP-集成"><a href="#3-MCP-集成" class="headerlink" title="3. MCP 集成"></a>3. MCP 集成</h3><ul>
+<li><strong><code>...MCPTool</code> 展开模式</strong>：一个模板对象 + 每个工具覆盖特定方法，减少重复代码。</li>
+<li><strong><code>mcp__server__tool</code> 命名约定</strong>：支持服务器级规则匹配（如 <code>deny: mcp__github__*</code> 禁用整个 GitHub MCP 服务器）。</li>
+<li>**<code>passthrough + suggestions</code>**：MCP 工具默认要权限，建议在工具定义中包含 <code>localSettings</code> allow 规则，减少用户手动配置。</li>
+</ul>
+<h3 id="4-ToolSearch-优化"><a href="#4-ToolSearch-优化" class="headerlink" title="4. ToolSearch 优化"></a>4. ToolSearch 优化</h3><ul>
+<li><strong><code>defer_loading</code></strong> 让 API 只看到工具名称，按需加载完整 schema。适合 schema 较长的 MCP 工具。</li>
+<li><strong><code>tool_reference</code></strong> 是 API 层面的懒加载机制，由 Anthropic API 负责展开，不需要客户端额外处理。</li>
+<li><strong><code>extractDiscoveredToolNames</code></strong> 追踪已发现工具集，compact 时快照到 boundary，保证压缩后已发现的工具仍然可用。</li>
+</ul>
+<h3 id="5-Hook-系统"><a href="#5-Hook-系统" class="headerlink" title="5. Hook 系统"></a>5. Hook 系统</h3><ul>
+<li><strong>PreToolUse</strong>: 可 allow&#x2F;deny&#x2F;ask&#x2F;modify input&#x2F;prevent continuation。适合实现审计日志、输入过滤、自定义权限逻辑。</li>
+<li><strong>PostToolUse</strong>: 可审计&#x2F;修改 MCP 工具输出。适合过滤敏感信息、格式化输出。</li>
+<li><strong>关键安全约束</strong>: Hook 的 allow 不能绕过 deny&#x2F;ask 规则——这是硬编码的安全不变量。设计自己的 Hook 时不要假设 allow 决策一定会被执行。</li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/AI%E7%BC%96%E7%A8%8B/">AI编程</a><a class="post-meta__tags" href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/">软件工程</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E7%A8%8B%E8%83%BD%E5%8A%9B/">工程能力</a><a class="post-meta__tags" href="/tags/Claude-Code/">Claude Code</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/14_Claude_Code_%E6%BA%90%E7%A0%81%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90/" title="ClaudeCode 源码架构分析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">ClaudeCode 源码架构分析</div></div></a></div><div class="next-post pull-right"><a href="/posts/22_%E6%8F%90%E7%A4%BA%E8%AF%8D%E7%B3%BB%E7%BB%9F/" title="Claude Code 提示词系统"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Claude Code 提示词系统</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">92</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">168</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E8%B0%83%E7%94%A8%E7%B3%BB%E7%BB%9F-%E2%80%94-Claude-Code-%E6%BA%90%E7%A0%81%E6%B7%B1%E5%BA%A6%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">工具调用系统 — Claude Code 源码深度分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%90%86%E8%A7%A3"><span class="toc-number">1.1.</span> <span class="toc-text">一句话理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%99%BD%E8%AF%9D%E7%89%88%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">1.2.</span> <span class="toc-text">白话版运行流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B4%E4%BD%93%E4%B8%80%E6%9D%A1%E7%BA%BF"><span class="toc-number">1.2.1.</span> <span class="toc-text">整体一条线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%83%E9%99%90%E6%A3%80%E6%9F%A5-%E2%80%94-%E2%80%9C%E4%BD%A0%E8%83%BD%E4%B8%8D%E8%83%BD%E5%B9%B2%E8%BF%99%E4%BB%B6%E4%BA%8B%E2%80%9D"><span class="toc-number">1.2.2.</span> <span class="toc-text">权限检查 — “你能不能干这件事”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ToolSearch-%E2%80%94-%E2%80%9C%E6%8C%89%E9%9C%80%E5%8A%A0%E8%BD%BD%E5%B7%A5%E5%85%B7%E8%AF%B4%E6%98%8E%E4%B9%A6%E2%80%9D"><span class="toc-number">1.2.3.</span> <span class="toc-text">ToolSearch — “按需加载工具说明书”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B9%B6%E5%8F%91-vs-%E4%B8%B2%E8%A1%8C-%E2%80%94-%E2%80%9C%E5%93%AA%E4%BA%9B%E5%B7%A5%E5%85%B7%E5%8F%AF%E4%BB%A5%E4%B8%80%E8%B5%B7%E8%B7%91%E2%80%9D"><span class="toc-number">1.2.4.</span> <span class="toc-text">并发 vs 串行 — “哪些工具可以一起跑”</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E6%80%BB%E8%A7%88%EF%BC%88%E6%BA%90%E7%A0%81%E8%A7%86%E8%A7%92%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">架构总览（源码视角）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%96%87%E4%BB%B6%E8%A1%A8"><span class="toc-number">1.4.</span> <span class="toc-text">关键文件表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%87%BD%E6%95%B0%E8%AF%A6%E8%A7%A3-%E2%80%94-%E2%80%9C%E5%AE%83%E5%88%B0%E5%BA%95%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88%E2%80%9D"><span class="toc-number">1.5.</span> <span class="toc-text">核心函数详解 — “它到底做了什么”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-buildTool-%E2%80%94-%E5%B7%A5%E5%85%B7%E5%B7%A5%E5%8E%82%E5%87%BD%E6%95%B0"><span class="toc-number">1.5.1.</span> <span class="toc-text">1. buildTool() — 工具工厂函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-assembleToolPool-%E2%80%94-%E7%BB%84%E8%A3%85%E5%B7%A5%E5%85%B7%E6%B1%A0"><span class="toc-number">1.5.2.</span> <span class="toc-text">2. assembleToolPool() — 组装工具池</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-runTools-%E2%80%94-%E5%B7%A5%E5%85%B7%E7%BC%96%E6%8E%92%E5%85%A5%E5%8F%A3"><span class="toc-number">1.5.3.</span> <span class="toc-text">3. runTools() — 工具编排入口</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-runToolUse-%E2%80%94-%E5%8D%95%E5%B7%A5%E5%85%B7%E6%89%A7%E8%A1%8C"><span class="toc-number">1.5.4.</span> <span class="toc-text">4. runToolUse() — 单工具执行</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-hasPermissionsToUseTool-%E2%80%94-%E6%9D%83%E9%99%90%E5%86%B3%E7%AD%96%E7%AE%A1%E7%BA%BF"><span class="toc-number">1.5.5.</span> <span class="toc-text">5. hasPermissionsToUseTool() — 权限决策管线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-resolveHookPermissionDecision-%E2%80%94-Hook-%E5%AE%89%E5%85%A8%E5%B1%8F%E9%9A%9C"><span class="toc-number">1.5.6.</span> <span class="toc-text">6. resolveHookPermissionDecision() — Hook 安全屏障</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-ToolSearchTool-call-%E2%80%94-%E6%8C%89%E9%9C%80%E5%8A%A0%E8%BD%BD%E5%B7%A5%E5%85%B7-Schema"><span class="toc-number">1.5.7.</span> <span class="toc-text">7. ToolSearchTool.call() — 按需加载工具 Schema</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="toc-number">1.6.</span> <span class="toc-text">核心流程图</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E6%89%A7%E8%A1%8C%E7%AE%A1%E7%BA%BF"><span class="toc-number">1.6.1.</span> <span class="toc-text">工具执行管线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%83%E9%99%90%E5%86%B3%E7%AD%96%E7%AE%A1%E7%BA%BF"><span class="toc-number">1.6.2.</span> <span class="toc-text">权限决策管线</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ToolSearch-%E5%BB%B6%E8%BF%9F%E5%8A%A0%E8%BD%BD%E6%B5%81%E7%A8%8B"><span class="toc-number">1.6.3.</span> <span class="toc-text">ToolSearch 延迟加载流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="toc-number">1.7.</span> <span class="toc-text">数据流</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B7%A5%E5%85%B7%E6%B1%A0%E7%BB%84%E8%A3%85%E9%93%BE"><span class="toc-number">1.7.1.</span> <span class="toc-text">工具池组装链</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Hook-%E5%AE%89%E5%85%A8%E4%B8%8D%E5%8F%98%E9%87%8F"><span class="toc-number">1.7.2.</span> <span class="toc-text">Hook 安全不变量</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%80%BB%E7%BB%93"><span class="toc-number">1.8.</span> <span class="toc-text">设计模式总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9-Agent-%E5%BC%80%E5%8F%91%E7%9A%84%E5%8F%82%E8%80%83%E4%BB%B7%E5%80%BC"><span class="toc-number">1.9.</span> <span class="toc-text">对 Agent 开发的参考价值</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%B7%A5%E5%85%B7%E5%AE%9A%E4%B9%89%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5"><span class="toc-number">1.9.1.</span> <span class="toc-text">1. 工具定义最佳实践</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E6%9D%83%E9%99%90%E7%B3%BB%E7%BB%9F%E8%AE%BE%E8%AE%A1"><span class="toc-number">1.9.2.</span> <span class="toc-text">2. 权限系统设计</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-MCP-%E9%9B%86%E6%88%90"><span class="toc-number">1.9.3.</span> <span class="toc-text">3. MCP 集成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-ToolSearch-%E4%BC%98%E5%8C%96"><span class="toc-number">1.9.4.</span> <span class="toc-text">4. ToolSearch 优化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-Hook-%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.9.5.</span> <span class="toc-text">5. Hook 系统</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/15_%E6%9D%83%E9%99%90%E4%B8%8E%E5%AE%89%E5%85%A8%E7%B3%BB%E7%BB%9F/" title="权限与安全系统 — Claude Code 源码深度分析">权限与安全系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/18_%E6%9F%A5%E8%AF%A2%E4%B8%8E%E5%BE%AA%E7%8E%AF%E6%A8%A1%E5%9D%97/" title="查询与循环模块 — Claude Code 源码深度分析">查询与循环模块 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/16_%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/" title="上下文管理系统 — Claude Code 源码深度分析">上下文管理系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/17_%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F/" title="记忆系统 — Claude Code 源码深度分析">记忆系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/14_Claude_Code_%E6%BA%90%E7%A0%81%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90/" title="ClaudeCode 源码架构分析">ClaudeCode 源码架构分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

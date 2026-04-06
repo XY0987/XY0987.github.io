@@ -1,0 +1,1085 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 92;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>多Agent协作系统 — Claude Code 源码深度分析 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="多Agent协作系统 — Claude Code 源码深度分析 一句话理解 用户跟”主 Agent”对话，主 Agent 可以派活给子 Agent（像领导叫下属干活，干完汇报），也可以拉一个团队（像建一个群聊，大家各干各的，通过”收件箱”互通消息）。   白话版运行流程整体分两条路当 LLM 决定需要帮手时，会调用 AgentTool。这个工具内部有一个路由开关，根据参数走两条完全不同的路： 用户">
+<meta property="og:type" content="article">
+<meta property="og:title" content="多Agent协作系统 — Claude Code 源码深度分析">
+<meta property="og:url" content="http://example.com/posts/21_%E5%A4%9AAgent%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="多Agent协作系统 — Claude Code 源码深度分析 一句话理解 用户跟”主 Agent”对话，主 Agent 可以派活给子 Agent（像领导叫下属干活，干完汇报），也可以拉一个团队（像建一个群聊，大家各干各的，通过”收件箱”互通消息）。   白话版运行流程整体分两条路当 LLM 决定需要帮手时，会调用 AgentTool。这个工具内部有一个路由开关，根据参数走两条完全不同的路： 用户">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-04-04T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-05T12:43:20.047Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="AI编程">
+<meta property="article:tag" content="软件工程">
+<meta property="article:tag" content="工程能力">
+<meta property="article:tag" content="Claude Code">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/21_%E5%A4%9AAgent%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '多Agent协作系统 — Claude Code 源码深度分析',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 20:43:20'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">168</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">多Agent协作系统 — Claude Code 源码深度分析</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-05T12:43:20.047Z" title="更新于 2026 20:43:20">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">9.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>34分钟</span></span></div></div></div><article class="post-content" id="article-container"><h1 id="多Agent协作系统-—-Claude-Code-源码深度分析"><a href="#多Agent协作系统-—-Claude-Code-源码深度分析" class="headerlink" title="多Agent协作系统 — Claude Code 源码深度分析"></a>多Agent协作系统 — Claude Code 源码深度分析</h1><hr>
+<h2 id="一句话理解"><a href="#一句话理解" class="headerlink" title="一句话理解"></a>一句话理解</h2><blockquote>
+<p>用户跟”主 Agent”对话，主 Agent 可以<strong>派活给子 Agent</strong>（像领导叫下属干活，干完汇报），也可以<strong>拉一个团队</strong>（像建一个群聊，大家各干各的，通过”收件箱”互通消息）。</p>
+</blockquote>
+<hr>
+<h2 id="白话版运行流程"><a href="#白话版运行流程" class="headerlink" title="白话版运行流程"></a>白话版运行流程</h2><h3 id="整体分两条路"><a href="#整体分两条路" class="headerlink" title="整体分两条路"></a>整体分两条路</h3><p>当 LLM 决定需要帮手时，会调用 <code>AgentTool</code>。这个工具内部有一个<strong>路由开关</strong>，根据参数走两条完全不同的路：</p>
+<pre><code>用户提问 → 主Agent思考 → &quot;我需要帮手&quot; → 调用 AgentTool
+                                              │
+                    ┌─────────────────────────┴─────────────────────────┐
+                    ▼                                                   ▼
+            【子Agent模式】                                       【团队模式】
+           传了 prompt                                      传了 prompt + name + team
+           没传 name/team                                    
+                    │                                                   │
+                    ▼                                                   ▼
+        在当前进程内启动一个&quot;下属&quot;                              开一个新终端/新线程，
+        下属干完活，结果直接                                   创建一个独立的&quot;队友&quot;
+        通过函数返回值交给主Agent                               队友们通过&quot;收件箱文件&quot;互发消息
+</code></pre>
+<h3 id="子Agent模式-—-“叫下属干活”"><a href="#子Agent模式-—-“叫下属干活”" class="headerlink" title="子Agent模式 — “叫下属干活”"></a>子Agent模式 — “叫下属干活”</h3><p><strong>类比</strong>：你是经理，叫一个下属去查资料。下属在你旁边干活，干完直接口头汇报给你。</p>
+<p><strong>运行过程</strong>：</p>
+<ol>
+<li>主Agent 说”帮我搜一下这个文件的实现”</li>
+<li>系统创建一个子Agent（比如 <code>Explore</code> 类型），给它一套精简的工具</li>
+<li>子Agent 独立运行一个”思考-调工具-思考”的循环</li>
+<li>每条消息通过 <code>yield</code> 实时传回给主Agent</li>
+<li>子Agent 干完了，主Agent 拿到结果继续思考</li>
+</ol>
+<p><strong>三种子Agent类型</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>什么时候用</th>
+<th>通俗理解</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>指定类型</strong>（如 Explore、Plan）</td>
+<td>明确知道要干什么</td>
+<td>“叫专门搜文件的人去搜”</td>
+</tr>
+<tr>
+<td><strong>Fork</strong></td>
+<td>需要父级的完整对话上下文</td>
+<td>“克隆一个我自己，带着全部记忆去干”</td>
+</tr>
+<tr>
+<td><strong>general-purpose</strong></td>
+<td>没指定，走默认</td>
+<td>“叫一个通用助手去干”</td>
+</tr>
+</tbody></table>
+<p><strong>同步 vs 异步</strong>：</p>
+<ul>
+<li><strong>同步</strong>：主Agent 等着子Agent 干完（2分钟内大概能完成的任务）</li>
+<li><strong>异步</strong>：主Agent 不等，立刻继续做自己的事，子Agent 干完后会弹通知</li>
+<li><strong>中途转换</strong>：同步任务跑超 2 分钟，自动变成异步（用户也可以手动点”放到后台”）</li>
+</ul>
+<h3 id="团队模式-—-“建群协作”"><a href="#团队模式-—-“建群协作”" class="headerlink" title="团队模式 — “建群协作”"></a>团队模式 — “建群协作”</h3><p><strong>类比</strong>：你是项目经理，拉了一个群，分配几个人各做一部分。大家各自在自己的终端里干活，干完了在群里汇报”我好了”。</p>
+<p><strong>运行过程</strong>：</p>
+<ol>
+<li>主Agent（Leader）创建一个”团队”，本质是在 <code>~/.claude/teams/</code> 下建了个文件夹</li>
+<li>Leader 派出多个 Teammate，每个可能是：<ul>
+<li>一个新的 tmux 终端面板（独立进程）</li>
+<li>一个 iTerm2 分屏（独立进程）</li>
+<li>同进程内的一个隔离线程（轻量级）</li>
+</ul>
+</li>
+<li>Leader 创建”任务”（写到磁盘 JSON 文件），分配给不同 Teammate</li>
+<li>Teammate 从”收件箱”里收到任务 → 干活 → 完成后往 Leader 的收件箱写”我好了”</li>
+<li>Leader 每 1 秒看一下收件箱，发现有人汇报了就处理</li>
+</ol>
+<p><strong>“收件箱”是什么</strong>：就是一个 JSON 文件（<code>~/.claude/teams/&#123;团队名&#125;/inboxes/&#123;人名&#125;.json</code>），写入时加文件锁防冲突。简单但有效。</p>
+<h3 id="两种模式的关键区别"><a href="#两种模式的关键区别" class="headerlink" title="两种模式的关键区别"></a>两种模式的关键区别</h3><table>
+<thead>
+<tr>
+<th></th>
+<th>子Agent模式</th>
+<th>团队模式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>关系</strong></td>
+<td>父子（上下级）</td>
+<td>平级（Leader + Workers）</td>
+</tr>
+<tr>
+<td><strong>通信</strong></td>
+<td>函数调用（yield）</td>
+<td>文件系统收件箱（JSON 文件）</td>
+</tr>
+<tr>
+<td><strong>生命期</strong></td>
+<td>跟随父Agent</td>
+<td>独立运行，可以活得更久</td>
+</tr>
+<tr>
+<td><strong>使用场景</strong></td>
+<td>搜索、分析、单次任务</td>
+<td>多人并行开发、复杂协作</td>
+</tr>
+<tr>
+<td><strong>开销</strong></td>
+<td>轻（同进程）</td>
+<td>重（可能开新进程&#x2F;终端）</td>
+</tr>
+</tbody></table>
+<h3 id="权限和安全怎么处理"><a href="#权限和安全怎么处理" class="headerlink" title="权限和安全怎么处理"></a>权限和安全怎么处理</h3><ul>
+<li><strong>子Agent</strong>：默认不能弹权限对话框（因为可能在后台），遇到需要权限的操作会自动拒绝</li>
+<li><strong>Team 的 Worker</strong>：遇到需要权限的操作，会通过收件箱把”权限请求”发给 Leader，Leader 的终端上弹出确认框，用户确认后结果写回 Worker 的收件箱</li>
+<li><strong>关闭队友</strong>：Leader 发 <code>shutdown_request</code> → Worker 回 <code>shutdown_approved</code> → Leader 关掉 Worker 的终端面板</li>
+</ul>
+<h3 id="一个完整的团队协作例子"><a href="#一个完整的团队协作例子" class="headerlink" title="一个完整的团队协作例子"></a>一个完整的团队协作例子</h3><pre><code>1. 用户说：&quot;帮我重构这个模块，加上测试&quot;
+2. 主Agent 创建团队 &quot;refactor-team&quot;
+3. 主Agent 创建两个任务：①重构代码 ②写测试
+4. 主Agent 派出两个 Teammate：
+   - &quot;coder&quot;（负责重构）→ 开一个 tmux 面板
+   - &quot;tester&quot;（负责测试）→ 开另一个 tmux 面板
+5. coder 收到任务 → 修改文件 → 提交代码 → 标记&quot;完成&quot; → 通知 Leader
+6. tester 收到任务 → 等 coder 完成 → 写测试 → 标记&quot;完成&quot; → 通知 Leader
+7. Leader 收到两个&quot;完成&quot;通知 → 汇总结果 → 回复用户
+8. Leader 发 shutdown 给 coder 和 tester → 关闭团队
+</code></pre>
+<hr>
+<blockquote>
+<p>以下是源码级别的详细分析，如果你只想了解整体思路，上面的部分已经足够。</p>
+</blockquote>
+<hr>
+<h2 id="架构总览（源码视角）"><a href="#架构总览（源码视角）" class="headerlink" title="架构总览（源码视角）"></a>架构总览（源码视角）</h2><p>Claude Code 的多Agent协作系统是一个分层、多模式的智能体编排架构。核心设计理念是<strong>单进程多上下文</strong>——通过 AsyncLocalStorage 实现同一 Node.js 进程内多个队友的身份隔离，辅以文件系统邮箱实现进程间通信。</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  graph TD
+    subgraph &quot;Agent 编排层&quot;
+        AT[&quot;AgentTool&lt;br&#x2F;&gt;路由入口 (1398行)&quot;]
+        RA[&quot;runAgent&lt;br&#x2F;&gt;子查询循环 (974行)&quot;]
+        FA[&quot;forkSubagent&lt;br&#x2F;&gt;上下文克隆 (211行)&quot;]
+        RS[&quot;resumeAgent&lt;br&#x2F;&gt;恢复已停 (266行)&quot;]
+    end
+
+    subgraph &quot;Team&#x2F;Swarm 层&quot;
+        TC[&quot;TeamCreateTool&lt;br&#x2F;&gt;创建团队&quot;]
+        TD[&quot;TeamDeleteTool&lt;br&#x2F;&gt;解散团队&quot;]
+        SM[&quot;SendMessageTool&lt;br&#x2F;&gt;消息路由 (918行)&quot;]
+        IP[&quot;useInboxPoller&lt;br&#x2F;&gt;轮询收件箱 (970行)&quot;]
+    end
+
+    subgraph &quot;消息传递层&quot;
+        MB[&quot;teammateMailbox&lt;br&#x2F;&gt;文件系统邮箱 (1184行)&quot;]
+        UDS[&quot;UDS Socket&lt;br&#x2F;&gt;跨会话通信&quot;]
+        BRD[&quot;Bridge&lt;br&#x2F;&gt;跨机器通信&quot;]
+    end
+
+    subgraph &quot;Task 系统&quot;
+        TCR[&quot;TaskCreateTool&quot;]
+        TU[&quot;TaskUpdateTool&quot;]
+        TL[&quot;TaskListTool&quot;]
+        TS[&quot;TaskStopTool&quot;]
+    end
+
+    subgraph &quot;后端执行层&quot;
+        TMX[&quot;TmuxBackend&lt;br&#x2F;&gt;终端分屏&quot;]
+        IT2[&quot;ITermBackend&lt;br&#x2F;&gt;iTerm2分屏&quot;]
+        INP[&quot;InProcessBackend&lt;br&#x2F;&gt;同进程隔离&quot;]
+    end
+
+    AT --&gt;|&quot;team+name&quot;| SM
+    AT --&gt;|&quot;sync&#x2F;async&quot;| RA
+    AT --&gt;|&quot;fork&quot;| FA
+    RA --&gt; |&quot;query()&quot;| Q[&quot;核心查询循环&quot;]
+    TC --&gt; MB
+    SM --&gt; MB
+    SM --&gt; UDS
+    SM --&gt; BRD
+    IP --&gt; MB
+    TCR --&gt; TL
+    TU --&gt; MB
+    INP --&gt; RA
+  </pre></div>
+
+<h2 id="关键文件表"><a href="#关键文件表" class="headerlink" title="关键文件表"></a>关键文件表</h2><table>
+<thead>
+<tr>
+<th>文件路径</th>
+<th>大小</th>
+<th>核心职责</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>src/tools/AgentTool/AgentTool.tsx</code></td>
+<td>228 KB</td>
+<td>主入口：工具定义、同步&#x2F;异步&#x2F;Fork 路由</td>
+</tr>
+<tr>
+<td><code>src/tools/AgentTool/runAgent.ts</code></td>
+<td>35 KB</td>
+<td>子查询循环核心：query() 封装</td>
+</tr>
+<tr>
+<td><code>src/tools/AgentTool/agentToolUtils.ts</code></td>
+<td>22 KB</td>
+<td>工具过滤、结果整理、异步生命周期</td>
+</tr>
+<tr>
+<td><code>src/tools/AgentTool/forkSubagent.ts</code></td>
+<td>8.5 KB</td>
+<td>Fork 子智能体：继承父上下文</td>
+</tr>
+<tr>
+<td><code>src/tools/AgentTool/resumeAgent.ts</code></td>
+<td>9.1 KB</td>
+<td>恢复已暂停的后台智能体</td>
+</tr>
+<tr>
+<td><code>src/tools/AgentTool/loadAgentsDir.ts</code></td>
+<td>25.6 KB</td>
+<td>从 <code>.claude/agents/</code> 加载用户定义智能体</td>
+</tr>
+<tr>
+<td><code>src/tools/TeamCreateTool/TeamCreateTool.ts</code></td>
+<td>7.5 KB</td>
+<td>创建团队</td>
+</tr>
+<tr>
+<td><code>src/tools/TeamDeleteTool/TeamDeleteTool.ts</code></td>
+<td>4.1 KB</td>
+<td>删除团队</td>
+</tr>
+<tr>
+<td><code>src/tools/SendMessageTool/SendMessageTool.ts</code></td>
+<td>27 KB</td>
+<td>智能体间消息传递</td>
+</tr>
+<tr>
+<td><code>src/utils/swarm/teamHelpers.ts</code></td>
+<td>21 KB</td>
+<td>团队文件读写、成员管理</td>
+</tr>
+<tr>
+<td><code>src/utils/swarm/spawnInProcess.ts</code></td>
+<td>10 KB</td>
+<td>进程内队友生成</td>
+</tr>
+<tr>
+<td><code>src/utils/teammateMailbox.ts</code></td>
+<td>33 KB</td>
+<td>文件系统邮箱 (1184行)</td>
+</tr>
+<tr>
+<td><code>src/hooks/useInboxPoller.ts</code></td>
+<td>34 KB</td>
+<td>收件箱轮询 Hook</td>
+</tr>
+<tr>
+<td><code>src/tools/TaskCreateTool/TaskCreateTool.ts</code></td>
+<td>3.4 KB</td>
+<td>创建任务</td>
+</tr>
+<tr>
+<td><code>src/tools/TaskUpdateTool/TaskUpdateTool.ts</code></td>
+<td>12 KB</td>
+<td>更新任务</td>
+</tr>
+<tr>
+<td><code>src/utils/forkedAgent.ts</code></td>
+<td>23 KB</td>
+<td>子代理上下文创建、Fork查询循环</td>
+</tr>
+<tr>
+<td><code>src/tools/shared/spawnMultiAgent.ts</code></td>
+<td>36 KB</td>
+<td>多代理 spawn 核心逻辑</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="核心函数详解-—-“它到底做了什么”"><a href="#核心函数详解-—-“它到底做了什么”" class="headerlink" title="核心函数详解 — “它到底做了什么”"></a>核心函数详解 — “它到底做了什么”</h2><h3 id="1-AgentTool-call-—-总入口路由"><a href="#1-AgentTool-call-—-总入口路由" class="headerlink" title="1. AgentTool.call() — 总入口路由"></a>1. <code>AgentTool.call()</code> — 总入口路由</h3><p><strong>文件</strong>: <code>src/tools/AgentTool/AgentTool.tsx</code></p>
+<p>当 LLM 决定调用 Agent 工具时，<code>call()</code> 被触发。它是整个多Agent系统的”交通枢纽”，负责把请求路由到正确的执行路径。</p>
+<p><strong>具体做了什么（逐步）</strong>:</p>
+<ol>
+<li><p><strong>权限检查</strong>: 从 AppState 读取 <code>permissionMode</code>，如果传了 <code>team_name</code> 但 swarms 未启用，直接报错；如果当前已经是 teammate 且传了 <code>name</code>，也报错（禁止嵌套 teammate）。</p>
+</li>
+<li><p><strong>多代理 spawn 路径</strong>: 如果 <code>teamName &amp;&amp; name</code> 同时存在 → 调用 <code>spawnTeammate()</code> 在 tmux&#x2F;iTerm2&#x2F;进程内创建一个独立的 teammate，立即返回 <code>&#123; status: &#39;teammate_spawned&#39; &#125;</code>，不等待结果。</p>
+</li>
+<li><p><strong>选择代理定义</strong>:</p>
+<ul>
+<li><strong>Fork 路径</strong>: 如果 fork 实验开关打开且 <code>subagent_type</code> 没有传，选择内置的 <code>FORK_AGENT</code>，同时做递归防护——<strong>主要检查</strong> <code>toolUseContext.options.querySource === &#39;agent:builtin:fork&#39;</code>（compaction-resistant，能抵抗 autocompact 的消息重写），<strong>fallback</strong> 扫描消息历史中是否已有 <code>&lt;fork-boilerplate&gt;</code> 标签，有就拒绝（防止 fork 子代理再 fork）。</li>
+<li><strong>普通路径</strong>: 从 <code>agentDefinitions.activeAgents</code> 列表中按 <code>subagent_type</code> 查找对应的 AgentDefinition，找不到就抛错。</li>
+</ul>
+</li>
+<li><p><strong>MCP 服务器等待</strong>: 如果 agent 定义了 <code>requiredMcpServers</code>，会轮询等待最多 30 秒（每 500ms 检查一次），直到这些 MCP 服务器连接就绪且有 tools 可用。</p>
+</li>
+<li><p><strong>构建 System Prompt 和消息</strong>:</p>
+<ul>
+<li>Fork 路径: 直接继承父级已渲染好的 system prompt（<code>toolUseContext.renderedSystemPrompt</code>），调用 <code>buildForkedMessages()</code> 构建消息——这样所有 fork 子代理产生字节相同的 API 请求前缀，最大化 prompt cache 命中。</li>
+<li>普通路径: 调用 agent 自己的 <code>getSystemPrompt()</code> 再用 <code>enhanceSystemPromptWithEnvDetails()</code> 增强（加入 OS 信息、CWD 等环境细节）。</li>
+</ul>
+</li>
+<li><p><strong>同步 vs 异步决策</strong>（<code>shouldRunAsync</code>）: 满足以下任一条件就走异步——<code>run_in_background=true</code>、agent 定义中 <code>background=true</code>、coordinator 模式、fork 实验开启（所有 fork 都强制异步）、Kairos 助手模式、proactive 模式。但如果环境变量禁用了后台任务则全部降级为同步。</p>
+</li>
+<li><p><strong>异步路径</strong>: 调用 <code>registerAsyncAgent()</code> 注册后台任务，然后用 <code>void</code>（fire-and-forget）启动 <code>runAsyncAgentLifecycle()</code>，立即返回 <code>&#123; status: &#39;async_launched&#39;, agentId, outputFile &#125;</code> 给父级。</p>
+</li>
+<li><p><strong>同步路径</strong>: 调用 <code>registerAgentForeground()</code> 注册前台任务，进入 <code>while(true)</code> 循环。每次循环用 <code>Promise.race([下一条消息, 后台化信号])</code> 竞争——如果后台化信号先 resolve（用户点击了后台按钮或 2 分钟自动超时），就把迭代器清理掉，重新以异步模式启动 <code>runAgent()</code>；如果消息先到，继续处理。循环结束后调用 <code>finalizeAgentTool()</code> 提取最终结果。</p>
+</li>
+</ol>
+<hr>
+<h3 id="2-registerAsyncAgent-—-注册后台任务"><a href="#2-registerAsyncAgent-—-注册后台任务" class="headerlink" title="2. registerAsyncAgent() — 注册后台任务"></a>2. <code>registerAsyncAgent()</code> — 注册后台任务</h3><p><strong>文件</strong>: <code>src/tasks/LocalAgentTask/LocalAgentTask.tsx</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li>调用 <code>initTaskOutputAsSymlink(agentId, transcriptPath)</code> — 在磁盘上创建一个符号链接，指向 agent 的 transcript 文件，方便后续通过 <code>TaskOutput</code> 查看进度。</li>
+<li>创建 <code>AbortController</code>：如果传入了 <code>parentAbortController</code>，则创建链接到父级的子控制器（<code>createChildAbortController</code>）；否则创建独立的控制器（<code>createAbortController()</code>）。这意味着后台代理通常不会因为用户按 ESC 而被中断，但可以通过父级控制器级联中断。</li>
+<li>构造 <code>LocalAgentTaskState</code> 对象：<code>type: &#39;local_agent&#39;</code>、<code>status: &#39;running&#39;</code>、<code>isBackgrounded: true</code>（一开始就是后台）。</li>
+<li>注册 cleanup handler（用于 <code>gracefulShutdown</code> 时自动 kill）。</li>
+<li>调用 <code>registerTask(taskState, setAppState)</code> 写入全局 AppState，这样 UI 上就能看到这个任务在运行。</li>
+</ol>
+<hr>
+<h3 id="3-registerAgentForeground-—-注册前台任务"><a href="#3-registerAgentForeground-—-注册前台任务" class="headerlink" title="3. registerAgentForeground() — 注册前台任务"></a>3. <code>registerAgentForeground()</code> — 注册前台任务</h3><p><strong>文件</strong>: <code>src/tasks/LocalAgentTask/LocalAgentTask.tsx</code></p>
+<p><strong>与异步版本的关键区别</strong>: <code>isBackgrounded: false</code>（初始在前台），且会创建一个 <code>backgroundSignal</code> Promise。</p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li>创建 <code>AbortController</code> 和任务状态，但 <code>isBackgrounded: false</code>。</li>
+<li>创建一个 <code>Promise&lt;void&gt;</code> 及对应的 resolve 函数，存入 <code>backgroundSignalResolvers</code> Map（key 是 agentId）。</li>
+<li>注册任务到 AppState。</li>
+<li>如果配置了 <code>autoBackgroundMs</code>（通过 <code>CLAUDE_AUTO_BACKGROUND_TASKS</code> 环境变量或 GrowthBook 特性开关启用，启用后默认 120000ms &#x3D; 2分钟），设置 <code>setTimeout</code>：到时间后自动把任务标记为 <code>isBackgrounded: true</code> 并 resolve 那个 Promise。</li>
+<li>返回 <code>&#123; taskId, backgroundSignal, cancelAutoBackground &#125;</code> — 调用方通过 <code>Promise.race</code> 监听 <code>backgroundSignal</code>。</li>
+</ol>
+<hr>
+<h3 id="4-runAgent-—-子代理核心执行循环"><a href="#4-runAgent-—-子代理核心执行循环" class="headerlink" title="4. runAgent() — 子代理核心执行循环"></a>4. <code>runAgent()</code> — 子代理核心执行循环</h3><p><strong>文件</strong>: <code>src/tools/AgentTool/runAgent.ts</code></p>
+<p>这是一个 <code>async function*</code>（异步生成器），是所有子代理执行的核心。</p>
+<p><strong>具体做了什么（逐步）</strong>:</p>
+<ol>
+<li><p><strong>解析模型</strong>: <code>getAgentModel()</code> 从 agent 定义、主循环模型、用户指定模型中选出最终使用的模型。</p>
+</li>
+<li><p><strong>处理 Fork 消息</strong>: 如果有 <code>forkContextMessages</code>（从父级继承的消息历史），先用 <code>filterIncompleteToolCalls()</code> 过滤掉没有 <code>tool_result</code> 配对的 <code>tool_use</code>（否则 API 会报错）。</p>
+</li>
+<li><p><strong>构建文件状态缓存</strong>: fork 上下文 → 克隆父级的 <code>readFileState</code>（防止子代理的文件缓存污染父级）；否则 → 创建新的带大小限制的缓存。</p>
+</li>
+<li><p><strong>获取 User&#x2F;System Context</strong>: 并行获取用户上下文和系统上下文。对于 Explore&#x2F;Plan 代理，省略 <code>claudeMd</code>（节省约 5-15 Gtok&#x2F;周）和 <code>gitStatus</code>（如果需要，agent 自己执行 <code>git status</code> 获取新鲜数据）。</p>
+</li>
+<li><p><strong>覆盖权限模式</strong>: 构建 <code>agentGetAppState()</code> 包装函数——如果 agent 定义了自己的 <code>permissionMode</code>（如 <code>bubble</code>）且父级不是 <code>bypassPermissions</code>&#x2F;<code>acceptEdits</code>&#x2F;<code>auto</code>，就覆盖为 agent 自己的模式。对于异步代理，还会设置 <code>shouldAvoidPermissionPrompts: true</code>（它们没有终端 UI，不能弹权限对话框）——但 <code>bubble</code> 模式例外，即使是异步代理也允许弹窗（权限会冒泡到父级终端显示）。</p>
+</li>
+<li><p><strong>解析工具集</strong>: fork 路径直接用父级的工具池（保证 API 请求字节相同）；普通路径用 <code>resolveAgentTools()</code> 根据 agent 定义过滤工具。</p>
+</li>
+<li><p><strong>执行 SubagentStart hooks</strong>: 遍历所有注册的钩子，收集 <code>additionalContexts</code>（额外上下文注入到初始消息中）。</p>
+</li>
+<li><p><strong>预加载 Skills</strong>: 如果 agent frontmatter 指定了 <code>skills</code>，逐一加载技能内容并添加为初始消息。</p>
+</li>
+<li><p><strong>初始化 Agent MCP 服务器</strong>: 连接 agent 专属的 MCP 服务器，获取工具，与已有工具合并（按名称去重）。</p>
+</li>
+<li><p><strong>创建子代理上下文</strong> <code>createSubagentContext()</code>:</p>
+<ul>
+<li>克隆 <code>readFileState</code></li>
+<li>创建新的空 <code>Set</code>（<code>nestedMemoryAttachmentTriggers</code>、<code>loadedNestedMemoryPaths</code>、<code>dynamicSkillDirTriggers</code>、<code>discoveredSkillNames</code> 等多个集合）</li>
+<li>根据共享选项决定 <code>setAppState</code> 是父级的还是空函数（异步代理的 <code>setAppState</code> 是 no-op，防止后台代理修改 UI 状态）</li>
+<li>所有 UI 回调设为 <code>undefined</code>（子代理不能控制父级 UI）</li>
+<li>新的 <code>queryTracking.chainId</code> + <code>depth + 1</code></li>
+</ul>
+</li>
+<li><p><strong>主查询循环</strong>: <code>for await (const message of query(&#123;...&#125;))</code> — 这里调用了核心的 <code>query()</code> 函数，它会不断循环调用 LLM → 执行工具 → 返回结果，直到 LLM 停止调用工具或达到 maxTurns。每条消息都会:</p>
+<ul>
+<li><code>stream_event</code> 中的 <code>message_start</code> → 记录 TTFT 指标</li>
+<li><code>attachment</code> 类型的 <code>max_turns_reached</code> → 跳出循环</li>
+<li>可记录的消息 → <code>recordSidechainTranscript()</code> 持久化到磁盘 + <code>yield</code> 给父级</li>
+</ul>
+</li>
+<li><p><strong>finally 清理链</strong>: MCP 连接 → session hooks → prompt cache 追踪 → 文件状态缓存 → 消息数组 → perfetto → transcript 子目录 → agent 的 todos 条目 → 后台 bash 任务 → Monitor MCP 任务，全部依次清理。</p>
+</li>
+</ol>
+<hr>
+<h3 id="5-buildForkedMessages-—-构建-Fork-子代理的消息"><a href="#5-buildForkedMessages-—-构建-Fork-子代理的消息" class="headerlink" title="5. buildForkedMessages() — 构建 Fork 子代理的消息"></a>5. <code>buildForkedMessages()</code> — 构建 Fork 子代理的消息</h3><p><strong>文件</strong>: <code>src/tools/AgentTool/forkSubagent.ts</code></p>
+<p><strong>目标</strong>: 让所有 fork 子代理产生<strong>字节相同</strong>的 API 请求前缀，最大化 prompt cache 命中。</p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><p><strong>克隆 assistant 消息</strong>: 复制父级的完整 assistant 消息（包含所有 content blocks：thinking、text、每个 tool_use），赋新 UUID。</p>
+</li>
+<li><p><strong>收集所有 tool_use blocks</strong>: 从 assistant 消息中过滤出 <code>type === &#39;tool_use&#39;</code> 的块。</p>
+</li>
+<li><p><strong>构建 tool_result 占位符</strong>: 为每个 tool_use 创建 <code>tool_result</code>，内容全部是<strong>完全相同的</strong> <code>&quot;Fork started — processing in background&quot;</code> — 这是为了所有 fork 子代理产生字节相同的 API 请求前缀。</p>
+</li>
+<li><p><strong>构建 user 消息</strong>: 一条消息包含所有 tool_result 块 + 一个 text 块。text 块内容是 <code>&lt;fork-boilerplate&gt;</code> 包裹的 10 条不可协商规则（”你是一个 fork worker process”、”不要再 fork”、”直接执行”、”保持简洁”、”报告格式：Scope&#x2F;Result&#x2F;Key files&#x2F;Files changed&#x2F;Issues”等）+ 具体的 per-child 指令。</p>
+</li>
+<li><p><strong>返回</strong>: <code>[fullAssistantMessage, toolResultMessage]</code> — 只有最后的 text block（per-child 指令）不同，前缀全部相同。</p>
+</li>
+</ol>
+<p><strong><code>isInForkChild()</code> 递归防护</strong>: 扫描所有 user 消息，检查是否存在 <code>&lt;fork-boilerplate&gt;</code> 标签。如果发现，说明当前已经在 fork 子代理里了，拒绝再次 fork。</p>
+<hr>
+<h3 id="6-createSubagentContext-—-创建隔离的子代理上下文"><a href="#6-createSubagentContext-—-创建隔离的子代理上下文" class="headerlink" title="6. createSubagentContext() — 创建隔离的子代理上下文"></a>6. <code>createSubagentContext()</code> — 创建隔离的子代理上下文</h3><p><strong>文件</strong>: <code>src/utils/forkedAgent.ts</code></p>
+<p><strong>核心理念</strong>: 默认所有可变状态都隔离，防止子代理和父代理互相干扰。调用方可以显式 opt-in 共享特定回调。</p>
+<p><strong>具体做了什么</strong>:</p>
+<pre><code>返回一个新的 ToolUseContext 对象:
+├─ readFileState: 克隆父级的文件缓存（防止子代理的文件读取污染父级缓存）
+├─ nestedMemoryAttachmentTriggers: 全新的空 Set
+├─ loadedNestedMemoryPaths: 全新的空 Set
+├─ contentReplacementState: 克隆的（保证 fork 子代理做出与父级相同的替换决策 → 相同的 wire prefix → cache hit）
+├─ abortController: override &gt; 共享父级的 &gt; 创建链接到父级的子 controller
+├─ getAppState: override &gt; shareAbortController ? 父级的 : 包装为设置 shouldAvoidPermissionPrompts: true（交互式子代理共享父级 AbortController 时，说明它能显示 UI，不需要避免权限弹窗）
+├─ setAppState: 如果 shareSetAppState → 父级的；否则 → () =&gt; &#123;&#125;（空函数）
+├─ setAppStateForTasks: 始终指向根 store（即使 setAppState 是空函数，任务注册/kill 必须到达根 store）
+├─ localDenialTracking: 如果不共享 setAppState → 创建新的拒绝追踪状态
+├─ setInProgressToolUseIDs: () =&gt; &#123;&#125;（空函数）
+├─ setResponseLength: 根据 shareSetResponseLength 决定
+├─ UI 回调全部 undefined（子代理不能控制父级 UI）
+├─ agentId: override &gt; 新建
+└─ queryTracking: 新的 chainId + depth + 1
+</code></pre>
+<hr>
+<h3 id="7-writeToMailbox-—-写消息到邮箱"><a href="#7-writeToMailbox-—-写消息到邮箱" class="headerlink" title="7. writeToMailbox() — 写消息到邮箱"></a>7. <code>writeToMailbox()</code> — 写消息到邮箱</h3><p><strong>文件</strong>: <code>src/utils/teammateMailbox.ts</code></p>
+<p><strong>这是整个多代理通信的基础设施</strong>。每个 teammate 在磁盘上有一个 JSON 文件作为”收件箱”。</p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><code>ensureInboxDir()</code> — 确保 <code>~/.claude/teams/&#123;team&#125;/inboxes/</code> 目录存在（<code>mkdir -p</code>）。</li>
+<li>获取收件箱路径: <code>~/.claude/teams/&#123;team&#125;/inboxes/&#123;agent_name&#125;.json</code>。</li>
+<li>尝试用 <code>flag: &#39;wx&#39;</code>（不存在才创建）创建空文件 <code>[]</code>。如果文件已存在，EEXIST 错误被忽略。</li>
+<li><strong>获取文件锁</strong>: 使用 <code>proper-lockfile</code> 库，锁文件路径为 <code>$&#123;inboxPath&#125;.lock</code>，重试配置为最多 10 次、最小超时 5ms、最大超时 100ms。</li>
+<li><strong>获取锁后重新读取</strong>: 读取最新状态（在获取锁的等待期间，其他代理可能已经写入了新消息）。</li>
+<li><strong>追加新消息</strong>: 构造 <code>&#123; ...message, read: false &#125;</code> 并 push 到数组。</li>
+<li><strong>写回完整数组</strong>: <code>JSON.stringify(messages, null, 2)</code> 写入文件。</li>
+<li><strong>释放锁</strong>。</li>
+</ol>
+<p><strong>邮箱文件格式</strong>:</p>
+<pre><code class="json">[
+  &#123;
+    &quot;from&quot;: &quot;researcher&quot;,
+    &quot;text&quot;: &quot;消息内容或 JSON 结构化消息&quot;,
+    &quot;timestamp&quot;: &quot;2024-01-01T00:00:00.000Z&quot;,
+    &quot;read&quot;: false,
+    &quot;color&quot;: &quot;blue&quot;,
+    &quot;summary&quot;: &quot;5-10 word summary&quot;
+  &#125;
+]
+</code></pre>
+<hr>
+<h3 id="8-useInboxPoller-—-收件箱轮询-Hook"><a href="#8-useInboxPoller-—-收件箱轮询-Hook" class="headerlink" title="8. useInboxPoller() — 收件箱轮询 Hook"></a>8. <code>useInboxPoller()</code> — 收件箱轮询 Hook</h3><p><strong>文件</strong>: <code>src/hooks/useInboxPoller.ts</code></p>
+<p><strong>一个 React Hook，每 1 秒轮询一次磁盘上的收件箱文件</strong>。</p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li><p><strong>决定谁需要轮询</strong>: <code>getAgentNameToPoll()</code> 根据当前身份返回:</p>
+<ul>
+<li>in-process teammate → <code>undefined</code>（它们有自己的轮询机制）</li>
+<li>process-based teammate → 返回自己的 <code>agentName</code></li>
+<li>team lead → 从 <code>teamContext</code> 查找 lead 名称</li>
+<li>普通会话 → <code>undefined</code></li>
+</ul>
+</li>
+<li><p><strong>每 1 秒</strong>: 调用 <code>readUnreadMessages()</code> 读取未读消息。</p>
+</li>
+<li><p><strong>分类所有消息</strong>: 逐条尝试解析为结构化协议消息:</p>
+<ul>
+<li><code>permission_request</code> → 权限请求队列</li>
+<li><code>permission_response</code> → 权限响应队列</li>
+<li><code>sandbox_permission_request/response</code> → 沙箱网络权限</li>
+<li><code>shutdown_request</code> → 关机请求</li>
+<li><code>shutdown_approved</code> → 关机批准</li>
+<li><code>team_permission_update</code> → 团队权限更新</li>
+<li><code>mode_set_request</code> → 模式设置</li>
+<li><code>plan_approval_request</code> → 计划审批</li>
+<li>其他 → 普通消息</li>
+</ul>
+</li>
+<li><p><strong>处理权限请求</strong>（Leader 侧）: 创建完整的 <code>ToolUseConfirm</code> 条目（包含 <code>onAllow</code>&#x2F;<code>onReject</code>&#x2F;<code>onAbort</code> 回调），回调通过 <code>sendPermissionResponseViaMailbox</code> 写回 worker 的收件箱。路由到标准的权限确认 UI。</p>
+</li>
+<li><p><strong>处理权限响应</strong>（Worker 侧）: 调用 <code>processMailboxPermissionResponse()</code> 回调已注册的 Promise（worker 在请求权限时会挂起等待这个 Promise resolve）。</p>
+</li>
+<li><p><strong>处理关机批准</strong>（Leader 侧）: kill 对应的 tmux pane → 从 <code>teamContext.teammates</code> 移除 → unassign 相关任务 → 更新 AppState。</p>
+</li>
+<li><p><strong>投递普通消息</strong>: 格式化为 XML → 如果空闲（<code>!isLoading</code>），立即通过 <code>onSubmitTeammateMessage()</code> 提交为新 turn；如果忙碌，加入 <code>AppState.inbox.messages</code> 队列，标记为 <code>pending</code>。当会话变空闲时，<code>useEffect</code> 自动投递 pending 消息。</p>
+</li>
+<li><p><strong>最后</strong>: 调用 <code>markMessagesAsRead()</code> 标记为已读（获取锁 → 所有消息 <code>read = true</code> → 写回）。</p>
+</li>
+</ol>
+<hr>
+<h3 id="9-spawnInProcessTeammate-—-进程内队友生成"><a href="#9-spawnInProcessTeammate-—-进程内队友生成" class="headerlink" title="9. spawnInProcessTeammate() — 进程内队友生成"></a>9. <code>spawnInProcessTeammate()</code> — 进程内队友生成</h3><p><strong>文件</strong>: <code>src/utils/swarm/spawnInProcess.ts</code></p>
+<p><strong>核心</strong>: 在同一 Node.js 进程内创建一个新的”队友”，通过 AsyncLocalStorage 实现身份隔离。</p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li>生成 Agent ID: <code>formatAgentId(name, teamName)</code> → 格式 <code>name@teamName</code>。</li>
+<li>生成 Task ID: <code>generateTaskId(&#39;in_process_teammate&#39;)</code>。</li>
+<li>创建<strong>独立的</strong> AbortController（不链接到 leader 的 query——teammate 不应随 ESC 中断）。</li>
+<li>创建 <code>TeammateIdentity</code> 数据结构: <code>&#123; agentId, agentName, teamName, color, planModeRequired, parentSessionId &#125;</code>。</li>
+<li>调用 <code>createTeammateContext()</code> — 返回一个对象，后续被传递给 <code>runWithTeammateContext()</code>。这个函数使用 Node.js 的 <code>AsyncLocalStorage</code>，让每个 in-process teammate 有自己的隔离上下文。<code>getAgentName()</code>、<code>getTeamName()</code> 等全局函数通过 ALS 获取正确的 teammate 上下文。</li>
+<li>构建 <code>InProcessTeammateTaskState</code>:<pre><code>&#123;
+  type: &#39;in_process_teammate&#39;, status: &#39;running&#39;,
+  identity, prompt, model, abortController,
+  awaitingPlanApproval: false,
+  spinnerVerb: sample(getSpinnerVerbs()),  // 随机动词如 &quot;thinking&quot;
+  pastTenseVerb: sample(TURN_COMPLETION_VERBS),  // 完成时动词
+  permissionMode: planModeRequired ? &#39;plan&#39; : &#39;default&#39;,
+  isIdle: false,
+  lastReportedToolCount: 0, lastReportedTokenCount: 0,
+  pendingUserMessages: [], messages: []
+&#125;
+</code></pre>
+</li>
+<li>注册 cleanup handler（abort on shutdown）。</li>
+<li><code>registerTask(taskState, setAppState)</code> 写入 AppState。</li>
+</ol>
+<hr>
+<h3 id="10-SendMessageTool-call-—-智能体间消息路由"><a href="#10-SendMessageTool-call-—-智能体间消息路由" class="headerlink" title="10. SendMessageTool.call() — 智能体间消息路由"></a>10. <code>SendMessageTool.call()</code> — 智能体间消息路由</h3><p><strong>文件</strong>: <code>src/tools/SendMessageTool/SendMessageTool.ts</code></p>
+<p>**这是多代理通信的”路由器”**，根据收件人地址决定走哪条通信通道。</p>
+<p><strong>具体路由逻辑</strong>:</p>
+<ol>
+<li><p><strong>Bridge&#x2F;UDS 地址</strong>: <code>parseAddress(input.to)</code> 解析地址 scheme:</p>
+<ul>
+<li><code>&quot;bridge:session-id&quot;</code> → 通过 <code>postInterClaudeMessage()</code> 发送到远程 REPL 会话（跨机器）</li>
+<li><code>&quot;uds:/path/to/socket&quot;</code> → 通过 <code>sendToUdsSocket()</code> 发送到本地 Unix 域套接字（跨会话）</li>
+</ul>
+</li>
+<li><p><strong>进程内子代理路由</strong>: 如果 <code>input.to</code> 不是广播且是字符串消息:</p>
+<ul>
+<li>从 <code>AppState.agentNameRegistry</code> 查找名称 → agentId</li>
+<li>找到 running task → <code>queuePendingMessage(agentId, message)</code> 排队等待下次工具轮</li>
+<li>找到 stopped task → <code>resumeAgentBackground()</code> <strong>自动恢复</strong>已暂停的代理</li>
+<li>已清理的 task → 尝试从磁盘 transcript 恢复</li>
+</ul>
+</li>
+<li><p><strong>广播</strong> (<code>input.to === &#39;*&#39;</code>): 读取 team file，对每个非自身 member 调用 <code>writeToMailbox()</code>。</p>
+</li>
+<li><p><strong>普通消息</strong>: <code>writeToMailbox(recipientName, &#123; from, text, summary, timestamp, color &#125;, teamName)</code>。</p>
+</li>
+<li><p><strong>结构化消息处理</strong>:</p>
+<ul>
+<li><code>shutdown_request</code> → 构造关机请求 JSON → 写入目标 teammate 的 inbox</li>
+<li><code>shutdown_response + approve</code> → 写入 <code>team-lead</code> 的 inbox shutdown_approved JSON → 对 in-process teammate 调用 <code>abortController.abort()</code>，对 tmux teammate 调用 <code>gracefulShutdown(0)</code>（进程退出）</li>
+<li><code>plan_approval_response</code> → 写入对应 teammate 的 inbox 审批响应</li>
+</ul>
+</li>
+</ol>
+<hr>
+<h3 id="11-TaskCreateTool-call-TaskUpdateTool-call-—-任务系统"><a href="#11-TaskCreateTool-call-TaskUpdateTool-call-—-任务系统" class="headerlink" title="11. TaskCreateTool.call() &#x2F; TaskUpdateTool.call() — 任务系统"></a>11. <code>TaskCreateTool.call()</code> &#x2F; <code>TaskUpdateTool.call()</code> — 任务系统</h3><p><strong>文件</strong>: <code>src/tools/TaskCreateTool/TaskCreateTool.ts</code>, <code>src/tools/TaskUpdateTool/TaskUpdateTool.ts</code></p>
+<p><strong>创建任务</strong>:</p>
+<ol>
+<li><code>createTask(getTaskListId(), &#123; subject, description, status: &#39;pending&#39;, ... &#125;)</code> → 持久化到 <code>~/.claude/tasks/&#123;taskListId&#125;/&#123;taskId&#125;.json</code>。</li>
+<li>执行 <code>TaskCreated</code> hooks，如果有阻塞错误 → 删除刚创建的任务并抛错。</li>
+<li>自动展开 UI 的 tasks 视图。</li>
+</ol>
+<p><strong>更新任务</strong>:</p>
+<ol>
+<li>读取已有任务，逐字段对比更新。</li>
+<li><strong>自动设置 owner</strong>: 当 teammate 将任务标记为 <code>in_progress</code> 但没有显式指定 owner 时，自动设置为 <code>getAgentName()</code>（当前 agent 的名字）。</li>
+<li><strong>完成验证</strong>: 执行 <code>TaskCompleted</code> hooks，如果有阻塞错误则拒绝完成。</li>
+<li><strong>任务分配触发邮箱通知</strong>: 当 <code>owner</code> 字段变更时，构造 <code>task_assignment</code> JSON 消息 → <code>writeToMailbox(newOwner, ...)</code> → 新 owner 的收件箱轮询器会收到这条消息。</li>
+<li><strong>验证提醒</strong>: 如果主线程代理完成了 3+ 个任务且没有验证步骤，返回提示要求 spawn 验证代理。</li>
+</ol>
+<hr>
+<h3 id="12-finalizeAgentTool-—-提取最终结果"><a href="#12-finalizeAgentTool-—-提取最终结果" class="headerlink" title="12. finalizeAgentTool() — 提取最终结果"></a>12. <code>finalizeAgentTool()</code> — 提取最终结果</h3><p><strong>文件</strong>: <code>src/tools/AgentTool/agentToolUtils.ts</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li>取最后一条 assistant 消息的 <code>content</code>，过滤出 <code>type === &#39;text&#39;</code> 的块。</li>
+<li>如果最后一条是纯 <code>tool_use</code>（没有文本），向前搜索找到有文本的 assistant 消息。</li>
+<li>从 <code>usage</code> 中提取 token 总数。</li>
+<li>统计 <code>totalToolUseCount</code>（遍历所有 assistant 消息，计数 <code>tool_use</code> 块数量）。</li>
+<li>记录 <code>tengu_agent_tool_completed</code> 分析事件。</li>
+<li>返回 <code>&#123; agentId, agentType, content, totalDurationMs, totalTokens, totalToolUseCount, usage &#125;</code>（注意：没有 <code>prompt</code> 和 <code>status</code> 字段，多了 <code>agentId</code>、<code>agentType</code> 和完整的 <code>usage</code> 对象）。</li>
+</ol>
+<hr>
+<h3 id="13-recordSidechainTranscript-—-持久化对话记录"><a href="#13-recordSidechainTranscript-—-持久化对话记录" class="headerlink" title="13. recordSidechainTranscript() — 持久化对话记录"></a>13. <code>recordSidechainTranscript()</code> — 持久化对话记录</h3><p><strong>文件</strong>: <code>src/utils/sessionStorage.ts</code></p>
+<pre><code class="typescript">async function recordSidechainTranscript(messages, agentId, startingParentUuid) &#123;
+  await getProject().insertMessageChain(
+    cleanMessagesForLogging(messages),  // 清洗敏感信息
+    true,                               // isSidechain = true（标记为侧链，不是主会话）
+    agentId,                            // 标识哪个 agent 的对话
+    startingParentUuid                  // 链接到父消息链（用于构建树状对话结构）
+  )
+&#125;
+</code></pre>
+<ul>
+<li><strong>fire-and-forget</strong>: 调用方用 <code>.catch()</code> 忽略错误，不阻塞 agent 执行。</li>
+<li><strong>用途</strong>: resume 时可以从磁盘恢复对话历史；UI 中可以查看子代理的完整执行过程。</li>
+</ul>
+<hr>
+<h3 id="14-cleanupTeamDirectories-—-团队清理"><a href="#14-cleanupTeamDirectories-—-团队清理" class="headerlink" title="14. cleanupTeamDirectories() — 团队清理"></a>14. <code>cleanupTeamDirectories()</code> — 团队清理</h3><p><strong>文件</strong>: <code>src/utils/swarm/teamHelpers.ts</code></p>
+<p><strong>具体做了什么</strong>:</p>
+<ol>
+<li>读取 team file 获取所有 member 的 <code>worktreePath</code>。</li>
+<li>逐个销毁 git worktree: 读取 <code>.git</code> 文件找到主仓库路径 → 尝试 <code>git worktree remove --force</code> → 失败则 <code>rm -rf</code>。</li>
+<li>删除团队目录: <code>rm(~/.claude/teams/&#123;team-name&#125;/, &#123; recursive: true, force: true &#125;)</code>。</li>
+<li>删除任务目录: <code>rm(~/.claude/tasks/&#123;taskListId&#125;/, &#123; recursive: true, force: true &#125;)</code>。</li>
+<li>调用 <code>notifyTasksUpdated()</code> 通知 UI 刷新。</li>
+</ol>
+<hr>
+<h2 id="核心流程图"><a href="#核心流程图" class="headerlink" title="核心流程图"></a>核心流程图</h2><h3 id="AgentTool-call-路由决策"><a href="#AgentTool-call-路由决策" class="headerlink" title="AgentTool.call() 路由决策"></a>AgentTool.call() 路由决策</h3><p><code>call()</code> 是整个多Agent系统的”交通枢纽”。LLM 每次想派活，都要经过这里的层层判断，最终落到某一条执行路径上。下面用文字走一遍完整的决策链路：</p>
+<p><strong>第一关：你想建团队，还是想派子Agent？</strong></p>
+<ul>
+<li>如果同时传了 <code>team_name</code>（团队名）和 <code>name</code>（队友名）→ 走<strong>团队模式</strong>，调用 <code>spawnTeammate()</code> 开一个新终端&#x2F;新线程，立刻返回”已派出”，不等结果。</li>
+<li>否则 → 走<strong>子Agent模式</strong>，继续往下判断。</li>
+</ul>
+<p><strong>第二关：派什么类型的子Agent？</strong></p>
+<ul>
+<li>如果明确传了 <code>subagent_type</code>（比如 <code>&quot;Explore&quot;</code>、<code>&quot;Plan&quot;</code>）→ 从已注册的 agent 列表里查找对应定义，找不到就报错。</li>
+<li>如果没传 <code>subagent_type</code>：<ul>
+<li>Fork 实验开关打开 → 走 <strong>Fork 路径</strong>（克隆父级全部上下文，共享 prompt cache）。但要先做递归防护：如果当前已经在一个 fork 子代理里了，拒绝再 fork。</li>
+<li>Fork 没开 → 默认用 <strong>general-purpose</strong>（通用子代理）。</li>
+</ul>
+</li>
+</ul>
+<p><strong>第三关：前台跑还是后台跑？</strong></p>
+<p>满足以下任一条件就走<strong>异步</strong>（后台）：</p>
+<ul>
+<li>用户显式说 <code>run_in_background=true</code></li>
+<li>agent 定义里写了 <code>background: true</code></li>
+<li>coordinator 模式 &#x2F; fork 实验 &#x2F; Kairos 助手模式 &#x2F; proactive 模式</li>
+</ul>
+<p>不满足 → 走<strong>同步</strong>（前台等待），但如果超过 2 分钟还没完成，会<strong>自动转为异步</strong>。</p>
+<p><strong>异步路径</strong>：注册一个后台任务 → fire-and-forget 启动 agent → 立即返回”已启动”。agent 干完后会弹桌面通知。</p>
+<p><strong>同步路径</strong>：注册一个前台任务 → 进入 while 循环，每次用 <code>Promise.race</code> 同时等两件事——agent 的下一条消息 vs 后台化信号。如果消息先到，处理后继续循环；如果后台化信号先到（用户点了”放后台”或 2 分钟超时），就把当前的前台迭代器关掉，重新以后台模式启动，然后立即返回。</p>
+<div class="mermaid-wrap"><pre class="mermaid-src" hidden>
+  flowchart TD
+    CALL[&quot;LLM决定需要帮手&lt;br&#x2F;&gt;调用 AgentTool&quot;] --&gt; TEAM{&quot;传了团队名+队友名?&quot;}
+
+    TEAM --&gt;|&quot;是 → 团队模式&quot;| SPAWN[&quot;开一个新终端&#x2F;新线程&lt;br&#x2F;&gt;派出独立队友&lt;br&#x2F;&gt;把任务写进队友的收件箱&lt;br&#x2F;&gt;立刻返回&#39;已派出&#39;，不等结果&quot;]
+
+    TEAM --&gt;|&quot;否 → 子Agent模式&quot;| TYPE{&quot;指定了Agent类型?&lt;br&#x2F;&gt;如 Explore&#x2F;Plan&#x2F;自定义&quot;}
+    
+    TYPE --&gt;|&quot;指定了&quot;| SELECT[&quot;找到对应类型的Agent定义&lt;br&#x2F;&gt;用它自己的system prompt和工具集&quot;]
+    TYPE --&gt;|&quot;没指定 + Fork实验开着&quot;| FORK[&quot;走Fork路径&lt;br&#x2F;&gt;克隆父级的全部对话上下文&lt;br&#x2F;&gt;（为了共享prompt cache省钱）&quot;]
+    TYPE --&gt;|&quot;没指定 + Fork没开&quot;| GP[&quot;用默认的通用Agent&quot;]
+    
+    FORK --&gt; GUARD{&quot;当前已经在Fork子代理里了?&quot;}
+    GUARD --&gt;|&quot;是&quot;| ERROR[&quot;拒绝：不能套娃Fork&quot;]
+    GUARD --&gt;|&quot;否&quot;| BUILD[&quot;构造消息：&lt;br&#x2F;&gt;复制父级的assistant消息&lt;br&#x2F;&gt;+ 统一的占位符回复&lt;br&#x2F;&gt;+ 本次具体的任务指令&quot;]
+    
+    SELECT --&gt; ASYNC{&quot;需要后台运行吗?&lt;br&#x2F;&gt;（用户指定了后台 &#x2F; Agent定义要求&lt;br&#x2F;&gt;&#x2F; Fork模式 &#x2F; 其他特殊模式）&quot;}
+    GP --&gt; ASYNC
+    BUILD --&gt; ASYNC
+    
+    ASYNC --&gt;|&quot;是 → 异步执行&quot;| REG_ASYNC[&quot;注册为后台任务&lt;br&#x2F;&gt;创建独立的中断控制器&lt;br&#x2F;&gt;（按ESC不会打断它）&quot;]
+    REG_ASYNC --&gt; LIFECYCLE[&quot;后台启动Agent&lt;br&#x2F;&gt;不等待，fire-and-forget&quot;]
+    LIFECYCLE --&gt; RETURN_ASYNC[&quot;立刻返回给主Agent：&lt;br&#x2F;&gt;&#39;已在后台启动&#39;&lt;br&#x2F;&gt;附带输出文件路径&quot;]
+    
+    ASYNC --&gt;|&quot;否 → 同步执行&quot;| REG_FG[&quot;注册为前台任务&lt;br&#x2F;&gt;设2分钟自动转后台的定时器&quot;]
+    REG_FG --&gt; LOOP[&quot;进入循环&lt;br&#x2F;&gt;等待子Agent产出消息&quot;]
+    LOOP --&gt; RACE[&quot;同时等两件事：&lt;br&#x2F;&gt;① 子Agent的下一条消息&lt;br&#x2F;&gt;② 后台化信号&quot;]
+    RACE --&gt;|&quot;消息先到&quot;| PROCESS[&quot;处理消息、记录进度&lt;br&#x2F;&gt;继续循环&quot;]
+    RACE --&gt;|&quot;后台信号先到&lt;br&#x2F;&gt;（用户点了后台&#x2F;超2分钟）&quot;| MIGRATE[&quot;关掉前台迭代器&lt;br&#x2F;&gt;以后台模式重新启动&quot;]
+    PROCESS --&gt; LOOP
+    MIGRATE --&gt; RETURN_ASYNC
+    LOOP --&gt;|&quot;子Agent干完了&quot;| FINALIZE[&quot;提取最终结果&lt;br&#x2F;&gt;（最后的文字回复+token统计）&lt;br&#x2F;&gt;返回给主Agent&quot;]
+  </pre></div>
+
+<h3 id="Agent-完整生命周期"><a href="#Agent-完整生命周期" class="headerlink" title="Agent 完整生命周期"></a>Agent 完整生命周期</h3><pre><code>┌────────────────────────────────────────────────────────────────────────┐
+│ 1. SPAWN                                                               │
+│   AgentTool.call()                                                     │
+│   ├─ 检查权限、解析team_name                                            │
+│   ├─ 选择AgentDefinition (fork/内置/用户定义)                            │
+│   ├─ 等待MCP服务器就绪 (最多30s轮询)                                     │
+│   ├─ 构建system prompt + 消息                                          │
+│   ├─ assembleToolPool() 组装工具池                                      │
+│   └─ registerAsyncAgent() 或 registerAgentForeground()                 │
+│       ├─ 创建AbortController (异步=独立, 同步=共享父级)                   │
+│       ├─ 构造TaskState写入AppState                                      │
+│       └─ 注册cleanup handler                                           │
+├────────────────────────────────────────────────────────────────────────┤
+│ 2. EXECUTION — runAgent() 异步生成器                                    │
+│   ├─ 解析模型、过滤不完整的tool_use                                      │
+│   ├─ 获取UserContext+SystemContext (省略Explore/Plan的claudeMd)         │
+│   ├─ 构建agentGetAppState() (覆盖permissionMode, 设避免弹窗)            │
+│   ├─ 执行SubagentStart hooks, 收集additionalContexts                   │
+│   ├─ 注册frontmatter hooks, 预加载skills                               │
+│   ├─ initializeAgentMcpServers() 连接agent专属MCP                      │
+│   ├─ createSubagentContext() 创建隔离上下文                              │
+│   │   ├─ 克隆readFileState                                             │
+│   │   ├─ 异步代理: setAppState=no-op, UI回调=undefined                 │
+│   │   └─ 新queryTracking: chainId + depth+1                           │
+│   ├─ recordSidechainTranscript(初始消息) fire-and-forget               │
+│   └─ for await (message of query(&#123;...&#125;)):                              │
+│       ├─ stream_event.message_start → 记录TTFT                         │
+│       ├─ attachment.max_turns_reached → break                          │
+│       ├─ assistant/user/progress → recordSidechainTranscript() + yield │
+│       └─ onQueryProgress?.() 通知 liveness                            │
+├────────────────────────────────────────────────────────────────────────┤
+│ 3. COMMUNICATION (团队模式)                                             │
+│   SendMessageTool.call()                                                │
+│   ├─ parseAddress() 解析地址scheme                                      │
+│   │   ├─ bridge → postInterClaudeMessage() 跨机器                       │
+│   │   ├─ uds → sendToUdsSocket() 跨会话                                │
+│   │   └─ other → 进程内路由/邮箱路由                                     │
+│   ├─ 进程内: queuePendingMessage() / resumeAgentBackground()           │
+│   ├─ 广播: 遍历team file成员, 逐个writeToMailbox()                      │
+│   └─ 结构化消息: shutdown/permission/plan 写入对应inbox                  │
+│                                                                        │
+│   useInboxPoller() — 每1秒轮询收件箱                                    │
+│   ├─ 读取未读消息 → 分类到10+个队列                                      │
+│   ├─ 权限请求 → 创建ToolUseConfirm → 路由到权限UI                       │
+│   ├─ 权限响应 → 回调已注册的Promise                                     │
+│   ├─ 关机批准 → kill pane + 移除teammate + unassign tasks              │
+│   └─ 普通消息 → XML格式化 → 空闲时立即提交/忙时入队                      │
+├────────────────────────────────────────────────────────────────────────┤
+│ 4. BACKGROUNDING (同步→异步透明迁移)                                    │
+│   Promise.race([agentIterator.next(), backgroundSignal])               │
+│   ├─ backgroundSignal 触发条件:                                         │
+│   │   ├─ 用户点击BackgroundHint UI                                     │
+│   │   └─ autoBackgroundMs超时 (需环境变量/特性开关启用, 启用后默认2分钟)  │
+│   ├─ await agentIterator.return(undefined) 清理前台生成器               │
+│   │   (触发finally: MCP连接释放、hooks清理等)                            │
+│   ├─ 初始化新的进度追踪器, 从已有消息恢复进度                            │
+│   └─ 以 isAsync=true 重新启动runAgent(), 后台继续                       │
+├────────────────────────────────────────────────────────────────────────┤
+│ 5. TERMINATION                                                         │
+│   正常完成:                                                             │
+│   ├─ finalizeAgentTool() 提取最后assistant文本 + token统计              │
+│   ├─ completeAsyncAgent() 标记status=completed (先于其他操作)           │
+│   ├─ classifyHandoffIfNeeded() 检查是否需要人工介入                     │
+│   ├─ cleanupWorktreeIfNeeded() 清理git worktree (无变更则删除)          │
+│   └─ enqueueAgentNotification() 发送桌面通知                            │
+│                                                                        │
+│   被取消 (ESC/kill):                                                    │
+│   ├─ killAsyncAgent() 标记status=killed                                │
+│   ├─ extractPartialResult() 提取已有的部分结果                          │
+│   └─ enqueueAgentNotification() 通知用户                               │
+│                                                                        │
+│   finally 清理链 (无论正常/取消/错误):                                   │
+│   ├─ mcpCleanup() 断开agent专属MCP连接 (只清理新建的, 不清理共享的)      │
+│   ├─ clearSessionHooks(agentId) 移除agent注册的hooks                   │
+│   ├─ cleanupAgentTracking(agentId) 清除prompt cache追踪                │
+│   ├─ readFileState.clear() 释放文件缓存内存                             │
+│   ├─ initialMessages.length = 0 释放消息数组                            │
+│   ├─ unregisterPerfettoAgent() 释放追踪                                │
+│   ├─ clearAgentTranscriptSubdir() 释放transcript映射                   │
+│   ├─ 清除AppState.todos[agentId] 释放todo条目                          │
+│   ├─ killShellTasksForAgent() 杀死后台bash任务 (防PPID=1僵尸)          │
+│   └─ killMonitorMcpTasksForAgent() 杀死Monitor MCP任务                 │
+├────────────────────────────────────────────────────────────────────────┤
+│ 6. RESUME                                                              │
+│   resumeAgentBackground()                                              │
+│   ├─ getAgentTranscript(agentId) 从磁盘 JSONL 文件恢复对话历史          │
+│   ├─ readAgentMetadata(agentId) 读取agent类型、worktree路径等           │
+│   ├─ registerAsyncAgent() 注册为新的后台任务                            │
+│   └─ runAsyncAgentLifecycle() 从恢复点继续执行                          │
+└────────────────────────────────────────────────────────────────────────┘
+</code></pre>
+<hr>
+<h2 id="数据流"><a href="#数据流" class="headerlink" title="数据流"></a>数据流</h2><h3 id="消息传递架构"><a href="#消息传递架构" class="headerlink" title="消息传递架构"></a>消息传递架构</h3><pre><code>┌─────────────┐       writeToMailbox()        ┌─────────────┐
+│  Agent A     │ ──────────────────────────── │  Agent B     │
+│  (Leader)    │  ~/.claude/teams/&#123;team&#125;/      │  (Worker)    │
+│              │  inboxes/&#123;name&#125;.json          │              │
+└──────┬──────┘                               └──────┬──────┘
+       │                                              │
+       │  useInboxPoller()              useInboxPoller()  │
+       │  (React Hook, 每1秒)           (React Hook)      │
+       │                                              │
+       ├─ idle_notification ──────────────────────── │
+       ├─ shutdown_request ───────────────────────── │
+       │ ◄── shutdown_approved ──────────────────── │
+       ├─ permission_request ─────────────────────── │
+       │ ◄── permission_response ────────────────── │
+       ├─ task_assignment ────────────────────────── │
+       └─ team_permission_update ─────────────────── │
+
+跨会话: SendMessageTool → parseAddress()
+  ├─ &quot;uds:/path/to.sock&quot;     → sendToUdsSocket()
+  ├─ &quot;bridge:session_xxx&quot;    → postInterClaudeMessage()
+  └─ 进程内子代理             → queuePendingMessage() / resumeAgent()
+</code></pre>
+<h3 id="团队创建→工作→关闭-数据流"><a href="#团队创建→工作→关闭-数据流" class="headerlink" title="团队创建→工作→关闭 数据流"></a>团队创建→工作→关闭 数据流</h3><pre><code>TeamCreate → mkdirSync(teamDir) + writeFileSync(config.json) + AppState.teamContext
+    │
+    ├─ Agent(name, team_name) → spawnTeammate() → handleSpawn()
+    │   ├─ detectAndGetBackend() 检测可用后端
+    │   ├─ Tmux: createTeammatePaneInSwarmView() + send-keys CLI启动
+    │   ├─ iTerm2: it2 split-pane + 发送启动命令
+    │   └─ In-process: spawnInProcessTeammate()
+    │       ├─ formatAgentId(&quot;name@team&quot;)
+    │       ├─ createAbortController() (独立，不随leader ESC中断)
+    │       ├─ createTeammateContext() → AsyncLocalStorage隔离
+    │       └─ registerTask(InProcessTeammateTaskState)
+    │
+    ├─ TaskCreate → createTask() → 写入 ~/.claude/tasks/&#123;team&#125;/&#123;id&#125;.json
+    │   └─ 执行TaskCreated hooks, 有阻塞错误则回滚删除
+    │
+    ├─ TaskUpdate(owner=worker) → updateTask() + writeToMailbox(worker, task_assignment)
+    │
+    ├─ 队友工作循环:
+    │   ├─ TaskUpdate(status=in_progress) → 自动设owner=getAgentName()
+    │   ├─ 工具调用 (Bash/Edit/Read/...)
+    │   ├─ TaskUpdate(status=completed) → 执行TaskCompleted hooks
+    │   └─ Stop hook → createIdleNotification() → writeToMailbox(team-lead)
+    │
+    ├─ 关闭队友:
+    │   ├─ SendMessage(shutdown_request) → writeToMailbox(worker, JSON)
+    │   └─ Worker收到后: SendMessage(shutdown_response, approve=true)
+    │       ├─ 写入team-lead inbox shutdown_approved JSON
+    │       ├─ in-process: findTeammateTaskByAgentId() → abortController.abort()
+    │       └─ tmux: gracefulShutdown(0) 进程退出
+    │   Leader收到shutdown_approved后:
+    │       ├─ backend.killPane(paneId) 关闭终端面板
+    │       ├─ removeTeammateFromTeamFile() 从config.json移除
+    │       ├─ unassignTeammateTasks() 取消任务分配
+    │       └─ setAppState() 从teamContext.teammates移除
+    │
+    └─ TeamDelete → cleanupTeamDirectories()
+        ├─ 逐个 destroyWorktree() (git worktree remove --force / rm -rf)
+        ├─ rm(~/.claude/teams/&#123;team&#125;/, recursive)
+        ├─ rm(~/.claude/tasks/&#123;team&#125;/, recursive)
+        └─ clearTeammateColors()
+</code></pre>
+<hr>
+<h2 id="设计模式总结"><a href="#设计模式总结" class="headerlink" title="设计模式总结"></a>设计模式总结</h2><table>
+<thead>
+<tr>
+<th>模式</th>
+<th>实现细节</th>
+<th>为什么这样设计</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>单进程多上下文</strong></td>
+<td><code>AsyncLocalStorage</code> 为每个 in-process teammate 创建独立 <code>TeammateContext</code>。<code>getAgentName()/getTeamName()</code> 全局函数通过 ALS 返回正确的身份。</td>
+<td>无需启动新进程，内存高效，一个 Node.js 进程内可运行多个 teammate，且彼此身份完全隔离。</td>
+</tr>
+<tr>
+<td><strong>文件系统即消息总线</strong></td>
+<td>JSON 文件 + <code>proper-lockfile</code> (10次重试, 5-100ms退避)。每次写操作: 获取锁 → 读最新 → 追加 → 写回 → 释放锁。</td>
+<td>解耦、天然持久化、跨进程可用，无需额外消息中间件。崩溃重启后消息不丢失（未标已读的会被重新消费）。</td>
+</tr>
+<tr>
+<td><strong>同步→异步透明迁移</strong></td>
+<td><code>registerAgentForeground()</code> 创建 <code>backgroundSignal</code> Promise + 2分钟自动超时。<code>Promise.race</code> 监听。触发后 <code>agentIterator.return()</code> 清理前台 → 重新以 <code>isAsync=true</code> 启动 <code>runAgent()</code>。</td>
+<td>前台任务可中途转后台，用户体验连续。不需要提前预判任务时长——短任务同步等待结果，长任务自动转后台。</td>
+</tr>
+<tr>
+<td><strong>Fork 共享缓存</strong></td>
+<td>fork 子代理继承父的 system prompt + tool pool + 消息前缀。所有 tool_result 使用相同占位符文本。只有最后的 per-child 指令不同。</td>
+<td>所有 fork 子代理产生字节相同的 API 请求前缀 → 最大化 Anthropic API 的 prompt cache 命中率，节省大量 token 费用。</td>
+</tr>
+<tr>
+<td><strong>结构化协议消息</strong></td>
+<td>JSON 消息类型鉴别 (<code>type</code> 字段) 叠加在纯文本邮箱之上。<code>isPermissionRequest()</code>、<code>isShutdownRequest()</code> 等函数逐一尝试 JSON 解析 + schema 校验。</td>
+<td>在简单的文件邮箱上实现复杂交互（权限请求&#x2F;响应、关机协商、计划审批），无需引入 RPC 框架。</td>
+</tr>
+<tr>
+<td><strong>Fail-closed 默认</strong></td>
+<td><code>isConcurrencySafe = false</code>、<code>isReadOnly = false</code>。异步代理的 <code>setAppState</code> 默认是 no-op。</td>
+<td>新工具忘记声明属性时走最保守路径。后台代理不能意外修改 UI 状态。</td>
+</tr>
+<tr>
+<td><strong>三层后端抽象</strong></td>
+<td><code>detectAndGetBackend()</code> 运行时自动检测: iTerm2 with it2 CLI → tmux → in-process 回退。统一 <code>TeammateExecutor</code> 接口 (<code>spawn</code>&#x2F;<code>kill</code>&#x2F;<code>listPanes</code>)。</td>
+<td>一套代码适配多种终端环境，用户无需手动配置。</td>
+</tr>
+<tr>
+<td><strong>递归防护</strong></td>
+<td><code>isInForkChild()</code> 检查消息中的 <code>&lt;fork-boilerplate&gt;</code> 标签。主检查是 <code>querySource</code>（compaction-resistant），消息扫描是 fallback。</td>
+<td>防止 fork 子代理再 fork（fork 子代理保留 Agent 工具是为了 cache-identical tool defs，但实际调用时要拦截）。</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="对-Agent-开发的参考价值"><a href="#对-Agent-开发的参考价值" class="headerlink" title="对 Agent 开发的参考价值"></a>对 Agent 开发的参考价值</h2><h3 id="1-子代理编排模式"><a href="#1-子代理编排模式" class="headerlink" title="1. 子代理编排模式"></a>1. 子代理编排模式</h3><ul>
+<li><strong>同步 vs 异步</strong>: 简单任务用同步等结果（调用方被阻塞直到完成），长任务用异步 fire-and-forget + 完成通知。两者可以<strong>中途转换</strong>——同步任务超过 2 分钟自动变异步。</li>
+<li><strong>Fork 模式</strong>: 需要父级完整对话上下文的调查任务用 fork（共享 prompt cache，极大节省 token），独立任务用新代理（干净的上下文）。</li>
+<li><strong>工具池隔离</strong>: 子代理的工具池由 <code>assembleToolPool()</code> 独立构建，使用 worker 自己的 <code>permissionMode</code>，不受父级的工具限制影响。</li>
+</ul>
+<h3 id="2-通信架构"><a href="#2-通信架构" class="headerlink" title="2. 通信架构"></a>2. 通信架构</h3><ul>
+<li><strong>文件系统邮箱</strong> 是极简但有效的 IPC 方案：JSON 文件 + 文件锁。适合低频消息场景（每秒轮询一次），实现简单、天然持久化。</li>
+<li><strong>proper-lockfile</strong> 的重试配置（10次 &#x2F; 5-100ms退避）平衡了并发安全和性能。</li>
+<li><strong>结构化协议消息</strong> 在纯文本层上叠加类型安全的 JSON 消息格式——一个 <code>type</code> 字段就区分了 10+ 种协议消息（权限、关机、审批等），简洁高效。</li>
+</ul>
+<h3 id="3-团队协调"><a href="#3-团队协调" class="headerlink" title="3. 团队协调"></a>3. 团队协调</h3><ul>
+<li><strong>任务看板模式</strong>（Team &#x3D; TaskList）: 创建团队自动创建对应任务目录，多代理共享一个任务板。任务分配自动触发邮箱通知。</li>
+<li><strong>idle_notification + Stop hook</strong>: 队友完成任务后自动通知 leader “我空了”，leader 可以分配新任务或关闭队友。</li>
+<li><strong>权限冒泡</strong>（bubble mode）: 后台代理遇到需要用户确认的操作时，权限请求通过邮箱冒泡到 leader 终端显示。</li>
+</ul>
+<h3 id="4-资源管理"><a href="#4-资源管理" class="headerlink" title="4. 资源管理"></a>4. 资源管理</h3><ul>
+<li><strong>finally 清理链</strong>: <code>runAgent()</code> 的 finally 块依次清理 11 项资源（MCP 连接 → hooks → cache → 文件状态 → 消息 → perfetto → transcript → todos → bash 任务 → Monitor 任务），确保任何退出路径都不会泄漏。</li>
+<li><strong>abort 级联</strong>: 同步代理共享父级的 AbortController（按 ESC 一起停），异步代理有独立的（不受 ESC 影响，只能显式 kill）。In-process teammate 也是独立的（不随 leader 中断）。</li>
+</ul>
+<h3 id="5-状态隔离"><a href="#5-状态隔离" class="headerlink" title="5. 状态隔离"></a>5. 状态隔离</h3><ul>
+<li><strong>AsyncLocalStorage</strong>: 零成本的上下文隔离。多个 in-process teammate 运行在同一进程内，但 <code>getAgentName()</code> 始终返回正确的身份。</li>
+<li><strong>readFileState 独立克隆</strong>: 每个子代理有自己的文件缓存副本，防止子代理读取的文件内容影响父级或其他代理。</li>
+<li><strong>setAppState 隔离</strong>: 异步代理的 <code>setAppState</code> 是空函数——防止后台代理意外修改 UI 状态。但 <code>setAppStateForTasks</code> 始终指向根 store，确保任务注册&#x2F;kill 能正确传递。</li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/AI%E7%BC%96%E7%A8%8B/">AI编程</a><a class="post-meta__tags" href="/tags/%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B/">软件工程</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E7%A8%8B%E8%83%BD%E5%8A%9B/">工程能力</a><a class="post-meta__tags" href="/tags/Claude-Code/">Claude Code</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/20_Hooks+Skills+Agent%E5%AE%9A%E4%B9%89%E7%B3%BB%E7%BB%9F/" title="Hooks + Skills + Agent 定义系统 — Claude Code 源码深度分析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Hooks + Skills + Agent 定义系统 — Claude Code 源码深度分析</div></div></a></div><div class="next-post pull-right"><a href="/posts/13-Harness-Engineering-AI%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E9%A9%BE%E9%A9%AD%E5%8A%9B/" title="Harness Engineering：AI时代的工程驾驭力"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Harness Engineering：AI时代的工程驾驭力</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">92</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">168</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%A4%9AAgent%E5%8D%8F%E4%BD%9C%E7%B3%BB%E7%BB%9F-%E2%80%94-Claude-Code-%E6%BA%90%E7%A0%81%E6%B7%B1%E5%BA%A6%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">多Agent协作系统 — Claude Code 源码深度分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%90%86%E8%A7%A3"><span class="toc-number">1.1.</span> <span class="toc-text">一句话理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%99%BD%E8%AF%9D%E7%89%88%E8%BF%90%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">1.2.</span> <span class="toc-text">白话版运行流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%95%B4%E4%BD%93%E5%88%86%E4%B8%A4%E6%9D%A1%E8%B7%AF"><span class="toc-number">1.2.1.</span> <span class="toc-text">整体分两条路</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AD%90Agent%E6%A8%A1%E5%BC%8F-%E2%80%94-%E2%80%9C%E5%8F%AB%E4%B8%8B%E5%B1%9E%E5%B9%B2%E6%B4%BB%E2%80%9D"><span class="toc-number">1.2.2.</span> <span class="toc-text">子Agent模式 — “叫下属干活”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%A2%E9%98%9F%E6%A8%A1%E5%BC%8F-%E2%80%94-%E2%80%9C%E5%BB%BA%E7%BE%A4%E5%8D%8F%E4%BD%9C%E2%80%9D"><span class="toc-number">1.2.3.</span> <span class="toc-text">团队模式 — “建群协作”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%A4%E7%A7%8D%E6%A8%A1%E5%BC%8F%E7%9A%84%E5%85%B3%E9%94%AE%E5%8C%BA%E5%88%AB"><span class="toc-number">1.2.4.</span> <span class="toc-text">两种模式的关键区别</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9D%83%E9%99%90%E5%92%8C%E5%AE%89%E5%85%A8%E6%80%8E%E4%B9%88%E5%A4%84%E7%90%86"><span class="toc-number">1.2.5.</span> <span class="toc-text">权限和安全怎么处理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%AE%8C%E6%95%B4%E7%9A%84%E5%9B%A2%E9%98%9F%E5%8D%8F%E4%BD%9C%E4%BE%8B%E5%AD%90"><span class="toc-number">1.2.6.</span> <span class="toc-text">一个完整的团队协作例子</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9E%B6%E6%9E%84%E6%80%BB%E8%A7%88%EF%BC%88%E6%BA%90%E7%A0%81%E8%A7%86%E8%A7%92%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">架构总览（源码视角）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E6%96%87%E4%BB%B6%E8%A1%A8"><span class="toc-number">1.4.</span> <span class="toc-text">关键文件表</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E5%87%BD%E6%95%B0%E8%AF%A6%E8%A7%A3-%E2%80%94-%E2%80%9C%E5%AE%83%E5%88%B0%E5%BA%95%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88%E2%80%9D"><span class="toc-number">1.5.</span> <span class="toc-text">核心函数详解 — “它到底做了什么”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-AgentTool-call-%E2%80%94-%E6%80%BB%E5%85%A5%E5%8F%A3%E8%B7%AF%E7%94%B1"><span class="toc-number">1.5.1.</span> <span class="toc-text">1. AgentTool.call() — 总入口路由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-registerAsyncAgent-%E2%80%94-%E6%B3%A8%E5%86%8C%E5%90%8E%E5%8F%B0%E4%BB%BB%E5%8A%A1"><span class="toc-number">1.5.2.</span> <span class="toc-text">2. registerAsyncAgent() — 注册后台任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-registerAgentForeground-%E2%80%94-%E6%B3%A8%E5%86%8C%E5%89%8D%E5%8F%B0%E4%BB%BB%E5%8A%A1"><span class="toc-number">1.5.3.</span> <span class="toc-text">3. registerAgentForeground() — 注册前台任务</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-runAgent-%E2%80%94-%E5%AD%90%E4%BB%A3%E7%90%86%E6%A0%B8%E5%BF%83%E6%89%A7%E8%A1%8C%E5%BE%AA%E7%8E%AF"><span class="toc-number">1.5.4.</span> <span class="toc-text">4. runAgent() — 子代理核心执行循环</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-buildForkedMessages-%E2%80%94-%E6%9E%84%E5%BB%BA-Fork-%E5%AD%90%E4%BB%A3%E7%90%86%E7%9A%84%E6%B6%88%E6%81%AF"><span class="toc-number">1.5.5.</span> <span class="toc-text">5. buildForkedMessages() — 构建 Fork 子代理的消息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-createSubagentContext-%E2%80%94-%E5%88%9B%E5%BB%BA%E9%9A%94%E7%A6%BB%E7%9A%84%E5%AD%90%E4%BB%A3%E7%90%86%E4%B8%8A%E4%B8%8B%E6%96%87"><span class="toc-number">1.5.6.</span> <span class="toc-text">6. createSubagentContext() — 创建隔离的子代理上下文</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-writeToMailbox-%E2%80%94-%E5%86%99%E6%B6%88%E6%81%AF%E5%88%B0%E9%82%AE%E7%AE%B1"><span class="toc-number">1.5.7.</span> <span class="toc-text">7. writeToMailbox() — 写消息到邮箱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-useInboxPoller-%E2%80%94-%E6%94%B6%E4%BB%B6%E7%AE%B1%E8%BD%AE%E8%AF%A2-Hook"><span class="toc-number">1.5.8.</span> <span class="toc-text">8. useInboxPoller() — 收件箱轮询 Hook</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#9-spawnInProcessTeammate-%E2%80%94-%E8%BF%9B%E7%A8%8B%E5%86%85%E9%98%9F%E5%8F%8B%E7%94%9F%E6%88%90"><span class="toc-number">1.5.9.</span> <span class="toc-text">9. spawnInProcessTeammate() — 进程内队友生成</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-SendMessageTool-call-%E2%80%94-%E6%99%BA%E8%83%BD%E4%BD%93%E9%97%B4%E6%B6%88%E6%81%AF%E8%B7%AF%E7%94%B1"><span class="toc-number">1.5.10.</span> <span class="toc-text">10. SendMessageTool.call() — 智能体间消息路由</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#11-TaskCreateTool-call-TaskUpdateTool-call-%E2%80%94-%E4%BB%BB%E5%8A%A1%E7%B3%BB%E7%BB%9F"><span class="toc-number">1.5.11.</span> <span class="toc-text">11. TaskCreateTool.call() &#x2F; TaskUpdateTool.call() — 任务系统</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#12-finalizeAgentTool-%E2%80%94-%E6%8F%90%E5%8F%96%E6%9C%80%E7%BB%88%E7%BB%93%E6%9E%9C"><span class="toc-number">1.5.12.</span> <span class="toc-text">12. finalizeAgentTool() — 提取最终结果</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#13-recordSidechainTranscript-%E2%80%94-%E6%8C%81%E4%B9%85%E5%8C%96%E5%AF%B9%E8%AF%9D%E8%AE%B0%E5%BD%95"><span class="toc-number">1.5.13.</span> <span class="toc-text">13. recordSidechainTranscript() — 持久化对话记录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#14-cleanupTeamDirectories-%E2%80%94-%E5%9B%A2%E9%98%9F%E6%B8%85%E7%90%86"><span class="toc-number">1.5.14.</span> <span class="toc-text">14. cleanupTeamDirectories() — 团队清理</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E6%B5%81%E7%A8%8B%E5%9B%BE"><span class="toc-number">1.6.</span> <span class="toc-text">核心流程图</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#AgentTool-call-%E8%B7%AF%E7%94%B1%E5%86%B3%E7%AD%96"><span class="toc-number">1.6.1.</span> <span class="toc-text">AgentTool.call() 路由决策</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Agent-%E5%AE%8C%E6%95%B4%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F"><span class="toc-number">1.6.2.</span> <span class="toc-text">Agent 完整生命周期</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="toc-number">1.7.</span> <span class="toc-text">数据流</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B6%88%E6%81%AF%E4%BC%A0%E9%80%92%E6%9E%B6%E6%9E%84"><span class="toc-number">1.7.1.</span> <span class="toc-text">消息传递架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9B%A2%E9%98%9F%E5%88%9B%E5%BB%BA%E2%86%92%E5%B7%A5%E4%BD%9C%E2%86%92%E5%85%B3%E9%97%AD-%E6%95%B0%E6%8D%AE%E6%B5%81"><span class="toc-number">1.7.2.</span> <span class="toc-text">团队创建→工作→关闭 数据流</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F%E6%80%BB%E7%BB%93"><span class="toc-number">1.8.</span> <span class="toc-text">设计模式总结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AF%B9-Agent-%E5%BC%80%E5%8F%91%E7%9A%84%E5%8F%82%E8%80%83%E4%BB%B7%E5%80%BC"><span class="toc-number">1.9.</span> <span class="toc-text">对 Agent 开发的参考价值</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%AD%90%E4%BB%A3%E7%90%86%E7%BC%96%E6%8E%92%E6%A8%A1%E5%BC%8F"><span class="toc-number">1.9.1.</span> <span class="toc-text">1. 子代理编排模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E9%80%9A%E4%BF%A1%E6%9E%B6%E6%9E%84"><span class="toc-number">1.9.2.</span> <span class="toc-text">2. 通信架构</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%9B%A2%E9%98%9F%E5%8D%8F%E8%B0%83"><span class="toc-number">1.9.3.</span> <span class="toc-text">3. 团队协调</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-%E8%B5%84%E6%BA%90%E7%AE%A1%E7%90%86"><span class="toc-number">1.9.4.</span> <span class="toc-text">4. 资源管理</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-%E7%8A%B6%E6%80%81%E9%9A%94%E7%A6%BB"><span class="toc-number">1.9.5.</span> <span class="toc-text">5. 状态隔离</span></a></li></ol></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/15_%E6%9D%83%E9%99%90%E4%B8%8E%E5%AE%89%E5%85%A8%E7%B3%BB%E7%BB%9F/" title="权限与安全系统 — Claude Code 源码深度分析">权限与安全系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/18_%E6%9F%A5%E8%AF%A2%E4%B8%8E%E5%BE%AA%E7%8E%AF%E6%A8%A1%E5%9D%97/" title="查询与循环模块 — Claude Code 源码深度分析">查询与循环模块 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/16_%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/" title="上下文管理系统 — Claude Code 源码深度分析">上下文管理系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/17_%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F/" title="记忆系统 — Claude Code 源码深度分析">记忆系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/14_Claude_Code_%E6%BA%90%E7%A0%81%E6%9E%B6%E6%9E%84%E5%88%86%E6%9E%90/" title="ClaudeCode 源码架构分析">ClaudeCode 源码架构分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
