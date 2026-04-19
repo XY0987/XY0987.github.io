@@ -1,0 +1,845 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 94;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>不用框架，从零手搓一个AI Agent | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：之前写过 Agent 架构设计与实践，讲的是理论层面的东西。这篇反过来，直接从代码层面拆解：不用任何 Agent 框架，纯手写 Agent Loop，用最原始的 OpenAI Function Calling 协议，自己管循环、管工具、管重试、管上下文。项目是一个智能新闻聚合与推送系统，开源在 GitHub。  为什么不用 Agent 框架先说结论：不是框架不好，是我需要的控制粒度太细了。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="不用框架，从零手搓一个AI Agent">
+<meta property="og:url" content="http://example.com/posts/24-%E6%89%8B%E6%90%93Agent%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：之前写过 Agent 架构设计与实践，讲的是理论层面的东西。这篇反过来，直接从代码层面拆解：不用任何 Agent 框架，纯手写 Agent Loop，用最原始的 OpenAI Function Calling 协议，自己管循环、管工具、管重试、管上下文。项目是一个智能新闻聚合与推送系统，开源在 GitHub。  为什么不用 Agent 框架先说结论：不是框架不好，是我需要的控制粒度太细了。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-04-18T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-04-19T08:21:29.441Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Function Calling">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="NestJS">
+<meta property="article:tag" content="OpenAI">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/24-%E6%89%8B%E6%90%93Agent%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '不用框架，从零手搓一个AI Agent',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 16:21:29'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">171</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">不用框架，从零手搓一个AI Agent</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-04-18T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-04-19T08:21:29.441Z" title="更新于 2026 16:21:29">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>16分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：之前写过 Agent 架构设计与实践，讲的是理论层面的东西。这篇反过来，直接从代码层面拆解：不用任何 Agent 框架，纯手写 Agent Loop，用最原始的 OpenAI Function Calling 协议，自己管循环、管工具、管重试、管上下文。项目是一个智能新闻聚合与推送系统，开源在 <a target="_blank" rel="noopener" href="https://github.com/XY0987/news_agent.git">GitHub</a>。</p>
+</blockquote>
+<h2 id="为什么不用-Agent-框架"><a href="#为什么不用-Agent-框架" class="headerlink" title="为什么不用 Agent 框架"></a>为什么不用 Agent 框架</h2><p>先说结论：<strong>不是框架不好，是我需要的控制粒度太细了</strong>。</p>
+<p>这个项目是一个智能新闻聚合与推送系统，Agent 需要做的事情包括：</p>
+<ol>
+<li>读取用户画像，了解用户兴趣</li>
+<li>从 RSS、GitHub Trending、微信公众号等多个源采集内容</li>
+<li>过滤去重</li>
+<li>用规则 + AI 双层评分</li>
+<li>为高分内容生成个性化摘要</li>
+<li>组装邮件推送</li>
+<li>将本次决策经验写入记忆，供下次参考</li>
+</ol>
+<p>整个流程中，Agent 需要<strong>自主决定调用哪些工具、以什么顺序调用、遇到错误怎么处理</strong>。如果某个环节用了框架的黑盒封装，限频重试逻辑你控制不了，Token 裁剪策略你改不了，推送意图检测你加不进去。</p>
+<p>所以我的选择是：<strong>手写 Agent Loop + OpenAI Function Calling 协议 + NestJS 服务注入</strong>。所有逻辑透明可控，每一行都是自己的。</p>
+<hr>
+<h2 id="Agent-核心架构"><a href="#Agent-核心架构" class="headerlink" title="Agent 核心架构"></a>Agent 核心架构</h2><p>先看整体结构：</p>
+<pre><code>┌─────────────────────────────────────────────────────────┐
+│                     Agent Loop (最多 25 步)              │
+│                                                          │
+│  ┌──────────┐    ┌──────────┐    ┌──────────────────┐   │
+│  │ System   │    │ LLM 推理  │    │ 并行执行 Tools   │   │
+│  │ Prompt   │───▶│ (带重试)  │───▶│ (Promise.all)   │   │
+│  │ + 记忆   │    │          │    │                  │   │
+│  └──────────┘    └──────────┘    └──────────────────┘   │
+│        │               │                   │             │
+│        │               │                   ▼             │
+│        │               │          ┌────────────────┐    │
+│        │               │          │ Tool 结果回填    │    │
+│        │               │◀─────────│ 到消息历史      │    │
+│        │               │          └────────────────┘    │
+│        │               │                                 │
+│        │         finish_reason=stop?                     │
+│        │               │                                 │
+│        │          ┌────┴────┐                            │
+│        │          │ Yes     │ No → 继续循环              │
+│        │          ▼         │                            │
+│  ┌──────────┐              │                            │
+│  │ 推送检测  │              │                            │
+│  │ + 兜底    │              │                            │
+│  └──────────┘              │                            │
+└─────────────────────────────────────────────────────────┘
+           │
+     ┌─────┴─────┐
+     │ Tool Registry │ ← 16 个工具，4 大类
+     ├─────────────┤
+     │ 感知(4)     │  read_user_profile, read_feedback_history, query_memory, get_user_sources
+     │ 行动(7)     │  collect_wechat, collect_github, filter_and_dedup, score_contents, ...
+     │ 推送(2)     │  send_daily_digest, send_github_trending
+     │ 记忆(3)     │  store_memory, analyze_source_quality, suggest_source_change
+     └─────────────┘
+</code></pre>
+<hr>
+<h2 id="Agent-Loop-核心实现"><a href="#Agent-Loop-核心实现" class="headerlink" title="Agent Loop 核心实现"></a>Agent Loop 核心实现</h2><p>所有 Agent 框架的本质都是一个循环：<strong>调 LLM → 拿到 tool_calls → 执行工具 → 把结果喂回去 → 再调 LLM</strong>。我把这个循环手写了出来。</p>
+<p>核心代码在 <code>backend/src/modules/agent/agent.service.ts</code> 的 <code>runAgentLoop</code> 方法中：</p>
+<pre><code class="typescript">// Agent Loop 核心
+for (let step = 0; step &lt; this.maxSteps; step++) &#123;
+  const stepStart = Date.now();
+
+  // 1. 每轮从 ToolRegistry 实时获取工具列表（支持动态注册）
+  const currentTools = this.getCurrentTools(allowedToolNames);
+
+  // 2. 调用 LLM（带 4 级重试 + 自动降级）
+  let response: OpenAI.ChatCompletion;
+  try &#123;
+    response = await this.callLLMWithRetry(sessionId, messages, currentTools);
+  &#125; catch (error) &#123;
+    this.logger.error(`[$&#123;sessionId&#125;] LLM 调用最终失败: $&#123;error.message&#125;`);
+    break;
+  &#125;
+
+  const choice = response.choices[0];
+  const assistantMessage = choice.message;
+  const thinking = assistantMessage.content || &#39;&#39;;
+  const toolCallsRaw = assistantMessage.tool_calls || [];
+
+  // 3. 解析 tool_calls —— 从 OpenAI 协议格式提取工具名和参数
+  const toolCalls: AgentToolCall[] = toolCallsRaw
+    .filter((tc) =&gt; tc.type === &#39;function&#39;)
+    .map((tc) =&gt; (&#123;
+      id: tc.id,
+      name: tc.function.name,
+      args: JSON.parse(tc.function.arguments || &#39;&#123;&#125;&#39;),
+    &#125;));
+
+  // 4. LLM 没有调用任何 Tool → 任务完成，退出循环
+  if (toolCallsRaw.length === 0 || choice.finish_reason === &#39;stop&#39;) &#123;
+    // 推送意图检测 + 兜底逻辑（后文详述）
+    break;
+  &#125;
+
+  // 5. 把 LLM 响应加入消息历史
+  messages.push(assistantMessage);
+
+  // 6. 并行执行所有 Tool Call
+  const toolResultMessages = await Promise.all(
+    toolCalls.map(async (tc) =&gt; &#123;
+      const result = await this.toolRegistry.executeTool(tc.name, tc.args);
+      // 结果超 8000 字符则智能截断
+      const truncated = JSON.stringify(result).length &gt; 8000
+        ? this.smartTruncateToolResult(result, 8000)
+        : JSON.stringify(result);
+      return &#123; role: &#39;tool&#39;, tool_call_id: tc.id, content: truncated &#125;;
+    &#125;),
+  );
+
+  // 7. Tool 结果回填消息历史 → 回到步骤 1
+  messages.push(...toolResultMessages);
+
+  // 8. Token 管理 —— 消息过长时裁剪早期轮次
+  this.pruneMessagesIfNeeded(messages);
+&#125;
+</code></pre>
+<p><strong>这就是一个完整 Agent 的核心</strong>。没有任何框架魔法，就是一个 <code>for</code> 循环。每一步做的事情很清楚：</p>
+<table>
+<thead>
+<tr>
+<th>步骤</th>
+<th>做什么</th>
+<th>为什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>实时获取工具列表</td>
+<td>Skills 系统可能动态注册了新工具</td>
+</tr>
+<tr>
+<td>2</td>
+<td>调 LLM（带重试）</td>
+<td>限频时自动切备用模型</td>
+</tr>
+<tr>
+<td>3</td>
+<td>解析 tool_calls</td>
+<td>从 OpenAI 协议中提取工具名和 JSON 参数</td>
+</tr>
+<tr>
+<td>4</td>
+<td>检查是否结束</td>
+<td>LLM 不再调工具 &#x3D; 认为任务完成</td>
+</tr>
+<tr>
+<td>5</td>
+<td>消息历史追加</td>
+<td>保持完整对话上下文</td>
+</tr>
+<tr>
+<td>6</td>
+<td>并行执行工具</td>
+<td><code>Promise.all</code>，LLM 一次选了 3 个工具就同时跑</td>
+</tr>
+<tr>
+<td>7</td>
+<td>结果回填</td>
+<td>让 LLM 看到工具输出，决定下一步</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Token 裁剪</td>
+<td>防止上下文爆炸，丢弃早期非关键消息</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="Tool-Registry-——-16-个工具的注册"><a href="#Tool-Registry-——-16-个工具的注册" class="headerlink" title="Tool Registry —— 16 个工具的注册"></a>Tool Registry —— 16 个工具的注册</h2><p>Agent 的能力边界由工具决定。我设计了一个 <code>AgentToolRegistry</code>，把 NestJS 的 11 个 Service 封装成 16 个 OpenAI Function Calling 格式的工具。</p>
+<pre><code class="typescript">@Injectable()
+export class AgentToolRegistry &#123;
+  private tools: Map&lt;string, ToolRegistryEntry&gt; = new Map();
+
+  constructor(
+    private readonly collectorService: CollectorService,   // 内容采集
+    private readonly filterService: FilterService,         // 过滤去重
+    private readonly scorerService: ScorerService,         // AI 评分
+    private readonly summaryService: SummaryService,       // 摘要生成
+    private readonly notificationService: NotificationService, // 推送
+    private readonly memoryService: MemoryService,         // 记忆
+    private readonly feedbackService: FeedbackService,     // 反馈
+    private readonly userService: UserService,             // 用户
+    private readonly contentService: ContentService,       // 内容
+    private readonly sourceService: SourceService,         // 数据源
+    private readonly digestService: DigestService,         // 日报
+  ) &#123;
+    this.registerAllTools();
+  &#125;
+
+  // 按类别注册
+  private registerAllTools(): void &#123;
+    this.registerPerceptionTools();  // 感知类 (4)
+    this.registerActionTools();      // 行动类 (7)
+    this.registerPushTools();        // 推送类 (2)
+    this.registerMemoryTools();      // 记忆类 (3)
+  &#125;
+&#125;
+</code></pre>
+<p>每个工具的注册格式统一遵循 OpenAI Function Calling 协议：</p>
+<pre><code class="typescript">this.register(&#123;
+  name: &#39;read_user_profile&#39;,
+  description: &#39;读取用户画像，了解用户的职业、兴趣标签、偏好设置、评分权重等。&#39;,
+  parameters: &#123;
+    type: &#39;object&#39;,
+    properties: &#123;
+      userId: &#123; type: &#39;string&#39;, description: &#39;用户 ID&#39; &#125;,
+    &#125;,
+    required: [&#39;userId&#39;],
+  &#125;,
+  execute: async (&#123; userId &#125;) =&gt; &#123;
+    const user = await this.userService.findById(userId);
+    return &#123;
+      id: user.id,
+      name: user.name,
+      profile: user.profile,
+      preferences: user.preferences,
+      notificationSettings: user.notificationSettings,
+    &#125;;
+  &#125;,
+&#125;);
+</code></pre>
+<p><strong>这个设计的好处是：工具定义和执行逻辑绑在一起，新增工具只需要加一个 <code>register()</code> 调用</strong>。</p>
+<h3 id="16-个工具全景"><a href="#16-个工具全景" class="headerlink" title="16 个工具全景"></a>16 个工具全景</h3><table>
+<thead>
+<tr>
+<th>类别</th>
+<th>工具名</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><strong>感知</strong></td>
+<td><code>read_user_profile</code></td>
+<td>读取用户画像和偏好</td>
+</tr>
+<tr>
+<td></td>
+<td><code>read_feedback_history</code></td>
+<td>读取用户历史反馈</td>
+</tr>
+<tr>
+<td></td>
+<td><code>query_memory</code></td>
+<td>查询 Agent 跨会话记忆</td>
+</tr>
+<tr>
+<td></td>
+<td><code>get_user_sources</code></td>
+<td>获取用户订阅的数据源</td>
+</tr>
+<tr>
+<td><strong>行动</strong></td>
+<td><code>collect_wechat</code></td>
+<td>采集微信公众号文章</td>
+</tr>
+<tr>
+<td></td>
+<td><code>collect_github</code></td>
+<td>采集 GitHub Trending</td>
+</tr>
+<tr>
+<td></td>
+<td><code>filter_and_dedup</code></td>
+<td>内容过滤去重</td>
+</tr>
+<tr>
+<td></td>
+<td><code>score_contents</code></td>
+<td>对内容进行多维评分</td>
+</tr>
+<tr>
+<td></td>
+<td><code>generate_summary</code></td>
+<td>为单篇内容生成 AI 摘要</td>
+</tr>
+<tr>
+<td></td>
+<td><code>batch_generate_summaries</code></td>
+<td>批量生成摘要</td>
+</tr>
+<tr>
+<td></td>
+<td><code>get_recent_contents</code></td>
+<td>获取近期内容列表</td>
+</tr>
+<tr>
+<td><strong>推送</strong></td>
+<td><code>send_daily_digest</code></td>
+<td>发送每日精选邮件</td>
+</tr>
+<tr>
+<td></td>
+<td><code>send_github_trending</code></td>
+<td>发送 GitHub Trending 推送</td>
+</tr>
+<tr>
+<td><strong>记忆</strong></td>
+<td><code>store_memory</code></td>
+<td>存储决策经验到长期记忆</td>
+</tr>
+<tr>
+<td></td>
+<td><code>analyze_source_quality</code></td>
+<td>分析数据源质量</td>
+</tr>
+<tr>
+<td></td>
+<td><code>suggest_source_change</code></td>
+<td>建议调整数据源</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="LLM-容错机制-——-4-级重试-自动降级"><a href="#LLM-容错机制-——-4-级重试-自动降级" class="headerlink" title="LLM 容错机制 —— 4 级重试 + 自动降级"></a>LLM 容错机制 —— 4 级重试 + 自动降级</h2><p>线上跑 Agent 最怕什么？<strong>LLM 接口限频</strong>。一旦 429，整个流程就断了。我设计了一套 4 级重试策略：</p>
+<pre><code class="typescript">private async callLLMWithRetry(
+  sessionId: string,
+  messages: OpenAI.ChatCompletionMessageParam[],
+  tools: OpenAI.ChatCompletionTool[],
+): Promise&lt;OpenAI.ChatCompletion&gt; &#123;
+  const callLLM = async (model: string) =&gt; &#123;
+    await this.rateLimiter.acquire(`Agent[$&#123;sessionId&#125;]`);  // 主动限流
+    return this.openai.chat.completions.create(&#123;
+      model,
+      max_tokens: 4096,
+      messages,
+      tools,
+      tool_choice: &#39;auto&#39;,
+    &#125;);
+  &#125;;
+
+  // 第 1 次：当前模型
+  try &#123;
+    return await callLLM(this.getCurrentModel());
+  &#125; catch (error) &#123;
+    if (!this.isRateLimitError(error)) throw error;
+
+    // 第 2 次：等待 30s，同一模型重试
+    await sleep(30_000);
+    try &#123;
+      return await callLLM(this.getCurrentModel());
+    &#125; catch (retryError) &#123;
+      if (!this.isRateLimitError(retryError)) throw retryError;
+
+      // 第 3 次：切换到备用模型
+      this.usingFallback = true;
+      await this.sendRateLimitAlert(context, retryError.message, this.fallbackModel);
+      try &#123;
+        return await callLLM(this.fallbackModel);
+      &#125; catch (fallbackError) &#123;
+        // 第 4 次：等待 60s，备用模型最后重试
+        await sleep(60_000);
+        return await callLLM(this.fallbackModel);  // 再失败就抛出
+      &#125;
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>重试策略的降级路径：</p>
+<pre><code>第 1 次  →  当前模型直接调用
+  ↓ 限频
+第 2 次  →  等 30s，同模型重试
+  ↓ 再限频
+第 3 次  →  切换备用模型 + 发告警邮件
+  ↓ 还限频
+第 4 次  →  等 60s，备用模型最后一搏
+  ↓ 全失败
+抛出错误 + 告警邮件
+</code></pre>
+<p>配合<strong>主动限流</strong>（<code>rateLimiter.acquire()</code> 基于滑动窗口的 RPM 控制），大部分情况下根本不会触发被动重试。</p>
+<p>同时，<code>isRateLimitError</code> 方法做了非常细致的错误识别：</p>
+<pre><code class="typescript">private isRateLimitError(error: any): boolean &#123;
+  // HTTP 429
+  if (status === 429) return true;
+  // 标准关键词
+  if (msg.includes(&#39;rate limit&#39;) || msg.includes(&#39;too many requests&#39;)) return true;
+  // 业务层限频（某些 API 用 400 + 特定错误码表示限频）
+  if (status === 400 &amp;&amp; msg.includes(&#39;频率超出&#39;)) return true;
+  return false;
+&#125;
+</code></pre>
+<blockquote>
+<p>为什么要这么细？因为不同的 LLM 提供商（OpenAI &#x2F; 混元 &#x2F; DeepSeek &#x2F; 其他国产模型）返回限频错误的格式完全不统一。有的用 429，有的用 400 + 业务错误码。</p>
+</blockquote>
+<hr>
+<h2 id="推送意图检测-——-防止-LLM-“说了不做”"><a href="#推送意图检测-——-防止-LLM-“说了不做”" class="headerlink" title="推送意图检测 —— 防止 LLM “说了不做”"></a>推送意图检测 —— 防止 LLM “说了不做”</h2><p>这是实际跑 Agent 时踩出来的坑：<strong>LLM 有时候会在文字中说”好的，我现在发送推送”，但实际上它 <code>finish_reason=stop</code> 了，根本没调用推送工具</strong>。</p>
+<p>原因可能是上下文太长、模型注意力分散，或者纯粹是概率性的 hallucination。</p>
+<p>解决方案——推送意图检测 + 自动注入提醒：</p>
+<pre><code class="typescript">if (!digestSent &amp;&amp; thinking &amp;&amp; this.looksLikePushIntent(thinking)) &#123;
+  // LLM 嘴上说要推送，手上没调工具
+  messages.push(assistantMessage);
+  messages.push(&#123;
+    role: &#39;user&#39;,
+    content: `你刚才说要发送推送，但没有调用推送工具。请立即调用 $&#123;digestToolName&#125; 工具完成推送。`,
+  &#125;);
+  continue;  // 不退出循环，让 LLM 继续执行
+&#125;
+</code></pre>
+<p><code>looksLikePushIntent</code> 是一个关键词匹配方法，覆盖了各种表达推送意图的说法：</p>
+<pre><code class="typescript">private looksLikePushIntent(text: string): boolean &#123;
+  const pushKeywords = [
+    &#39;发送推送&#39;, &#39;发送每日精选&#39;, &#39;推送给用户&#39;,
+    &#39;send_daily_digest&#39;, &#39;send_github_trending&#39;,
+    &#39;现在发送&#39;, &#39;开始推送&#39;, &#39;执行推送&#39;,
+    &#39;下一步.*推送&#39;, &#39;接下来.*推送&#39;,
+  ];
+  // ...
+&#125;
+</code></pre>
+<p><strong>这类”工程直觉”型的处理，在框架里是很难加的</strong>。你得理解 LLM 的行为特征，才能针对性地打补丁。</p>
+<hr>
+<h2 id="安全网-——-Agent-失败后的三层兜底"><a href="#安全网-——-Agent-失败后的三层兜底" class="headerlink" title="安全网 —— Agent 失败后的三层兜底"></a>安全网 —— Agent 失败后的三层兜底</h2><p>Agent 是概率性的。即使做了 4 级重试 + 推送意图检测，仍然有可能整个流程跑完了，推送没发出去。</p>
+<p>所以我设计了三层兜底：</p>
+<pre><code>Agent 正常推送  →  成功
+       ↓ 失败
+自动推送已分析内容  →  成功（降级，但用户有东西看）
+       ↓ 也失败
+发送告警邮件给管理员  →  人工介入
+</code></pre>
+<pre><code class="typescript">if (!digestSent) &#123;
+  return this.handleUnsentDigest(
+    userId, sessionId, label, steps, startTime,
+    enableAutoDigest,     // 是否尝试自动推送
+    enableFallbackAlert,  // 是否发告警邮件
+  );
+&#125;
+</code></pre>
+<p><code>handleUnsentDigest</code> 会从数据库中捞出已经被 Agent 评过分的内容，按分数排序，直接调推送服务发出去。<strong>即使 Agent 的 LLM 大脑宕了，用户也不会收到空邮件</strong>。</p>
+<hr>
+<h2 id="双层评分系统-——-规则-AI"><a href="#双层评分系统-——-规则-AI" class="headerlink" title="双层评分系统 —— 规则 + AI"></a>双层评分系统 —— 规则 + AI</h2><p>评分是 Agent 决定”推什么给用户”的关键环节。我设计了<strong>规则预筛 + AI 深度评分</strong>的双层架构。</p>
+<h3 id="第一层：规则评分（5-维度加权）"><a href="#第一层：规则评分（5-维度加权）" class="headerlink" title="第一层：规则评分（5 维度加权）"></a>第一层：规则评分（5 维度加权）</h3><pre><code class="typescript">const breakdown = &#123;
+  relevance:     this.scoreRelevance(content, user),     // 相关性 45%
+  quality:       this.scoreQuality(content),              // 质量   20%
+  timeliness:    this.scoreTimeliness(content),            // 时效性 20%
+  novelty:       this.scoreNovelty(content, recentTitles), // 新颖性 10%
+  actionability: this.scoreActionability(content),         // 可操作 5%
+&#125;;
+
+const finalScore =
+  breakdown.relevance * weights.relevance +
+  breakdown.quality * weights.quality +
+  breakdown.timeliness * weights.timeliness +
+  breakdown.novelty * weights.novelty +
+  breakdown.actionability * weights.actionability;
+</code></pre>
+<p>每个维度都是确定性的规则计算：</p>
+<ul>
+<li><strong>相关性</strong>（45%）：内容标签与用户兴趣标签的匹配度</li>
+<li><strong>质量</strong>（20%）：基于内容长度、引用源可信度等</li>
+<li><strong>时效性</strong>（20%）：发布时间与当前时间的衰减</li>
+<li><strong>新颖性</strong>（10%）：与近 7 天已推送内容的标题相似度（越不同越高分）</li>
+<li><strong>可操作性</strong>（5%）：内容是否包含可执行的建议&#x2F;方法</li>
+</ul>
+<p><strong>重点是：评分权重是每个用户可自定义的</strong>，存在用户偏好中。Agent 会通过 <code>read_user_profile</code> 工具获取用户的个性化权重。</p>
+<h3 id="第二层：AI-深度评分"><a href="#第二层：AI-深度评分" class="headerlink" title="第二层：AI 深度评分"></a>第二层：AI 深度评分</h3><p>规则评分快但粗糙。对于进入候选池的高分内容，Agent 可以通过 LLM 做更精准的语义理解评分，覆盖规则引擎无法判断的场景。</p>
+<hr>
+<h2 id="Agent-记忆系统"><a href="#Agent-记忆系统" class="headerlink" title="Agent 记忆系统"></a>Agent 记忆系统</h2><p>传统的 LLM 调用是无状态的——每次都是从零开始。但一个好的信息管家应该<strong>记住上次的经验</strong>。</p>
+<p>我实现了一个基于 MySQL 持久化的记忆系统，Agent 通过 3 个记忆工具与之交互：</p>
+<pre><code>store_memory         → 存储记忆（决策经验 / 源质量评估 / 偏好变化）
+query_memory         → 查询记忆（关键词匹配，支持按类型过滤）
+analyze_source_quality → 分析数据源质量并记入记忆
+</code></pre>
+<p>记忆的存储格式：</p>
+<pre><code class="typescript">&#123;
+  type: &#39;decision_experience&#39;,        // 记忆类型
+  memoryKey: &#39;github_trending_quality&#39;, // 检索关键字
+  value: &#123;                             // 记忆内容（JSON）
+    observation: &#39;GitHub Trending 技术文章质量稳定但重复率较高&#39;,
+    suggestion: &#39;后续可降低 GitHub 源的新颖性权重&#39;,
+    confidence: 0.85
+  &#125;,
+  userId: &#39;xxx&#39;
+&#125;
+</code></pre>
+<p>实际效果：Agent 第一次跑的时候是”新手”，到第 10 次、第 50 次，它会积累大量对数据源质量、用户偏好变化的经验，推送质量会随使用时间持续提升。</p>
+<hr>
+<h2 id="三种运行模式"><a href="#三种运行模式" class="headerlink" title="三种运行模式"></a>三种运行模式</h2><p>同一个 <code>runAgentLoop</code> 方法，通过传入不同的配置（systemPrompt、工具白名单、推送工具名），实现了三种运行模式：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>入口方法</th>
+<th>可用工具数</th>
+<th>推送工具</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>每日推送</td>
+<td><code>runDailyDigest()</code></td>
+<td>全部 16 个</td>
+<td><code>send_daily_digest</code></td>
+<td>完整流程：采集→评分→推送</td>
+</tr>
+<tr>
+<td>GitHub 推送</td>
+<td><code>runGithubTrending()</code></td>
+<td>12 个（去掉微信相关）</td>
+<td><code>send_github_trending</code></td>
+<td>只跑 GitHub 源</td>
+</tr>
+<tr>
+<td>仅分析</td>
+<td><code>runAnalysisOnly()</code></td>
+<td>部分（跳过采集）</td>
+<td>无</td>
+<td>只做评分分析，不推送</td>
+</tr>
+</tbody></table>
+<pre><code class="typescript">// 每日推送入口
+async runDailyDigest(userId: string): Promise&lt;AgentResult&gt; &#123;
+  const user = await this.userService.findById(userId);
+  let systemPrompt = this.buildAgentSystemPrompt(user);
+
+  // Skills 增强：注入已启用 Skill 的描述 + 注册 load_skill 工具
+  const enhanced = await this.skillEnhancer.enhance(systemPrompt, userId);
+  systemPrompt = enhanced.systemPrompt;
+
+  return await this.runAgentLoop(&#123;
+    userId,
+    label: &#39;Agent&#39;,
+    systemPrompt,
+    userMessage: `执行今日信息采集和推送任务。
+当前时间: $&#123;new Date().toISOString()&#125;
+用户 ID: $&#123;userId&#125;
+你的目标是为用户产出一份高质量的每日精选推送。
+请自主决定执行步骤，合理使用可用工具。`,
+    tools: this.toolRegistry.getToolDefinitions(),
+    digestToolName: &#39;send_daily_digest&#39;,
+    enableAutoDigest: true,
+    enableFallbackAlert: true,
+  &#125;);
+&#125;
+</code></pre>
+<p>这种设计的好处在于：核心循环只写一份，不同场景通过配置注入来区分。新增一种运行模式只需要写一个新的入口方法。</p>
+<hr>
+<h2 id="Skills-插件系统"><a href="#Skills-插件系统" class="headerlink" title="Skills 插件系统"></a>Skills 插件系统</h2><p>仅有 16 个内置工具是不够的。我实现了一套可插拔的 Skills 系统，参照了 Claude Code &#x2F; CodeBuddy 的 Skills 设计标准。</p>
+<h3 id="Skill-格式"><a href="#Skill-格式" class="headerlink" title="Skill 格式"></a>Skill 格式</h3><p>每个 Skill 就是一个 <code>SKILL.md</code> 文件：</p>
+<pre><code class="markdown">---
+name: tech-news-scorer
+description: 使用 Hacker News API 获取实时热度评分作为评分参考
+---
+
+# 工具说明
+本 Skill 提供 get_hn_score 工具，根据文章 URL 查询其在 Hacker News 上的热度。
+
+# 使用规则
+- 仅在评分阶段使用
+- 结果作为 quality 维度的补充参考
+</code></pre>
+<h3 id="渐进式加载（3-阶段）"><a href="#渐进式加载（3-阶段）" class="headerlink" title="渐进式加载（3 阶段）"></a>渐进式加载（3 阶段）</h3><pre><code>阶段 1: 系统提示词注入 Skill 名称 + 描述（轻量）
+阶段 2: Agent 判断需要 → 调用 load_skill 工具 → 加载完整 SKILL.md 内容
+阶段 3: Skill 注册的脚本工具可被 Agent 调用
+</code></pre>
+<p>为什么要三阶段？因为如果一次性把所有 Skill 的完整内容塞进 system prompt，Token 会爆。渐进式加载让 Agent 自己决定”我需要哪个 Skill”，按需加载。</p>
+<hr>
+<h2 id="类型系统"><a href="#类型系统" class="headerlink" title="类型系统"></a>类型系统</h2><p>整个 Agent 的类型定义非常精简，只有 76 行：</p>
+<pre><code class="typescript">// 一轮 Agent 步骤
+interface AgentStep &#123;
+  step: number;
+  thinking: string;          // LLM 的思考文本
+  toolCalls: AgentToolCall[];
+  toolResults: AgentToolResult[];
+  durationMs: number;
+&#125;
+
+// 工具调用
+interface AgentToolCall &#123;
+  id: string;
+  name: string;
+  args: Record&lt;string, any&gt;;
+&#125;
+
+// 工具执行结果
+interface AgentToolResult &#123;
+  toolUseId: string;
+  toolName: string;
+  result: any;
+  isError: boolean;
+  durationMs: number;
+&#125;
+
+// Agent 最终结果
+interface AgentResult &#123;
+  sessionId: string;
+  report: string;
+  stepsUsed: number;
+  totalDurationMs: number;
+  isSuccess: boolean;
+  isFallback: boolean;    // 是否走了降级逻辑
+  digestSent: boolean;    // 推送是否成功
+  contentCount: number;
+&#125;
+
+// OpenAI Function Calling 工具定义
+interface OpenAIToolDefinition &#123;
+  type: &#39;function&#39;;
+  function: &#123;
+    name: string;
+    description: string;
+    parameters: &#123;
+      type: &#39;object&#39;;
+      properties: Record&lt;string, any&gt;;
+      required?: string[];
+    &#125;;
+  &#125;;
+&#125;
+</code></pre>
+<p>这些类型跟 OpenAI 的 API 格式高度对齐。<strong>这就是不用框架的好处——你的代码直接对接协议本身，没有中间抽象层的类型转换</strong>。</p>
+<hr>
+<h2 id="一次完整的执行流程"><a href="#一次完整的执行流程" class="headerlink" title="一次完整的执行流程"></a>一次完整的执行流程</h2><p>用一个实际例子串起来：</p>
+<pre><code>Step 1:  Agent 调用 read_user_profile → 了解到用户关注 &quot;前端/AI/Rust&quot;
+Step 2:  Agent 调用 query_memory → 查到上次经验：&quot;GitHub 源质量好但重复率高&quot;
+Step 3:  Agent 调用 get_user_sources → 获取 3 个 RSS + 2 个公众号 + GitHub
+Step 4:  Agent 并行调用 collect_github + collect_wechat → 采集 47 篇内容
+Step 5:  Agent 调用 filter_and_dedup → 去重后剩 31 篇
+Step 6:  Agent 调用 score_contents → 五维度评分，Top 10 出炉
+Step 7:  Agent 调用 batch_generate_summaries → 为 Top 10 生成个性化摘要
+Step 8:  Agent 调用 send_daily_digest → 邮件推送成功
+Step 9:  Agent 调用 store_memory → 记下本次经验：&quot;今日 RSS 源产出 2 篇高质量文章&quot;
+Step 10: Agent 输出执行报告 → finish_reason=stop，循环结束
+</code></pre>
+<p><strong>整个过程中，Agent 自主决定了调用顺序</strong>。有时候它会在 Step 3 之后先查记忆再决定要不要采集某个源，有时候它会跳过摘要直接推送——这就是 Agent 和 Workflow 的本质区别。</p>
+<hr>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Agent 本质就是一个循环 + 工具调用，不要被框架吓到</li>
+<li>容错比功能重要——限频重试、推送兜底、告警邮件，这些才是线上能跑的关键</li>
+<li>记忆让 Agent 有灵魂——没有记忆的 Agent 就是一次性脚本</li>
+<li>类型即协议——把 OpenAI 的 Function Calling 协议直接映射成 TypeScript 类型，不需要额外抽象</li>
+<li>工具注册表 + 配置注入的设计，让同一个 Loop 支撑多种运行模式</li>
+</ol>
+<p>项目地址：<a target="_blank" rel="noopener" href="https://github.com/XY0987/news_agent.git">https://github.com/XY0987/news_agent.git</a></p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Function-Calling/">Function Calling</a><a class="post-meta__tags" href="/tags/Agent/">Agent</a><a class="post-meta__tags" href="/tags/NestJS/">NestJS</a><a class="post-meta__tags" href="/tags/OpenAI/">OpenAI</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/23-Claude-Code-Plugins-%E6%8F%92%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Claude Code Plugins：插件系统全解析"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Claude Code Plugins：插件系统全解析</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">94</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">171</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">11</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E7%94%A8-Agent-%E6%A1%86%E6%9E%B6"><span class="toc-number">1.</span> <span class="toc-text">为什么不用 Agent 框架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Agent-%E6%A0%B8%E5%BF%83%E6%9E%B6%E6%9E%84"><span class="toc-number">2.</span> <span class="toc-text">Agent 核心架构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Agent-Loop-%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0"><span class="toc-number">3.</span> <span class="toc-text">Agent Loop 核心实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Tool-Registry-%E2%80%94%E2%80%94-16-%E4%B8%AA%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B3%A8%E5%86%8C"><span class="toc-number">4.</span> <span class="toc-text">Tool Registry —— 16 个工具的注册</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#16-%E4%B8%AA%E5%B7%A5%E5%85%B7%E5%85%A8%E6%99%AF"><span class="toc-number">4.1.</span> <span class="toc-text">16 个工具全景</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#LLM-%E5%AE%B9%E9%94%99%E6%9C%BA%E5%88%B6-%E2%80%94%E2%80%94-4-%E7%BA%A7%E9%87%8D%E8%AF%95-%E8%87%AA%E5%8A%A8%E9%99%8D%E7%BA%A7"><span class="toc-number">5.</span> <span class="toc-text">LLM 容错机制 —— 4 级重试 + 自动降级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8E%A8%E9%80%81%E6%84%8F%E5%9B%BE%E6%A3%80%E6%B5%8B-%E2%80%94%E2%80%94-%E9%98%B2%E6%AD%A2-LLM-%E2%80%9C%E8%AF%B4%E4%BA%86%E4%B8%8D%E5%81%9A%E2%80%9D"><span class="toc-number">6.</span> <span class="toc-text">推送意图检测 —— 防止 LLM “说了不做”</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%89%E5%85%A8%E7%BD%91-%E2%80%94%E2%80%94-Agent-%E5%A4%B1%E8%B4%A5%E5%90%8E%E7%9A%84%E4%B8%89%E5%B1%82%E5%85%9C%E5%BA%95"><span class="toc-number">7.</span> <span class="toc-text">安全网 —— Agent 失败后的三层兜底</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8C%E5%B1%82%E8%AF%84%E5%88%86%E7%B3%BB%E7%BB%9F-%E2%80%94%E2%80%94-%E8%A7%84%E5%88%99-AI"><span class="toc-number">8.</span> <span class="toc-text">双层评分系统 —— 规则 + AI</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E5%B1%82%EF%BC%9A%E8%A7%84%E5%88%99%E8%AF%84%E5%88%86%EF%BC%885-%E7%BB%B4%E5%BA%A6%E5%8A%A0%E6%9D%83%EF%BC%89"><span class="toc-number">8.1.</span> <span class="toc-text">第一层：规则评分（5 维度加权）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E5%B1%82%EF%BC%9AAI-%E6%B7%B1%E5%BA%A6%E8%AF%84%E5%88%86"><span class="toc-number">8.2.</span> <span class="toc-text">第二层：AI 深度评分</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Agent-%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F"><span class="toc-number">9.</span> <span class="toc-text">Agent 记忆系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E8%BF%90%E8%A1%8C%E6%A8%A1%E5%BC%8F"><span class="toc-number">10.</span> <span class="toc-text">三种运行模式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Skills-%E6%8F%92%E4%BB%B6%E7%B3%BB%E7%BB%9F"><span class="toc-number">11.</span> <span class="toc-text">Skills 插件系统</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Skill-%E6%A0%BC%E5%BC%8F"><span class="toc-number">11.1.</span> <span class="toc-text">Skill 格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B8%90%E8%BF%9B%E5%BC%8F%E5%8A%A0%E8%BD%BD%EF%BC%883-%E9%98%B6%E6%AE%B5%EF%BC%89"><span class="toc-number">11.2.</span> <span class="toc-text">渐进式加载（3 阶段）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B1%BB%E5%9E%8B%E7%B3%BB%E7%BB%9F"><span class="toc-number">12.</span> <span class="toc-text">类型系统</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E6%AC%A1%E5%AE%8C%E6%95%B4%E7%9A%84%E6%89%A7%E8%A1%8C%E6%B5%81%E7%A8%8B"><span class="toc-number">13.</span> <span class="toc-text">一次完整的执行流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">14.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/24-%E6%89%8B%E6%90%93Agent%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0%E8%A7%A3%E6%9E%90/" title="不用框架，从零手搓一个AI Agent">不用框架，从零手搓一个AI Agent</a><time datetime="2026-04-18T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/23-Claude-Code-Plugins-%E6%8F%92%E4%BB%B6%E7%B3%BB%E7%BB%9F%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Claude Code Plugins：插件系统全解析">Claude Code Plugins：插件系统全解析</a><time datetime="2026-04-10T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/16_%E4%B8%8A%E4%B8%8B%E6%96%87%E7%AE%A1%E7%90%86%E7%B3%BB%E7%BB%9F/" title="上下文管理系统 — Claude Code 源码深度分析">上下文管理系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/15_%E6%9D%83%E9%99%90%E4%B8%8E%E5%AE%89%E5%85%A8%E7%B3%BB%E7%BB%9F/" title="权限与安全系统 — Claude Code 源码深度分析">权限与安全系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/17_%E8%AE%B0%E5%BF%86%E7%B3%BB%E7%BB%9F/" title="记忆系统 — Claude Code 源码深度分析">记忆系统 — Claude Code 源码深度分析</a><time datetime="2026-04-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
