@@ -530,9 +530,9 @@
             
             <tag> Vite </tag>
             
-            <tag> HMR </tag>
-            
             <tag> Webpack </tag>
+            
+            <tag> HMR </tag>
             
             <tag> bundle </tag>
             
@@ -1482,39 +1482,6 @@
     
     
     <entry>
-      <title>Claude Code Worktree 机制解析：AI 并行改代码如何避免互相打架</title>
-      <link href="/posts/34-Claude-Code-Worktree%E6%9C%BA%E5%88%B6%E8%A7%A3%E6%9E%90/"/>
-      <url>/posts/34-Claude-Code-Worktree%E6%9C%BA%E5%88%B6%E8%A7%A3%E6%9E%90/</url>
-      
-        <content type="html"><![CDATA[<blockquote><p><strong>前言</strong>：前面讲 <code>Agent View</code>、<code>Background Agents</code>、<code>Agent Teams</code> 和 <code>Dynamic Workflows</code> 时，反复提到一个词：<code>worktree</code>。它看起来只是 Git 的一个功能，但在 AI Coding 里非常关键——<strong>多个 Agent 同时改代码时，worktree 是避免互相覆盖的基础隔离层。</strong></p></blockquote><h2 id="为什么要专门讲-Worktree"><a href="#为什么要专门讲-Worktree" class="headerlink" title="为什么要专门讲 Worktree"></a>为什么要专门讲 Worktree</h2><p>AI Coding 进入多 Agent 阶段后，一个很现实的问题出现了：</p><blockquote><p>多个 AI 同时改一个仓库，怎么避免它们把彼此的代码改乱？</p></blockquote><p>比如你同时派了三个任务：</p><pre><code class="text">Agent A：修登录页 bugAgent B：补支付模块测试Agent C：重构用户设置页面</code></pre><p>如果它们都在同一个 working copy 里改文件，就很容易出现：</p><ul><li>A 刚改完，B 又格式化了同一批文件；</li><li>C 改了公共类型，A 的代码突然冲突；</li><li>多个 Agent 都以为自己“完成了”，但最终工作区一团乱；</li><li>你很难判断每个 Agent 到底改了什么。</li></ul><p>所以，多 Agent 并行不是只靠“多开几个 Claude”就够了，还需要文件系统层面的隔离。</p><p>这就是 worktree 的作用。</p><p>一句话：</p><blockquote><p><strong>Worktree 是 Claude Code 并行任务的代码隔离舱。</strong></p></blockquote><h2 id="Git-Worktree-到底是什么"><a href="#Git-Worktree-到底是什么" class="headerlink" title="Git Worktree 到底是什么"></a>Git Worktree 到底是什么</h2><p><code>git worktree</code> 是 Git 自带能力，不是 Claude Code 发明的。</p><p>它允许一个 Git 仓库同时拥有多个工作目录。</p><p>这些目录：</p><ul><li>共享同一份 Git 历史；</li><li>共享同一个远程仓库；</li><li>但每个目录有自己的文件树；</li><li>每个目录可以 checkout 不同分支；</li><li>每个目录的未提交修改互不影响。</li></ul><p>用图表示：</p><pre><code class="text">同一个 Git 仓库历史        │        ├── main working copy        │     └── 你当前正在开发        │        ├── worktree-feature-auth        │     └── Agent A 改登录功能        │        ├── worktree-bugfix-payment        │     └── Agent B 修支付 bug        │        └── worktree-docs-update              └── Agent C 更新文档</code></pre><p>这和 <code>git clone</code> 不一样。</p><table><thead><tr><th>方式</th><th>特点</th></tr></thead><tbody><tr><td><code>git clone</code></td><td>完整复制一个仓库，历史和对象都重新来一份</td></tr><tr><td><code>git worktree</code></td><td>共用同一份 Git 对象库，只新增工作目录</td></tr></tbody></table><p>所以 worktree 更轻，也更适合在同一台机器上做多分支并行开发。</p><h2 id="Claude-Code-为什么需要-Worktree"><a href="#Claude-Code-为什么需要-Worktree" class="headerlink" title="Claude Code 为什么需要 Worktree"></a>Claude Code 为什么需要 Worktree</h2><p>Claude Code 里的 worktree 主要解决三个问题。</p><h3 id="1-文件修改隔离"><a href="#1-文件修改隔离" class="headerlink" title="1. 文件修改隔离"></a>1. 文件修改隔离</h3><p>多个 Claude 会话同时改代码时，每个会话放到独立 worktree，就不会直接污染主工作区。</p><pre><code class="text">主工作区：保持干净  │  ├── Agent A worktree：只看 A 的 diff  ├── Agent B worktree：只看 B 的 diff  └── Agent C worktree：只看 C 的 diff</code></pre><p>这对审查很重要。</p><p>你可以逐个看：</p><pre><code class="bash">git diff</code></pre><p>决定：</p><ul><li>这个 Agent 的结果要不要保留；</li><li>要不要 cherry-pick；</li><li>要不要让它继续修；</li><li>要不要直接删除整个 worktree。</li></ul><h3 id="2-并行任务互不阻塞"><a href="#2-并行任务互不阻塞" class="headerlink" title="2. 并行任务互不阻塞"></a>2. 并行任务互不阻塞</h3><p>没有 worktree 时，你很难同时做多个改动。</p><p>因为 Git 工作区只有一份。</p><p>有 worktree 后，你可以：</p><ul><li>一个终端做功能；</li><li>一个终端修 bug；</li><li>一个后台 Agent 跑测试；</li><li>一个 Agent Teams teammate 做 review。</li></ul><p>只要任务边界清楚，它们就能并行。</p><h3 id="3-降低-AI-误操作成本"><a href="#3-降低-AI-误操作成本" class="headerlink" title="3. 降低 AI 误操作成本"></a>3. 降低 AI 误操作成本</h3><p>AI 改代码不可能 100% 正确。</p><p>Worktree 的好处是：错了也比较好丢。</p><p>如果一个 Agent 改崩了，你可以直接删除它的 worktree，而不是在主工作区里一点点回滚。</p><p>这就像给每个 Agent 一个沙盒房间。</p><p>它可以在房间里折腾，但不要一上来就在客厅拆墙。</p><h2 id="Claude-Code-里的-Worktree-怎么启动"><a href="#Claude-Code-里的-Worktree-怎么启动" class="headerlink" title="Claude Code 里的 Worktree 怎么启动"></a>Claude Code 里的 Worktree 怎么启动</h2><p>官方文档里最常见的方式是：</p><pre><code class="bash">claude --worktree feature-auth</code></pre><p>也可以用短参数：</p><pre><code class="bash">claude -w feature-auth</code></pre><p>默认会创建类似这样的目录：</p><pre><code class="text">.claude/worktrees/feature-auth/</code></pre><p>并创建分支：</p><pre><code class="text">worktree-feature-auth</code></pre><p>也就是说，下面这个命令：</p><pre><code class="bash">claude --worktree feature-auth</code></pre><p>大致表达的是：</p><pre><code class="text">我要开一个名为 feature-auth 的隔离工作区，然后在这个工作区里启动 Claude Code。</code></pre><p>如果不指定名字：</p><pre><code class="bash">claude --worktree</code></pre><p>Claude Code 会自动生成一个名字，比如：</p><pre><code class="text">bright-running-fox</code></pre><p>我个人更建议显式命名。</p><p>原因很简单：后面你要看 diff、清理目录、回忆任务时，<code>feature-auth</code> 比 <code>bright-running-fox</code> 清楚得多。</p><h2 id="在会话中进入-Worktree"><a href="#在会话中进入-Worktree" class="headerlink" title="在会话中进入 Worktree"></a>在会话中进入 Worktree</h2><p>除了启动时指定，你也可以在 Claude Code 会话里直接说：</p><pre><code class="text">work in a worktree</code></pre><p>Claude 可以通过 <code>EnterWorktree</code> 进入或创建 worktree。</p><p>这在两种情况下很有用：</p><ol><li>你一开始没打算隔离，后来发现任务会改很多文件；</li><li>Claude 准备启动 subagent 或后台任务，需要先隔离工作区。</li></ol><p>我的建议是：只要任务满足下面任意一个条件，就让它进 worktree：</p><ul><li>会改多个文件；</li><li>会跑较长时间；</li><li>可能和你当前工作冲突；</li><li>需要多个 Agent 并行；</li><li>你不确定 AI 改动质量。</li></ul><h2 id="默认目录和分支规则"><a href="#默认目录和分支规则" class="headerlink" title="默认目录和分支规则"></a>默认目录和分支规则</h2><p>Claude Code 默认把 worktree 放在：</p><pre><code class="text">&lt;repo-root&gt;/.claude/worktrees/&lt;name&gt;/</code></pre><p>默认分支名是：</p><pre><code class="text">worktree-&lt;name&gt;</code></pre><p>比如：</p><pre><code class="bash">claude --worktree fix-login</code></pre><p>会得到：</p><pre><code class="text">.claude/worktrees/fix-login/</code></pre><p>和：</p><pre><code class="text">worktree-fix-login</code></pre><p>这有一个非常重要的配套动作：你应该把 <code>.claude/worktrees/</code> 加进 <code>.gitignore</code>。</p><pre><code class="gitignore">.claude/worktrees/</code></pre><p>否则主工作区里可能看到一堆未跟踪目录，甚至误提交 worktree 内容。</p><h2 id="baseRef：Worktree-从哪里分出来"><a href="#baseRef：Worktree-从哪里分出来" class="headerlink" title="baseRef：Worktree 从哪里分出来"></a>baseRef：Worktree 从哪里分出来</h2><p>创建 worktree 时，最关键的问题是：新工作区从哪个版本开始？</p><p>Claude Code 默认倾向于从远程默认分支创建，也就是类似：</p><pre><code class="text">origin/HEAD</code></pre><p>可以理解成“从一个干净的远程主线开始”。</p><p>这适合大多数独立任务。</p><p>但有时候你希望基于当前本地分支，比如：</p><ul><li>你本地已经有一些未推送提交；</li><li>当前功能分支上还有前置改动；</li><li>worktree 任务必须基于你当前 <code>HEAD</code>。</li></ul><p>这时可以在 Settings 里配置：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;baseRef&quot;: &quot;head&quot;  &#125;&#125;</code></pre><p>官方支持的值主要是：</p><table><thead><tr><th>值</th><th>含义</th></tr></thead><tbody><tr><td><code>fresh</code></td><td>从远程默认分支创建，默认行为</td></tr><tr><td><code>head</code></td><td>从当前本地 <code>HEAD</code> 创建</td></tr></tbody></table><p>我的建议是：</p><table><thead><tr><th>场景</th><th>推荐 baseRef</th></tr></thead><tbody><tr><td>修独立 bug</td><td><code>fresh</code></td></tr><tr><td>做独立调研</td><td><code>fresh</code></td></tr><tr><td>当前分支上继续拆任务</td><td><code>head</code></td></tr><tr><td>多 Agent 基于同一组本地改动继续协作</td><td><code>head</code></td></tr></tbody></table><p>不要无脑用 <code>head</code>，因为它会把当前分支状态带进每个 worktree，可能让隔离变得不干净。</p><h2 id="从-Pull-Request-创建-Worktree"><a href="#从-Pull-Request-创建-Worktree" class="headerlink" title="从 Pull Request 创建 Worktree"></a>从 Pull Request 创建 Worktree</h2><p>官方文档还提到，可以从 GitHub PR 创建 worktree。</p><p>例如：</p><pre><code class="bash">claude --worktree &quot;#1234&quot;</code></pre><p>Claude Code 会从 <code>origin</code> 拉取：</p><pre><code class="text">pull/1234/head</code></pre><p>并创建类似目录：</p><pre><code class="text">.claude/worktrees/pr-1234</code></pre><p>也可以传完整 GitHub PR URL。</p><p>这个能力很适合 PR 审查：</p><pre><code class="bash">claude --worktree &quot;#1234&quot;</code></pre><p>然后在隔离目录里让 Claude：</p><pre><code class="text">Review this PR for security, compatibility, and missing tests.</code></pre><p>这样你不需要污染当前工作区，就能审别人的 PR。</p><h2 id="worktreeinclude：怎么把-env-复制进去"><a href="#worktreeinclude：怎么把-env-复制进去" class="headerlink" title=".worktreeinclude：怎么把 .env 复制进去"></a><code>.worktreeinclude</code>：怎么把 <code>.env</code> 复制进去</h2><p>Worktree 是一个新的 checkout。</p><p>这意味着主目录里的未跟踪文件默认不会出现。</p><p>典型例子：</p><ul><li><code>.env</code>；</li><li><code>.env.local</code>；</li><li><code>config/secrets.json</code>；</li><li>本地数据库配置；</li><li>某些 gitignored 的测试配置。</li></ul><p>如果项目启动必须依赖这些文件，就会出现一个常见问题：</p><blockquote><p>主工作区能跑，worktree 里跑不起来。</p></blockquote><p>Claude Code 支持用 <code>.worktreeinclude</code> 处理这个问题。</p><p>在项目根目录创建：</p><pre><code class="text">.worktreeinclude</code></pre><p>内容类似：</p><pre><code class="gitignore">.env.env.localconfig/local.json</code></pre><p>规则是：</p><ol><li><code>.worktreeinclude</code> 使用类似 <code>.gitignore</code> 的语法；</li><li>只有匹配 <code>.worktreeinclude</code> 的文件会被复制；</li><li>文件本身还必须是 gitignored；</li><li>已经被 Git 跟踪的文件不会因为 <code>.worktreeinclude</code> 被额外复制。</li></ol><p>这设计得比较谨慎，避免你不小心复制一堆被 Git 管理的文件。</p><p>但注意：复制 <code>.env</code> 有安全风险。</p><p>我的建议是：</p><ul><li>尽量复制 <code>.env.example</code> 或低权限本地配置；</li><li>不要把生产密钥复制到 AI 会话 worktree；</li><li>如果必须复制 <code>.env.local</code>，确保权限和内容可控；</li><li>企业环境应配合权限规则禁止读取高敏感文件。</li></ul><h2 id="Subagents-如何使用-Worktree"><a href="#Subagents-如何使用-Worktree" class="headerlink" title="Subagents 如何使用 Worktree"></a>Subagents 如何使用 Worktree</h2><p>Subagent 也可以运行在独立 worktree 里。</p><p>你可以直接告诉 Claude：</p><pre><code class="text">use worktrees for your agents</code></pre><p>也可以在自定义 subagent 里配置：</p><pre><code class="yaml">---name: feature-workerdescription: Implements isolated feature changesisolation: worktree---</code></pre><p>这样每个 subagent 可以获得自己的临时 worktree。</p><p>适合场景：</p><ul><li>多个 subagent 分别尝试不同修复方案；</li><li>reviewer 只读，worker 可写；</li><li>多个模块并行迁移；</li><li>不希望 subagent 污染主会话工作区。</li></ul><p>如果 subagent 完成后没有变更，Claude Code 可能自动清理对应 worktree。</p><p>如果有变更，则通常需要你决定是否保留。</p><h2 id="Background-Agents-和-Worktree"><a href="#Background-Agents-和-Worktree" class="headerlink" title="Background Agents 和 Worktree"></a>Background Agents 和 Worktree</h2><p>前面那篇 <code>Agent View</code> 里提到，后台 Agent 很适合跑多个独立任务。</p><p>但后台任务能安全并行，离不开 worktree。</p><p>典型结构是：</p><pre><code class="text">main checkout  │  ├── .claude/worktrees/bg-fix-test/  │     └── 后台 Agent A 修改测试  │  ├── .claude/worktrees/bg-review-pr/  │     └── 后台 Agent B 审查 PR  │  └── .claude/worktrees/bg-update-docs/        └── 后台 Agent C 更新文档</code></pre><p>如果没有 worktree，后台 Agent 同时修改文件会非常危险。</p><p>所以我建议：<strong>只要用 Background Agents 做会改代码的任务，就默认开启 worktree 隔离。</strong></p><p>Settings 示例：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;bgIsolation&quot;: &quot;worktree&quot;  &#125;&#125;</code></pre><p>如果你明确不想隔离：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;bgIsolation&quot;: &quot;none&quot;  &#125;&#125;</code></pre><p>但这个配置要非常谨慎。</p><p><code>none</code> 的意思是后台任务可能直接改当前 working copy。</p><p>除非你确定任务不会和你冲突，否则不建议这么配。</p><h2 id="大仓库里的-Worktree-优化"><a href="#大仓库里的-Worktree-优化" class="headerlink" title="大仓库里的 Worktree 优化"></a>大仓库里的 Worktree 优化</h2><p>Monorepo 里创建 worktree 可能比较重。</p><p>比如：</p><ul><li><code>node_modules</code> 很大；</li><li><code>.cache</code> 很大；</li><li>仓库目录非常多；</li><li>只需要改某个 package。</li></ul><p>Claude Code Settings 提供了一些优化方向。</p><h3 id="1-软链大目录"><a href="#1-软链大目录" class="headerlink" title="1. 软链大目录"></a>1. 软链大目录</h3><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;symlinkDirectories&quot;: [&quot;node_modules&quot;, &quot;.cache&quot;]  &#125;&#125;</code></pre><p>这样新 worktree 可以复用主目录里的大目录，避免重复安装依赖。</p><p>但注意：软链目录如果被 Agent 修改，可能影响主工作区。</p><p>所以适合：</p><ul><li>依赖目录；</li><li>构建缓存；</li><li>只读或可重新生成目录。</li></ul><p>不适合：</p><ul><li>源码目录；</li><li>会被任务写入的业务目录；</li><li>包含敏感数据的目录。</li></ul><h3 id="2-稀疏-checkout"><a href="#2-稀疏-checkout" class="headerlink" title="2. 稀疏 checkout"></a>2. 稀疏 checkout</h3><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;sparsePaths&quot;: [&quot;packages/web&quot;, &quot;shared/utils&quot;]  &#125;&#125;</code></pre><p>这适合超大仓库。</p><p>比如任务只需要 <code>packages/web</code>，那就没必要 checkout 整个 monorepo。</p><p>但缺点是：Claude 可能看不到某些相关文件。</p><p>所以使用 sparse checkout 前，要确认任务边界真的清楚。</p><h2 id="Worktree-的清理机制"><a href="#Worktree-的清理机制" class="headerlink" title="Worktree 的清理机制"></a>Worktree 的清理机制</h2><p>Worktree 最大的坑之一是：创建容易，清理容易忘。</p><p>Claude Code 会根据状态做不同处理。</p><h3 id="没有变更"><a href="#没有变更" class="headerlink" title="没有变更"></a>没有变更</h3><p>如果 worktree 里：</p><ul><li>没有未提交修改；</li><li>没有未跟踪文件；</li><li>没有新提交；</li></ul><p>退出时通常可以自动清理。</p><h3 id="有变更"><a href="#有变更" class="headerlink" title="有变更"></a>有变更</h3><p>如果存在：</p><ul><li>未提交修改；</li><li>未跟踪文件；</li><li>新提交；</li></ul><p>Claude Code 会提示你：保留还是删除。</p><p>如果删除，里面的改动可能会丢。</p><p>这点要非常小心。</p><h3 id="非交互模式"><a href="#非交互模式" class="headerlink" title="非交互模式"></a>非交互模式</h3><p>如果你这样用：</p><pre><code class="bash">claude --worktree fix-test -p &quot;run tests and fix failures&quot;</code></pre><p>因为是非交互模式，退出时没有用户确认，worktree 通常不会自动清理。</p><p>需要你后续自己处理。</p><p>手动查看：</p><pre><code class="bash">git worktree list</code></pre><p>手动删除：</p><pre><code class="bash">git worktree remove .claude/worktrees/fix-test</code></pre><p>删除前最好先确认：</p><pre><code class="bash">cd .claude/worktrees/fix-testgit statusgit diff</code></pre><p>不要在没看 diff 的情况下直接删。</p><h2 id="手动使用-Git-Worktree"><a href="#手动使用-Git-Worktree" class="headerlink" title="手动使用 Git Worktree"></a>手动使用 Git Worktree</h2><p>你也可以不用 Claude Code 的 <code>--worktree</code>，直接手动管理 Git worktree。</p><p>创建新分支 worktree：</p><pre><code class="bash">git worktree add ../project-feature-a -b feature-a</code></pre><p>基于已有分支创建：</p><pre><code class="bash">git worktree add ../project-bugfix bugfix-123</code></pre><p>进入后启动 Claude：</p><pre><code class="bash">cd ../project-feature-aclaude</code></pre><p>这种方式适合你想完全控制目录结构和分支命名。</p><p>比如你不想放在 <code>.claude/worktrees/</code> 下面，而是想放到同级目录：</p><pre><code class="text">my-app/my-app-feature-a/my-app-bugfix-123/</code></pre><p>手动方式更灵活，但也更需要你自己清理。</p><h2 id="非-Git-项目怎么办"><a href="#非-Git-项目怎么办" class="headerlink" title="非 Git 项目怎么办"></a>非 Git 项目怎么办</h2><p>Claude Code 默认使用 Git worktree。</p><p>如果你的项目不是 Git，而是：</p><ul><li>SVN；</li><li>Perforce；</li><li>Mercurial；</li><li>内部版本控制系统；</li></ul><p>官方文档提到可以用 Hooks 自定义：</p><ul><li><code>WorktreeCreate</code>；</li><li><code>WorktreeRemove</code>。</li></ul><p>也就是说，你可以让 hook 自己创建一个隔离目录，然后把路径交给 Claude Code 使用。</p><p>但注意：一旦自定义 <code>WorktreeCreate</code>，默认 Git worktree 逻辑就被替代，<code>.worktreeinclude</code> 也不会自动处理。</p><p>这类场景偏企业内部工程化，不建议个人用户一开始就折腾。</p><h2 id="使用-Worktree-的推荐流程"><a href="#使用-Worktree-的推荐流程" class="headerlink" title="使用 Worktree 的推荐流程"></a>使用 Worktree 的推荐流程</h2><p>如果我让 Claude Code 做一个可能修改多文件的任务，我会这样做：</p><h3 id="第一步：确保主工作区干净"><a href="#第一步：确保主工作区干净" class="headerlink" title="第一步：确保主工作区干净"></a>第一步：确保主工作区干净</h3><pre><code class="bash">git status</code></pre><p>如果主工作区有未提交修改，先决定：</p><ul><li>commit；</li><li>stash；</li><li>或者配置 <code>baseRef: head</code>。</li></ul><p>不要在一个混乱的主工作区上开多个 worktree。</p><h3 id="第二步：创建明确命名的-worktree"><a href="#第二步：创建明确命名的-worktree" class="headerlink" title="第二步：创建明确命名的 worktree"></a>第二步：创建明确命名的 worktree</h3><pre><code class="bash">claude --worktree fix-login-validation</code></pre><p>名字要表达任务，而不是随便取。</p><h3 id="第三步：让-Claude-在-worktree-里完成任务"><a href="#第三步：让-Claude-在-worktree-里完成任务" class="headerlink" title="第三步：让 Claude 在 worktree 里完成任务"></a>第三步：让 Claude 在 worktree 里完成任务</h3><pre><code class="text">Fix the login validation bug. Keep the public API unchanged. Run related tests only.</code></pre><h3 id="第四步：审查-diff"><a href="#第四步：审查-diff" class="headerlink" title="第四步：审查 diff"></a>第四步：审查 diff</h3><pre><code class="bash">git statusgit diff</code></pre><p>如果满意：</p><pre><code class="bash">git add .git commit -m &quot;fix login validation&quot;</code></pre><p>如果不满意：</p><pre><code class="bash">git worktree remove .claude/worktrees/fix-login-validation</code></pre><p>删除前确认没有要保留的内容。</p><h2 id="和分支、stash、clone-怎么选"><a href="#和分支、stash、clone-怎么选" class="headerlink" title="和分支、stash、clone 怎么选"></a>和分支、stash、clone 怎么选</h2><p>Worktree 不是唯一方案。</p><table><thead><tr><th>方式</th><th>适合场景</th><th>缺点</th></tr></thead><tbody><tr><td>Git branch</td><td>单任务正常开发</td><td>同一时间只有一个 working copy</td></tr><tr><td>Git stash</td><td>临时保存现场</td><td>多任务切换复杂，容易忘</td></tr><tr><td>Git clone</td><td>完全隔离</td><td>占空间，初始化慢</td></tr><tr><td>Git worktree</td><td>同仓库多工作区并行</td><td>需要管理多个目录和分支</td></tr></tbody></table><p>我的判断是：</p><ul><li>一个人做一个任务：普通 branch 就够；</li><li>人工频繁切换：stash 可以临时用；</li><li>完全隔离环境：clone；</li><li>多 Agent 并行改同一仓库：worktree。</li></ul><p>也就是说，worktree 是为并行而生的。</p><h2 id="使用时最容易踩的坑"><a href="#使用时最容易踩的坑" class="headerlink" title="使用时最容易踩的坑"></a>使用时最容易踩的坑</h2><h3 id="坑一：忘记信任-workspace"><a href="#坑一：忘记信任-workspace" class="headerlink" title="坑一：忘记信任 workspace"></a>坑一：忘记信任 workspace</h3><p>官方文档提到，第一次在某个目录使用 <code>--worktree</code> 前，需要先运行一次普通 <code>claude</code>，接受 workspace trust。</p><p>否则直接：</p><pre><code class="bash">claude --worktree feature-a</code></pre><p>可能会报错。</p><p>解决方式：</p><pre><code class="bash">claude</code></pre><p>先完成信任，再使用 worktree。</p><h3 id="坑二：忘记把-claude-worktrees-加到-gitignore"><a href="#坑二：忘记把-claude-worktrees-加到-gitignore" class="headerlink" title="坑二：忘记把 .claude/worktrees/ 加到 .gitignore"></a>坑二：忘记把 <code>.claude/worktrees/</code> 加到 <code>.gitignore</code></h3><p>如果没加，主工作区可能出现大量未跟踪内容。</p><p>建议：</p><pre><code class="gitignore">.claude/worktrees/</code></pre><p>这应该成为项目接入 Claude Code worktree 的标准动作。</p><h3 id="坑三：-env-没复制导致项目跑不起来"><a href="#坑三：-env-没复制导致项目跑不起来" class="headerlink" title="坑三：.env 没复制导致项目跑不起来"></a>坑三：<code>.env</code> 没复制导致项目跑不起来</h3><p>现象：主工作区能启动，worktree 里启动失败。</p><p>原因：<code>.env.local</code> 是 gitignored 文件，不会自动出现在新 checkout。</p><p>解决方式：使用 <code>.worktreeinclude</code>：</p><pre><code class="gitignore">.env.local</code></pre><p>但不要无脑复制生产密钥。</p><h3 id="坑四：误删有改动的-worktree"><a href="#坑四：误删有改动的-worktree" class="headerlink" title="坑四：误删有改动的 worktree"></a>坑四：误删有改动的 worktree</h3><p>删除 worktree 前一定看：</p><pre><code class="bash">git statusgit diff</code></pre><p>尤其是 Agent View 里删除后台 session 时，要确认相关 worktree 是否有未保存修改。</p><h3 id="坑五：多个-worktree-基于不同起点，最后合并困难"><a href="#坑五：多个-worktree-基于不同起点，最后合并困难" class="headerlink" title="坑五：多个 worktree 基于不同起点，最后合并困难"></a>坑五：多个 worktree 基于不同起点，最后合并困难</h3><p>比如有的基于远程 main，有的基于本地 feature 分支，有的基于 PR。</p><p>最后合并时容易出现上下文不一致。</p><p>解决方式：任务开始前统一 baseRef 策略。</p><h2 id="我的实践建议"><a href="#我的实践建议" class="headerlink" title="我的实践建议"></a>我的实践建议</h2><h3 id="个人使用"><a href="#个人使用" class="headerlink" title="个人使用"></a>个人使用</h3><p>个人开发者可以先记住三条：</p><ol><li>多文件修改用 <code>claude --worktree &lt;name&gt;</code>；</li><li><code>.claude/worktrees/</code> 加进 <code>.gitignore</code>；</li><li>删除前先看 <code>git diff</code>。</li></ol><p>这三条能避开 80% 的坑。</p><h3 id="团队使用"><a href="#团队使用" class="headerlink" title="团队使用"></a>团队使用</h3><p>团队项目建议加一个最小配置：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;bgIsolation&quot;: &quot;worktree&quot;,    &quot;baseRef&quot;: &quot;fresh&quot;,    &quot;symlinkDirectories&quot;: [&quot;node_modules&quot;]  &#125;&#125;</code></pre><p>再加 <code>.gitignore</code>：</p><pre><code class="gitignore">.claude/worktrees/</code></pre><p>如果项目依赖本地配置，再加 <code>.worktreeinclude</code>：</p><pre><code class="gitignore">.env.local</code></pre><h3 id="多-Agent-使用"><a href="#多-Agent-使用" class="headerlink" title="多 Agent 使用"></a>多 Agent 使用</h3><p>如果你要用 Agent View、Agent Teams 或 Dynamic Workflows，我建议默认启用 worktree 隔离。</p><p>多 Agent 最大的问题不是“能不能完成”，而是“完成之后你能不能安全验收”。</p><p>Worktree 正是为了让你有独立 diff、独立回滚点、独立审查边界。</p><h2 id="Worktree-背后的意义"><a href="#Worktree-背后的意义" class="headerlink" title="Worktree 背后的意义"></a>Worktree 背后的意义</h2><p>Worktree 看起来是一个 Git 小技巧，但放到 AI Coding 里，它的意义很大。</p><p>以前我们写代码，Git 分支主要服务“人类开发者”：</p><pre><code class="text">一个人切一个分支，完成后合并</code></pre><p>现在 AI Agent 也开始成为“并行开发者”。</p><p>那就需要给每个 Agent 分配自己的工作空间：</p><pre><code class="text">一个 Agent 一个 worktree，完成后人工验收</code></pre><p>这其实是 AI Coding 工程化的一个重要变化：</p><blockquote><p><strong>未来不是一个 AI 在一个工作区里帮你改代码，而是一组 AI 在多个隔离工作区里并行提出候选改动。人类负责选择、合并和治理。</strong></p></blockquote><p>所以 worktree 不是边角料，它是多 Agent 编程的基础设施。</p><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol><li>Worktree 是 Git 的多工作目录机制，Claude Code 用它隔离多个 AI 会话的文件修改。</li><li><code>claude --worktree &lt;name&gt;</code> 会在 <code>.claude/worktrees/&lt;name&gt;/</code> 下创建隔离工作区，并启动 Claude Code。</li><li><code>worktree.baseRef</code> 决定新 worktree 从远程默认分支还是当前本地 <code>HEAD</code> 创建。</li><li><code>.worktreeinclude</code> 用于复制 <code>.env.local</code> 等 gitignored 本地配置，但要注意密钥风险。</li><li>Background Agents、Subagents、Agent Teams 和 Dynamic Workflows 都可以从 worktree 隔离中受益。</li><li>使用 worktree 最重要的三件事：加 <code>.gitignore</code>、统一 baseRef、删除前看 diff。</li></ol>]]></content>
-      
-      
-      <categories>
-          
-          <category> AI相关 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> AI </tag>
-            
-            <tag> Claude Code </tag>
-            
-            <tag> 多Agent </tag>
-            
-            <tag> Worktree </tag>
-            
-            <tag> Git </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层</title>
       <link href="/posts/31-Claude-Code-Settings%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F%E5%85%A8%E8%A7%A3%E6%9E%90/"/>
       <url>/posts/31-Claude-Code-Settings%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F%E5%85%A8%E8%A7%A3%E6%9E%90/</url>
@@ -1548,6 +1515,39 @@
     
     
     <entry>
+      <title>Claude Code Worktree 机制解析：AI 并行改代码如何避免互相打架</title>
+      <link href="/posts/34-Claude-Code-Worktree%E6%9C%BA%E5%88%B6%E8%A7%A3%E6%9E%90/"/>
+      <url>/posts/34-Claude-Code-Worktree%E6%9C%BA%E5%88%B6%E8%A7%A3%E6%9E%90/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p><strong>前言</strong>：前面讲 <code>Agent View</code>、<code>Background Agents</code>、<code>Agent Teams</code> 和 <code>Dynamic Workflows</code> 时，反复提到一个词：<code>worktree</code>。它看起来只是 Git 的一个功能，但在 AI Coding 里非常关键——<strong>多个 Agent 同时改代码时，worktree 是避免互相覆盖的基础隔离层。</strong></p></blockquote><h2 id="为什么要专门讲-Worktree"><a href="#为什么要专门讲-Worktree" class="headerlink" title="为什么要专门讲 Worktree"></a>为什么要专门讲 Worktree</h2><p>AI Coding 进入多 Agent 阶段后，一个很现实的问题出现了：</p><blockquote><p>多个 AI 同时改一个仓库，怎么避免它们把彼此的代码改乱？</p></blockquote><p>比如你同时派了三个任务：</p><pre><code class="text">Agent A：修登录页 bugAgent B：补支付模块测试Agent C：重构用户设置页面</code></pre><p>如果它们都在同一个 working copy 里改文件，就很容易出现：</p><ul><li>A 刚改完，B 又格式化了同一批文件；</li><li>C 改了公共类型，A 的代码突然冲突；</li><li>多个 Agent 都以为自己“完成了”，但最终工作区一团乱；</li><li>你很难判断每个 Agent 到底改了什么。</li></ul><p>所以，多 Agent 并行不是只靠“多开几个 Claude”就够了，还需要文件系统层面的隔离。</p><p>这就是 worktree 的作用。</p><p>一句话：</p><blockquote><p><strong>Worktree 是 Claude Code 并行任务的代码隔离舱。</strong></p></blockquote><h2 id="Git-Worktree-到底是什么"><a href="#Git-Worktree-到底是什么" class="headerlink" title="Git Worktree 到底是什么"></a>Git Worktree 到底是什么</h2><p><code>git worktree</code> 是 Git 自带能力，不是 Claude Code 发明的。</p><p>它允许一个 Git 仓库同时拥有多个工作目录。</p><p>这些目录：</p><ul><li>共享同一份 Git 历史；</li><li>共享同一个远程仓库；</li><li>但每个目录有自己的文件树；</li><li>每个目录可以 checkout 不同分支；</li><li>每个目录的未提交修改互不影响。</li></ul><p>用图表示：</p><pre><code class="text">同一个 Git 仓库历史        │        ├── main working copy        │     └── 你当前正在开发        │        ├── worktree-feature-auth        │     └── Agent A 改登录功能        │        ├── worktree-bugfix-payment        │     └── Agent B 修支付 bug        │        └── worktree-docs-update              └── Agent C 更新文档</code></pre><p>这和 <code>git clone</code> 不一样。</p><table><thead><tr><th>方式</th><th>特点</th></tr></thead><tbody><tr><td><code>git clone</code></td><td>完整复制一个仓库，历史和对象都重新来一份</td></tr><tr><td><code>git worktree</code></td><td>共用同一份 Git 对象库，只新增工作目录</td></tr></tbody></table><p>所以 worktree 更轻，也更适合在同一台机器上做多分支并行开发。</p><h2 id="Claude-Code-为什么需要-Worktree"><a href="#Claude-Code-为什么需要-Worktree" class="headerlink" title="Claude Code 为什么需要 Worktree"></a>Claude Code 为什么需要 Worktree</h2><p>Claude Code 里的 worktree 主要解决三个问题。</p><h3 id="1-文件修改隔离"><a href="#1-文件修改隔离" class="headerlink" title="1. 文件修改隔离"></a>1. 文件修改隔离</h3><p>多个 Claude 会话同时改代码时，每个会话放到独立 worktree，就不会直接污染主工作区。</p><pre><code class="text">主工作区：保持干净  │  ├── Agent A worktree：只看 A 的 diff  ├── Agent B worktree：只看 B 的 diff  └── Agent C worktree：只看 C 的 diff</code></pre><p>这对审查很重要。</p><p>你可以逐个看：</p><pre><code class="bash">git diff</code></pre><p>决定：</p><ul><li>这个 Agent 的结果要不要保留；</li><li>要不要 cherry-pick；</li><li>要不要让它继续修；</li><li>要不要直接删除整个 worktree。</li></ul><h3 id="2-并行任务互不阻塞"><a href="#2-并行任务互不阻塞" class="headerlink" title="2. 并行任务互不阻塞"></a>2. 并行任务互不阻塞</h3><p>没有 worktree 时，你很难同时做多个改动。</p><p>因为 Git 工作区只有一份。</p><p>有 worktree 后，你可以：</p><ul><li>一个终端做功能；</li><li>一个终端修 bug；</li><li>一个后台 Agent 跑测试；</li><li>一个 Agent Teams teammate 做 review。</li></ul><p>只要任务边界清楚，它们就能并行。</p><h3 id="3-降低-AI-误操作成本"><a href="#3-降低-AI-误操作成本" class="headerlink" title="3. 降低 AI 误操作成本"></a>3. 降低 AI 误操作成本</h3><p>AI 改代码不可能 100% 正确。</p><p>Worktree 的好处是：错了也比较好丢。</p><p>如果一个 Agent 改崩了，你可以直接删除它的 worktree，而不是在主工作区里一点点回滚。</p><p>这就像给每个 Agent 一个沙盒房间。</p><p>它可以在房间里折腾，但不要一上来就在客厅拆墙。</p><h2 id="Claude-Code-里的-Worktree-怎么启动"><a href="#Claude-Code-里的-Worktree-怎么启动" class="headerlink" title="Claude Code 里的 Worktree 怎么启动"></a>Claude Code 里的 Worktree 怎么启动</h2><p>官方文档里最常见的方式是：</p><pre><code class="bash">claude --worktree feature-auth</code></pre><p>也可以用短参数：</p><pre><code class="bash">claude -w feature-auth</code></pre><p>默认会创建类似这样的目录：</p><pre><code class="text">.claude/worktrees/feature-auth/</code></pre><p>并创建分支：</p><pre><code class="text">worktree-feature-auth</code></pre><p>也就是说，下面这个命令：</p><pre><code class="bash">claude --worktree feature-auth</code></pre><p>大致表达的是：</p><pre><code class="text">我要开一个名为 feature-auth 的隔离工作区，然后在这个工作区里启动 Claude Code。</code></pre><p>如果不指定名字：</p><pre><code class="bash">claude --worktree</code></pre><p>Claude Code 会自动生成一个名字，比如：</p><pre><code class="text">bright-running-fox</code></pre><p>我个人更建议显式命名。</p><p>原因很简单：后面你要看 diff、清理目录、回忆任务时，<code>feature-auth</code> 比 <code>bright-running-fox</code> 清楚得多。</p><h2 id="在会话中进入-Worktree"><a href="#在会话中进入-Worktree" class="headerlink" title="在会话中进入 Worktree"></a>在会话中进入 Worktree</h2><p>除了启动时指定，你也可以在 Claude Code 会话里直接说：</p><pre><code class="text">work in a worktree</code></pre><p>Claude 可以通过 <code>EnterWorktree</code> 进入或创建 worktree。</p><p>这在两种情况下很有用：</p><ol><li>你一开始没打算隔离，后来发现任务会改很多文件；</li><li>Claude 准备启动 subagent 或后台任务，需要先隔离工作区。</li></ol><p>我的建议是：只要任务满足下面任意一个条件，就让它进 worktree：</p><ul><li>会改多个文件；</li><li>会跑较长时间；</li><li>可能和你当前工作冲突；</li><li>需要多个 Agent 并行；</li><li>你不确定 AI 改动质量。</li></ul><h2 id="默认目录和分支规则"><a href="#默认目录和分支规则" class="headerlink" title="默认目录和分支规则"></a>默认目录和分支规则</h2><p>Claude Code 默认把 worktree 放在：</p><pre><code class="text">&lt;repo-root&gt;/.claude/worktrees/&lt;name&gt;/</code></pre><p>默认分支名是：</p><pre><code class="text">worktree-&lt;name&gt;</code></pre><p>比如：</p><pre><code class="bash">claude --worktree fix-login</code></pre><p>会得到：</p><pre><code class="text">.claude/worktrees/fix-login/</code></pre><p>和：</p><pre><code class="text">worktree-fix-login</code></pre><p>这有一个非常重要的配套动作：你应该把 <code>.claude/worktrees/</code> 加进 <code>.gitignore</code>。</p><pre><code class="gitignore">.claude/worktrees/</code></pre><p>否则主工作区里可能看到一堆未跟踪目录，甚至误提交 worktree 内容。</p><h2 id="baseRef：Worktree-从哪里分出来"><a href="#baseRef：Worktree-从哪里分出来" class="headerlink" title="baseRef：Worktree 从哪里分出来"></a>baseRef：Worktree 从哪里分出来</h2><p>创建 worktree 时，最关键的问题是：新工作区从哪个版本开始？</p><p>Claude Code 默认倾向于从远程默认分支创建，也就是类似：</p><pre><code class="text">origin/HEAD</code></pre><p>可以理解成“从一个干净的远程主线开始”。</p><p>这适合大多数独立任务。</p><p>但有时候你希望基于当前本地分支，比如：</p><ul><li>你本地已经有一些未推送提交；</li><li>当前功能分支上还有前置改动；</li><li>worktree 任务必须基于你当前 <code>HEAD</code>。</li></ul><p>这时可以在 Settings 里配置：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;baseRef&quot;: &quot;head&quot;  &#125;&#125;</code></pre><p>官方支持的值主要是：</p><table><thead><tr><th>值</th><th>含义</th></tr></thead><tbody><tr><td><code>fresh</code></td><td>从远程默认分支创建，默认行为</td></tr><tr><td><code>head</code></td><td>从当前本地 <code>HEAD</code> 创建</td></tr></tbody></table><p>我的建议是：</p><table><thead><tr><th>场景</th><th>推荐 baseRef</th></tr></thead><tbody><tr><td>修独立 bug</td><td><code>fresh</code></td></tr><tr><td>做独立调研</td><td><code>fresh</code></td></tr><tr><td>当前分支上继续拆任务</td><td><code>head</code></td></tr><tr><td>多 Agent 基于同一组本地改动继续协作</td><td><code>head</code></td></tr></tbody></table><p>不要无脑用 <code>head</code>，因为它会把当前分支状态带进每个 worktree，可能让隔离变得不干净。</p><h2 id="从-Pull-Request-创建-Worktree"><a href="#从-Pull-Request-创建-Worktree" class="headerlink" title="从 Pull Request 创建 Worktree"></a>从 Pull Request 创建 Worktree</h2><p>官方文档还提到，可以从 GitHub PR 创建 worktree。</p><p>例如：</p><pre><code class="bash">claude --worktree &quot;#1234&quot;</code></pre><p>Claude Code 会从 <code>origin</code> 拉取：</p><pre><code class="text">pull/1234/head</code></pre><p>并创建类似目录：</p><pre><code class="text">.claude/worktrees/pr-1234</code></pre><p>也可以传完整 GitHub PR URL。</p><p>这个能力很适合 PR 审查：</p><pre><code class="bash">claude --worktree &quot;#1234&quot;</code></pre><p>然后在隔离目录里让 Claude：</p><pre><code class="text">Review this PR for security, compatibility, and missing tests.</code></pre><p>这样你不需要污染当前工作区，就能审别人的 PR。</p><h2 id="worktreeinclude：怎么把-env-复制进去"><a href="#worktreeinclude：怎么把-env-复制进去" class="headerlink" title=".worktreeinclude：怎么把 .env 复制进去"></a><code>.worktreeinclude</code>：怎么把 <code>.env</code> 复制进去</h2><p>Worktree 是一个新的 checkout。</p><p>这意味着主目录里的未跟踪文件默认不会出现。</p><p>典型例子：</p><ul><li><code>.env</code>；</li><li><code>.env.local</code>；</li><li><code>config/secrets.json</code>；</li><li>本地数据库配置；</li><li>某些 gitignored 的测试配置。</li></ul><p>如果项目启动必须依赖这些文件，就会出现一个常见问题：</p><blockquote><p>主工作区能跑，worktree 里跑不起来。</p></blockquote><p>Claude Code 支持用 <code>.worktreeinclude</code> 处理这个问题。</p><p>在项目根目录创建：</p><pre><code class="text">.worktreeinclude</code></pre><p>内容类似：</p><pre><code class="gitignore">.env.env.localconfig/local.json</code></pre><p>规则是：</p><ol><li><code>.worktreeinclude</code> 使用类似 <code>.gitignore</code> 的语法；</li><li>只有匹配 <code>.worktreeinclude</code> 的文件会被复制；</li><li>文件本身还必须是 gitignored；</li><li>已经被 Git 跟踪的文件不会因为 <code>.worktreeinclude</code> 被额外复制。</li></ol><p>这设计得比较谨慎，避免你不小心复制一堆被 Git 管理的文件。</p><p>但注意：复制 <code>.env</code> 有安全风险。</p><p>我的建议是：</p><ul><li>尽量复制 <code>.env.example</code> 或低权限本地配置；</li><li>不要把生产密钥复制到 AI 会话 worktree；</li><li>如果必须复制 <code>.env.local</code>，确保权限和内容可控；</li><li>企业环境应配合权限规则禁止读取高敏感文件。</li></ul><h2 id="Subagents-如何使用-Worktree"><a href="#Subagents-如何使用-Worktree" class="headerlink" title="Subagents 如何使用 Worktree"></a>Subagents 如何使用 Worktree</h2><p>Subagent 也可以运行在独立 worktree 里。</p><p>你可以直接告诉 Claude：</p><pre><code class="text">use worktrees for your agents</code></pre><p>也可以在自定义 subagent 里配置：</p><pre><code class="yaml">---name: feature-workerdescription: Implements isolated feature changesisolation: worktree---</code></pre><p>这样每个 subagent 可以获得自己的临时 worktree。</p><p>适合场景：</p><ul><li>多个 subagent 分别尝试不同修复方案；</li><li>reviewer 只读，worker 可写；</li><li>多个模块并行迁移；</li><li>不希望 subagent 污染主会话工作区。</li></ul><p>如果 subagent 完成后没有变更，Claude Code 可能自动清理对应 worktree。</p><p>如果有变更，则通常需要你决定是否保留。</p><h2 id="Background-Agents-和-Worktree"><a href="#Background-Agents-和-Worktree" class="headerlink" title="Background Agents 和 Worktree"></a>Background Agents 和 Worktree</h2><p>前面那篇 <code>Agent View</code> 里提到，后台 Agent 很适合跑多个独立任务。</p><p>但后台任务能安全并行，离不开 worktree。</p><p>典型结构是：</p><pre><code class="text">main checkout  │  ├── .claude/worktrees/bg-fix-test/  │     └── 后台 Agent A 修改测试  │  ├── .claude/worktrees/bg-review-pr/  │     └── 后台 Agent B 审查 PR  │  └── .claude/worktrees/bg-update-docs/        └── 后台 Agent C 更新文档</code></pre><p>如果没有 worktree，后台 Agent 同时修改文件会非常危险。</p><p>所以我建议：<strong>只要用 Background Agents 做会改代码的任务，就默认开启 worktree 隔离。</strong></p><p>Settings 示例：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;bgIsolation&quot;: &quot;worktree&quot;  &#125;&#125;</code></pre><p>如果你明确不想隔离：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;bgIsolation&quot;: &quot;none&quot;  &#125;&#125;</code></pre><p>但这个配置要非常谨慎。</p><p><code>none</code> 的意思是后台任务可能直接改当前 working copy。</p><p>除非你确定任务不会和你冲突，否则不建议这么配。</p><h2 id="大仓库里的-Worktree-优化"><a href="#大仓库里的-Worktree-优化" class="headerlink" title="大仓库里的 Worktree 优化"></a>大仓库里的 Worktree 优化</h2><p>Monorepo 里创建 worktree 可能比较重。</p><p>比如：</p><ul><li><code>node_modules</code> 很大；</li><li><code>.cache</code> 很大；</li><li>仓库目录非常多；</li><li>只需要改某个 package。</li></ul><p>Claude Code Settings 提供了一些优化方向。</p><h3 id="1-软链大目录"><a href="#1-软链大目录" class="headerlink" title="1. 软链大目录"></a>1. 软链大目录</h3><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;symlinkDirectories&quot;: [&quot;node_modules&quot;, &quot;.cache&quot;]  &#125;&#125;</code></pre><p>这样新 worktree 可以复用主目录里的大目录，避免重复安装依赖。</p><p>但注意：软链目录如果被 Agent 修改，可能影响主工作区。</p><p>所以适合：</p><ul><li>依赖目录；</li><li>构建缓存；</li><li>只读或可重新生成目录。</li></ul><p>不适合：</p><ul><li>源码目录；</li><li>会被任务写入的业务目录；</li><li>包含敏感数据的目录。</li></ul><h3 id="2-稀疏-checkout"><a href="#2-稀疏-checkout" class="headerlink" title="2. 稀疏 checkout"></a>2. 稀疏 checkout</h3><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;sparsePaths&quot;: [&quot;packages/web&quot;, &quot;shared/utils&quot;]  &#125;&#125;</code></pre><p>这适合超大仓库。</p><p>比如任务只需要 <code>packages/web</code>，那就没必要 checkout 整个 monorepo。</p><p>但缺点是：Claude 可能看不到某些相关文件。</p><p>所以使用 sparse checkout 前，要确认任务边界真的清楚。</p><h2 id="Worktree-的清理机制"><a href="#Worktree-的清理机制" class="headerlink" title="Worktree 的清理机制"></a>Worktree 的清理机制</h2><p>Worktree 最大的坑之一是：创建容易，清理容易忘。</p><p>Claude Code 会根据状态做不同处理。</p><h3 id="没有变更"><a href="#没有变更" class="headerlink" title="没有变更"></a>没有变更</h3><p>如果 worktree 里：</p><ul><li>没有未提交修改；</li><li>没有未跟踪文件；</li><li>没有新提交；</li></ul><p>退出时通常可以自动清理。</p><h3 id="有变更"><a href="#有变更" class="headerlink" title="有变更"></a>有变更</h3><p>如果存在：</p><ul><li>未提交修改；</li><li>未跟踪文件；</li><li>新提交；</li></ul><p>Claude Code 会提示你：保留还是删除。</p><p>如果删除，里面的改动可能会丢。</p><p>这点要非常小心。</p><h3 id="非交互模式"><a href="#非交互模式" class="headerlink" title="非交互模式"></a>非交互模式</h3><p>如果你这样用：</p><pre><code class="bash">claude --worktree fix-test -p &quot;run tests and fix failures&quot;</code></pre><p>因为是非交互模式，退出时没有用户确认，worktree 通常不会自动清理。</p><p>需要你后续自己处理。</p><p>手动查看：</p><pre><code class="bash">git worktree list</code></pre><p>手动删除：</p><pre><code class="bash">git worktree remove .claude/worktrees/fix-test</code></pre><p>删除前最好先确认：</p><pre><code class="bash">cd .claude/worktrees/fix-testgit statusgit diff</code></pre><p>不要在没看 diff 的情况下直接删。</p><h2 id="手动使用-Git-Worktree"><a href="#手动使用-Git-Worktree" class="headerlink" title="手动使用 Git Worktree"></a>手动使用 Git Worktree</h2><p>你也可以不用 Claude Code 的 <code>--worktree</code>，直接手动管理 Git worktree。</p><p>创建新分支 worktree：</p><pre><code class="bash">git worktree add ../project-feature-a -b feature-a</code></pre><p>基于已有分支创建：</p><pre><code class="bash">git worktree add ../project-bugfix bugfix-123</code></pre><p>进入后启动 Claude：</p><pre><code class="bash">cd ../project-feature-aclaude</code></pre><p>这种方式适合你想完全控制目录结构和分支命名。</p><p>比如你不想放在 <code>.claude/worktrees/</code> 下面，而是想放到同级目录：</p><pre><code class="text">my-app/my-app-feature-a/my-app-bugfix-123/</code></pre><p>手动方式更灵活，但也更需要你自己清理。</p><h2 id="非-Git-项目怎么办"><a href="#非-Git-项目怎么办" class="headerlink" title="非 Git 项目怎么办"></a>非 Git 项目怎么办</h2><p>Claude Code 默认使用 Git worktree。</p><p>如果你的项目不是 Git，而是：</p><ul><li>SVN；</li><li>Perforce；</li><li>Mercurial；</li><li>内部版本控制系统；</li></ul><p>官方文档提到可以用 Hooks 自定义：</p><ul><li><code>WorktreeCreate</code>；</li><li><code>WorktreeRemove</code>。</li></ul><p>也就是说，你可以让 hook 自己创建一个隔离目录，然后把路径交给 Claude Code 使用。</p><p>但注意：一旦自定义 <code>WorktreeCreate</code>，默认 Git worktree 逻辑就被替代，<code>.worktreeinclude</code> 也不会自动处理。</p><p>这类场景偏企业内部工程化，不建议个人用户一开始就折腾。</p><h2 id="使用-Worktree-的推荐流程"><a href="#使用-Worktree-的推荐流程" class="headerlink" title="使用 Worktree 的推荐流程"></a>使用 Worktree 的推荐流程</h2><p>如果我让 Claude Code 做一个可能修改多文件的任务，我会这样做：</p><h3 id="第一步：确保主工作区干净"><a href="#第一步：确保主工作区干净" class="headerlink" title="第一步：确保主工作区干净"></a>第一步：确保主工作区干净</h3><pre><code class="bash">git status</code></pre><p>如果主工作区有未提交修改，先决定：</p><ul><li>commit；</li><li>stash；</li><li>或者配置 <code>baseRef: head</code>。</li></ul><p>不要在一个混乱的主工作区上开多个 worktree。</p><h3 id="第二步：创建明确命名的-worktree"><a href="#第二步：创建明确命名的-worktree" class="headerlink" title="第二步：创建明确命名的 worktree"></a>第二步：创建明确命名的 worktree</h3><pre><code class="bash">claude --worktree fix-login-validation</code></pre><p>名字要表达任务，而不是随便取。</p><h3 id="第三步：让-Claude-在-worktree-里完成任务"><a href="#第三步：让-Claude-在-worktree-里完成任务" class="headerlink" title="第三步：让 Claude 在 worktree 里完成任务"></a>第三步：让 Claude 在 worktree 里完成任务</h3><pre><code class="text">Fix the login validation bug. Keep the public API unchanged. Run related tests only.</code></pre><h3 id="第四步：审查-diff"><a href="#第四步：审查-diff" class="headerlink" title="第四步：审查 diff"></a>第四步：审查 diff</h3><pre><code class="bash">git statusgit diff</code></pre><p>如果满意：</p><pre><code class="bash">git add .git commit -m &quot;fix login validation&quot;</code></pre><p>如果不满意：</p><pre><code class="bash">git worktree remove .claude/worktrees/fix-login-validation</code></pre><p>删除前确认没有要保留的内容。</p><h2 id="和分支、stash、clone-怎么选"><a href="#和分支、stash、clone-怎么选" class="headerlink" title="和分支、stash、clone 怎么选"></a>和分支、stash、clone 怎么选</h2><p>Worktree 不是唯一方案。</p><table><thead><tr><th>方式</th><th>适合场景</th><th>缺点</th></tr></thead><tbody><tr><td>Git branch</td><td>单任务正常开发</td><td>同一时间只有一个 working copy</td></tr><tr><td>Git stash</td><td>临时保存现场</td><td>多任务切换复杂，容易忘</td></tr><tr><td>Git clone</td><td>完全隔离</td><td>占空间，初始化慢</td></tr><tr><td>Git worktree</td><td>同仓库多工作区并行</td><td>需要管理多个目录和分支</td></tr></tbody></table><p>我的判断是：</p><ul><li>一个人做一个任务：普通 branch 就够；</li><li>人工频繁切换：stash 可以临时用；</li><li>完全隔离环境：clone；</li><li>多 Agent 并行改同一仓库：worktree。</li></ul><p>也就是说，worktree 是为并行而生的。</p><h2 id="使用时最容易踩的坑"><a href="#使用时最容易踩的坑" class="headerlink" title="使用时最容易踩的坑"></a>使用时最容易踩的坑</h2><h3 id="坑一：忘记信任-workspace"><a href="#坑一：忘记信任-workspace" class="headerlink" title="坑一：忘记信任 workspace"></a>坑一：忘记信任 workspace</h3><p>官方文档提到，第一次在某个目录使用 <code>--worktree</code> 前，需要先运行一次普通 <code>claude</code>，接受 workspace trust。</p><p>否则直接：</p><pre><code class="bash">claude --worktree feature-a</code></pre><p>可能会报错。</p><p>解决方式：</p><pre><code class="bash">claude</code></pre><p>先完成信任，再使用 worktree。</p><h3 id="坑二：忘记把-claude-worktrees-加到-gitignore"><a href="#坑二：忘记把-claude-worktrees-加到-gitignore" class="headerlink" title="坑二：忘记把 .claude/worktrees/ 加到 .gitignore"></a>坑二：忘记把 <code>.claude/worktrees/</code> 加到 <code>.gitignore</code></h3><p>如果没加，主工作区可能出现大量未跟踪内容。</p><p>建议：</p><pre><code class="gitignore">.claude/worktrees/</code></pre><p>这应该成为项目接入 Claude Code worktree 的标准动作。</p><h3 id="坑三：-env-没复制导致项目跑不起来"><a href="#坑三：-env-没复制导致项目跑不起来" class="headerlink" title="坑三：.env 没复制导致项目跑不起来"></a>坑三：<code>.env</code> 没复制导致项目跑不起来</h3><p>现象：主工作区能启动，worktree 里启动失败。</p><p>原因：<code>.env.local</code> 是 gitignored 文件，不会自动出现在新 checkout。</p><p>解决方式：使用 <code>.worktreeinclude</code>：</p><pre><code class="gitignore">.env.local</code></pre><p>但不要无脑复制生产密钥。</p><h3 id="坑四：误删有改动的-worktree"><a href="#坑四：误删有改动的-worktree" class="headerlink" title="坑四：误删有改动的 worktree"></a>坑四：误删有改动的 worktree</h3><p>删除 worktree 前一定看：</p><pre><code class="bash">git statusgit diff</code></pre><p>尤其是 Agent View 里删除后台 session 时，要确认相关 worktree 是否有未保存修改。</p><h3 id="坑五：多个-worktree-基于不同起点，最后合并困难"><a href="#坑五：多个-worktree-基于不同起点，最后合并困难" class="headerlink" title="坑五：多个 worktree 基于不同起点，最后合并困难"></a>坑五：多个 worktree 基于不同起点，最后合并困难</h3><p>比如有的基于远程 main，有的基于本地 feature 分支，有的基于 PR。</p><p>最后合并时容易出现上下文不一致。</p><p>解决方式：任务开始前统一 baseRef 策略。</p><h2 id="我的实践建议"><a href="#我的实践建议" class="headerlink" title="我的实践建议"></a>我的实践建议</h2><h3 id="个人使用"><a href="#个人使用" class="headerlink" title="个人使用"></a>个人使用</h3><p>个人开发者可以先记住三条：</p><ol><li>多文件修改用 <code>claude --worktree &lt;name&gt;</code>；</li><li><code>.claude/worktrees/</code> 加进 <code>.gitignore</code>；</li><li>删除前先看 <code>git diff</code>。</li></ol><p>这三条能避开 80% 的坑。</p><h3 id="团队使用"><a href="#团队使用" class="headerlink" title="团队使用"></a>团队使用</h3><p>团队项目建议加一个最小配置：</p><pre><code class="json">&#123;  &quot;worktree&quot;: &#123;    &quot;bgIsolation&quot;: &quot;worktree&quot;,    &quot;baseRef&quot;: &quot;fresh&quot;,    &quot;symlinkDirectories&quot;: [&quot;node_modules&quot;]  &#125;&#125;</code></pre><p>再加 <code>.gitignore</code>：</p><pre><code class="gitignore">.claude/worktrees/</code></pre><p>如果项目依赖本地配置，再加 <code>.worktreeinclude</code>：</p><pre><code class="gitignore">.env.local</code></pre><h3 id="多-Agent-使用"><a href="#多-Agent-使用" class="headerlink" title="多 Agent 使用"></a>多 Agent 使用</h3><p>如果你要用 Agent View、Agent Teams 或 Dynamic Workflows，我建议默认启用 worktree 隔离。</p><p>多 Agent 最大的问题不是“能不能完成”，而是“完成之后你能不能安全验收”。</p><p>Worktree 正是为了让你有独立 diff、独立回滚点、独立审查边界。</p><h2 id="Worktree-背后的意义"><a href="#Worktree-背后的意义" class="headerlink" title="Worktree 背后的意义"></a>Worktree 背后的意义</h2><p>Worktree 看起来是一个 Git 小技巧，但放到 AI Coding 里，它的意义很大。</p><p>以前我们写代码，Git 分支主要服务“人类开发者”：</p><pre><code class="text">一个人切一个分支，完成后合并</code></pre><p>现在 AI Agent 也开始成为“并行开发者”。</p><p>那就需要给每个 Agent 分配自己的工作空间：</p><pre><code class="text">一个 Agent 一个 worktree，完成后人工验收</code></pre><p>这其实是 AI Coding 工程化的一个重要变化：</p><blockquote><p><strong>未来不是一个 AI 在一个工作区里帮你改代码，而是一组 AI 在多个隔离工作区里并行提出候选改动。人类负责选择、合并和治理。</strong></p></blockquote><p>所以 worktree 不是边角料，它是多 Agent 编程的基础设施。</p><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol><li>Worktree 是 Git 的多工作目录机制，Claude Code 用它隔离多个 AI 会话的文件修改。</li><li><code>claude --worktree &lt;name&gt;</code> 会在 <code>.claude/worktrees/&lt;name&gt;/</code> 下创建隔离工作区，并启动 Claude Code。</li><li><code>worktree.baseRef</code> 决定新 worktree 从远程默认分支还是当前本地 <code>HEAD</code> 创建。</li><li><code>.worktreeinclude</code> 用于复制 <code>.env.local</code> 等 gitignored 本地配置，但要注意密钥风险。</li><li>Background Agents、Subagents、Agent Teams 和 Dynamic Workflows 都可以从 worktree 隔离中受益。</li><li>使用 worktree 最重要的三件事：加 <code>.gitignore</code>、统一 baseRef、删除前看 diff。</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> AI相关 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> AI </tag>
+            
+            <tag> Claude Code </tag>
+            
+            <tag> 多Agent </tag>
+            
+            <tag> Worktree </tag>
+            
+            <tag> Git </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>Vue 3 源码系统总览：从响应式到渲染闭环</title>
       <link href="/posts/00-Vue%203%20%E6%BA%90%E7%A0%81%E7%B3%BB%E7%BB%9F%E6%80%BB%E8%A7%88%EF%BC%9A%E4%BB%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E5%88%B0%E6%B8%B2%E6%9F%93%E9%97%AD%E7%8E%AF/"/>
       <url>/posts/00-Vue%203%20%E6%BA%90%E7%A0%81%E7%B3%BB%E7%BB%9F%E6%80%BB%E8%A7%88%EF%BC%9A%E4%BB%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E5%88%B0%E6%B8%B2%E6%9F%93%E9%97%AD%E7%8E%AF/</url>
@@ -1566,9 +1566,9 @@
             
             <tag> 架构设计 </tag>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 系统总览 </tag>
             
@@ -1595,9 +1595,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1626,9 +1626,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1657,9 +1657,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1690,9 +1690,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1721,9 +1721,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1752,9 +1752,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1783,9 +1783,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -1814,9 +1814,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> runtime-core </tag>
             
@@ -1845,9 +1845,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> renderer </tag>
             
@@ -1876,9 +1876,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件系统 </tag>
             
@@ -1907,9 +1907,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件通信 </tag>
             
@@ -1940,9 +1940,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件系统 </tag>
             
@@ -1971,9 +1971,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件系统 </tag>
             
@@ -2002,9 +2002,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> scheduler </tag>
             
@@ -2033,9 +2033,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> renderer </tag>
             
@@ -2064,9 +2064,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 内置组件 </tag>
             
@@ -2099,9 +2099,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -2130,9 +2130,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -2161,9 +2161,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -2194,9 +2194,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -2225,9 +2225,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译时优化 </tag>
             
@@ -2260,9 +2260,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> compiler-sfc </tag>
             
@@ -2293,9 +2293,9 @@
             
             <tag> SSR </tag>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> hydration </tag>
             
@@ -2322,11 +2322,11 @@
       
         <tags>
             
+            <tag> Vue3 </tag>
+            
             <tag> 源码解析 </tag>
             
             <tag> 源码阅读 </tag>
-            
-            <tag> Vue3 </tag>
             
             <tag> 阅读路线 </tag>
             
@@ -2353,11 +2353,11 @@
       
         <tags>
             
+            <tag> Vue3 </tag>
+            
             <tag> 源码解析 </tag>
             
             <tag> 设计哲学 </tag>
-            
-            <tag> Vue3 </tag>
             
             <tag> 源码总结 </tag>
             
@@ -2415,11 +2415,11 @@
       
         <tags>
             
+            <tag> 源码解析 </tag>
+            
             <tag> React18 </tag>
             
             <tag> Fiber </tag>
-            
-            <tag> 源码解析 </tag>
             
         </tags>
       
@@ -2939,9 +2939,9 @@
       
         <tags>
             
-            <tag> React18 </tag>
-            
             <tag> 源码阅读 </tag>
+            
+            <tag> React18 </tag>
             
             <tag> 调试指南 </tag>
             
@@ -2968,9 +2968,9 @@
       
         <tags>
             
-            <tag> React18 </tag>
-            
             <tag> 设计哲学 </tag>
+            
+            <tag> React18 </tag>
             
             <tag> 框架设计 </tag>
             
@@ -3065,9 +3065,9 @@
             
             <tag> Docker </tag>
             
-            <tag> Node.js </tag>
-            
             <tag> Nginx </tag>
+            
+            <tag> Node.js </tag>
             
             <tag> 反向代理 </tag>
             
@@ -3098,11 +3098,11 @@
             
             <tag> AI </tag>
             
+            <tag> 架构设计 </tag>
+            
             <tag> OpenClaw </tag>
             
             <tag> AI Agent </tag>
-            
-            <tag> 架构设计 </tag>
             
             <tag> Hermes Agent </tag>
             
@@ -3855,39 +3855,6 @@
     
     
     <entry>
-      <title>Harness Engineering：AI时代的工程驾驭力</title>
-      <link href="/posts/13-Harness-Engineering-AI%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E9%A9%BE%E9%A9%AD%E5%8A%9B/"/>
-      <url>/posts/13-Harness-Engineering-AI%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E9%A9%BE%E9%A9%AD%E5%8A%9B/</url>
-      
-        <content type="html"><![CDATA[<blockquote><p><strong>前言</strong>：当 AI 能写出 80% 的代码，工程师的核心价值到底是什么？答案不是”写代码”，而是<strong>驾驭 AI 写出正确的、可维护的、能上线的代码</strong>。这就是 Harness Engineering——AI 时代工程师的核心能力模型。</p></blockquote><h2 id="从一个现象说起"><a href="#从一个现象说起" class="headerlink" title="从一个现象说起"></a>从一个现象说起</h2><p>最近半年，我观察到一个有趣的分化：</p><pre><code>同样使用 AI 编程工具的两类工程师：工程师 A（传统强手，拒绝AI）：  → 手写所有代码，效率没变  → 代码质量稳定，但速度慢  → 逐渐被效率更高的人追赶工程师 B（新手，过度依赖AI）：  → 让 AI 写所有代码，速度很快  → 不理解生成的代码，出bug无法定位  → 项目越大，失控越严重工程师 C（AI + 工程能力兼备）：  → 用 AI 加速，但每段代码都经过工程判断  → 架构清晰，边界明确，AI 只在&quot;安全区&quot;内执行  → 既快又稳，产出质量最高</code></pre><p><strong>工程师 C 的核心能力，就是 Harness Engineering。</strong></p><h2 id="什么是-Harness-Engineering"><a href="#什么是-Harness-Engineering" class="headerlink" title="什么是 Harness Engineering"></a>什么是 Harness Engineering</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><blockquote><p><strong>Harness Engineering（工程驾驭力）</strong>：在 AI 辅助开发环境下，工程师<strong>约束、引导、校验 AI 产出</strong>，使其融入工程体系、满足生产标准的系统性能力。</p></blockquote><p>“Harness”这个词，原意是”马具”——不是控制马不让它跑，而是<strong>让马朝正确的方向跑、跑得又快又稳</strong>。</p><pre><code>类比：  AI = 一匹能力极强但没有方向感的马  Vibe Coding = 骑上去闭着眼睛，让马随便跑  Harness Engineering = 给马装上缰绳，你来决定方向和节奏  马的奔跑能力（AI生成能力）在不断增强  但没有缰绳的马（不受约束的AI），跑得越快，偏离越远</code></pre><h3 id="Harness-Engineering-vs-相关概念"><a href="#Harness-Engineering-vs-相关概念" class="headerlink" title="Harness Engineering vs 相关概念"></a>Harness Engineering vs 相关概念</h3><table><thead><tr><th>概念</th><th>核心关注</th><th>与 Harness Engineering 的关系</th></tr></thead><tbody><tr><td><strong>Prompt Engineering</strong></td><td>如何与 AI 高效沟通</td><td>是 Harness 的一个子技能</td></tr><tr><td><strong>Vibe Coding</strong></td><td>快速原型、拥抱 AI</td><td>Harness 是 Vibe Coding 的工程化升级</td></tr><tr><td><strong>OpenSpec</strong></td><td>规范驱动 AI 编码</td><td>是 Harness 的一种实践方法</td></tr><tr><td><strong>传统软件工程</strong></td><td>系统化构建软件</td><td>Harness 是传统工程能力在 AI 时代的延伸</td></tr></tbody></table><p><strong>一句话总结：Prompt Engineering 解决”怎么跟 AI 说话”，Harness Engineering 解决”怎么让 AI 的产出能上线”。</strong></p><h2 id="Harness-Engineering-的五大支柱"><a href="#Harness-Engineering-的五大支柱" class="headerlink" title="Harness Engineering 的五大支柱"></a>Harness Engineering 的五大支柱</h2><p>我把 Harness Engineering 拆解为五大核心能力：</p><pre><code>                    Harness Engineering                          │        ┌─────────┬───────┼───────┬─────────┐        │         │       │       │         │    ┌───┴───┐ ┌───┴───┐ ┌┴────┐ ┌┴───────┐ ┌┴───────┐    │ 约束力 │ │ 判断力 │ │ 拆解力｜ │ 集成力 │ │ 兜底力 │    │Constrain│ Judge │ │Decomp│ │Integrate│ │Fallback│    └───────┘ └───────┘ └──────┘ └────────┘ └────────┘      给AI设     判断AI     把大问题   让AI产出    AI搞不定      边界和     产出的     拆成AI     融入现有    时能兜住      规则      好坏对错    能处理的   工程体系                          小问题</code></pre><h3 id="支柱一：约束力（Constraint）——给-AI-画”安全区”"><a href="#支柱一：约束力（Constraint）——给-AI-画”安全区”" class="headerlink" title="支柱一：约束力（Constraint）——给 AI 画”安全区”"></a>支柱一：约束力（Constraint）——给 AI 画”安全区”</h3><p>AI 的能力很强，但<strong>没有边界意识</strong>。你不约束它，它就会自由发挥——用你不想用的库、改你不想改的架构、引入你没预料到的模式。</p><p><strong>约束力的核心：在 AI 动手之前，明确告诉它”什么能做、什么不能做”。</strong></p><pre><code class="markdown">## 约束力的三个层次### Level 1：技术栈约束  &quot;用 React 18 + TypeScript，不要用 class 组件，   状态管理用 Zustand，不要用 Redux&quot;### Level 2：架构约束  &quot;这是一个分层架构：controller → service → repository   AI 只能在 service 层添加业务逻辑   不能修改 controller 的路由结构   不能直接在 controller 里写数据库查询&quot;### Level 3：质量约束  &quot;函数不超过 50 行   必须有错误处理   所有公共 API 必须有 JSDoc 注释   不能使用 any 类型&quot;</code></pre><h3 id="支柱二：判断力（Judgment）——辨别-AI-产出的好与坏"><a href="#支柱二：判断力（Judgment）——辨别-AI-产出的好与坏" class="headerlink" title="支柱二：判断力（Judgment）——辨别 AI 产出的好与坏"></a>支柱二：判断力（Judgment）——辨别 AI 产出的好与坏</h3><p>这是 Harness Engineering 中<strong>最难培养但最关键</strong>的能力。</p><pre><code>AI 生成的代码通常有三种状态：1. ✅ 正确且优雅（约20%）   → 直接采用2. ⚠️ 能跑但有问题（约60%）   → 表面上正确，但存在：     · 性能隐患（N+1查询、内存泄漏）     · 安全漏洞（SQL注入、XSS）     · 架构坏味道（过度耦合、职责不清）     · 边界情况未处理3. ❌ 错误的（约20%）   → 逻辑错误、理解偏差、幻觉输出</code></pre><p><strong>为什么60%的”能跑但有问题”最危险？</strong> 因为它能通过简单的功能测试，让你误以为没问题。等到生产环境出事，排查成本远高于一开始的review成本。</p><p>判断力来自哪里？来自<strong>对底层原理的理解</strong>：</p><table><thead><tr><th>判断场景</th><th>需要的底层知识</th></tr></thead><tbody><tr><td>这段SQL有没有性能问题？</td><td>索引原理、执行计划、N+1问题</td></tr><tr><td>这个API设计合不合理？</td><td>RESTful规范、幂等性、向后兼容</td></tr><tr><td>这段并发代码安不安全？</td><td>锁机制、原子操作、竞态条件</td></tr><tr><td>这个状态管理方案好不好？</td><td>单向数据流、不可变性、渲染性能</td></tr><tr><td>这个错误处理够不够？</td><td>异常层级、错误边界、降级策略</td></tr></tbody></table><p><strong>没有底层功力，你连 AI 犯了什么错都看不出来。</strong></p><h3 id="支柱三：拆解力（Decomposition）——把大象装进冰箱"><a href="#支柱三：拆解力（Decomposition）——把大象装进冰箱" class="headerlink" title="支柱三：拆解力（Decomposition）——把大象装进冰箱"></a>支柱三：拆解力（Decomposition）——把大象装进冰箱</h3><p>AI 的最佳工作粒度是<strong>中等复杂度的、边界清晰的任务</strong>。太简单浪费AI，太复杂AI容易跑偏。</p><pre><code>拆解的核心原则：❌ 错误的交给AI方式：  &quot;帮我做一个电商系统&quot;  → AI 会生成一个巨大的、耦合的、不可维护的代码块✅ 正确的拆解方式：  1. &quot;设计用户模块的数据库 Schema，要求支持手机号和邮箱登录&quot;  2. &quot;实现用户注册接口，输入校验用 Zod，密码用 bcrypt&quot;  3. &quot;实现 JWT 认证中间件，Token 过期时间 7 天&quot;  4. &quot;实现商品列表接口，支持分页和按分类筛选&quot;  ...每个任务：  · 有明确的输入和输出  · 有清晰的技术约束  · 复杂度在 AI 的&quot;甜蜜区&quot;内  · 可以独立验证正确性</code></pre><p>拆解力的本质是<strong>架构能力</strong>——你必须对系统有全局视角，才能把它拆成合理的模块。这恰恰是传统软件工程中最核心的能力之一。</p><h3 id="支柱四：集成力（Integration）——让碎片变成系统"><a href="#支柱四：集成力（Integration）——让碎片变成系统" class="headerlink" title="支柱四：集成力（Integration）——让碎片变成系统"></a>支柱四：集成力（Integration）——让碎片变成系统</h3><p>AI 擅长生成单个模块的代码，但<strong>不擅长模块之间的集成</strong>。因为集成需要理解：</p><ul><li>模块间的依赖关系和调用链路</li><li>数据在系统中的流转路径</li><li>错误在不同层之间的传播和处理</li><li>配置、环境变量、部署依赖</li></ul><pre><code>AI 能做的（模块内部）：  ┌──────┐  ┌──────┐  ┌──────┐  │用户模块│  │商品模块│  │订单模块│  │ ✅AI  │  │ ✅AI  │  │ ✅AI  │  └──────┘  └──────┘  └──────┘你必须做的（模块之间）：  ┌──────┐  ┌──────┐  ┌──────┐  │用户模块│←→│商品模块│←→│订单模块│  │      │  │      │  │      │  └──┬───┘  └──┬───┘  └──┬───┘     │         │         │     └─────────┼─────────┘               │        ┌──────┴──────┐        │  集成层      │  ← 你来设计        │  错误处理    │        │  数据一致性  │        │  事务管理    │        │  监控告警    │        └─────────────┘</code></pre><p><strong>集成力的体现</strong>：</p><ul><li><strong>接口契约设计</strong>：定义模块间的数据格式和调用协议</li><li><strong>错误传播策略</strong>：哪些错误重试、哪些错误熔断、哪些错误回滚</li><li><strong>数据一致性保证</strong>：分布式事务、最终一致性、补偿机制</li><li><strong>可观测性埋点</strong>：日志、指标、链路追踪的统一规范</li></ul><h3 id="支柱五：兜底力（Fallback）——AI-搞不定时怎么办"><a href="#支柱五：兜底力（Fallback）——AI-搞不定时怎么办" class="headerlink" title="支柱五：兜底力（Fallback）——AI 搞不定时怎么办"></a>支柱五：兜底力（Fallback）——AI 搞不定时怎么办</h3><p>现阶段的 AI，一定会有搞不定的时候。<strong>成熟工程师的标志不是”AI能解决一切”，而是”AI搞不定时我能兜住”。</strong></p><pre><code>兜底力的几个层次：Level 1：识别失败  → 能判断出 AI 的输出不可用  → 而不是&quot;AI说什么我信什么&quot;Level 2：手动补救  → AI 生成的代码有bug，你能手动定位和修复  → 不至于&quot;AI写的代码我完全看不懂&quot;Level 3：降级方案  → AI 辅助方案失败，能切换到传统方案继续推进  → 项目不会因为 AI 工具故障而停滞Level 4：经验反哺  → 把 AI 犯过的错误总结成规则/约束  → 下次 AI 不再犯同样的错（持续改进循环）</code></pre><h2 id="给未来工程师的建议"><a href="#给未来工程师的建议" class="headerlink" title="给未来工程师的建议"></a>给未来工程师的建议</h2><h3 id="回归软件工程本身"><a href="#回归软件工程本身" class="headerlink" title="回归软件工程本身"></a>回归软件工程本身</h3><p>AI 在不断进化，但有些东西不会变。我的核心观点是——</p><blockquote><p><strong>AI 改变的是”编码的方式”，不变的是”工程的本质”。</strong></p></blockquote><pre><code>不变的工程本质：1. 抽象能力   → 从具体问题中提取通用模式   → 10年前需要，10年后仍然需要   → AI 可以帮你实现抽象，但抽象本身需要你来定义2. 系统思维   → 理解部分与整体的关系   → 预判修改的连锁反应   → AI 只看得到当前文件，你需要看到整个系统3. 权衡取舍   → 没有完美方案，只有当前最优解   → 性能 vs 可读性、一致性 vs 可用性   → AI 给你选项，你做决策4. 质量意识   → 代码不只是&quot;能跑&quot;，而是&quot;能维护&quot;   → 今天的偷懒是明天的技术债   → AI 不关心技术债，但你必须关心</code></pre><h3 id="五个具体建议"><a href="#五个具体建议" class="headerlink" title="五个具体建议"></a>五个具体建议</h3><p><strong>建议一：先成为合格的工程师，再成为 AI 驾驭者</strong></p><pre><code>学习路径（不能跳过的基础）：1. 至少精通一门语言的核心机制   → 不是&quot;会用语法&quot;，而是理解运行时、内存模型、并发机制2. 数据结构与算法基础   → 不是为了刷题，而是为了判断 AI 生成的代码效率3. 系统设计基础   → 分层架构、领域建模、API设计、数据库设计   → 这些是&quot;拆解力&quot;和&quot;集成力&quot;的根基4. 工程化实践   → Git工作流、CI/CD、代码review、测试策略   → 这些是&quot;约束力&quot;的具体实现5. 然后，拥抱AI   → 在有工程基础的前提下，AI 是10倍效率放大器   → 没有基础就用 AI，是10倍的风险放大器</code></pre><p><strong>建议二：培养”代码审计”的习惯，而不是”代码接受”的习惯</strong></p><pre><code>每次 AI 生成代码后，问自己四个问题：1. 它为什么选择这个方案？有没有更好的方案？   → 训练技术决策能力2. 边界情况处理了吗？空值、超时、并发、大数据量？   → 训练鲁棒性思维3. 三个月后的我/同事能看懂这段代码吗？   → 训练可维护性意识4. 这段代码如果出了bug，我能定位到原因吗？   → 训练兜底能力</code></pre><p><strong>建议三：深耕一个领域，建立 AI 无法替代的判断力</strong></p><pre><code>通用能力 AI 越来越强，但领域深度仍然是人类的护城河：前端工程师  → 深入浏览器渲染机制、性能优化、无障碍后端工程师  → 深入分布式系统、数据一致性、高可用架构数据工程师  → 深入数据建模、ETL优化、数据质量治理安全工程师  → 深入攻防对抗、威胁建模、合规要求深度决定了你的&quot;判断力&quot;天花板——  浅尝辄止的人只能判断 AI 是否&quot;语法正确&quot;  领域专家能判断 AI 是否&quot;工程正确&quot;</code></pre><p><strong>建议四：学会”人机协作”的工作流，而不是单打独斗</strong></p><pre><code>高效的人机协作模式：Phase 1：你规划，AI 执行  → 你做架构设计和任务拆解  → AI 按你的规划实现每个模块Phase 2：AI 初稿，你审核  → AI 快速生成代码初稿  → 你做工程审查（安全、性能、架构合理性）Phase 3：你重构，AI 辅助  → 你决定重构方向和策略  → AI 帮你执行机械性的重构操作Phase 4：持续反馈循环  → AI 犯的错 → 总结成规则 → 加入约束  → 你的审查经验 → 沉淀为规范 → 指导AI</code></pre><p><strong>建议五：保持对”为什么”的好奇心</strong></p><pre><code>AI 擅长回答 &quot;怎么做&quot;（HOW）人类的价值在于追问 &quot;为什么&quot;（WHY）为什么用微服务而不是单体？  → 不是因为&quot;大家都用&quot;，而是因为团队规模和部署需求为什么选 PostgreSQL 而不是 MongoDB？  → 不是因为&quot;AI推荐&quot;，而是因为数据关系和查询模式为什么这个接口要做幂等？  → 不是因为&quot;规范要求&quot;，而是因为网络不可靠和重试机制能回答 &quot;WHY&quot; 的工程师，才能驾驭 AI只会执行 &quot;HOW&quot; 的工程师，终将被 AI 替代</code></pre><h2 id="一个思维模型：HCAI-循环"><a href="#一个思维模型：HCAI-循环" class="headerlink" title="一个思维模型：HCAI 循环"></a>一个思维模型：HCAI 循环</h2><p>我总结了一个 Harness Engineering 的实践框架——<strong>HCAI 循环</strong>：</p><pre><code>H → Harness（驾驭）：给 AI 设定约束和规范C → Create（创造）：AI 在约束下生成代码A → Audit（审计）：工程师审查 AI 产出I → Improve（改进）：将审查经验反哺为新的约束  ┌──────────┐  │ H: 设约束  │  └────┬─────┘       ▼  ┌──────────┐  │ C: AI生成  │  └────┬─────┘       ▼  ┌──────────┐  │ A: 你审查  │  └────┬─────┘       ▼  ┌──────────┐  │ I: 反哺改进│──→ 更好的约束 ──→ 回到 H  └──────────┘每一轮循环：  → AI 的产出质量更高（因为约束更精准）  → 你的审查效率更高（因为经验更丰富）  → 整体协作效率持续提升</code></pre><p>这个循环的关键在于 <strong>I（Improve）</strong>——不是每次都从零开始约束 AI，而是<strong>把踩过的坑转化为系统化的规则</strong>。随着循环次数增多，约束越来越精确，AI 的产出越来越靠近你的工程标准。</p><h2 id="我的实践感受"><a href="#我的实践感受" class="headerlink" title="我的实践感受"></a>我的实践感受</h2><p>过去几个月的实践中，我最深的感受是：</p><ol><li><strong>AI 写代码的速度不是瓶颈，审查速度才是</strong>——我 80% 的时间不在”让 AI 写代码”上，而在”判断 AI 写得对不对”上</li><li><strong>约束越具体，产出质量越高</strong>——模糊的指令产出模糊的代码，精确的约束产出精确的代码</li><li><strong>工程基础好的人，AI 效率提升是指数级的</strong>——因为他们知道”什么值得让 AI 做”和”怎么判断 AI 做得好不好”</li><li><strong>工程基础弱的人，AI 反而在制造混乱</strong>——生成了大量”看起来能跑但其实有坑”的代码</li></ol><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Harness Engineering 核心要点：</p><ol><li>**本质是”驾驭”而非”使用”**——不是把 AI 当工具，而是把 AI 当需要引导的强大搭档</li><li><strong>五大支柱缺一不可</strong>——约束力（边界）、判断力（审查）、拆解力（分治）、集成力（整合）、兜底力（保底）</li><li><strong>AI 改变编码方式，不改变工程本质</strong>——抽象、系统思维、权衡、质量意识永远重要</li><li><strong>先成为好工程师，再成为好的 AI 驾驭者</strong>——基础不牢，AI 是风险放大器</li><li><strong>HCAI 循环是持续改进的框架</strong>——驾驭 → 创造 → 审计 → 改进，每轮都在进步</li><li><strong>能回答 WHY 的人驾驭 AI，只会执行 HOW 的人被 AI 替代</strong>——这是最根本的分界线</li></ol>]]></content>
-      
-      
-      <categories>
-          
-          <category> AI相关 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> AI </tag>
-            
-            <tag> AI编程 </tag>
-            
-            <tag> Harness Engineering </tag>
-            
-            <tag> 软件工程 </tag>
-            
-            <tag> 工程能力 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>CLAUDE.md与Agents.md：AI项目配置文件全解析</title>
       <link href="/posts/12-CLAUDE-md%E4%B8%8EAgents-md-AI%E9%A1%B9%E7%9B%AE%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%85%A8%E8%A7%A3%E6%9E%90/"/>
       <url>/posts/12-CLAUDE-md%E4%B8%8EAgents-md-AI%E9%A1%B9%E7%9B%AE%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6%E5%85%A8%E8%A7%A3%E6%9E%90/</url>
@@ -3915,6 +3882,39 @@
             <tag> Rules </tag>
             
             <tag> 项目配置 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>Harness Engineering：AI时代的工程驾驭力</title>
+      <link href="/posts/13-Harness-Engineering-AI%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E9%A9%BE%E9%A9%AD%E5%8A%9B/"/>
+      <url>/posts/13-Harness-Engineering-AI%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E9%A9%BE%E9%A9%AD%E5%8A%9B/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p><strong>前言</strong>：当 AI 能写出 80% 的代码，工程师的核心价值到底是什么？答案不是”写代码”，而是<strong>驾驭 AI 写出正确的、可维护的、能上线的代码</strong>。这就是 Harness Engineering——AI 时代工程师的核心能力模型。</p></blockquote><h2 id="从一个现象说起"><a href="#从一个现象说起" class="headerlink" title="从一个现象说起"></a>从一个现象说起</h2><p>最近半年，我观察到一个有趣的分化：</p><pre><code>同样使用 AI 编程工具的两类工程师：工程师 A（传统强手，拒绝AI）：  → 手写所有代码，效率没变  → 代码质量稳定，但速度慢  → 逐渐被效率更高的人追赶工程师 B（新手，过度依赖AI）：  → 让 AI 写所有代码，速度很快  → 不理解生成的代码，出bug无法定位  → 项目越大，失控越严重工程师 C（AI + 工程能力兼备）：  → 用 AI 加速，但每段代码都经过工程判断  → 架构清晰，边界明确，AI 只在&quot;安全区&quot;内执行  → 既快又稳，产出质量最高</code></pre><p><strong>工程师 C 的核心能力，就是 Harness Engineering。</strong></p><h2 id="什么是-Harness-Engineering"><a href="#什么是-Harness-Engineering" class="headerlink" title="什么是 Harness Engineering"></a>什么是 Harness Engineering</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><blockquote><p><strong>Harness Engineering（工程驾驭力）</strong>：在 AI 辅助开发环境下，工程师<strong>约束、引导、校验 AI 产出</strong>，使其融入工程体系、满足生产标准的系统性能力。</p></blockquote><p>“Harness”这个词，原意是”马具”——不是控制马不让它跑，而是<strong>让马朝正确的方向跑、跑得又快又稳</strong>。</p><pre><code>类比：  AI = 一匹能力极强但没有方向感的马  Vibe Coding = 骑上去闭着眼睛，让马随便跑  Harness Engineering = 给马装上缰绳，你来决定方向和节奏  马的奔跑能力（AI生成能力）在不断增强  但没有缰绳的马（不受约束的AI），跑得越快，偏离越远</code></pre><h3 id="Harness-Engineering-vs-相关概念"><a href="#Harness-Engineering-vs-相关概念" class="headerlink" title="Harness Engineering vs 相关概念"></a>Harness Engineering vs 相关概念</h3><table><thead><tr><th>概念</th><th>核心关注</th><th>与 Harness Engineering 的关系</th></tr></thead><tbody><tr><td><strong>Prompt Engineering</strong></td><td>如何与 AI 高效沟通</td><td>是 Harness 的一个子技能</td></tr><tr><td><strong>Vibe Coding</strong></td><td>快速原型、拥抱 AI</td><td>Harness 是 Vibe Coding 的工程化升级</td></tr><tr><td><strong>OpenSpec</strong></td><td>规范驱动 AI 编码</td><td>是 Harness 的一种实践方法</td></tr><tr><td><strong>传统软件工程</strong></td><td>系统化构建软件</td><td>Harness 是传统工程能力在 AI 时代的延伸</td></tr></tbody></table><p><strong>一句话总结：Prompt Engineering 解决”怎么跟 AI 说话”，Harness Engineering 解决”怎么让 AI 的产出能上线”。</strong></p><h2 id="Harness-Engineering-的五大支柱"><a href="#Harness-Engineering-的五大支柱" class="headerlink" title="Harness Engineering 的五大支柱"></a>Harness Engineering 的五大支柱</h2><p>我把 Harness Engineering 拆解为五大核心能力：</p><pre><code>                    Harness Engineering                          │        ┌─────────┬───────┼───────┬─────────┐        │         │       │       │         │    ┌───┴───┐ ┌───┴───┐ ┌┴────┐ ┌┴───────┐ ┌┴───────┐    │ 约束力 │ │ 判断力 │ │ 拆解力｜ │ 集成力 │ │ 兜底力 │    │Constrain│ Judge │ │Decomp│ │Integrate│ │Fallback│    └───────┘ └───────┘ └──────┘ └────────┘ └────────┘      给AI设     判断AI     把大问题   让AI产出    AI搞不定      边界和     产出的     拆成AI     融入现有    时能兜住      规则      好坏对错    能处理的   工程体系                          小问题</code></pre><h3 id="支柱一：约束力（Constraint）——给-AI-画”安全区”"><a href="#支柱一：约束力（Constraint）——给-AI-画”安全区”" class="headerlink" title="支柱一：约束力（Constraint）——给 AI 画”安全区”"></a>支柱一：约束力（Constraint）——给 AI 画”安全区”</h3><p>AI 的能力很强，但<strong>没有边界意识</strong>。你不约束它，它就会自由发挥——用你不想用的库、改你不想改的架构、引入你没预料到的模式。</p><p><strong>约束力的核心：在 AI 动手之前，明确告诉它”什么能做、什么不能做”。</strong></p><pre><code class="markdown">## 约束力的三个层次### Level 1：技术栈约束  &quot;用 React 18 + TypeScript，不要用 class 组件，   状态管理用 Zustand，不要用 Redux&quot;### Level 2：架构约束  &quot;这是一个分层架构：controller → service → repository   AI 只能在 service 层添加业务逻辑   不能修改 controller 的路由结构   不能直接在 controller 里写数据库查询&quot;### Level 3：质量约束  &quot;函数不超过 50 行   必须有错误处理   所有公共 API 必须有 JSDoc 注释   不能使用 any 类型&quot;</code></pre><h3 id="支柱二：判断力（Judgment）——辨别-AI-产出的好与坏"><a href="#支柱二：判断力（Judgment）——辨别-AI-产出的好与坏" class="headerlink" title="支柱二：判断力（Judgment）——辨别 AI 产出的好与坏"></a>支柱二：判断力（Judgment）——辨别 AI 产出的好与坏</h3><p>这是 Harness Engineering 中<strong>最难培养但最关键</strong>的能力。</p><pre><code>AI 生成的代码通常有三种状态：1. ✅ 正确且优雅（约20%）   → 直接采用2. ⚠️ 能跑但有问题（约60%）   → 表面上正确，但存在：     · 性能隐患（N+1查询、内存泄漏）     · 安全漏洞（SQL注入、XSS）     · 架构坏味道（过度耦合、职责不清）     · 边界情况未处理3. ❌ 错误的（约20%）   → 逻辑错误、理解偏差、幻觉输出</code></pre><p><strong>为什么60%的”能跑但有问题”最危险？</strong> 因为它能通过简单的功能测试，让你误以为没问题。等到生产环境出事，排查成本远高于一开始的review成本。</p><p>判断力来自哪里？来自<strong>对底层原理的理解</strong>：</p><table><thead><tr><th>判断场景</th><th>需要的底层知识</th></tr></thead><tbody><tr><td>这段SQL有没有性能问题？</td><td>索引原理、执行计划、N+1问题</td></tr><tr><td>这个API设计合不合理？</td><td>RESTful规范、幂等性、向后兼容</td></tr><tr><td>这段并发代码安不安全？</td><td>锁机制、原子操作、竞态条件</td></tr><tr><td>这个状态管理方案好不好？</td><td>单向数据流、不可变性、渲染性能</td></tr><tr><td>这个错误处理够不够？</td><td>异常层级、错误边界、降级策略</td></tr></tbody></table><p><strong>没有底层功力，你连 AI 犯了什么错都看不出来。</strong></p><h3 id="支柱三：拆解力（Decomposition）——把大象装进冰箱"><a href="#支柱三：拆解力（Decomposition）——把大象装进冰箱" class="headerlink" title="支柱三：拆解力（Decomposition）——把大象装进冰箱"></a>支柱三：拆解力（Decomposition）——把大象装进冰箱</h3><p>AI 的最佳工作粒度是<strong>中等复杂度的、边界清晰的任务</strong>。太简单浪费AI，太复杂AI容易跑偏。</p><pre><code>拆解的核心原则：❌ 错误的交给AI方式：  &quot;帮我做一个电商系统&quot;  → AI 会生成一个巨大的、耦合的、不可维护的代码块✅ 正确的拆解方式：  1. &quot;设计用户模块的数据库 Schema，要求支持手机号和邮箱登录&quot;  2. &quot;实现用户注册接口，输入校验用 Zod，密码用 bcrypt&quot;  3. &quot;实现 JWT 认证中间件，Token 过期时间 7 天&quot;  4. &quot;实现商品列表接口，支持分页和按分类筛选&quot;  ...每个任务：  · 有明确的输入和输出  · 有清晰的技术约束  · 复杂度在 AI 的&quot;甜蜜区&quot;内  · 可以独立验证正确性</code></pre><p>拆解力的本质是<strong>架构能力</strong>——你必须对系统有全局视角，才能把它拆成合理的模块。这恰恰是传统软件工程中最核心的能力之一。</p><h3 id="支柱四：集成力（Integration）——让碎片变成系统"><a href="#支柱四：集成力（Integration）——让碎片变成系统" class="headerlink" title="支柱四：集成力（Integration）——让碎片变成系统"></a>支柱四：集成力（Integration）——让碎片变成系统</h3><p>AI 擅长生成单个模块的代码，但<strong>不擅长模块之间的集成</strong>。因为集成需要理解：</p><ul><li>模块间的依赖关系和调用链路</li><li>数据在系统中的流转路径</li><li>错误在不同层之间的传播和处理</li><li>配置、环境变量、部署依赖</li></ul><pre><code>AI 能做的（模块内部）：  ┌──────┐  ┌──────┐  ┌──────┐  │用户模块│  │商品模块│  │订单模块│  │ ✅AI  │  │ ✅AI  │  │ ✅AI  │  └──────┘  └──────┘  └──────┘你必须做的（模块之间）：  ┌──────┐  ┌──────┐  ┌──────┐  │用户模块│←→│商品模块│←→│订单模块│  │      │  │      │  │      │  └──┬───┘  └──┬───┘  └──┬───┘     │         │         │     └─────────┼─────────┘               │        ┌──────┴──────┐        │  集成层      │  ← 你来设计        │  错误处理    │        │  数据一致性  │        │  事务管理    │        │  监控告警    │        └─────────────┘</code></pre><p><strong>集成力的体现</strong>：</p><ul><li><strong>接口契约设计</strong>：定义模块间的数据格式和调用协议</li><li><strong>错误传播策略</strong>：哪些错误重试、哪些错误熔断、哪些错误回滚</li><li><strong>数据一致性保证</strong>：分布式事务、最终一致性、补偿机制</li><li><strong>可观测性埋点</strong>：日志、指标、链路追踪的统一规范</li></ul><h3 id="支柱五：兜底力（Fallback）——AI-搞不定时怎么办"><a href="#支柱五：兜底力（Fallback）——AI-搞不定时怎么办" class="headerlink" title="支柱五：兜底力（Fallback）——AI 搞不定时怎么办"></a>支柱五：兜底力（Fallback）——AI 搞不定时怎么办</h3><p>现阶段的 AI，一定会有搞不定的时候。<strong>成熟工程师的标志不是”AI能解决一切”，而是”AI搞不定时我能兜住”。</strong></p><pre><code>兜底力的几个层次：Level 1：识别失败  → 能判断出 AI 的输出不可用  → 而不是&quot;AI说什么我信什么&quot;Level 2：手动补救  → AI 生成的代码有bug，你能手动定位和修复  → 不至于&quot;AI写的代码我完全看不懂&quot;Level 3：降级方案  → AI 辅助方案失败，能切换到传统方案继续推进  → 项目不会因为 AI 工具故障而停滞Level 4：经验反哺  → 把 AI 犯过的错误总结成规则/约束  → 下次 AI 不再犯同样的错（持续改进循环）</code></pre><h2 id="给未来工程师的建议"><a href="#给未来工程师的建议" class="headerlink" title="给未来工程师的建议"></a>给未来工程师的建议</h2><h3 id="回归软件工程本身"><a href="#回归软件工程本身" class="headerlink" title="回归软件工程本身"></a>回归软件工程本身</h3><p>AI 在不断进化，但有些东西不会变。我的核心观点是——</p><blockquote><p><strong>AI 改变的是”编码的方式”，不变的是”工程的本质”。</strong></p></blockquote><pre><code>不变的工程本质：1. 抽象能力   → 从具体问题中提取通用模式   → 10年前需要，10年后仍然需要   → AI 可以帮你实现抽象，但抽象本身需要你来定义2. 系统思维   → 理解部分与整体的关系   → 预判修改的连锁反应   → AI 只看得到当前文件，你需要看到整个系统3. 权衡取舍   → 没有完美方案，只有当前最优解   → 性能 vs 可读性、一致性 vs 可用性   → AI 给你选项，你做决策4. 质量意识   → 代码不只是&quot;能跑&quot;，而是&quot;能维护&quot;   → 今天的偷懒是明天的技术债   → AI 不关心技术债，但你必须关心</code></pre><h3 id="五个具体建议"><a href="#五个具体建议" class="headerlink" title="五个具体建议"></a>五个具体建议</h3><p><strong>建议一：先成为合格的工程师，再成为 AI 驾驭者</strong></p><pre><code>学习路径（不能跳过的基础）：1. 至少精通一门语言的核心机制   → 不是&quot;会用语法&quot;，而是理解运行时、内存模型、并发机制2. 数据结构与算法基础   → 不是为了刷题，而是为了判断 AI 生成的代码效率3. 系统设计基础   → 分层架构、领域建模、API设计、数据库设计   → 这些是&quot;拆解力&quot;和&quot;集成力&quot;的根基4. 工程化实践   → Git工作流、CI/CD、代码review、测试策略   → 这些是&quot;约束力&quot;的具体实现5. 然后，拥抱AI   → 在有工程基础的前提下，AI 是10倍效率放大器   → 没有基础就用 AI，是10倍的风险放大器</code></pre><p><strong>建议二：培养”代码审计”的习惯，而不是”代码接受”的习惯</strong></p><pre><code>每次 AI 生成代码后，问自己四个问题：1. 它为什么选择这个方案？有没有更好的方案？   → 训练技术决策能力2. 边界情况处理了吗？空值、超时、并发、大数据量？   → 训练鲁棒性思维3. 三个月后的我/同事能看懂这段代码吗？   → 训练可维护性意识4. 这段代码如果出了bug，我能定位到原因吗？   → 训练兜底能力</code></pre><p><strong>建议三：深耕一个领域，建立 AI 无法替代的判断力</strong></p><pre><code>通用能力 AI 越来越强，但领域深度仍然是人类的护城河：前端工程师  → 深入浏览器渲染机制、性能优化、无障碍后端工程师  → 深入分布式系统、数据一致性、高可用架构数据工程师  → 深入数据建模、ETL优化、数据质量治理安全工程师  → 深入攻防对抗、威胁建模、合规要求深度决定了你的&quot;判断力&quot;天花板——  浅尝辄止的人只能判断 AI 是否&quot;语法正确&quot;  领域专家能判断 AI 是否&quot;工程正确&quot;</code></pre><p><strong>建议四：学会”人机协作”的工作流，而不是单打独斗</strong></p><pre><code>高效的人机协作模式：Phase 1：你规划，AI 执行  → 你做架构设计和任务拆解  → AI 按你的规划实现每个模块Phase 2：AI 初稿，你审核  → AI 快速生成代码初稿  → 你做工程审查（安全、性能、架构合理性）Phase 3：你重构，AI 辅助  → 你决定重构方向和策略  → AI 帮你执行机械性的重构操作Phase 4：持续反馈循环  → AI 犯的错 → 总结成规则 → 加入约束  → 你的审查经验 → 沉淀为规范 → 指导AI</code></pre><p><strong>建议五：保持对”为什么”的好奇心</strong></p><pre><code>AI 擅长回答 &quot;怎么做&quot;（HOW）人类的价值在于追问 &quot;为什么&quot;（WHY）为什么用微服务而不是单体？  → 不是因为&quot;大家都用&quot;，而是因为团队规模和部署需求为什么选 PostgreSQL 而不是 MongoDB？  → 不是因为&quot;AI推荐&quot;，而是因为数据关系和查询模式为什么这个接口要做幂等？  → 不是因为&quot;规范要求&quot;，而是因为网络不可靠和重试机制能回答 &quot;WHY&quot; 的工程师，才能驾驭 AI只会执行 &quot;HOW&quot; 的工程师，终将被 AI 替代</code></pre><h2 id="一个思维模型：HCAI-循环"><a href="#一个思维模型：HCAI-循环" class="headerlink" title="一个思维模型：HCAI 循环"></a>一个思维模型：HCAI 循环</h2><p>我总结了一个 Harness Engineering 的实践框架——<strong>HCAI 循环</strong>：</p><pre><code>H → Harness（驾驭）：给 AI 设定约束和规范C → Create（创造）：AI 在约束下生成代码A → Audit（审计）：工程师审查 AI 产出I → Improve（改进）：将审查经验反哺为新的约束  ┌──────────┐  │ H: 设约束  │  └────┬─────┘       ▼  ┌──────────┐  │ C: AI生成  │  └────┬─────┘       ▼  ┌──────────┐  │ A: 你审查  │  └────┬─────┘       ▼  ┌──────────┐  │ I: 反哺改进│──→ 更好的约束 ──→ 回到 H  └──────────┘每一轮循环：  → AI 的产出质量更高（因为约束更精准）  → 你的审查效率更高（因为经验更丰富）  → 整体协作效率持续提升</code></pre><p>这个循环的关键在于 <strong>I（Improve）</strong>——不是每次都从零开始约束 AI，而是<strong>把踩过的坑转化为系统化的规则</strong>。随着循环次数增多，约束越来越精确，AI 的产出越来越靠近你的工程标准。</p><h2 id="我的实践感受"><a href="#我的实践感受" class="headerlink" title="我的实践感受"></a>我的实践感受</h2><p>过去几个月的实践中，我最深的感受是：</p><ol><li><strong>AI 写代码的速度不是瓶颈，审查速度才是</strong>——我 80% 的时间不在”让 AI 写代码”上，而在”判断 AI 写得对不对”上</li><li><strong>约束越具体，产出质量越高</strong>——模糊的指令产出模糊的代码，精确的约束产出精确的代码</li><li><strong>工程基础好的人，AI 效率提升是指数级的</strong>——因为他们知道”什么值得让 AI 做”和”怎么判断 AI 做得好不好”</li><li><strong>工程基础弱的人，AI 反而在制造混乱</strong>——生成了大量”看起来能跑但其实有坑”的代码</li></ol><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>Harness Engineering 核心要点：</p><ol><li>**本质是”驾驭”而非”使用”**——不是把 AI 当工具，而是把 AI 当需要引导的强大搭档</li><li><strong>五大支柱缺一不可</strong>——约束力（边界）、判断力（审查）、拆解力（分治）、集成力（整合）、兜底力（保底）</li><li><strong>AI 改变编码方式，不改变工程本质</strong>——抽象、系统思维、权衡、质量意识永远重要</li><li><strong>先成为好工程师，再成为好的 AI 驾驭者</strong>——基础不牢，AI 是风险放大器</li><li><strong>HCAI 循环是持续改进的框架</strong>——驾驭 → 创造 → 审计 → 改进，每轮都在进步</li><li><strong>能回答 WHY 的人驾驭 AI，只会执行 HOW 的人被 AI 替代</strong>——这是最根本的分界线</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> AI相关 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> AI </tag>
+            
+            <tag> AI编程 </tag>
+            
+            <tag> Harness Engineering </tag>
+            
+            <tag> 软件工程 </tag>
+            
+            <tag> 工程能力 </tag>
             
         </tags>
       
@@ -3976,9 +3976,9 @@
             
             <tag> MCP </tag>
             
-            <tag> Skills </tag>
-            
             <tag> Agent </tag>
+            
+            <tag> Skills </tag>
             
         </tags>
       
@@ -5359,31 +5359,6 @@
     
     
     <entry>
-      <title>字符串专题</title>
-      <link href="/posts/04-%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%93%E9%A2%98/"/>
-      <url>/posts/04-%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%93%E9%A2%98/</url>
-      
-        <content type="html"><![CDATA[<p>字符串是由字符组成的序列，本文整理了字符串相关的经典算法题目。</p><h2 id="反转字符串"><a href="#反转字符串" class="headerlink" title="反转字符串"></a>反转字符串</h2><p>首和尾进行反转操作，头尾各有一个指针，双指针往中间移动</p><pre><code class="javascript">/** * @param &#123;character[]&#125; s * @return &#123;void&#125; Do not return anything, modify s in-place instead. */var reverseString = function (s) &#123;  let left = 0;  let right = s.length - 1;  while (left &lt; right) &#123;    const tem = s[right]    s[right] = s[left];    s[left] = tem    left++;    right--  &#125;  return s&#125;;</code></pre><pre><code class="javascript">/** * @param &#123;character[]&#125; s * @return &#123;void&#125; Do not return anything, modify s in-place instead. */var reverseString = function (s) &#123;  return s.reverse()&#125;;</code></pre><h2 id="反转字符串（二）"><a href="#反转字符串（二）" class="headerlink" title="反转字符串（二）"></a>反转字符串（二）</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;number&#125; k * @return &#123;string&#125; */var reverseStr = function (s, k) &#123;  const len = s.length;  let resArr = s.split(&quot;&quot;);  // 反转后边的字符  for (let i = 0; i &lt; len; i += 2 * k) &#123;  // 每隔 2k 个字符的前 k 个字符进行反转    // 判断边界条件,不能溢出(如果剩余字符少于 k 个，则将剩余字符全部反转)    let l = i - 1, r = i + k &gt; len ? len : i + k;    // 反转字符串    while (++l &lt; --r) &#123;      let tem = resArr[r]      resArr[r] = resArr[l]      resArr[l] = tem    &#125;  &#125;  return resArr.join(&quot;&quot;);&#125;;</code></pre><h2 id="反转字符串中的单词"><a href="#反转字符串中的单词" class="headerlink" title="反转字符串中的单词"></a>反转字符串中的单词</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;string&#125; */var reverseWords = function (s) &#123;  // 去除前后空格  s.trim()  // 将字符串拆分为数组(并去除空格元素)  const arr = s.split(&#39; &#39;).filter((item) =&gt; &#123;    return item !== &#39;&#39;  &#125;)  return arr.reverse().join(&#39; &#39;)&#125;;</code></pre><h2 id="KMP算法"><a href="#KMP算法" class="headerlink" title="KMP算法"></a>KMP算法</h2><p>解决字符串匹配问题</p><ul><li>前缀：不包含尾字符</li><li>后缀：不包含首字符</li><li>最长相等前后缀，遇到不匹配的时候，回退到与前缀相等的一个位置</li></ul><p>构建next数组：</p><pre><code class="javascript">function getNext(next, s) &#123;  let j = -1;  next[0] = j;  for (let i = 1; i &lt; s.length; i++) &#123;    // 不匹配一直回退(j&gt;=0)，不代表只回退一次    while (j &gt;= 0 &amp;&amp; s[i] !== s[j + 1]) &#123;      j = next[j];    &#125;    // 配匹上，j++    if (s[i] === s[j + 1]) &#123;      j++;    &#125;    next[i] = j;  &#125;&#125;</code></pre><p>找到字符串出现的下标：</p><pre><code class="javascript">/** * @param &#123;string&#125; haystack * @param &#123;string&#125; needle * @return &#123;number&#125; */var strStr = function (haystack, needle) &#123;  return haystack.indexOf(needle)&#125;;</code></pre><h2 id="重复子字符串"><a href="#重复子字符串" class="headerlink" title="重复子字符串"></a>重复子字符串</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;boolean&#125; */var repeatedSubstringPattern = function (s) &#123;  // 将字符串之后再添加一个自己，去除首位字符，如果仍然包含字符串，表示有  let ss = s + s;  ss = ss.substr(1, ss.length - 2);  return !!ss.includes(s)&#125;;</code></pre><h2 id="判断子序列"><a href="#判断子序列" class="headerlink" title="判断子序列"></a>判断子序列</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;boolean&#125; */var isSubsequence = function (s, t) &#123;  /*   转换为两个数组，相同的arrS移除首元素，最后判断arrS的长度  */  const arrS = s.split(&quot;&quot;);  const arrT = t.split(&quot;&quot;);  if (arrS.length &gt; arrT.length) &#123;    return false;  &#125;  while (arrS.length &amp;&amp; arrT.length) &#123;    if (arrS[0] === arrT[0]) &#123;      arrS.shift();    &#125;    arrT.shift();  &#125;  return arrS.length === 0 ? true : false;&#125;;</code></pre><h2 id="不同的子序列"><a href="#不同的子序列" class="headerlink" title="不同的子序列"></a>不同的子序列</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;number&#125; */var numDistinct = function (s, t) &#123;  /*     不要求连续    dp[i][j] 表示以i-1为结尾的s中有以j-1为结尾的t的个数为dp[i][j]    */  let dp = Array.from(Array(s.length + 1), () =&gt; Array(t.length + 1).fill(0));  for (let i = 0; i &lt;= s.length; i++) &#123;    dp[i][0] = 1;  &#125;  for (let i = 1; i &lt;= s.length; i++) &#123;    for (let j = 1; j &lt;= t.length; j++) &#123;      if (s[i - 1] === t[j - 1]) &#123;        dp[i][j] = dp[i - 1][j - 1] + dp[i - 1][j];      &#125; else &#123;        dp[i][j] = dp[i - 1][j];      &#125;    &#125;  &#125;  return dp[s.length][t.length];&#125;;</code></pre><h2 id="两个字符串的删除操作"><a href="#两个字符串的删除操作" class="headerlink" title="两个字符串的删除操作"></a>两个字符串的删除操作</h2><pre><code class="javascript">/** * @param &#123;string&#125; word1 * @param &#123;string&#125; word2 * @return &#123;number&#125; */var minDistance = function (word1, word2) &#123;  let dp = Array.from(new Array(word1.length + 1), () =&gt;    Array(word2.length + 1).fill(0)                     );  for (let i = 1; i &lt;= word1.length; i++) &#123;    dp[i][0] = i;  &#125;  for (let j = 1; j &lt;= word2.length; j++) &#123;    dp[0][j] = j;  &#125;  for (let i = 1; i &lt;= word1.length; i++) &#123;    for (let j = 1; j &lt;= word2.length; j++) &#123;      if (word1[i - 1] === word2[j - 1]) &#123;        dp[i][j] = dp[i - 1][j - 1];      &#125; else &#123;        dp[i][j] = Math.min(          dp[i - 1][j] + 1,          dp[i][j - 1] + 1,          dp[i - 1][j - 1] + 2        );      &#125;    &#125;  &#125;  return dp[word1.length][word2.length];&#125;;</code></pre><h2 id="编辑距离"><a href="#编辑距离" class="headerlink" title="编辑距离"></a>编辑距离</h2><pre><code class="javascript">const minDistance = (word1, word2) =&gt; &#123;    let dp = Array.from(Array(word1.length + 1), () =&gt; Array(word2.length+1).fill(0));    for(let i = 1; i &lt;= word1.length; i++) &#123;        dp[i][0] = i;     &#125;    for(let j = 1; j &lt;= word2.length; j++) &#123;        dp[0][j] = j;    &#125;    for(let i = 1; i &lt;= word1.length; i++) &#123;        for(let j = 1; j &lt;= word2.length; j++) &#123;            if(word1[i-1] === word2[j-1]) &#123;                dp[i][j] = dp[i-1][j-1];            &#125; else &#123;                dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + 1);            &#125;        &#125;    &#125;    return dp[word1.length][word2.length];&#125;;</code></pre><h2 id="回文子串"><a href="#回文子串" class="headerlink" title="回文子串"></a>回文子串</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;number&#125; */var countSubstrings = function (s) &#123;  const strLen = s.length;  let numOfPalindromicStr = 0;  let dp = Array.from(Array(strLen), () =&gt; Array(strLen).fill(false));  for (let j = 0; j &lt; strLen; j++) &#123;    for (let i = 0; i &lt;= j; i++) &#123;      if (s[i] === s[j]) &#123;        if ((j - i) &lt; 2) &#123;          dp[i][j] = true;        &#125; else &#123;          dp[i][j] = dp[i + 1][j - 1];        &#125;        numOfPalindromicStr += dp[i][j] ? 1 : 0;      &#125;    &#125;  &#125;  return numOfPalindromicStr;&#125;;</code></pre><h2 id="最长回文子序列"><a href="#最长回文子序列" class="headerlink" title="最长回文子序列"></a>最长回文子序列</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;number&#125; */var longestPalindromeSubseq = function (s) &#123;  /*     可以不连续    */  const strLen = s.length;  let dp = Array.from(Array(strLen), () =&gt; Array(strLen).fill(0));  for (let i = 0; i &lt; strLen; i++) &#123;    dp[i][i] = 1;  &#125;  for (let i = strLen - 1; i &gt;= 0; i--) &#123;    for (let j = i + 1; j &lt; strLen; j++) &#123;      if (s[i] === s[j]) &#123;        dp[i][j] = dp[i + 1][j - 1] + 2;      &#125; else &#123;        dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);      &#125;    &#125;  &#125;  return dp[0][strLen - 1];&#125;;</code></pre>]]></content>
-      
-      
-      <categories>
-          
-          <category> 算法 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 字符串 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>二叉树专题</title>
       <link href="/posts/06-%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%93%E9%A2%98/"/>
       <url>/posts/06-%E4%BA%8C%E5%8F%89%E6%A0%91%E4%B8%93%E9%A2%98/</url>
@@ -5401,6 +5376,31 @@
         <tags>
             
             <tag> 二叉树 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>字符串专题</title>
+      <link href="/posts/04-%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%93%E9%A2%98/"/>
+      <url>/posts/04-%E5%AD%97%E7%AC%A6%E4%B8%B2%E4%B8%93%E9%A2%98/</url>
+      
+        <content type="html"><![CDATA[<p>字符串是由字符组成的序列，本文整理了字符串相关的经典算法题目。</p><h2 id="反转字符串"><a href="#反转字符串" class="headerlink" title="反转字符串"></a>反转字符串</h2><p>首和尾进行反转操作，头尾各有一个指针，双指针往中间移动</p><pre><code class="javascript">/** * @param &#123;character[]&#125; s * @return &#123;void&#125; Do not return anything, modify s in-place instead. */var reverseString = function (s) &#123;  let left = 0;  let right = s.length - 1;  while (left &lt; right) &#123;    const tem = s[right]    s[right] = s[left];    s[left] = tem    left++;    right--  &#125;  return s&#125;;</code></pre><pre><code class="javascript">/** * @param &#123;character[]&#125; s * @return &#123;void&#125; Do not return anything, modify s in-place instead. */var reverseString = function (s) &#123;  return s.reverse()&#125;;</code></pre><h2 id="反转字符串（二）"><a href="#反转字符串（二）" class="headerlink" title="反转字符串（二）"></a>反转字符串（二）</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;number&#125; k * @return &#123;string&#125; */var reverseStr = function (s, k) &#123;  const len = s.length;  let resArr = s.split(&quot;&quot;);  // 反转后边的字符  for (let i = 0; i &lt; len; i += 2 * k) &#123;  // 每隔 2k 个字符的前 k 个字符进行反转    // 判断边界条件,不能溢出(如果剩余字符少于 k 个，则将剩余字符全部反转)    let l = i - 1, r = i + k &gt; len ? len : i + k;    // 反转字符串    while (++l &lt; --r) &#123;      let tem = resArr[r]      resArr[r] = resArr[l]      resArr[l] = tem    &#125;  &#125;  return resArr.join(&quot;&quot;);&#125;;</code></pre><h2 id="反转字符串中的单词"><a href="#反转字符串中的单词" class="headerlink" title="反转字符串中的单词"></a>反转字符串中的单词</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;string&#125; */var reverseWords = function (s) &#123;  // 去除前后空格  s.trim()  // 将字符串拆分为数组(并去除空格元素)  const arr = s.split(&#39; &#39;).filter((item) =&gt; &#123;    return item !== &#39;&#39;  &#125;)  return arr.reverse().join(&#39; &#39;)&#125;;</code></pre><h2 id="KMP算法"><a href="#KMP算法" class="headerlink" title="KMP算法"></a>KMP算法</h2><p>解决字符串匹配问题</p><ul><li>前缀：不包含尾字符</li><li>后缀：不包含首字符</li><li>最长相等前后缀，遇到不匹配的时候，回退到与前缀相等的一个位置</li></ul><p>构建next数组：</p><pre><code class="javascript">function getNext(next, s) &#123;  let j = -1;  next[0] = j;  for (let i = 1; i &lt; s.length; i++) &#123;    // 不匹配一直回退(j&gt;=0)，不代表只回退一次    while (j &gt;= 0 &amp;&amp; s[i] !== s[j + 1]) &#123;      j = next[j];    &#125;    // 配匹上，j++    if (s[i] === s[j + 1]) &#123;      j++;    &#125;    next[i] = j;  &#125;&#125;</code></pre><p>找到字符串出现的下标：</p><pre><code class="javascript">/** * @param &#123;string&#125; haystack * @param &#123;string&#125; needle * @return &#123;number&#125; */var strStr = function (haystack, needle) &#123;  return haystack.indexOf(needle)&#125;;</code></pre><h2 id="重复子字符串"><a href="#重复子字符串" class="headerlink" title="重复子字符串"></a>重复子字符串</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;boolean&#125; */var repeatedSubstringPattern = function (s) &#123;  // 将字符串之后再添加一个自己，去除首位字符，如果仍然包含字符串，表示有  let ss = s + s;  ss = ss.substr(1, ss.length - 2);  return !!ss.includes(s)&#125;;</code></pre><h2 id="判断子序列"><a href="#判断子序列" class="headerlink" title="判断子序列"></a>判断子序列</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;boolean&#125; */var isSubsequence = function (s, t) &#123;  /*   转换为两个数组，相同的arrS移除首元素，最后判断arrS的长度  */  const arrS = s.split(&quot;&quot;);  const arrT = t.split(&quot;&quot;);  if (arrS.length &gt; arrT.length) &#123;    return false;  &#125;  while (arrS.length &amp;&amp; arrT.length) &#123;    if (arrS[0] === arrT[0]) &#123;      arrS.shift();    &#125;    arrT.shift();  &#125;  return arrS.length === 0 ? true : false;&#125;;</code></pre><h2 id="不同的子序列"><a href="#不同的子序列" class="headerlink" title="不同的子序列"></a>不同的子序列</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;number&#125; */var numDistinct = function (s, t) &#123;  /*     不要求连续    dp[i][j] 表示以i-1为结尾的s中有以j-1为结尾的t的个数为dp[i][j]    */  let dp = Array.from(Array(s.length + 1), () =&gt; Array(t.length + 1).fill(0));  for (let i = 0; i &lt;= s.length; i++) &#123;    dp[i][0] = 1;  &#125;  for (let i = 1; i &lt;= s.length; i++) &#123;    for (let j = 1; j &lt;= t.length; j++) &#123;      if (s[i - 1] === t[j - 1]) &#123;        dp[i][j] = dp[i - 1][j - 1] + dp[i - 1][j];      &#125; else &#123;        dp[i][j] = dp[i - 1][j];      &#125;    &#125;  &#125;  return dp[s.length][t.length];&#125;;</code></pre><h2 id="两个字符串的删除操作"><a href="#两个字符串的删除操作" class="headerlink" title="两个字符串的删除操作"></a>两个字符串的删除操作</h2><pre><code class="javascript">/** * @param &#123;string&#125; word1 * @param &#123;string&#125; word2 * @return &#123;number&#125; */var minDistance = function (word1, word2) &#123;  let dp = Array.from(new Array(word1.length + 1), () =&gt;    Array(word2.length + 1).fill(0)                     );  for (let i = 1; i &lt;= word1.length; i++) &#123;    dp[i][0] = i;  &#125;  for (let j = 1; j &lt;= word2.length; j++) &#123;    dp[0][j] = j;  &#125;  for (let i = 1; i &lt;= word1.length; i++) &#123;    for (let j = 1; j &lt;= word2.length; j++) &#123;      if (word1[i - 1] === word2[j - 1]) &#123;        dp[i][j] = dp[i - 1][j - 1];      &#125; else &#123;        dp[i][j] = Math.min(          dp[i - 1][j] + 1,          dp[i][j - 1] + 1,          dp[i - 1][j - 1] + 2        );      &#125;    &#125;  &#125;  return dp[word1.length][word2.length];&#125;;</code></pre><h2 id="编辑距离"><a href="#编辑距离" class="headerlink" title="编辑距离"></a>编辑距离</h2><pre><code class="javascript">const minDistance = (word1, word2) =&gt; &#123;    let dp = Array.from(Array(word1.length + 1), () =&gt; Array(word2.length+1).fill(0));    for(let i = 1; i &lt;= word1.length; i++) &#123;        dp[i][0] = i;     &#125;    for(let j = 1; j &lt;= word2.length; j++) &#123;        dp[0][j] = j;    &#125;    for(let i = 1; i &lt;= word1.length; i++) &#123;        for(let j = 1; j &lt;= word2.length; j++) &#123;            if(word1[i-1] === word2[j-1]) &#123;                dp[i][j] = dp[i-1][j-1];            &#125; else &#123;                dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + 1);            &#125;        &#125;    &#125;    return dp[word1.length][word2.length];&#125;;</code></pre><h2 id="回文子串"><a href="#回文子串" class="headerlink" title="回文子串"></a>回文子串</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;number&#125; */var countSubstrings = function (s) &#123;  const strLen = s.length;  let numOfPalindromicStr = 0;  let dp = Array.from(Array(strLen), () =&gt; Array(strLen).fill(false));  for (let j = 0; j &lt; strLen; j++) &#123;    for (let i = 0; i &lt;= j; i++) &#123;      if (s[i] === s[j]) &#123;        if ((j - i) &lt; 2) &#123;          dp[i][j] = true;        &#125; else &#123;          dp[i][j] = dp[i + 1][j - 1];        &#125;        numOfPalindromicStr += dp[i][j] ? 1 : 0;      &#125;    &#125;  &#125;  return numOfPalindromicStr;&#125;;</code></pre><h2 id="最长回文子序列"><a href="#最长回文子序列" class="headerlink" title="最长回文子序列"></a>最长回文子序列</h2><pre><code class="javascript">/** * @param &#123;string&#125; s * @return &#123;number&#125; */var longestPalindromeSubseq = function (s) &#123;  /*     可以不连续    */  const strLen = s.length;  let dp = Array.from(Array(strLen), () =&gt; Array(strLen).fill(0));  for (let i = 0; i &lt; strLen; i++) &#123;    dp[i][i] = 1;  &#125;  for (let i = strLen - 1; i &gt;= 0; i--) &#123;    for (let j = i + 1; j &lt; strLen; j++) &#123;      if (s[i] === s[j]) &#123;        dp[i][j] = dp[i + 1][j - 1] + 2;      &#125; else &#123;        dp[i][j] = Math.max(dp[i + 1][j], dp[i][j - 1]);      &#125;    &#125;  &#125;  return dp[0][strLen - 1];&#125;;</code></pre>]]></content>
+      
+      
+      <categories>
+          
+          <category> 算法 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 字符串 </tag>
             
         </tags>
       
@@ -5434,31 +5434,6 @@
     
     
     <entry>
-      <title>哈希表专题</title>
-      <link href="/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/"/>
-      <url>/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/</url>
-      
-        <content type="html"><![CDATA[<p>哈希表是一种根据关键码值(Key value)而直接进行访问的数据结构，本文整理了哈希表相关的经典算法题目。</p><h2 id="哈希表基础"><a href="#哈希表基础" class="headerlink" title="哈希表基础"></a>哈希表基础</h2><p>哈希表常用的数据结构有：数组、Set、Map</p><h2 id="有效的字母异位词"><a href="#有效的字母异位词" class="headerlink" title="有效的字母异位词"></a>有效的字母异位词</h2><h3 id="方法一：用数组"><a href="#方法一：用数组" class="headerlink" title="方法一：用数组"></a>方法一：用数组</h3><p>定义一个可以存放26个字母的数组，第一个字符串做加法，第二个字符串做减法，最后判断数组中元素是不是全部是0</p><h3 id="方法二：字符串排序"><a href="#方法二：字符串排序" class="headerlink" title="方法二：字符串排序"></a>方法二：字符串排序</h3><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;boolean&#125; */var isAnagram = function (s, t) &#123;  if (s.length !== t.length || s === t) &#123;    return false;  &#125;  const arrS = s.split(&#39;&#39;);  const arrT = t.split(&#39;&#39;);  arrS.sort();  arrT.sort();  for (let i = 0; i &lt; arrS.length; i++) &#123;    if (arrS[i] !== arrT[i]) &#123;      return false;    &#125;  &#125;  return true;&#125;;</code></pre><h2 id="两个数组的交集"><a href="#两个数组的交集" class="headerlink" title="两个数组的交集"></a>两个数组的交集</h2><h3 id="方法一：哈希表-set"><a href="#方法一：哈希表-set" class="headerlink" title="方法一：哈希表(set)"></a>方法一：哈希表(set)</h3><p>将第一个数组中的数据存放到哈希表中，遍历第二个数组然后出现过就加到结果数组中</p><h3 id="方法二：set-排序"><a href="#方法二：set-排序" class="headerlink" title="方法二：set+排序"></a>方法二：set+排序</h3><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @return &#123;number[]&#125; */var intersection = function (nums1, nums2) &#123;  nums1 = Array.from(new Set(nums1));  nums2 = Array.from(new Set(nums2));  const tem = [...nums1, ...nums2];  tem.sort((a, b) =&gt; &#123;    return a - b;  &#125;)  const res = []  tem.forEach((elem) =&gt; &#123;    if (tem.indexOf(elem) !== tem.lastIndexOf(elem) &amp;&amp; res.indexOf(elem) === -1) &#123;      res.push(elem);    &#125;  &#125;)  return res;&#125;;</code></pre><h2 id="两数之和"><a href="#两数之和" class="headerlink" title="两数之和"></a>两数之和</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[]&#125; */var twoSum = function (nums, target) &#123;  let map = new Map();  for (let i = 0, len = nums.length; i &lt; len; i++) &#123;    if (map.has(target - nums[i])) &#123;      return [map.get(target - nums[i]), i];    &#125; else &#123;      map.set(nums[i], i);    &#125;  &#125;  return [];&#125;;</code></pre><h2 id="四数之和"><a href="#四数之和" class="headerlink" title="四数之和"></a>四数之和</h2><ol><li>暴力解法，四重for循环</li><li>遍历两个数组之和相加，存储到map中，另外需要存储出现的次数，再遍历另外两个数组，去map中查看是否有需要的元素</li></ol><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @param &#123;number[]&#125; nums3 * @param &#123;number[]&#125; nums4 * @return &#123;number&#125; */var fourSumCount = function (nums1, nums2, nums3, nums4) &#123;  const map = new Map();  // 遍历前两个数组将和存储到map中，并统计次数  for (let i = 0; i &lt; nums1.length; i++) &#123;    for (let j = 0; j &lt; nums2.length; j++) &#123;      const sum = nums1[i] + nums2[j]      map.set(sum, (map.get(sum) || 0) + 1)    &#125;  &#125;  // 遍历剩余两个数组，判断map中是否具有目标元素(出现多少次就加多少个)  let res = 0  for (let i = 0; i &lt; nums3.length; i++) &#123;    for (let j = 0; j &lt; nums4.length; j++) &#123;      const sum = 0 - (nums3[i] + nums4[j]);      res += map.get(sum) || 0    &#125;  &#125;  return res&#125;;</code></pre><h2 id="三数之和"><a href="#三数之和" class="headerlink" title="三数之和"></a>三数之和</h2><p>一个数组中找到三个元素，三个元素之和为0</p><h3 id="方法一：hash法"><a href="#方法一：hash法" class="headerlink" title="方法一：hash法"></a>方法一：hash法</h3><p>需要考虑去重，a、b、c都需要考虑去重</p><h3 id="方法二：双指针"><a href="#方法二：双指针" class="headerlink" title="方法二：双指针"></a>方法二：双指针</h3><p>对数组进行排序<br>a值固定，b和c用双指针去找，如果三个数的值相加大了，就移动右指针，如果小了就移动左指针</p><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @return &#123;number[][]&#125; */var threeSum = function (nums) &#123;  if (nums.length &lt; 3) &#123;    return []  &#125;  // 数组排序  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 目标结果是0，如果第一个元素都大于0，那么不可能获得结果  if (nums[0] &gt; 0) &#123;    return []  &#125;  const res = []  for (let i = 0; i &lt; nums.length; i++) &#123;    /*         判断第一个数是否重复,如果判断后一个的话判断的是数组中是否有重复元素，        [-1,-1,2]        所有判断前一个是否用过    */    if (i &gt; 0 &amp;&amp; nums[i] === nums[i - 1]) &#123;      continue;    &#125;    let left = i + 1    let right = nums.length - 1    while (right &gt; left) &#123;      const sum = nums[i] + nums[right] + nums[left]      if (sum &gt; 0) &#123;        right--;      &#125; else if (sum &lt; 0) &#123;        left++;      &#125; else if (sum == 0) &#123;        res.push([nums[i], nums[left], nums[right]])        /*           收获结果之后再进行去重操作          去重,如果数组中元素是[0,-1,-1,-1,-1,1,1,1,1]          left指针和right指针移动后指针指向的值是相同的，需要进行去重操作        */        while (left &lt; right &amp;&amp; nums[left] == nums[left + 1]) &#123;          left++        &#125;        while (left &lt; right &amp;&amp; nums[right] == nums[right - 1]) &#123;          right--        &#125;        // 去重完成之和继续循环        left++        right--      &#125;    &#125;  &#125;  return res&#125;;</code></pre><h2 id="四数之和（数组）"><a href="#四数之和（数组）" class="headerlink" title="四数之和（数组）"></a>四数之和（数组）</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[][]&#125; */var fourSum = function (nums, target) &#123;  if (nums.length &lt; 4) &#123;    return []  &#125;  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 剪枝操作,这里需要加上target大于0  if (nums[0] &gt; target &amp;&amp; target &gt; 0) &#123;    return []  &#125;  /*    双重for循环+定义两指针去寻找    */  const res = []  for (let k = 0; k &lt; nums.length; k++) &#123;    // 去重,判断是否与前一个数相等相等表示已经用过了    if (k &gt; 0 &amp;&amp; nums[k] === nums[k - 1]) &#123;      continue    &#125;    for (let i = k + 1; i &lt; nums.length; i++) &#123;      // 去重,判断是否与前一个数相等相等表示已经用过了      if (i &gt; k + 1 &amp;&amp; nums[i] === nums[i - 1]) continue;      let left = i + 1;      let right = nums.length - 1;      while (right &gt; left) &#123;        // 获得结果        const sum = nums[k] + nums[i] + nums[left] + nums[right]        if (sum &gt; target) &#123;          right--        &#125;        if (sum &lt; target) &#123;          left++        &#125;        if (sum === target) &#123;          res.push([nums[k], nums[i], nums[left], nums[right]])          // 去重          while (right &gt; left &amp;&amp; nums[left] === nums[left + 1]) &#123;            left++          &#125;          while (right &gt; left &amp;&amp; nums[right] === nums[right - 1]) &#123;            right--          &#125;          left++          right--        &#125;      &#125;    &#125;  &#125;  return res&#125;;</code></pre>]]></content>
-      
-      
-      <categories>
-          
-          <category> 算法 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 哈希表 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>链表专题</title>
       <link href="/posts/02-%E9%93%BE%E8%A1%A8%E4%B8%93%E9%A2%98/"/>
       <url>/posts/02-%E9%93%BE%E8%A1%A8%E4%B8%93%E9%A2%98/</url>
@@ -5476,6 +5451,31 @@
         <tags>
             
             <tag> 链表 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>哈希表专题</title>
+      <link href="/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/"/>
+      <url>/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/</url>
+      
+        <content type="html"><![CDATA[<p>哈希表是一种根据关键码值(Key value)而直接进行访问的数据结构，本文整理了哈希表相关的经典算法题目。</p><h2 id="哈希表基础"><a href="#哈希表基础" class="headerlink" title="哈希表基础"></a>哈希表基础</h2><p>哈希表常用的数据结构有：数组、Set、Map</p><h2 id="有效的字母异位词"><a href="#有效的字母异位词" class="headerlink" title="有效的字母异位词"></a>有效的字母异位词</h2><h3 id="方法一：用数组"><a href="#方法一：用数组" class="headerlink" title="方法一：用数组"></a>方法一：用数组</h3><p>定义一个可以存放26个字母的数组，第一个字符串做加法，第二个字符串做减法，最后判断数组中元素是不是全部是0</p><h3 id="方法二：字符串排序"><a href="#方法二：字符串排序" class="headerlink" title="方法二：字符串排序"></a>方法二：字符串排序</h3><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;boolean&#125; */var isAnagram = function (s, t) &#123;  if (s.length !== t.length || s === t) &#123;    return false;  &#125;  const arrS = s.split(&#39;&#39;);  const arrT = t.split(&#39;&#39;);  arrS.sort();  arrT.sort();  for (let i = 0; i &lt; arrS.length; i++) &#123;    if (arrS[i] !== arrT[i]) &#123;      return false;    &#125;  &#125;  return true;&#125;;</code></pre><h2 id="两个数组的交集"><a href="#两个数组的交集" class="headerlink" title="两个数组的交集"></a>两个数组的交集</h2><h3 id="方法一：哈希表-set"><a href="#方法一：哈希表-set" class="headerlink" title="方法一：哈希表(set)"></a>方法一：哈希表(set)</h3><p>将第一个数组中的数据存放到哈希表中，遍历第二个数组然后出现过就加到结果数组中</p><h3 id="方法二：set-排序"><a href="#方法二：set-排序" class="headerlink" title="方法二：set+排序"></a>方法二：set+排序</h3><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @return &#123;number[]&#125; */var intersection = function (nums1, nums2) &#123;  nums1 = Array.from(new Set(nums1));  nums2 = Array.from(new Set(nums2));  const tem = [...nums1, ...nums2];  tem.sort((a, b) =&gt; &#123;    return a - b;  &#125;)  const res = []  tem.forEach((elem) =&gt; &#123;    if (tem.indexOf(elem) !== tem.lastIndexOf(elem) &amp;&amp; res.indexOf(elem) === -1) &#123;      res.push(elem);    &#125;  &#125;)  return res;&#125;;</code></pre><h2 id="两数之和"><a href="#两数之和" class="headerlink" title="两数之和"></a>两数之和</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[]&#125; */var twoSum = function (nums, target) &#123;  let map = new Map();  for (let i = 0, len = nums.length; i &lt; len; i++) &#123;    if (map.has(target - nums[i])) &#123;      return [map.get(target - nums[i]), i];    &#125; else &#123;      map.set(nums[i], i);    &#125;  &#125;  return [];&#125;;</code></pre><h2 id="四数之和"><a href="#四数之和" class="headerlink" title="四数之和"></a>四数之和</h2><ol><li>暴力解法，四重for循环</li><li>遍历两个数组之和相加，存储到map中，另外需要存储出现的次数，再遍历另外两个数组，去map中查看是否有需要的元素</li></ol><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @param &#123;number[]&#125; nums3 * @param &#123;number[]&#125; nums4 * @return &#123;number&#125; */var fourSumCount = function (nums1, nums2, nums3, nums4) &#123;  const map = new Map();  // 遍历前两个数组将和存储到map中，并统计次数  for (let i = 0; i &lt; nums1.length; i++) &#123;    for (let j = 0; j &lt; nums2.length; j++) &#123;      const sum = nums1[i] + nums2[j]      map.set(sum, (map.get(sum) || 0) + 1)    &#125;  &#125;  // 遍历剩余两个数组，判断map中是否具有目标元素(出现多少次就加多少个)  let res = 0  for (let i = 0; i &lt; nums3.length; i++) &#123;    for (let j = 0; j &lt; nums4.length; j++) &#123;      const sum = 0 - (nums3[i] + nums4[j]);      res += map.get(sum) || 0    &#125;  &#125;  return res&#125;;</code></pre><h2 id="三数之和"><a href="#三数之和" class="headerlink" title="三数之和"></a>三数之和</h2><p>一个数组中找到三个元素，三个元素之和为0</p><h3 id="方法一：hash法"><a href="#方法一：hash法" class="headerlink" title="方法一：hash法"></a>方法一：hash法</h3><p>需要考虑去重，a、b、c都需要考虑去重</p><h3 id="方法二：双指针"><a href="#方法二：双指针" class="headerlink" title="方法二：双指针"></a>方法二：双指针</h3><p>对数组进行排序<br>a值固定，b和c用双指针去找，如果三个数的值相加大了，就移动右指针，如果小了就移动左指针</p><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @return &#123;number[][]&#125; */var threeSum = function (nums) &#123;  if (nums.length &lt; 3) &#123;    return []  &#125;  // 数组排序  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 目标结果是0，如果第一个元素都大于0，那么不可能获得结果  if (nums[0] &gt; 0) &#123;    return []  &#125;  const res = []  for (let i = 0; i &lt; nums.length; i++) &#123;    /*         判断第一个数是否重复,如果判断后一个的话判断的是数组中是否有重复元素，        [-1,-1,2]        所有判断前一个是否用过    */    if (i &gt; 0 &amp;&amp; nums[i] === nums[i - 1]) &#123;      continue;    &#125;    let left = i + 1    let right = nums.length - 1    while (right &gt; left) &#123;      const sum = nums[i] + nums[right] + nums[left]      if (sum &gt; 0) &#123;        right--;      &#125; else if (sum &lt; 0) &#123;        left++;      &#125; else if (sum == 0) &#123;        res.push([nums[i], nums[left], nums[right]])        /*           收获结果之后再进行去重操作          去重,如果数组中元素是[0,-1,-1,-1,-1,1,1,1,1]          left指针和right指针移动后指针指向的值是相同的，需要进行去重操作        */        while (left &lt; right &amp;&amp; nums[left] == nums[left + 1]) &#123;          left++        &#125;        while (left &lt; right &amp;&amp; nums[right] == nums[right - 1]) &#123;          right--        &#125;        // 去重完成之和继续循环        left++        right--      &#125;    &#125;  &#125;  return res&#125;;</code></pre><h2 id="四数之和（数组）"><a href="#四数之和（数组）" class="headerlink" title="四数之和（数组）"></a>四数之和（数组）</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[][]&#125; */var fourSum = function (nums, target) &#123;  if (nums.length &lt; 4) &#123;    return []  &#125;  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 剪枝操作,这里需要加上target大于0  if (nums[0] &gt; target &amp;&amp; target &gt; 0) &#123;    return []  &#125;  /*    双重for循环+定义两指针去寻找    */  const res = []  for (let k = 0; k &lt; nums.length; k++) &#123;    // 去重,判断是否与前一个数相等相等表示已经用过了    if (k &gt; 0 &amp;&amp; nums[k] === nums[k - 1]) &#123;      continue    &#125;    for (let i = k + 1; i &lt; nums.length; i++) &#123;      // 去重,判断是否与前一个数相等相等表示已经用过了      if (i &gt; k + 1 &amp;&amp; nums[i] === nums[i - 1]) continue;      let left = i + 1;      let right = nums.length - 1;      while (right &gt; left) &#123;        // 获得结果        const sum = nums[k] + nums[i] + nums[left] + nums[right]        if (sum &gt; target) &#123;          right--        &#125;        if (sum &lt; target) &#123;          left++        &#125;        if (sum === target) &#123;          res.push([nums[k], nums[i], nums[left], nums[right]])          // 去重          while (right &gt; left &amp;&amp; nums[left] === nums[left + 1]) &#123;            left++          &#125;          while (right &gt; left &amp;&amp; nums[right] === nums[right - 1]) &#123;            right--          &#125;          left++          right--        &#125;      &#125;    &#125;  &#125;  return res&#125;;</code></pre>]]></content>
+      
+      
+      <categories>
+          
+          <category> 算法 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 哈希表 </tag>
             
         </tags>
       
@@ -5846,11 +5846,11 @@
       
         <tags>
             
+            <tag> 文件上传 </tag>
+            
             <tag> React </tag>
             
             <tag> Ant Design </tag>
-            
-            <tag> 文件上传 </tag>
             
         </tags>
       
@@ -5933,11 +5933,11 @@
       
         <tags>
             
+            <tag> 组件封装 </tag>
+            
             <tag> React </tag>
             
             <tag> Hooks </tag>
-            
-            <tag> 组件封装 </tag>
             
         </tags>
       
@@ -6016,11 +6016,11 @@
       
         <tags>
             
-            <tag> 文件上传 </tag>
-            
             <tag> Vue </tag>
             
             <tag> Element-UI </tag>
+            
+            <tag> 文件上传 </tag>
             
         </tags>
       
@@ -6045,9 +6045,9 @@
       
         <tags>
             
-            <tag> 组件封装 </tag>
-            
             <tag> Vue </tag>
+            
+            <tag> 组件封装 </tag>
             
         </tags>
       
