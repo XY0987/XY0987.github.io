@@ -1,0 +1,535 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vue 3 源码总结：从实现细节走向设计哲学 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：源码读到最后，最值得沉淀的不是”哪个函数调了哪个函数”，而是”为什么 Vue 在这几条岔路上选了这一条，又付出了什么代价”。代码会变、版本会迭代、优化策略也会演进，但取舍和约束会留下来。这篇是整条主线的收尾，">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 3 源码总结：从实现细节走向设计哲学">
+<meta property="og:url" content="http://example.com/posts/25-Vue%203%20%E6%BA%90%E7%A0%81%E6%80%BB%E7%BB%93%EF%BC%9A%E4%BB%8E%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82%E8%B5%B0%E5%90%91%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：源码读到最后，最值得沉淀的不是”哪个函数调了哪个函数”，而是”为什么 Vue 在这几条岔路上选了这一条，又付出了什么代价”。代码会变、版本会迭代、优化策略也会演进，但取舍和约束会留下来。这篇是整条主线的收尾，">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-31T15:34:00.000Z">
+<meta property="article:modified_time" content="2026-05-31T07:26:04.959Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vue3">
+<meta property="article:tag" content="源码解析">
+<meta property="article:tag" content="设计哲学">
+<meta property="article:tag" content="源码总结">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/25-Vue%203%20%E6%BA%90%E7%A0%81%E6%80%BB%E7%BB%93%EF%BC%9A%E4%BB%8E%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82%E8%B5%B0%E5%90%91%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vue 3 源码总结：从实现细节走向设计哲学',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:26:04'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vue 3 源码总结：从实现细节走向设计哲学</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-31T15:34:00.000Z" title="发表于 2026 23:34:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-31T07:26:04.959Z" title="更新于 2026 15:26:04">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>12分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>源码说明：本文分析的源码基于 <code>vue@3.5.21</code>，对应官方仓库为 <a target="_blank" rel="noopener" href="https://github.com/vuejs/core/tree/v3.5.21">vuejs&#x2F;core</a>，本文所在学习仓库为 <a target="_blank" rel="noopener" href="https://github.com/XY0987/vue_ori_learning">XY0987&#x2F;vue_ori_learning</a>。</p>
+</blockquote>
+<blockquote>
+<p>前言：源码读到最后，最值得沉淀的不是”哪个函数调了哪个函数”，而是”为什么 Vue 在这几条岔路上选了这一条，又付出了什么代价”。代码会变、版本会迭代、优化策略也会演进，但取舍和约束会留下来。这篇是整条主线的收尾，只讲取舍，不讲流程。</p>
+</blockquote>
+<h2 id="先给结论"><a href="#先给结论" class="headerlink" title="先给结论"></a>先给结论</h2><p>读完一整条主线后，我对 Vue 3 设计哲学的判断不在”声明式”和”分层”这种通用词上——这些放到 React上也成立。Vue 真正独有的取舍是下面这几条：</p>
+<ol>
+<li>Vue 是<strong>渐进式框架</strong>：让用户自己决定要把多少能力交给框架，从 <code>@vue/reactivity</code> 到 SFC 是一条连续光谱。</li>
+<li>Vue 走的是<strong>编译器与运行时的中间路线</strong>：不是纯 VDOM，也不是纯编译；用 PatchFlags &#x2F; Block Tree 让两者协作。</li>
+<li>Vue 把<strong>用户心智</strong>当作 API 的第一约束：<code>.value</code>、async update、SFC 这些”看起来更麻烦”的设计，都是在保护可预测性。</li>
+<li>Vue 给每条默认路径都留了<strong>逃生口</strong>：<code>shallow</code>、<code>raw</code>、<code>createRenderer</code>、独立 reactivity 包、render function。</li>
+<li>Vue 的<strong>每一个优化都有标价</strong>：响应式的代理代价、调度的同步直觉代价、SFC 的工具链代价。哲学的厚度来自取舍，不是来自正确。</li>
+</ol>
+<p>一句话概括：</p>
+<blockquote>
+<p>Vue 不追求”一种最好的实现”，而是在多条岔路之间走一条<strong>显式的中间路线</strong>，并把代价告诉你。</p>
+</blockquote>
+<h2 id="哲学一：渐进式不是口号，是一条连续光谱"><a href="#哲学一：渐进式不是口号，是一条连续光谱" class="headerlink" title="哲学一：渐进式不是口号，是一条连续光谱"></a>哲学一：渐进式不是口号，是一条连续光谱</h2><p>很多框架都会自称”渐进式”，但 Vue 把这件事真正落实在了<strong>包结构</strong>上。同一套响应式能力，可以以四种深度被使用：</p>
+<table>
+<thead>
+<tr>
+<th>使用深度</th>
+<th>入口</th>
+<th>典型场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>只要响应式</td>
+<td><code>@vue/reactivity</code></td>
+<td>自建小框架、Node.js 中做依赖追踪</td>
+</tr>
+<tr>
+<td>要响应式 + 渲染</td>
+<td><code>@vue/runtime-core</code> + 自定义 <code>createRenderer</code></td>
+<td>Canvas&#x2F;原生&#x2F;小程序渲染</td>
+</tr>
+<tr>
+<td>要完整运行时</td>
+<td><code>vue</code> 运行时构建</td>
+<td>CDN 引入、动态模板</td>
+</tr>
+<tr>
+<td>要完整工具链</td>
+<td><code>vue</code> + <code>compiler-sfc</code></td>
+<td>大型工程、SFC、TS、SSR</td>
+</tr>
+</tbody></table>
+<p><code>reactivity</code> 包是完全独立可用的：</p>
+<pre><code class="1:11:packages/reactivity/src/index.ts">export &#123;
+  ref,
+  shallowRef,
+  isRef,
+  toRef,
+  toValue,
+  toRefs,
+  unref,
+  proxyRefs,
+  customRef,
+  triggerRef,
+</code></pre>
+<p>这条光谱让”渐进式”成为可验证的事实——不是文档口号。它带来的设计哲学是：</p>
+<blockquote>
+<p>框架能力应该可以被<strong>部分采用</strong>，而不是只能整体接受。</p>
+</blockquote>
+<p>对比 React：你很难只用 React 的 reconciler，不要 JSX，不要 hooks。Vue 把每一层都拆成了独立 npm 包，用户可以从最薄一层开始，逐层叠加。</p>
+<p>代价也很明确：包之间需要稳定的内部协议（<code>RendererOptions</code>、<code>ComponentInternalInstance</code>、<code>PatchFlags</code>），任何一层重构都要顾及下游使用方。这是 Vue 内部 RFC 流程比 React 重的根因之一。</p>
+<h2 id="哲学二：声明式的本质，是把变化收敛到数据层"><a href="#哲学二：声明式的本质，是把变化收敛到数据层" class="headerlink" title="哲学二：声明式的本质，是把变化收敛到数据层"></a>哲学二：声明式的本质，是把变化收敛到数据层</h2><p>写 Vue 时我们写的是状态：</p>
+<pre><code class="vue">&lt;template&gt;
+  &lt;button @click=&quot;count++&quot;&gt;&#123;&#123; count &#125;&#125;&lt;/button&gt;
+&lt;/template&gt;
+</code></pre>
+<p>没有手动找 DOM，没有手动重渲染。这种”语法简单”的表象之下，是响应式系统维护的一个事实：<strong>谁在运行时读过某个数据，谁就订阅这个数据</strong>。</p>
+<pre><code class="45:47:packages/reactivity/src/effect.ts">// 当前正在执行并允许收集依赖的订阅者。
+// ReactiveEffect.run / refreshComputed 会在执行用户函数前设置它，track 会读取它来建立依赖关系。
+export let activeSub: Subscriber | undefined
+</code></pre>
+<p>声明式的深层价值不是 <code>Proxy</code>，也不是 VDOM，而是：</p>
+<blockquote>
+<p>不要让用户描述”更新步骤”，让用户描述”状态和结果的关系”。</p>
+</blockquote>
+<p>这一点 React 的函数组件也做到了，但 Vue 选了不同的路径——React 通过”重新执行整个函数”来表达关系，Vue 通过”细粒度依赖图”来表达关系。前者心智简单但需要 <code>useMemo</code> 救场，后者写起来更接近普通赋值，但需要 <code>Proxy</code> 在背后维护图。</p>
+<p>两条路都是声明式，但<strong>响应粒度的位置</strong>完全不同。Vue 选择把粒度推到数据本身，这是它整套架构的起点。</p>
+<h2 id="哲学三：编译器和运行时的中间路线"><a href="#哲学三：编译器和运行时的中间路线" class="headerlink" title="哲学三：编译器和运行时的中间路线"></a>哲学三：编译器和运行时的中间路线</h2><p>这一条是 Vue 3 最有原创性的设计。</p>
+<p>纯运行时框架（早期 React）：所有判断都在更新时进行，模板是不透明的。代价是 diff 工作量大。</p>
+<p>纯编译型框架（Svelte）：所有更新逻辑都在编译期生成，运行时极薄。代价是无法处理”运行时才知道结构”的场景。</p>
+<p>Vue 3 的选择：让编译器<strong>给运行时打小抄</strong>——这就是 PatchFlags 和 Block Tree。</p>
+<h3 id="PatchFlags：编译器告诉运行时”哪里是动态的”"><a href="#PatchFlags：编译器告诉运行时”哪里是动态的”" class="headerlink" title="PatchFlags：编译器告诉运行时”哪里是动态的”"></a>PatchFlags：编译器告诉运行时”哪里是动态的”</h3><pre><code class="20:51:packages/shared/src/patchFlags.ts">export enum PatchFlags &#123;
+  /**
+   * Indicates an element with dynamic textContent (children fast path)
+   */
+  TEXT = 1,
+
+  /**
+   * Indicates an element with dynamic class binding.
+   */
+  CLASS = 1 &lt;&lt; 1,
+
+  /**
+   * Indicates an element with dynamic style
+   * The compiler pre-compiles static string styles into static objects
+   * + detects and hoists inline static objects
+   * e.g. `style=&quot;color: red&quot;` and `:style=&quot;&#123; color: &#39;red&#39; &#125;&quot;` both get hoisted
+   * as:
+   * ```js
+   * const style = &#123; color: &#39;red&#39; &#125;
+   * render() &#123; return e(&#39;div&#39;, &#123; style &#125;) &#125;
+   * ```
+   */
+  STYLE = 1 &lt;&lt; 2,
+
+  /**
+   * Indicates an element that has non-class/style dynamic props.
+   * Can also be on a component that has any dynamic props (includes
+   * class/style). when this flag is present, the vnode also has a dynamicProps
+   * array that contains the keys of the props that may change so the runtime
+   * can diff them faster (without having to worry about removed props)
+   */
+  PROPS = 1 &lt;&lt; 3,
+</code></pre>
+<p>模板里 <code>&lt;div class=&quot;static&quot; :title=&quot;x&quot;&gt;&#123;&#123; y &#125;&#125;&lt;/div&gt;</code> 编译后会带上 <code>TEXT | PROPS</code> 这样的标记。运行时拿到 VNode 时已经知道”这个节点只有文本和 props 是动态的”，可以跳过 class&#x2F;style&#x2F;children 的全量 diff。</p>
+<h3 id="Block-Tree：把动态节点从树里抽出来排成一队"><a href="#Block-Tree：把动态节点从树里抽出来排成一队" class="headerlink" title="Block Tree：把动态节点从树里抽出来排成一队"></a>Block Tree：把动态节点从树里抽出来排成一队</h3><pre><code class="283:289:packages/runtime-core/src/vnode.ts">export function openBlock(disableTracking = false): void &#123;
+  blockStack.push((currentBlock = disableTracking ? null : []))
+&#125;
+
+export function closeBlock(): void &#123;
+  blockStack.pop()
+  currentBlock = blockStack[blockStack.length - 1] || null
+&#125;
+</code></pre>
+<p>编译器在 render 函数里插入 <code>openBlock()</code>，编译进去的所有动态子节点会被收集到当前 block 的 <code>dynamicChildren</code> 数组中，<strong>跨越层级，扁平存储</strong>。更新时根本不需要递归整棵 VNode 树：</p>
+<pre><code class="874:884:packages/runtime-core/src/renderer.ts">    if (dynamicChildren) &#123;
+      // block tree 优化路径：只 patch 编译器收集到的动态子节点。
+      patchBlockChildren(
+        n1.dynamicChildren!,
+        dynamicChildren,
+        el,
+        parentComponent,
+        parentSuspense,
+        resolveChildrenNamespace(n2, namespace),
+        slotScopeIds,
+      )
+</code></pre>
+<p>这是 Vue 3 相比 Vue 2 渲染层最大的飞跃：<strong>diff 不再以树为单位，而是以”模板内可能变化的节点序列”为单位</strong>。</p>
+<h3 id="哲学落点"><a href="#哲学落点" class="headerlink" title="哲学落点"></a>哲学落点</h3><p>PatchFlags + Block Tree 的本质是一种<strong>协议</strong>：编译器和运行时不是单向调用，而是<strong>约定一份共享数据结构</strong>，让两边都减少工作。</p>
+<p>这条中间路线的代价也很显式：</p>
+<ul>
+<li>一旦用户写 render function 或来自外部的 VNode，整棵 block 退化成 <code>BAIL</code> 模式，所有优化失效。</li>
+<li>编译器输出和运行时实现强耦合，两者必须同版本演进。</li>
+</ul>
+<blockquote>
+<p>单层最简的方案往往不是最优解。让构建期和运行期协作，但要有清晰的协议作边界——这是 Vue 3 最值得学习的架构判断。构建期和运行时各有擅长的事情，好的框架应该让它们互相补位。</p>
+</blockquote>
+<h2 id="哲学四：用户心智是-API-的第一约束"><a href="#哲学四：用户心智是-API-的第一约束" class="headerlink" title="哲学四：用户心智是 API 的第一约束"></a>哲学四：用户心智是 API 的第一约束</h2><p>Vue 里有几个”看起来更麻烦”的设计，长期被社区争议，但都是为了<strong>保护用户心智的可预测性</strong>。</p>
+<h3 id="value：明确读写边界"><a href="#value：明确读写边界" class="headerlink" title=".value：明确读写边界"></a><code>.value</code>：明确读写边界</h3><pre><code class="js">const count = ref(0)
+count.value++ // 显式读写
+</code></pre>
+<p>vs Vue 2 的 <code>data</code> 自动 unwrap，写起来更顺。但 <code>.value</code> 换来了：</p>
+<ul>
+<li>函数边界稳定：<code>ref</code> 传进函数还是 <code>ref</code>，不会因为解构变成 snapshot。</li>
+<li>类型系统清晰：TS 能区分”响应式引用”和”普通值”。</li>
+<li>工具链可识别：<code>compiler-sfc</code> 的 ref sugar 之所以可被静态识别，靠的就是 <code>.value</code> 这个标记。</li>
+</ul>
+<h3 id="scheduler-的异步批量"><a href="#scheduler-的异步批量" class="headerlink" title="scheduler 的异步批量"></a>scheduler 的异步批量</h3><p><code>count++; count++</code> 不会触发两次更新——同一个微任务窗口里同步状态变化合并成一次：</p>
+<pre><code class="103:128:packages/runtime-core/src/scheduler.ts">export function queueJob(job: SchedulerJob): void &#123;
+  // 同一个 job 在同一轮 flush 中只允许入队一次。
+  if (!(job.flags! &amp; SchedulerJobFlags.QUEUED)) &#123;
+    const jobId = getId(job)
+    const lastJob = queue[queue.length - 1]
+    if (
+      !lastJob ||
+      // fast path when the job id is larger than the tail
+      (!(job.flags! &amp; SchedulerJobFlags.PRE) &amp;&amp; jobId &gt;= getId(lastJob))
+    ) &#123;
+      queue.push(job)
+    &#125; else &#123;
+      queue.splice(findInsertionIndex(jobId), 0, job)
+    &#125;
+
+    job.flags! |= SchedulerJobFlags.QUEUED
+
+    queueFlush()
+  &#125;
+&#125;
+
+function queueFlush() &#123;
+  if (!currentFlushPromise) &#123;
+    // 通过 Promise 微任务异步 flush，实现同一轮同步状态变更的批量更新。
+    currentFlushPromise = resolvedPromise.then(flushJobs)
+  &#125;
+&#125;
+</code></pre>
+<p>代价是同步直觉被打破：改完数据立刻读 DOM，拿到的是旧值，必须 <code>await nextTick()</code>。Vue 用一个明确的概念（nextTick）来交换”批量合并”的稳定性，而不是为了直观让两次 <code>count++</code> 触发两次更新。</p>
+<h3 id="Composition-API-与-Options-API-共存"><a href="#Composition-API-与-Options-API-共存" class="headerlink" title="Composition API 与 Options API 共存"></a>Composition API 与 Options API 共存</h3><p>这是 Vue 3 最有政治意味的设计决策。Vue 没有像 React 强推 hooks 那样强迫迁移，而是让两套 API 同时活着、互相兼容。代价是文档要讲两套、维护要顾两套；收益是 Vue 2 的存量项目升级 3.x 时心智成本极低。</p>
+<h3 id="哲学落点-1"><a href="#哲学落点-1" class="headerlink" title="哲学落点"></a>哲学落点</h3><blockquote>
+<p>API 不是函数签名，是用户理解系统的方式。<code>ref.value</code> 这种”看起来多余”的设计，本质上是在定义<strong>用户和框架之间的契约</strong>。</p>
+</blockquote>
+<p>读源码时如果只盯着实现优化，会错过 API 设计真正在保护的东西。反过来想：这个实现保护了怎样的心智？让用户少关心了什么？又刻意暴露了什么？</p>
+<h2 id="哲学五：默认路径要顺滑，逃生口要明确"><a href="#哲学五：默认路径要顺滑，逃生口要明确" class="headerlink" title="哲学五：默认路径要顺滑，逃生口要明确"></a>哲学五：默认路径要顺滑，逃生口要明确</h2><p>成熟框架的标志，是常规场景能一路走到底，复杂场景也有清晰的出口。Vue 的默认路径：</p>
+<pre><code class="text">state -&gt; render -&gt; VNode -&gt; patch -&gt; DOM
+</code></pre>
+<p>但每一段路上都留了<strong>显式的逃生口</strong>：</p>
+<table>
+<thead>
+<tr>
+<th>当默认路径不合适</th>
+<th>Vue 给的逃生口</th>
+<th>这个逃生口在保护什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>不希望对象被深代理</td>
+<td><code>markRaw</code> &#x2F; <code>shallowReactive</code> &#x2F; <code>shallowRef</code></td>
+<td>性能、第三方对象兼容、DOM 节点</td>
+</tr>
+<tr>
+<td>想自己控制副作用时机</td>
+<td><code>watch</code> 的 <code>flush</code> &#x2F; effect scheduler</td>
+<td>SSR、测试、外部异步系统集成</td>
+</tr>
+<tr>
+<td>想跨平台渲染</td>
+<td><code>createRenderer(options)</code></td>
+<td>Canvas、原生、小程序</td>
+</tr>
+<tr>
+<td>不想用模板</td>
+<td>render function &#x2F; JSX</td>
+<td>高度动态结构、TS 友好</td>
+</tr>
+<tr>
+<td>想做 SSR</td>
+<td><code>server-renderer</code> + hydration</td>
+<td>首屏性能、SEO</td>
+</tr>
+<tr>
+<td>只用响应式</td>
+<td>独立 <code>@vue/reactivity</code> 包</td>
+<td>嵌入到非 Vue 项目</td>
+</tr>
+</tbody></table>
+<pre><code class="67:73:packages/runtime-dom/src/index.ts">// runtime-dom 给 runtime-core 注入浏览器平台能力：
+// nodeOps 负责增删查改 DOM 节点，patchProp 负责更新 class/style/event/attribute 等属性。
+const rendererOptions = /*@__PURE__*/ extend(&#123; patchProp &#125;, nodeOps)
+</code></pre>
+<pre><code class="319:323:packages/runtime-core/src/renderer.ts">export function createRenderer&lt;
+  HostNode = RendererNode,
+  HostElement = RendererElement,
+&gt;(options: RendererOptions&lt;HostNode, HostElement&gt;): Renderer&lt;HostElement&gt; &#123;
+  return baseCreateRenderer&lt;HostNode, HostElement&gt;(options)
+&#125;
+</code></pre>
+<p><code>createRenderer</code> 是这一条哲学最干净的体现——平台能力被收成一个 <code>options</code> 对象，逃生口不是隐藏选项，而是公开 API。</p>
+<blockquote>
+<p>默认路径太弱，普通用户被迫学高级特性；逃生口太隐蔽，高级用户撞墙。Vue 在两端都没偷懒。</p>
+</blockquote>
+<h2 id="哲学六：每一个优化都有标价"><a href="#哲学六：每一个优化都有标价" class="headerlink" title="哲学六：每一个优化都有标价"></a>哲学六：每一个优化都有标价</h2><p>这一条是我整个源码阅读最深的体会，也是最容易被”框架优秀”叙事掩盖的部分：<strong>Vue 的每一个聪明设计，都付出了具体代价</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>设计</th>
+<th>收益</th>
+<th>代价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Proxy</code> 替代 <code>Object.defineProperty</code></td>
+<td>支持新增属性、Map&#x2F;Set、数组下标</td>
+<td>不支持 IE，Proxy 自身有性能 overhead</td>
+</tr>
+<tr>
+<td>Block Tree 跳过静态节点</td>
+<td>更新时间几乎只和动态节点数相关</td>
+<td>一旦走非编译器生成路径就 BAIL，全部失效</td>
+</tr>
+<tr>
+<td>scheduler 异步批量</td>
+<td>同一轮状态合并成一次更新</td>
+<td>改完数据立刻读 DOM 拿不到新值，需要 <code>nextTick</code></td>
+</tr>
+<tr>
+<td><code>.value</code> 显式</td>
+<td>类型清晰、边界稳定</td>
+<td>写起来啰嗦，社区反复讨论</td>
+</tr>
+<tr>
+<td>SFC 单文件组件</td>
+<td>模板&#x2F;逻辑&#x2F;样式聚合，工具链强</td>
+<td>必须有 build step，不能裸 HTML 用</td>
+</tr>
+<tr>
+<td>Composition + Options 共存</td>
+<td>迁移友好</td>
+<td>文档&#x2F;维护双倍，新手需要选边</td>
+</tr>
+<tr>
+<td>reactivity 独立包</td>
+<td>渐进式落地</td>
+<td>内部协议必须长期稳定，重构受限</td>
+</tr>
+</tbody></table>
+<p>这张表里没有一个设计是”白嫖”的。哲学不是”Vue 的选择都很对”，而是 Vue <strong>知道自己付了什么代价、并且明确告诉你这个代价</strong>。</p>
+<p>举例：<code>readonly</code> 不会为了和 <code>reactive</code> 共享代理而破坏写保护；keyed diff 追求最少移动，但前提是 <code>key</code> 能正确表达节点身份；hydration 文本不一致时<strong>告警并修正</strong>而不是假装没事——这些都是优化让位于语义。</p>
+<blockquote>
+<p>性能优化的真正纪律，不是”做到极致”，而是”在不破坏用户能理解的规则前提下，少做事”。</p>
+</blockquote>
+<h2 id="读-Vue-源码到底训练了什么"><a href="#读-Vue-源码到底训练了什么" class="headerlink" title="读 Vue 源码到底训练了什么"></a>读 Vue 源码到底训练了什么</h2><p>很多源码导读会以”如何实现一个 mini-vue”作为收尾。我倾向于不那样收。模仿一个简化版 Vue 训练的是 API 调用熟练度，而读完整 Vue 真正能训练的是另外几样：</p>
+<p>第一，<strong>识别岔路口</strong>。看到一段实现，能问出”这里本可以走另一条路，为什么没走？”——比如为什么 ref 不做自动 unwrap、为什么 scheduler 不用同步 flush、为什么 reactivity 不绑定到组件。</p>
+<p>第二，<strong>识别协议</strong>。框架内部的协议比函数签名重要——<code>PatchFlags</code> 是编译器和运行时的协议，<code>RendererOptions</code> 是 core 和平台的协议，<code>ComponentInternalInstance</code> 是 setup 和 render 的协议。好的系统是协议清晰的系统，不是函数封装好的系统。</p>
+<p>第三，<strong>识别代价</strong>。任何”优秀设计”都伴随代价。源码里能找到代价的位置：BAIL 分支、<code>__DEV__</code> 分支、各种 <code>// edge case</code> 注释、<code>shallow*</code> 系列的存在。这些”丑陋的角落”才是真实工程的样子。</p>
+<p>第四，<strong>识别边界</strong>。哪些事情 Vue 选择不做？比如不做细粒度组件级编译（这是 Solid 的方向），不做完全无 VDOM（这是 Svelte 的方向），不强推 Composition API（这是 React hooks 的方向）。理解一个框架不做什么，比理解它做了什么更难。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Vue 是<strong>渐进式框架</strong>：能力分层成可独立采用的包，从 reactivity 到 SFC 是连续光谱。</li>
+<li>Vue 走的是<strong>编译器+运行时的中间路线</strong>：PatchFlags 和 Block Tree 是这条路线的核心协议。</li>
+<li>Vue 把<strong>用户心智契约</strong>放在 API 第一位：<code>.value</code> 和 async update 不是缺陷，是有意识的边界设计。</li>
+<li>Vue 给每条默认路径都留了<strong>显式逃生口</strong>：<code>createRenderer</code>、<code>shallow*</code>、<code>server-renderer</code> 都是公开 API 而非内部细节。</li>
+<li>Vue 的每一个优化都<strong>有标价</strong>：哲学的厚度来自取舍，不是来自正确。读源码真正要沉淀的，是识别岔路、协议、代价和边界的能力。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vue3/">Vue3</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><a class="post-meta__tags" href="/tags/%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/">设计哲学</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E6%80%BB%E7%BB%93/">源码总结</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/24-Vue%203%20%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E8%B7%AF%E7%BA%BF%E5%92%8C%E6%8C%87%E5%8D%97%EF%BC%9A%E4%B8%8D%E8%A6%81%E4%BB%8E%E6%96%87%E4%BB%B6%E5%BC%80%E5%A7%8B%EF%BC%8C%E8%A6%81%E4%BB%8E%E9%97%AE%E9%A2%98%E5%BC%80%E5%A7%8B/" title="Vue 3 源码阅读路线和指南：不要从文件开始，要从问题开始"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Vue 3 源码阅读路线和指南：不要从文件开始，要从问题开始</div></div></a></div><div class="next-post pull-right"><a href="/posts/cdn-guide/" title="CDN 完全指南：从原理到实战的系统讲解"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">CDN 完全指南：从原理到实战的系统讲解</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E7%BB%99%E7%BB%93%E8%AE%BA"><span class="toc-number">1.</span> <span class="toc-text">先给结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E4%B8%80%EF%BC%9A%E6%B8%90%E8%BF%9B%E5%BC%8F%E4%B8%8D%E6%98%AF%E5%8F%A3%E5%8F%B7%EF%BC%8C%E6%98%AF%E4%B8%80%E6%9D%A1%E8%BF%9E%E7%BB%AD%E5%85%89%E8%B0%B1"><span class="toc-number">2.</span> <span class="toc-text">哲学一：渐进式不是口号，是一条连续光谱</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E4%BA%8C%EF%BC%9A%E5%A3%B0%E6%98%8E%E5%BC%8F%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%8C%E6%98%AF%E6%8A%8A%E5%8F%98%E5%8C%96%E6%94%B6%E6%95%9B%E5%88%B0%E6%95%B0%E6%8D%AE%E5%B1%82"><span class="toc-number">3.</span> <span class="toc-text">哲学二：声明式的本质，是把变化收敛到数据层</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E4%B8%89%EF%BC%9A%E7%BC%96%E8%AF%91%E5%99%A8%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E7%9A%84%E4%B8%AD%E9%97%B4%E8%B7%AF%E7%BA%BF"><span class="toc-number">4.</span> <span class="toc-text">哲学三：编译器和运行时的中间路线</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#PatchFlags%EF%BC%9A%E7%BC%96%E8%AF%91%E5%99%A8%E5%91%8A%E8%AF%89%E8%BF%90%E8%A1%8C%E6%97%B6%E2%80%9D%E5%93%AA%E9%87%8C%E6%98%AF%E5%8A%A8%E6%80%81%E7%9A%84%E2%80%9D"><span class="toc-number">4.1.</span> <span class="toc-text">PatchFlags：编译器告诉运行时”哪里是动态的”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Block-Tree%EF%BC%9A%E6%8A%8A%E5%8A%A8%E6%80%81%E8%8A%82%E7%82%B9%E4%BB%8E%E6%A0%91%E9%87%8C%E6%8A%BD%E5%87%BA%E6%9D%A5%E6%8E%92%E6%88%90%E4%B8%80%E9%98%9F"><span class="toc-number">4.2.</span> <span class="toc-text">Block Tree：把动态节点从树里抽出来排成一队</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E8%90%BD%E7%82%B9"><span class="toc-number">4.3.</span> <span class="toc-text">哲学落点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E5%9B%9B%EF%BC%9A%E7%94%A8%E6%88%B7%E5%BF%83%E6%99%BA%E6%98%AF-API-%E7%9A%84%E7%AC%AC%E4%B8%80%E7%BA%A6%E6%9D%9F"><span class="toc-number">5.</span> <span class="toc-text">哲学四：用户心智是 API 的第一约束</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#value%EF%BC%9A%E6%98%8E%E7%A1%AE%E8%AF%BB%E5%86%99%E8%BE%B9%E7%95%8C"><span class="toc-number">5.1.</span> <span class="toc-text">.value：明确读写边界</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#scheduler-%E7%9A%84%E5%BC%82%E6%AD%A5%E6%89%B9%E9%87%8F"><span class="toc-number">5.2.</span> <span class="toc-text">scheduler 的异步批量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Composition-API-%E4%B8%8E-Options-API-%E5%85%B1%E5%AD%98"><span class="toc-number">5.3.</span> <span class="toc-text">Composition API 与 Options API 共存</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E8%90%BD%E7%82%B9-1"><span class="toc-number">5.4.</span> <span class="toc-text">哲学落点</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E4%BA%94%EF%BC%9A%E9%BB%98%E8%AE%A4%E8%B7%AF%E5%BE%84%E8%A6%81%E9%A1%BA%E6%BB%91%EF%BC%8C%E9%80%83%E7%94%9F%E5%8F%A3%E8%A6%81%E6%98%8E%E7%A1%AE"><span class="toc-number">6.</span> <span class="toc-text">哲学五：默认路径要顺滑，逃生口要明确</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%B2%E5%AD%A6%E5%85%AD%EF%BC%9A%E6%AF%8F%E4%B8%80%E4%B8%AA%E4%BC%98%E5%8C%96%E9%83%BD%E6%9C%89%E6%A0%87%E4%BB%B7"><span class="toc-number">7.</span> <span class="toc-text">哲学六：每一个优化都有标价</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB-Vue-%E6%BA%90%E7%A0%81%E5%88%B0%E5%BA%95%E8%AE%AD%E7%BB%83%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">8.</span> <span class="toc-text">读 Vue 源码到底训练了什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">9.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

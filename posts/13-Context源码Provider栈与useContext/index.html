@@ -1,0 +1,342 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>React 18 源码解析 13：Context 源码之 Provider 栈与 useContext | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：Context 看起来只是跨层传值，但源码里有一个关键点：Provider 可以嵌套，因此 React 需要在 render 过程中维护一套值的入栈和出栈机制。  配套源码仓库：https:&#x2F;&#x2F;github.com&#x2F;XY0987&#x2F;react18_ori.git 系列导航 上一篇：12：合成事件系统、事件委托与优先级 下一篇：14：从 JSX 到 ReactElement 再到 Fiber">
+<meta property="og:type" content="article">
+<meta property="og:title" content="React 18 源码解析 13：Context 源码之 Provider 栈与 useContext">
+<meta property="og:url" content="http://example.com/posts/13-Context%E6%BA%90%E7%A0%81Provider%E6%A0%88%E4%B8%8EuseContext/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：Context 看起来只是跨层传值，但源码里有一个关键点：Provider 可以嵌套，因此 React 需要在 render 过程中维护一套值的入栈和出栈机制。  配套源码仓库：https:&#x2F;&#x2F;github.com&#x2F;XY0987&#x2F;react18_ori.git 系列导航 上一篇：12：合成事件系统、事件委托与优先级 下一篇：14：从 JSX 到 ReactElement 再到 Fiber">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-24T02:46:00.000Z">
+<meta property="article:modified_time" content="2026-05-24T02:51:34.012Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="React18">
+<meta property="article:tag" content="Context">
+<meta property="article:tag" content="useContext">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/13-Context%E6%BA%90%E7%A0%81Provider%E6%A0%88%E4%B8%8EuseContext/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'React 18 源码解析 13：Context 源码之 Provider 栈与 useContext',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 10:51:34'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">React 18 源码解析 13：Context 源码之 Provider 栈与 useContext</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-24T02:46:00.000Z" title="发表于 2026 10:46:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-24T02:51:34.012Z" title="更新于 2026 10:51:34">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/react/">React框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">772</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>2分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>前言：Context 看起来只是跨层传值，但源码里有一个关键点：Provider 可以嵌套，因此 React 需要在 render 过程中维护一套值的入栈和出栈机制。</p>
+</blockquote>
+<p>配套源码仓库：<code>https://github.com/XY0987/react18_ori.git</code></p>
+<h2 id="系列导航"><a href="#系列导航" class="headerlink" title="系列导航"></a>系列导航</h2><ul>
+<li>上一篇：<a href="/posts/12-%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BA%8B%E4%BB%B6%E5%A7%94%E6%89%98%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7/">12：合成事件系统、事件委托与优先级</a></li>
+<li>下一篇：<a href="/posts/14-JSX%E5%88%B0ReactElement%E5%86%8D%E5%88%B0Fiber/">14：从 JSX 到 ReactElement 再到 Fiber</a></li>
+</ul>
+<h2 id="Context-要解决什么问题"><a href="#Context-要解决什么问题" class="headerlink" title="Context 要解决什么问题"></a>Context 要解决什么问题</h2><p>普通 props 传递是逐层向下：</p>
+<pre><code class="text">App → Page → Layout → Button
+</code></pre>
+<p>如果每一层都只是转发同一个值，就会很啰嗦。</p>
+<p>Context 提供的是一种“跨层读取”的能力：</p>
+<pre><code class="tsx">const ThemeContext = createContext(&#39;light&#39;);
+
+&lt;ThemeContext.Provider value=&quot;dark&quot;&gt;
+  &lt;Button /&gt;
+&lt;/ThemeContext.Provider&gt;
+</code></pre>
+<p><code>Button</code> 里可以通过 <code>useContext(ThemeContext)</code> 读取到 <code>dark</code>。</p>
+<h2 id="createContext-创建了什么"><a href="#createContext-创建了什么" class="headerlink" title="createContext 创建了什么"></a>createContext 创建了什么</h2><p><code>createContext(defaultValue)</code> 会创建一个 context 对象：</p>
+<pre><code class="text">context = &#123;
+  $$typeof: REACT_CONTEXT_TYPE,
+  Provider: ...,
+  _currentValue: defaultValue
+&#125;
+</code></pre>
+<p>其中最关键的是两个字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>_currentValue</code></td>
+<td>当前 render 过程中这个 context 的值</td>
+</tr>
+<tr>
+<td><code>Provider</code></td>
+<td>一个特殊 React 类型，指向这个 context</td>
+</tr>
+</tbody></table>
+<p>Provider 本身不是普通组件，而是带 <code>REACT_PROVIDER_TYPE</code> 标记的特殊对象。</p>
+<p>reconciler 遇到 Provider 对应的 Fiber 时，会执行专门逻辑。</p>
+<h2 id="Provider-如何进入-Fiber-流程"><a href="#Provider-如何进入-Fiber-流程" class="headerlink" title="Provider 如何进入 Fiber 流程"></a>Provider 如何进入 Fiber 流程</h2><p>JSX：</p>
+<pre><code class="tsx">&lt;ThemeContext.Provider value=&quot;dark&quot;&gt;
+  &lt;Button /&gt;
+&lt;/ThemeContext.Provider&gt;
+</code></pre>
+<p>会先变成 ReactElement。</p>
+<p>创建 Fiber 时，React 看到 <code>type.$$typeof === REACT_PROVIDER_TYPE</code>，会把这个 Fiber 标记为 <code>ContextProvider</code>。</p>
+<p>之后在 <code>beginWork</code> 中进入：</p>
+<pre><code class="text">updateContextProvider
+  → pushProvider(context, newValue)
+  → reconcileChildren
+</code></pre>
+<p>也就是说，Provider 的 value 是在“递”阶段进入子树前写入的。</p>
+<h2 id="pushProvider：进入-Provider-子树"><a href="#pushProvider：进入-Provider-子树" class="headerlink" title="pushProvider：进入 Provider 子树"></a>pushProvider：进入 Provider 子树</h2><p><code>pushProvider(context, newValue)</code> 做两件事：</p>
+<pre><code class="text">保存旧值
+context._currentValue = newValue
+</code></pre>
+<p>为什么要保存旧值？</p>
+<p>因为 Provider 可以嵌套：</p>
+<pre><code class="tsx">&lt;ThemeContext.Provider value=&quot;outer&quot;&gt;
+  &lt;ThemeContext.Provider value=&quot;inner&quot;&gt;
+    &lt;Child /&gt;
+  &lt;/ThemeContext.Provider&gt;
+&lt;/ThemeContext.Provider&gt;
+</code></pre>
+<p>进入内层 Provider 时，<code>_currentValue</code> 会变成 <code>inner</code>。</p>
+<p>离开内层 Provider 后，必须恢复成 <code>outer</code>，否则会影响后面的兄弟子树。</p>
+<h2 id="popProvider：离开-Provider-子树"><a href="#popProvider：离开-Provider-子树" class="headerlink" title="popProvider：离开 Provider 子树"></a>popProvider：离开 Provider 子树</h2><p>Provider 子树完成后，<code>completeWork</code> 会调用 <code>popProvider(context)</code>。</p>
+<p>流程是：</p>
+<pre><code class="text">ContextProvider beginWork
+  → pushProvider：设置当前值
+  → 处理 children
+  → completeWork
+  → popProvider：恢复旧值
+</code></pre>
+<p>这和函数调用栈很像：进入作用域时压入新值，离开作用域时恢复旧值。</p>
+<h2 id="useContext-如何读取值"><a href="#useContext-如何读取值" class="headerlink" title="useContext 如何读取值"></a>useContext 如何读取值</h2><p><code>useContext(context)</code> 在简化实现里最终会走到 <code>readContext</code>：</p>
+<pre><code class="text">readContext(context)
+  → return context._currentValue
+</code></pre>
+<p>这也是为什么 Provider 的 push&#x2F;pop 必须和 Fiber 遍历顺序配合：</p>
+<p>当子组件执行 <code>useContext</code> 时，它必须处在正确 Provider 的作用域里。</p>
+<h2 id="Context-和-Hooks-dispatcher-的关系"><a href="#Context-和-Hooks-dispatcher-的关系" class="headerlink" title="Context 和 Hooks dispatcher 的关系"></a>Context 和 Hooks dispatcher 的关系</h2><p><code>useContext</code> 和 <code>useState</code> 一样，也是通过 dispatcher 转发：</p>
+<pre><code class="text">useContext
+  → resolveDispatcher
+  → dispatcher.useContext
+  → readContext
+</code></pre>
+<p>所以它也必须在函数组件 render 期间调用。</p>
+<p>脱离函数组件调用时，没有当前 dispatcher，也没有正在渲染的 Fiber 上下文。</p>
+<h2 id="Context-的完整流程"><a href="#Context-的完整流程" class="headerlink" title="Context 的完整流程"></a>Context 的完整流程</h2><pre><code class="text">createContext(defaultValue)
+  │
+  ▼
+创建 context 和 Provider 类型
+  │
+  ▼
+&lt;Context.Provider value=&#123;value&#125;&gt;
+  │
+  ▼
+createFiberFromElement → ContextProvider Fiber
+  │
+  ▼
+beginWork: pushProvider
+  │
+  ▼
+子组件 renderWithHooks
+  │
+  ▼
+useContext → readContext → context._currentValue
+  │
+  ▼
+completeWork: popProvider
+</code></pre>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li><code>createContext</code> 创建 context 对象和特殊的 Provider 类型。</li>
+<li>Provider 对应 <code>ContextProvider</code> Fiber，由 reconciler 特殊处理。</li>
+<li>进入 Provider 子树时 <code>pushProvider</code> 写入新值，离开时 <code>popProvider</code> 恢复旧值。</li>
+<li>Provider 嵌套依赖栈结构保存历史值。</li>
+<li><code>useContext</code> 本质上读取当前 render 作用域中的 <code>context._currentValue</code>。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/React18/">React18</a><a class="post-meta__tags" href="/tags/Context/">Context</a><a class="post-meta__tags" href="/tags/useContext/">useContext</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/12-%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BA%8B%E4%BB%B6%E5%A7%94%E6%89%98%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7/" title="React 18 源码解析 12：合成事件系统、事件委托与优先级"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">React 18 源码解析 12：合成事件系统、事件委托与优先级</div></div></a></div><div class="next-post pull-right"><a href="/posts/14-JSX%E5%88%B0ReactElement%E5%86%8D%E5%88%B0Fiber/" title="React 18 源码解析 14：从 JSX 到 ReactElement 再到 Fiber"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">React 18 源码解析 14：从 JSX 到 ReactElement 再到 Fiber</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E5%88%97%E5%AF%BC%E8%88%AA"><span class="toc-number">1.</span> <span class="toc-text">系列导航</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Context-%E8%A6%81%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="toc-number">2.</span> <span class="toc-text">Context 要解决什么问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#createContext-%E5%88%9B%E5%BB%BA%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">3.</span> <span class="toc-text">createContext 创建了什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Provider-%E5%A6%82%E4%BD%95%E8%BF%9B%E5%85%A5-Fiber-%E6%B5%81%E7%A8%8B"><span class="toc-number">4.</span> <span class="toc-text">Provider 如何进入 Fiber 流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#pushProvider%EF%BC%9A%E8%BF%9B%E5%85%A5-Provider-%E5%AD%90%E6%A0%91"><span class="toc-number">5.</span> <span class="toc-text">pushProvider：进入 Provider 子树</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#popProvider%EF%BC%9A%E7%A6%BB%E5%BC%80-Provider-%E5%AD%90%E6%A0%91"><span class="toc-number">6.</span> <span class="toc-text">popProvider：离开 Provider 子树</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#useContext-%E5%A6%82%E4%BD%95%E8%AF%BB%E5%8F%96%E5%80%BC"><span class="toc-number">7.</span> <span class="toc-text">useContext 如何读取值</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Context-%E5%92%8C-Hooks-dispatcher-%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-number">8.</span> <span class="toc-text">Context 和 Hooks dispatcher 的关系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Context-%E7%9A%84%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-number">9.</span> <span class="toc-text">Context 的完整流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">10.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

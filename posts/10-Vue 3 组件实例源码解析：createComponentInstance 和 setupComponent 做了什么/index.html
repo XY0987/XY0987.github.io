@@ -1,0 +1,778 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vue 3 组件实例源码解析：createComponentInstance 和 setupComponent 做了什么 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：上一篇看了 renderer 如何通过 mountComponent 进入组件挂载流程。这一篇继续往组件内部走，重点看 createComponentInstance 和 setupComponent：组件实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 3 组件实例源码解析：createComponentInstance 和 setupComponent 做了什么">
+<meta property="og:url" content="http://example.com/posts/10-Vue%203%20%E7%BB%84%E4%BB%B6%E5%AE%9E%E4%BE%8B%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9AcreateComponentInstance%20%E5%92%8C%20setupComponent%20%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：上一篇看了 renderer 如何通过 mountComponent 进入组件挂载流程。这一篇继续往组件内部走，重点看 createComponentInstance 和 setupComponent：组件实">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-31T15:49:00.000Z">
+<meta property="article:modified_time" content="2026-05-31T07:26:04.979Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vue3">
+<meta property="article:tag" content="源码解析">
+<meta property="article:tag" content="组件系统">
+<meta property="article:tag" content="component">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/10-Vue%203%20%E7%BB%84%E4%BB%B6%E5%AE%9E%E4%BE%8B%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9AcreateComponentInstance%20%E5%92%8C%20setupComponent%20%E5%81%9A%E4%BA%86%E4%BB%80%E4%B9%88/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vue 3 组件实例源码解析：createComponentInstance 和 setupComponent 做了什么',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:26:04'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vue 3 组件实例源码解析：createComponentInstance 和 setupComponent 做了什么</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-31T15:49:00.000Z" title="发表于 2026 23:49:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-31T07:26:04.979Z" title="更新于 2026 15:26:04">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.3k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>13分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>源码说明：本文分析的源码基于 <code>vue@3.5.21</code>，对应官方仓库为 <a target="_blank" rel="noopener" href="https://github.com/vuejs/core/tree/v3.5.21">vuejs&#x2F;core</a>，本文所在学习仓库为 <a target="_blank" rel="noopener" href="https://github.com/XY0987/vue_ori_learning">XY0987&#x2F;vue_ori_learning</a>。</p>
+</blockquote>
+<blockquote>
+<p>前言：上一篇看了 renderer 如何通过 <code>mountComponent</code> 进入组件挂载流程。这一篇继续往组件内部走，重点看 <code>createComponentInstance</code> 和 <code>setupComponent</code>：组件实例如何创建，props、slots、setup、render 又是如何一步步准备好的。</p>
+</blockquote>
+<h2 id="先给结论"><a href="#先给结论" class="headerlink" title="先给结论"></a>先给结论</h2><p>组件挂载的核心链路是：</p>
+<pre><code class="text">mountComponent(initialVNode)
+  │
+  ▼
+createComponentInstance(vnode)
+  │
+  ├─ 创建组件实例对象
+  ├─ 继承 appContext / provides
+  ├─ 初始化 propsOptions / emitsOptions
+  └─ 绑定 emit
+  │
+  ▼
+setupComponent(instance)
+  │
+  ├─ initProps
+  ├─ initSlots
+  └─ setupStatefulComponent
+       │
+       ├─ 创建 render proxy
+       ├─ 调用 setup(props, context)
+       ├─ handleSetupResult
+       └─ finishComponentSetup
+            │
+            ├─ 确定 render 函数
+            └─ 应用 Options API
+</code></pre>
+<p>如果说 <code>renderer.ts</code> 负责“把组件 VNode 放进渲染流程”，那 <code>component.ts</code> 就负责“把组件 VNode 变成可执行的组件实例”。</p>
+<h2 id="组件实例是什么"><a href="#组件实例是什么" class="headerlink" title="组件实例是什么"></a>组件实例是什么</h2><p>在 Vue 运行时里，组件不是直接执行组件对象。Vue 会先为组件创建一个内部实例 <code>ComponentInternalInstance</code>。</p>
+<p>这个实例保存了组件运行所需的全部状态：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>vnode</code></td>
+<td>当前组件对应的 VNode</td>
+</tr>
+<tr>
+<td><code>type</code></td>
+<td>组件定义对象或函数</td>
+</tr>
+<tr>
+<td><code>parent</code></td>
+<td>父组件实例</td>
+</tr>
+<tr>
+<td><code>appContext</code></td>
+<td>应用级上下文</td>
+</tr>
+<tr>
+<td><code>props</code> &#x2F; <code>attrs</code></td>
+<td>props 和非 props 属性</td>
+</tr>
+<tr>
+<td><code>slots</code></td>
+<td>插槽</td>
+</tr>
+<tr>
+<td><code>setupState</code></td>
+<td>setup 返回对象</td>
+</tr>
+<tr>
+<td><code>render</code></td>
+<td>最终渲染函数</td>
+</tr>
+<tr>
+<td><code>subTree</code></td>
+<td>组件 render 后得到的子树 VNode</td>
+</tr>
+<tr>
+<td><code>effect</code></td>
+<td>组件渲染 ReactiveEffect</td>
+</tr>
+<tr>
+<td><code>update</code> &#x2F; <code>job</code></td>
+<td>组件更新入口和调度任务</td>
+</tr>
+</tbody></table>
+<p>组件实例是连接“组件定义”和“渲染执行”的中间层。</p>
+<h2 id="createComponentInstance：创建组件实例"><a href="#createComponentInstance：创建组件实例" class="headerlink" title="createComponentInstance：创建组件实例"></a>createComponentInstance：创建组件实例</h2><p>组件挂载时，renderer 会调用 <code>createComponentInstance</code>。</p>
+<pre><code class="607:712:packages/runtime-core/src/component.ts">export function createComponentInstance(
+  vnode: VNode,
+  parent: ComponentInternalInstance | null,
+  suspense: SuspenseBoundary | null,
+): ComponentInternalInstance &#123;
+  const type = vnode.type as ConcreteComponent
+  // 组件实例继承父组件的 appContext；根组件则从根 VNode 上读取 appContext。
+  // appContext 提供全局组件/指令、app.provide、config 等应用级能力。
+  const appContext =
+    (parent ? parent.appContext : vnode.appContext) || emptyAppContext
+
+  const instance: ComponentInternalInstance = &#123;
+    uid: uid++,
+    vnode,
+    type,
+    parent,
+    appContext,
+    root: null!, // to be immediately set
+    next: null,
+    subTree: null!, // will be set synchronously right after creation
+    effect: null!,
+    update: null!, // will be set synchronously right after creation
+    job: null!,
+    // 每个组件实例都有独立 effectScope，组件卸载时可以统一停止 render effect、watch 等副作用。
+    scope: new EffectScope(true /* detached */),
+    render: null,
+    proxy: null,
+    exposed: null,
+    exposeProxy: null,
+    withProxy: null,
+
+    // provide/inject 原型链：子组件默认继承父组件 provides；根组件继承 appContext.provides。
+    provides: parent ? parent.provides : Object.create(appContext.provides),
+    ids: parent ? parent.ids : [&#39;&#39;, 0, 0],
+    accessCache: null!,
+    renderCache: [],
+</code></pre>
+<p>这里有几个重点。</p>
+<p>第一，组件实例会继承 <code>appContext</code>。根组件从根 VNode 上拿，子组件从父组件拿。</p>
+<p>这保证了全局组件、全局指令、<code>app.provide</code>、<code>app.config</code> 可以在整棵组件树里共享。</p>
+<p>第二，每个组件实例都有自己的 <code>EffectScope</code>：</p>
+<pre><code class="ts">scope: new EffectScope(true)
+</code></pre>
+<p>组件卸载时，可以统一停止这个 scope 中的副作用，比如组件渲染 effect、watch 等。</p>
+<p>第三，<code>provides</code> 是原型链结构：</p>
+<pre><code class="ts">provides: parent ? parent.provides : Object.create(appContext.provides)
+</code></pre>
+<p>子组件默认继承父组件的 provides。真正调用组件级 <code>provide</code> 时，会在需要时创建新的 provides 对象，从而形成层级覆盖。</p>
+<h2 id="props-emits-和运行时状态容器"><a href="#props-emits-和运行时状态容器" class="headerlink" title="props&#x2F;emits 和运行时状态容器"></a>props&#x2F;emits 和运行时状态容器</h2><p>实例创建时还会提前规范化 props 和 emits：</p>
+<pre><code class="644:670:packages/runtime-core/src/component.ts">    // local resolved assets
+    components: null,
+    directives: null,
+
+    // props/emits 选项在实例创建时先规范化，后续初始化 props 和 emit 校验会复用这些结果。
+    propsOptions: normalizePropsOptions(type, appContext),
+    emitsOptions: normalizeEmitsOptions(type, appContext),
+
+    // emit
+    emit: null!, // to be set immediately
+    emitted: null,
+
+    // props default value
+    propsDefaults: EMPTY_OBJ,
+
+    // inheritAttrs
+    inheritAttrs: type.inheritAttrs,
+
+    // 组件实例的运行时状态容器：props/attrs/slots/setupState/data/refs 都挂在实例上。
+    ctx: EMPTY_OBJ,
+    data: EMPTY_OBJ,
+    props: EMPTY_OBJ,
+    attrs: EMPTY_OBJ,
+    slots: EMPTY_OBJ,
+    refs: EMPTY_OBJ,
+    setupState: EMPTY_OBJ,
+    setupContext: null,
+</code></pre>
+<p>这些字段后续会被不同阶段填充：</p>
+<ul>
+<li><code>initProps</code> 填充 <code>props</code> &#x2F; <code>attrs</code></li>
+<li><code>initSlots</code> 填充 <code>slots</code></li>
+<li><code>setup</code> 返回对象后填充 <code>setupState</code></li>
+<li>Options API 的 <code>data</code> 会填充 <code>data</code></li>
+<li>模板 ref 会填充 <code>refs</code></li>
+</ul>
+<h2 id="root-和-emit-初始化"><a href="#root-和-emit-初始化" class="headerlink" title="root 和 emit 初始化"></a>root 和 emit 初始化</h2><p>实例最后会设置 <code>ctx</code>、<code>root</code> 和 <code>emit</code>：</p>
+<pre><code class="698:712:packages/runtime-core/src/component.ts">  if (__DEV__) &#123;
+    instance.ctx = createDevRenderContext(instance)
+  &#125; else &#123;
+    instance.ctx = &#123; _: instance &#125;
+  &#125;
+  // root 指向整棵组件树的根实例；emit 绑定当前实例，后续 this.$emit/setupContext.emit 都会走这里。
+  instance.root = parent ? parent.root : instance
+  instance.emit = emit.bind(null, instance)
+
+  // apply custom element special handling
+  if (vnode.ce) &#123;
+    vnode.ce(instance)
+  &#125;
+
+  return instance
+&#125;
+</code></pre>
+<p><code>emit</code> 绑定当前实例很重要。因为事件校验、事件名转换、已触发事件记录等，都需要知道当前是哪个组件在 emit。</p>
+<h2 id="currentInstance：让-setup-知道当前组件"><a href="#currentInstance：让-setup-知道当前组件" class="headerlink" title="currentInstance：让 setup 知道当前组件"></a>currentInstance：让 setup 知道当前组件</h2><p>很多组合式 API 都依赖当前组件实例，比如：</p>
+<ul>
+<li><code>getCurrentInstance</code></li>
+<li><code>provide</code> &#x2F; <code>inject</code></li>
+<li>生命周期注册</li>
+<li><code>useAttrs</code> &#x2F; <code>useSlots</code></li>
+</ul>
+<p>这些 API 能工作，是因为 Vue 在执行 setup 或生命周期时会设置 <code>currentInstance</code>。</p>
+<pre><code class="770:784:packages/runtime-core/src/component.ts">export const setCurrentInstance = (instance: ComponentInternalInstance) =&gt; &#123;
+  const prev = currentInstance
+  // setup/lifecycle 执行期间设置 currentInstance，让 getCurrentInstance、provide/inject 等 API 能定位当前组件。
+  internalSetCurrentInstance(instance)
+  instance.scope.on()
+  return (): void =&gt; &#123;
+    instance.scope.off()
+    internalSetCurrentInstance(prev)
+  &#125;
+&#125;
+
+export const unsetCurrentInstance = (): void =&gt; &#123;
+  currentInstance &amp;&amp; currentInstance.scope.off()
+  internalSetCurrentInstance(null)
+&#125;
+</code></pre>
+<p>这里还会打开当前组件的 <code>effectScope</code>，这样 setup 里创建的副作用可以归属到当前组件 scope。</p>
+<h2 id="setupComponent：初始化-props、slots-和-setup"><a href="#setupComponent：初始化-props、slots-和-setup" class="headerlink" title="setupComponent：初始化 props、slots 和 setup"></a>setupComponent：初始化 props、slots 和 setup</h2><p>创建完组件实例后，renderer 会调用 <code>setupComponent</code>。</p>
+<pre><code class="807:827:packages/runtime-core/src/component.ts">export function setupComponent(
+  instance: ComponentInternalInstance,
+  isSSR = false,
+  optimized = false,
+): Promise&lt;void&gt; | undefined &#123;
+  isSSR &amp;&amp; setInSSRSetupState(isSSR)
+
+  const &#123; props, children &#125; = instance.vnode
+  const isStateful = isStatefulComponent(instance)
+  // 初始化 props 和 slots，这是 setup(props, context) 之前必须准备好的输入。
+  initProps(instance, props, isStateful, isSSR)
+  initSlots(instance, children, optimized || isSSR)
+
+  // 只有有状态组件才需要执行 setupStatefulComponent；函数式组件没有实例状态初始化流程。
+  const setupResult = isStateful
+    ? setupStatefulComponent(instance, isSSR)
+    : undefined
+
+  isSSR &amp;&amp; setInSSRSetupState(false)
+  return setupResult
+&#125;
+</code></pre>
+<p>这一步做了两件基础工作：</p>
+<ol>
+<li>初始化 props 和 attrs。</li>
+<li>初始化 slots。</li>
+</ol>
+<p>然后根据组件类型判断是否继续执行 <code>setupStatefulComponent</code>。</p>
+<p>函数式组件没有完整的状态实例初始化过程，所以这里重点是有状态组件。</p>
+<h2 id="setupStatefulComponent：创建代理并执行-setup"><a href="#setupStatefulComponent：创建代理并执行-setup" class="headerlink" title="setupStatefulComponent：创建代理并执行 setup"></a>setupStatefulComponent：创建代理并执行 setup</h2><p>有状态组件会先创建访问缓存和组件代理。</p>
+<pre><code class="859:867:packages/runtime-core/src/component.ts">  // 0. 创建渲染代理的属性访问缓存，用于加速 this.xxx 从 setupState/props/data/ctx 中解析。
+  instance.accessCache = Object.create(null)
+  // 1. 创建组件公开实例代理。render 中的 this 和用户拿到的组件代理都会经过这些 handlers。
+  instance.proxy = new Proxy(instance.ctx, PublicInstanceProxyHandlers)
+  if (__DEV__) &#123;
+    exposePropsOnRenderContext(instance)
+  &#125;
+  // 2. 执行 setup()
+  const &#123; setup &#125; = Component
+</code></pre>
+<p><code>instance.proxy</code> 就是我们常说的组件公开实例代理。模板和 render 函数里访问 <code>this.xxx</code> 时，会通过它去解析：</p>
+<ul>
+<li><code>setupState</code></li>
+<li><code>data</code></li>
+<li><code>props</code></li>
+<li><code>ctx</code></li>
+<li><code>$attrs</code>、<code>$slots</code>、<code>$emit</code> 等公共属性</li>
+</ul>
+<p><code>accessCache</code> 是访问缓存，用来记住某个 key 上次是从哪里解析出来的，避免每次 render 都重复判断。</p>
+<h2 id="setup-的执行过程"><a href="#setup-的执行过程" class="headerlink" title="setup 的执行过程"></a>setup 的执行过程</h2><p>如果组件定义了 <code>setup</code>，Vue 会这样执行：</p>
+<pre><code class="868:886:packages/runtime-core/src/component.ts">  if (setup) &#123;
+    // 执行 setup 本身不应该被当前外层 effect 收集依赖，因此先暂停依赖追踪。
+    pauseTracking()
+    const setupContext = (instance.setupContext =
+      setup.length &gt; 1 ? createSetupContext(instance) : null)
+    const reset = setCurrentInstance(instance)
+    const setupResult = callWithErrorHandling(
+      setup,
+      instance,
+      ErrorCodes.SETUP_FUNCTION,
+      [
+        // props 在 setup 中是只读的，开发环境用 shallowReadonly 防止直接修改。
+        __DEV__ ? shallowReadonly(instance.props) : instance.props,
+        setupContext,
+      ],
+    )
+    const isAsyncSetup = isPromise(setupResult)
+    resetTracking()
+    reset()
+</code></pre>
+<p>这里有几个关键点。</p>
+<p>第一，执行 setup 前会 <code>pauseTracking()</code>。</p>
+<p>setup 本身不应该被外部 effect 收集依赖。真正的组件响应式更新，应该发生在 render effect 执行 render 时。</p>
+<p>第二，<code>setupContext</code> 是按需创建的。</p>
+<pre><code class="ts">setup.length &gt; 1 ? createSetupContext(instance) : null
+</code></pre>
+<p>如果用户只写：</p>
+<pre><code class="ts">setup(props) &#123;&#125;
+</code></pre>
+<p>就不创建 context。如果写：</p>
+<pre><code class="ts">setup(props, context) &#123;&#125;
+</code></pre>
+<p>才创建 <code>attrs</code>、<code>slots</code>、<code>emit</code>、<code>expose</code> 组成的 context。</p>
+<p>第三，props 在开发环境是 <code>shallowReadonly</code>。</p>
+<p>所以 setup 里直接修改 props 会被警告。</p>
+<h2 id="async-setup-的处理"><a href="#async-setup-的处理" class="headerlink" title="async setup 的处理"></a>async setup 的处理</h2><p><code>setup</code> 可能返回 Promise。</p>
+<pre><code class="893:906:packages/runtime-core/src/component.ts">    if (isAsyncSetup) &#123;
+      setupResult.then(unsetCurrentInstance, unsetCurrentInstance)
+      if (isSSR) &#123;
+        // SSR 会等待 async setup 完成后继续处理 setup 结果。
+        return setupResult
+          .then((resolvedResult: unknown) =&gt; &#123;
+            handleSetupResult(instance, resolvedResult, isSSR)
+          &#125;)
+          .catch(e =&gt; &#123;
+            handleError(e, instance, ErrorCodes.SETUP_FUNCTION)
+          &#125;)
+      &#125; else if (__FEATURE_SUSPENSE__) &#123;
+        // 客户端 async setup 需要 Suspense 承接，这里先记录 Promise，后续由 Suspense 重新进入挂载流程。
+        instance.asyncDep = setupResult
+</code></pre>
+<p>SSR 场景可以等待 Promise 完成。客户端场景下，async setup 需要配合 Suspense，否则开发环境会警告。</p>
+<h2 id="handleSetupResult：处理-setup-返回值"><a href="#handleSetupResult：处理-setup-返回值" class="headerlink" title="handleSetupResult：处理 setup 返回值"></a>handleSetupResult：处理 setup 返回值</h2><p>setup 返回值主要有两类。</p>
+<h3 id="返回函数：作为-render-函数"><a href="#返回函数：作为-render-函数" class="headerlink" title="返回函数：作为 render 函数"></a>返回函数：作为 render 函数</h3><pre><code class="930:944:packages/runtime-core/src/component.ts">export function handleSetupResult(
+  instance: ComponentInternalInstance,
+  setupResult: unknown,
+  isSSR: boolean,
+): void &#123;
+  if (isFunction(setupResult)) &#123;
+    // setup 返回函数时，这个函数就是组件的内联 render。
+    if (__SSR__ &amp;&amp; (instance.type as ComponentOptions).__ssrInlineRender) &#123;
+      // when the function&#39;s name is `ssrRender` (compiled by SFC inline mode),
+      // set it as ssrRender instead.
+      instance.ssrRender = setupResult
+    &#125; else &#123;
+      instance.render = setupResult as InternalRenderFunction
+    &#125;
+</code></pre>
+<p>这对应这种写法：</p>
+<pre><code class="ts">setup() &#123;
+  return () =&gt; h(&#39;div&#39;, &#39;hello&#39;)
+&#125;
+</code></pre>
+<p>返回函数时，它就是组件 render 函数。</p>
+<h3 id="返回对象：作为-setupState"><a href="#返回对象：作为-setupState" class="headerlink" title="返回对象：作为 setupState"></a>返回对象：作为 setupState</h3><pre><code class="944:968:packages/runtime-core/src/component.ts">  &#125; else if (isObject(setupResult)) &#123;
+    if (__DEV__ &amp;&amp; isVNode(setupResult)) &#123;
+      warn(
+        `setup() should not return VNodes directly - ` +
+          `return a render function instead.`,
+      )
+    &#125;
+    // setup 返回对象时，这些对象会作为 setupState 暴露给 render/template。
+    if (__DEV__ || __FEATURE_PROD_DEVTOOLS__) &#123;
+      instance.devtoolsRawSetupState = setupResult
+    &#125;
+    // proxyRefs 让模板/render 访问 setup 返回的 ref 时自动浅层解包。
+    instance.setupState = proxyRefs(setupResult)
+    if (__DEV__) &#123;
+      exposeSetupStateOnRenderContext(instance)
+    &#125;
+</code></pre>
+<p>这对应最常见的 Composition API 写法：</p>
+<pre><code class="ts">setup() &#123;
+  const count = ref(0)
+  return &#123; count &#125;
+&#125;
+</code></pre>
+<p>返回对象会被放进 <code>instance.setupState</code>，并经过 <code>proxyRefs</code> 处理，所以模板里可以直接写：</p>
+<pre><code class="vue">&#123;&#123; count &#125;&#125;
+</code></pre>
+<p>而不需要：</p>
+<pre><code class="vue">&#123;&#123; count.value &#125;&#125;
+</code></pre>
+<h2 id="finishComponentSetup：确定-render-函数"><a href="#finishComponentSetup：确定-render-函数" class="headerlink" title="finishComponentSetup：确定 render 函数"></a>finishComponentSetup：确定 render 函数</h2><p>无论 setup 返回什么，最后都会进入 <code>finishComponentSetup</code>。</p>
+<pre><code class="994:1053:packages/runtime-core/src/component.ts">export function finishComponentSetup(
+  instance: ComponentInternalInstance,
+  isSSR: boolean,
+  skipOptions?: boolean,
+): void &#123;
+  const Component = instance.type as ComponentOptions
+
+  if (__COMPAT__) &#123;
+    convertLegacyRenderFn(instance)
+
+    if (__DEV__ &amp;&amp; Component.compatConfig) &#123;
+      validateCompatConfig(Component.compatConfig)
+    &#125;
+  &#125;
+
+  // 规范化 render 函数：setup 返回 render 时前面已经设置过；否则从组件 render/template 中获得。
+  if (!instance.render) &#123;
+    // full build 下存在 runtime compiler，可以在客户端把 template 即时编译成 render。
+    // runtime-only 构建没有 compile，这一步会跳过。
+    if (!isSSR &amp;&amp; compile &amp;&amp; !Component.render) &#123;
+      const template =
+        (__COMPAT__ &amp;&amp;
+          instance.vnode.props &amp;&amp;
+          instance.vnode.props[&#39;inline-template&#39;]) ||
+        Component.template ||
+        (__FEATURE_OPTIONS_API__ &amp;&amp; resolveMergedOptions(instance).template)
+      if (template) &#123;
+</code></pre>
+<p>这一步负责确定最终的 <code>instance.render</code>。</p>
+<p>来源有几种：</p>
+<table>
+<thead>
+<tr>
+<th>来源</th>
+<th>场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>setup 返回函数</td>
+<td><code>setup() &#123; return () =&gt; ... &#125;</code></td>
+</tr>
+<tr>
+<td>组件本身有 render</td>
+<td><code>render() &#123; ... &#125;</code> 或 SFC 编译后结果</td>
+</tr>
+<tr>
+<td>template 运行时编译</td>
+<td>full build 下 <code>template</code> 编译成 render</td>
+</tr>
+<tr>
+<td>都没有</td>
+<td>使用 <code>NOOP</code>，开发环境警告</td>
+</tr>
+</tbody></table>
+<p>最终会落到：</p>
+<pre><code class="1052:1064:packages/runtime-core/src/component.ts">    // 最终把组件 render 函数落到 instance.render 上，renderer 后续会调用 renderComponentRoot(instance)。
+    instance.render = (Component.render || NOOP) as InternalRenderFunction
+
+    // for runtime-compiled render functions using `with` blocks, the render
+    // proxy used needs a different `has` handler which is more performant and
+    // also only allows a whitelist of globals to fallthrough.
+    if (installWithProxy) &#123;
+      installWithProxy(instance)
+    &#125;
+  &#125;
+
+  // Options API 支持：把 data/computed/methods/watch/lifecycle 等选项应用到实例上。
+</code></pre>
+<p><code>renderer.ts</code> 后续执行 <code>renderComponentRoot(instance)</code> 时，就会调用这里准备好的 <code>instance.render</code>。</p>
+<h2 id="Options-API-在哪里处理"><a href="#Options-API-在哪里处理" class="headerlink" title="Options API 在哪里处理"></a>Options API 在哪里处理</h2><p>如果构建支持 Options API，<code>finishComponentSetup</code> 最后会调用 <code>applyOptions</code>：</p>
+<pre><code class="1063:1073:packages/runtime-core/src/component.ts">  // Options API 支持：把 data/computed/methods/watch/lifecycle 等选项应用到实例上。
+  if (__FEATURE_OPTIONS_API__ &amp;&amp; !(__COMPAT__ &amp;&amp; skipOptions)) &#123;
+    const reset = setCurrentInstance(instance)
+    pauseTracking()
+    try &#123;
+      applyOptions(instance)
+    &#125; finally &#123;
+      resetTracking()
+      reset()
+    &#125;
+  &#125;
+</code></pre>
+<p><code>data</code>、<code>computed</code>、<code>methods</code>、<code>watch</code>、生命周期选项等，都会在这个阶段被应用到实例上。</p>
+<p>Composition API 的 <code>setup</code> 在前，Options API 的选项应用在后。</p>
+<h2 id="createSetupContext：setup-的第二个参数"><a href="#createSetupContext：setup-的第二个参数" class="headerlink" title="createSetupContext：setup 的第二个参数"></a>createSetupContext：setup 的第二个参数</h2><p>当用户写 <code>setup(props, context)</code> 时，Vue 会创建 setup context：</p>
+<pre><code class="1125:1179:packages/runtime-core/src/component.ts">export function createSetupContext(
+  instance: ComponentInternalInstance,
+): SetupContext &#123;
+  // setupContext 是 setup(props, context) 的第二个参数，按需提供 attrs/slots/emit/expose。
+  const expose: SetupContext[&#39;expose&#39;] = exposed =&gt; &#123;
+    if (__DEV__) &#123;
+      if (instance.exposed) &#123;
+        warn(`expose() should be called only once per setup().`)
+      &#125;
+</code></pre>
+<p>context 包含四个核心能力：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>attrs</code></td>
+<td>非 props attribute</td>
+</tr>
+<tr>
+<td><code>slots</code></td>
+<td>插槽对象</td>
+</tr>
+<tr>
+<td><code>emit</code></td>
+<td>触发组件事件</td>
+</tr>
+<tr>
+<td><code>expose</code></td>
+<td>控制父组件通过 ref 能访问什么</td>
+</tr>
+</tbody></table>
+<p><code>expose</code> 的结果会影响 <code>getComponentPublicInstance</code>。</p>
+<h2 id="expose-如何影响组件-ref"><a href="#expose-如何影响组件-ref" class="headerlink" title="expose 如何影响组件 ref"></a>expose 如何影响组件 ref</h2><p>如果组件调用了 <code>expose</code>，父组件通过模板 ref 拿到的不是完整实例代理，而是 exposed 代理：</p>
+<pre><code class="1182:1203:packages/runtime-core/src/component.ts">export function getComponentPublicInstance(
+  instance: ComponentInternalInstance,
+): ComponentPublicInstance | ComponentInternalInstance[&#39;exposed&#39;] | null &#123;
+  if (instance.exposed) &#123;
+    // 组件调用 expose 后，父组件通过 ref 拿到的是 exposed 代理，而不是完整组件实例代理。
+    return (
+      instance.exposeProxy ||
+      (instance.exposeProxy = new Proxy(proxyRefs(markRaw(instance.exposed)), &#123;
+        get(target, key: string) &#123;
+          if (key in target) &#123;
+            return target[key]
+          &#125; else if (key in publicPropertiesMap) &#123;
+            return publicPropertiesMap[key](instance)
+          &#125;
+        &#125;,
+</code></pre>
+<p>这对应 <code>&lt;script setup&gt;</code> 里的 <code>defineExpose</code>，本质上也是控制 <code>instance.exposed</code>。</p>
+<h2 id="一个完整流程"><a href="#一个完整流程" class="headerlink" title="一个完整流程"></a>一个完整流程</h2><p>以这个组件为例：</p>
+<pre><code class="ts">const App = &#123;
+  props: [&#39;msg&#39;],
+  setup(props) &#123;
+    const count = ref(0)
+    return &#123; count &#125;
+  &#125;,
+  template: `&#123;&#123; msg &#125;&#125; - &#123;&#123; count &#125;&#125;`,
+&#125;
+</code></pre>
+<p>挂载时内部大致是：</p>
+<pre><code class="text">mountComponent(vnode)
+  │
+  ▼
+createComponentInstance(vnode)
+  │
+  ├─ 创建 instance
+  ├─ 继承 appContext
+  ├─ 初始化 provides / scope / ctx
+  └─ 绑定 emit
+  │
+  ▼
+setupComponent(instance)
+  │
+  ├─ initProps(instance, vnode.props)
+  ├─ initSlots(instance, vnode.children)
+  └─ setupStatefulComponent(instance)
+       │
+       ├─ instance.proxy = new Proxy(ctx, handlers)
+       ├─ setCurrentInstance(instance)
+       ├─ setup(shallowReadonly(props), setupContext)
+       ├─ handleSetupResult
+       │    └─ setupState = proxyRefs(&#123; count &#125;)
+       └─ finishComponentSetup
+            ├─ 确定 render
+            └─ applyOptions
+</code></pre>
+<p>完成这些后，renderer 的 <code>setupRenderEffect</code> 才能执行组件 render，得到组件子树并进入 patch。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li><code>createComponentInstance</code> 创建组件内部实例，保存组件运行时所需的全部状态。</li>
+<li>组件实例继承 <code>appContext</code>，因此能访问 app 级全局组件、指令、provide 和 config。</li>
+<li>每个组件实例有独立 <code>EffectScope</code>，卸载时可以统一停止副作用。</li>
+<li><code>setupComponent</code> 先初始化 props 和 slots，再处理有状态组件的 setup。</li>
+<li><code>setupStatefulComponent</code> 会创建组件代理、设置 currentInstance、执行 setup。</li>
+<li>setup 返回函数时作为 render，返回对象时作为 setupState，并通过 <code>proxyRefs</code> 自动浅层解包。</li>
+<li><code>finishComponentSetup</code> 负责最终确定 <code>instance.render</code>，并应用 Options API。</li>
+<li><code>expose</code> 会影响父组件通过 ref 拿到的公开实例内容。</li>
+</ol>
+<p>下一篇可以先看 <code>props</code> 与 <code>emits</code> 如何在组件初始化阶段被规范化；随后再进入 <code>componentPublicInstance.ts</code> 和 <code>componentRenderUtils.ts</code>，理解模板变量、<code>this.xxx</code>、<code>setupState</code>、<code>props</code> 的访问优先级，以及组件 render 结果如何规范化。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vue3/">Vue3</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><a class="post-meta__tags" href="/tags/%E7%BB%84%E4%BB%B6%E7%B3%BB%E7%BB%9F/">组件系统</a><a class="post-meta__tags" href="/tags/component/">component</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/09-Vue%203%20renderer%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9Arender%20%E5%92%8C%20patch%20%E5%A6%82%E4%BD%95%E9%A9%B1%E5%8A%A8%E6%8C%82%E8%BD%BD%E6%9B%B4%E6%96%B0/" title="Vue 3 renderer 源码解析：render 和 patch 如何驱动挂载更新"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Vue 3 renderer 源码解析：render 和 patch 如何驱动挂载更新</div></div></a></div><div class="next-post pull-right"><a href="/posts/11-Vue%203%20props%20%E4%B8%8E%20emits%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E7%BB%84%E4%BB%B6%E9%80%9A%E4%BF%A1%E5%A6%82%E4%BD%95%E8%A2%AB%E8%A7%84%E8%8C%83%E5%8C%96/" title="Vue 3 props 与 emits 源码解析：组件通信如何被规范化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Vue 3 props 与 emits 源码解析：组件通信如何被规范化</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E7%BB%99%E7%BB%93%E8%AE%BA"><span class="toc-number">1.</span> <span class="toc-text">先给结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BB%84%E4%BB%B6%E5%AE%9E%E4%BE%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">2.</span> <span class="toc-text">组件实例是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#createComponentInstance%EF%BC%9A%E5%88%9B%E5%BB%BA%E7%BB%84%E4%BB%B6%E5%AE%9E%E4%BE%8B"><span class="toc-number">3.</span> <span class="toc-text">createComponentInstance：创建组件实例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#props-emits-%E5%92%8C%E8%BF%90%E8%A1%8C%E6%97%B6%E7%8A%B6%E6%80%81%E5%AE%B9%E5%99%A8"><span class="toc-number">4.</span> <span class="toc-text">props&#x2F;emits 和运行时状态容器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#root-%E5%92%8C-emit-%E5%88%9D%E5%A7%8B%E5%8C%96"><span class="toc-number">5.</span> <span class="toc-text">root 和 emit 初始化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#currentInstance%EF%BC%9A%E8%AE%A9-setup-%E7%9F%A5%E9%81%93%E5%BD%93%E5%89%8D%E7%BB%84%E4%BB%B6"><span class="toc-number">6.</span> <span class="toc-text">currentInstance：让 setup 知道当前组件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#setupComponent%EF%BC%9A%E5%88%9D%E5%A7%8B%E5%8C%96-props%E3%80%81slots-%E5%92%8C-setup"><span class="toc-number">7.</span> <span class="toc-text">setupComponent：初始化 props、slots 和 setup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#setupStatefulComponent%EF%BC%9A%E5%88%9B%E5%BB%BA%E4%BB%A3%E7%90%86%E5%B9%B6%E6%89%A7%E8%A1%8C-setup"><span class="toc-number">8.</span> <span class="toc-text">setupStatefulComponent：创建代理并执行 setup</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#setup-%E7%9A%84%E6%89%A7%E8%A1%8C%E8%BF%87%E7%A8%8B"><span class="toc-number">9.</span> <span class="toc-text">setup 的执行过程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#async-setup-%E7%9A%84%E5%A4%84%E7%90%86"><span class="toc-number">10.</span> <span class="toc-text">async setup 的处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#handleSetupResult%EF%BC%9A%E5%A4%84%E7%90%86-setup-%E8%BF%94%E5%9B%9E%E5%80%BC"><span class="toc-number">11.</span> <span class="toc-text">handleSetupResult：处理 setup 返回值</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%94%E5%9B%9E%E5%87%BD%E6%95%B0%EF%BC%9A%E4%BD%9C%E4%B8%BA-render-%E5%87%BD%E6%95%B0"><span class="toc-number">11.1.</span> <span class="toc-text">返回函数：作为 render 函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%94%E5%9B%9E%E5%AF%B9%E8%B1%A1%EF%BC%9A%E4%BD%9C%E4%B8%BA-setupState"><span class="toc-number">11.2.</span> <span class="toc-text">返回对象：作为 setupState</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#finishComponentSetup%EF%BC%9A%E7%A1%AE%E5%AE%9A-render-%E5%87%BD%E6%95%B0"><span class="toc-number">12.</span> <span class="toc-text">finishComponentSetup：确定 render 函数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Options-API-%E5%9C%A8%E5%93%AA%E9%87%8C%E5%A4%84%E7%90%86"><span class="toc-number">13.</span> <span class="toc-text">Options API 在哪里处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#createSetupContext%EF%BC%9Asetup-%E7%9A%84%E7%AC%AC%E4%BA%8C%E4%B8%AA%E5%8F%82%E6%95%B0"><span class="toc-number">14.</span> <span class="toc-text">createSetupContext：setup 的第二个参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#expose-%E5%A6%82%E4%BD%95%E5%BD%B1%E5%93%8D%E7%BB%84%E4%BB%B6-ref"><span class="toc-number">15.</span> <span class="toc-text">expose 如何影响组件 ref</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%AE%8C%E6%95%B4%E6%B5%81%E7%A8%8B"><span class="toc-number">16.</span> <span class="toc-text">一个完整流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">17.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

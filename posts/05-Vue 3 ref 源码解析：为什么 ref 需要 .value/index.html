@@ -1,0 +1,746 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vue 3 ref 源码解析：为什么 ref 需要 .value | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：前几篇我们看了 reactive 如何通过 Proxy 代理对象。可是 JavaScript 的基本类型，比如 number、string，没法被 Proxy 直接拦截属性读写。ref 的核心价值就是给这些值">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 3 ref 源码解析：为什么 ref 需要 .value">
+<meta property="og:url" content="http://example.com/posts/05-Vue%203%20ref%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%20ref%20%E9%9C%80%E8%A6%81%20.value/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：前几篇我们看了 reactive 如何通过 Proxy 代理对象。可是 JavaScript 的基本类型，比如 number、string，没法被 Proxy 直接拦截属性读写。ref 的核心价值就是给这些值">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-31T15:54:00.000Z">
+<meta property="article:modified_time" content="2026-05-31T07:26:04.969Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vue3">
+<meta property="article:tag" content="源码解析">
+<meta property="article:tag" content="响应式系统">
+<meta property="article:tag" content="ref">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/05-Vue%203%20ref%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%20ref%20%E9%9C%80%E8%A6%81%20.value/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vue 3 ref 源码解析：为什么 ref 需要 .value',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:26:04'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vue 3 ref 源码解析：为什么 ref 需要 .value</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-31T15:54:00.000Z" title="发表于 2026 23:54:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-31T07:26:04.969Z" title="更新于 2026 15:26:04">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>14分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>源码说明：本文分析的源码基于 <code>vue@3.5.21</code>，对应官方仓库为 <a target="_blank" rel="noopener" href="https://github.com/vuejs/core/tree/v3.5.21">vuejs&#x2F;core</a>，本文所在学习仓库为 <a target="_blank" rel="noopener" href="https://github.com/XY0987/vue_ori_learning">XY0987&#x2F;vue_ori_learning</a>。</p>
+</blockquote>
+<blockquote>
+<p>前言：前几篇我们看了 <code>reactive</code> 如何通过 <code>Proxy</code> 代理对象。可是 JavaScript 的基本类型，比如 <code>number</code>、<code>string</code>，没法被 <code>Proxy</code> 直接拦截属性读写。<code>ref</code> 的核心价值就是给这些值包一层对象，把响应式入口集中到 <code>.value</code> 上。</p>
+</blockquote>
+<h2 id="先给结论"><a href="#先给结论" class="headerlink" title="先给结论"></a>先给结论</h2><p><code>ref</code> 和 <code>reactive</code> 的响应式模型不一样：</p>
+<table>
+<thead>
+<tr>
+<th>API</th>
+<th>响应式入口</th>
+<th>依赖存在哪里</th>
+<th>适合处理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>reactive</code></td>
+<td>对象属性的 <code>get/set</code></td>
+<td><code>targetMap -&gt; target -&gt; key -&gt; Dep</code></td>
+<td>对象、数组、集合类型</td>
+</tr>
+<tr>
+<td><code>ref</code></td>
+<td><code>.value</code> 的 getter&#x2F;setter</td>
+<td>ref 实例自己的 <code>dep</code></td>
+<td>基本类型，也可以包对象</td>
+</tr>
+</tbody></table>
+<p>所以 <code>ref</code> 必须通过 <code>.value</code> 读写，不是语法上的“麻烦”，而是它建立响应式拦截点的方式。</p>
+<h2 id="为什么-ref-需要-value"><a href="#为什么-ref-需要-value" class="headerlink" title="为什么 ref 需要 .value"></a>为什么 ref 需要 .value</h2><p>先看 <code>Ref</code> 接口：</p>
+<pre><code class="26:35:packages/reactivity/src/ref.ts">export interface Ref&lt;T = any, S = T&gt; &#123;
+  // ref 的响应式入口集中在 .value 上：读取 .value 收集依赖，写入 .value 触发依赖。
+  get value(): T
+  set value(_: S)
+  /**
+   * Type differentiator only.
+   * We need this to be in public d.ts but don&#39;t want it to show up in IDE
+   * autocomplete, so we use a private Symbol instead.
+   */
+  [RefSymbol]: true
+&#125;
+</code></pre>
+<p><code>reactive</code> 依赖的是 <code>Proxy</code> 拦截对象属性：</p>
+<pre><code class="ts">state.count
+state.count = 1
+</code></pre>
+<p>但基本类型没有属性读写过程，不能这样代理：</p>
+<pre><code class="ts">let count = 1
+// 没有办法用 Proxy 拦截 count 这个变量本身的读取和赋值
+</code></pre>
+<p>所以 Vue 用对象包装一层：</p>
+<pre><code class="ts">const count = ref(1)
+
+count.value      // getter：收集依赖
+count.value = 2  // setter：触发依赖
+</code></pre>
+<p>我的理解是：<code>.value</code> 就是 Vue 给基本类型创造出来的“可拦截属性”。</p>
+<h2 id="ref-入口：创建-RefImpl"><a href="#ref-入口：创建-RefImpl" class="headerlink" title="ref 入口：创建 RefImpl"></a>ref 入口：创建 RefImpl</h2><p><code>ref</code> 的运行时入口很简单：</p>
+<pre><code class="64:72:packages/reactivity/src/ref.ts">// 类型重载的目的是为了给用户更好的类型提示。
+// 运行时 ref 只做一件事：创建一个围绕 .value 的响应式容器。
+export function ref&lt;T&gt;(
+  value: T,
+): [T] extends [Ref] ? IfAny&lt;T, Ref&lt;T&gt;, T&gt; : Ref&lt;UnwrapRef&lt;T&gt;, UnwrapRef&lt;T&gt; | T&gt;
+export function ref&lt;T = any&gt;(): Ref&lt;T | undefined&gt;
+export function ref(value?: unknown) &#123;
+  return createRef(value, false)
+&#125;
+</code></pre>
+<p><code>createRef</code> 里有一个小细节：如果传入的已经是 ref，就直接返回。</p>
+<pre><code class="109:115:packages/reactivity/src/ref.ts">function createRef(rawValue: unknown, shallow: boolean) &#123;
+  // ref(refValue) 直接返回原 ref，避免重复包裹导致 .value 层级变深。
+  if (isRef(rawValue)) &#123;
+    return rawValue
+  &#125;
+  return new RefImpl(rawValue, shallow)
+&#125;
+</code></pre>
+<p>这避免了这种尴尬情况：</p>
+<pre><code class="ts">const a = ref(1)
+const b = ref(a)
+
+// Vue 不会让你变成 b.value.value
+// 而是直接复用 a
+</code></pre>
+<h2 id="RefImpl：ref-的核心实现"><a href="#RefImpl：ref-的核心实现" class="headerlink" title="RefImpl：ref 的核心实现"></a>RefImpl：ref 的核心实现</h2><p><code>RefImpl</code> 是 <code>ref</code> 真正的实现类。</p>
+<pre><code class="120:177:packages/reactivity/src/ref.ts">class RefImpl&lt;T = any&gt; &#123;
+  // _value 是对外读取的值；如果传入对象，非 shallow ref 会把它转成 reactive 代理。
+  _value: T
+  // _rawValue 保存原始值，用于 set 时和新值做变化比较。
+  private _rawValue: T
+
+  // ref 只围绕 .value 这一处建立依赖，因此每个 ref 自带一个 Dep 即可。
+  dep: Dep = new Dep()
+
+  public readonly [ReactiveFlags.IS_REF] = true
+  public readonly [ReactiveFlags.IS_SHALLOW]: boolean = false
+
+  constructor(value: T, isShallow: boolean) &#123;
+    this._rawValue = isShallow ? value : toRaw(value)
+    // 非 shallow ref 在持有对象时，会把对象转成 reactive，保证 value 内部属性仍然响应式。
+    this._value = isShallow ? value : toReactive(value)
+    this[ReactiveFlags.IS_SHALLOW] = isShallow
+  &#125;
+
+  get value() &#123;
+    // 读取 .value 时收集依赖。和 reactive 的 target/key 模型不同，ref 的依赖直接挂在自身 dep 上。
+    if (__DEV__) &#123;
+      this.dep.track(&#123;
+        target: this,
+        type: TrackOpTypes.GET,
+        key: &#39;value&#39;,
+      &#125;)
+    &#125; else &#123;
+      this.dep.track()
+    &#125;
+    return this._value
+  &#125;
+
+  set value(newValue) &#123;
+    const oldValue = this._rawValue
+    // shallowRef、shallow/readonly 新值都直接保存；普通 ref 则比较原始值，并在需要时转 reactive。
+    const useDirectValue =
+      this[ReactiveFlags.IS_SHALLOW] ||
+      isShallow(newValue) ||
+      isReadonly(newValue)
+    newValue = useDirectValue ? newValue : toRaw(newValue)
+    if (hasChanged(newValue, oldValue)) &#123;
+      this._rawValue = newValue
+      this._value = useDirectValue ? newValue : toReactive(newValue)
+      if (__DEV__) &#123;
+        this.dep.trigger(&#123;
+          target: this,
+          type: TriggerOpTypes.SET,
+          key: &#39;value&#39;,
+          newValue,
+          oldValue,
+        &#125;)
+      &#125; else &#123;
+        this.dep.trigger()
+      &#125;
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>这里重点看三个字段：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>_value</code></td>
+<td>对外读取的值，可能是 reactive 代理</td>
+</tr>
+<tr>
+<td><code>_rawValue</code></td>
+<td>原始值，用于判断新旧值是否变化</td>
+</tr>
+<tr>
+<td><code>dep</code></td>
+<td>当前 ref 自己的依赖容器</td>
+</tr>
+</tbody></table>
+<p><code>reactive</code> 的依赖存在全局 <code>targetMap</code> 里，而 <code>ref</code> 的依赖直接存在自己的 <code>dep</code> 上。原因也很简单：<code>ref</code> 只追踪 <code>.value</code> 这一处，不需要再按 <code>target/key</code> 分层。</p>
+<h2 id="get-value：读取时收集依赖"><a href="#get-value：读取时收集依赖" class="headerlink" title="get value：读取时收集依赖"></a>get value：读取时收集依赖</h2><p><code>get value</code> 负责收集依赖：</p>
+<pre><code class="139:151:packages/reactivity/src/ref.ts">  get value() &#123;
+    // 读取 .value 时收集依赖。和 reactive 的 target/key 模型不同，ref 的依赖直接挂在自身 dep 上。
+    if (__DEV__) &#123;
+      this.dep.track(&#123;
+        target: this,
+        type: TrackOpTypes.GET,
+        key: &#39;value&#39;,
+      &#125;)
+    &#125; else &#123;
+      this.dep.track()
+    &#125;
+    return this._value
+  &#125;
+</code></pre>
+<p>这和 <code>reactive</code> 的 <code>baseHandlers.get</code> 很像，只是入口不同：</p>
+<pre><code class="text">reactive:
+  proxy.foo -&gt; get handler -&gt; track(target, GET, &#39;foo&#39;)
+
+ref:
+  ref.value -&gt; get value -&gt; this.dep.track()
+</code></pre>
+<p>所以在 effect 中读取 <code>count.value</code>，当前 effect 就会被收集到这个 ref 的 <code>dep</code> 里。</p>
+<pre><code class="ts">const count = ref(0)
+
+effect(() =&gt; &#123;
+  console.log(count.value)
+&#125;)
+</code></pre>
+<p>依赖关系可以理解成：</p>
+<pre><code class="text">countRef.dep ──► 当前 effect
+</code></pre>
+<h2 id="set-value：写入时触发依赖"><a href="#set-value：写入时触发依赖" class="headerlink" title="set value：写入时触发依赖"></a>set value：写入时触发依赖</h2><p><code>set value</code> 负责判断变化并触发依赖：</p>
+<pre><code class="153:176:packages/reactivity/src/ref.ts">  set value(newValue) &#123;
+    const oldValue = this._rawValue
+    // shallowRef、shallow/readonly 新值都直接保存；普通 ref 则比较原始值，并在需要时转 reactive。
+    const useDirectValue =
+      this[ReactiveFlags.IS_SHALLOW] ||
+      isShallow(newValue) ||
+      isReadonly(newValue)
+    newValue = useDirectValue ? newValue : toRaw(newValue)
+    if (hasChanged(newValue, oldValue)) &#123;
+      this._rawValue = newValue
+      this._value = useDirectValue ? newValue : toReactive(newValue)
+      if (__DEV__) &#123;
+        this.dep.trigger(&#123;
+          target: this,
+          type: TriggerOpTypes.SET,
+          key: &#39;value&#39;,
+          newValue,
+          oldValue,
+        &#125;)
+      &#125; else &#123;
+        this.dep.trigger()
+      &#125;
+    &#125;
+  &#125;
+</code></pre>
+<p>这里有几个关键点：</p>
+<ol>
+<li>用 <code>_rawValue</code> 和新值比较，避免代理对象和原始对象混用导致误判。</li>
+<li>值真的变了才触发依赖。</li>
+<li>普通 ref 如果接收对象，会通过 <code>toReactive</code> 转成响应式对象。</li>
+<li><code>shallowRef</code> 不会深层转 reactive。</li>
+</ol>
+<p>所以：</p>
+<pre><code class="ts">const count = ref(0)
+count.value = 0 // 不触发
+count.value = 1 // 触发
+</code></pre>
+<h2 id="ref-包对象时，内部属性也会响应式吗"><a href="#ref-包对象时，内部属性也会响应式吗" class="headerlink" title="ref 包对象时，内部属性也会响应式吗"></a>ref 包对象时，内部属性也会响应式吗</h2><p>会，但要分清两层依赖。</p>
+<pre><code class="ts">const state = ref(&#123; count: 0 &#125;)
+</code></pre>
+<p>普通 <code>ref</code> 在构造时会执行：</p>
+<pre><code class="132:136:packages/reactivity/src/ref.ts">  constructor(value: T, isShallow: boolean) &#123;
+    this._rawValue = isShallow ? value : toRaw(value)
+    // 非 shallow ref 在持有对象时，会把对象转成 reactive，保证 value 内部属性仍然响应式。
+    this._value = isShallow ? value : toReactive(value)
+    this[ReactiveFlags.IS_SHALLOW] = isShallow
+  &#125;
+</code></pre>
+<p>也就是说，<code>state.value</code> 是一个 reactive 对象。</p>
+<p>因此有两种更新：</p>
+<pre><code class="ts">const state = ref(&#123; count: 0 &#125;)
+
+effect(() =&gt; &#123;
+  console.log(state.value.count)
+&#125;)
+
+state.value = &#123; count: 1 &#125; // 触发 ref 的 .value 依赖
+state.value.count++       // 触发 reactive 对象 count 属性的依赖
+</code></pre>
+<p>可以这样理解：</p>
+<pre><code class="text">state.value = 新对象
+  │
+  └─ 触发 ref 层 dep
+
+state.value.count++
+  │
+  └─ 触发 reactive 对象内部 count 的 dep
+</code></pre>
+<h2 id="shallowRef-和-triggerRef"><a href="#shallowRef-和-triggerRef" class="headerlink" title="shallowRef 和 triggerRef"></a>shallowRef 和 triggerRef</h2><p><code>shallowRef</code> 只追踪 <code>.value</code> 本身，不会把对象内部转成 reactive。</p>
+<pre><code class="97:107:packages/reactivity/src/ref.ts">export function shallowRef&lt;T&gt;(
+  value: T,
+): Ref extends T
+  ? T extends Ref
+    ? IfAny&lt;T, ShallowRef&lt;T&gt;, T&gt;
+    : ShallowRef&lt;T&gt;
+  : ShallowRef&lt;T&gt;
+export function shallowRef&lt;T = any&gt;(): ShallowRef&lt;T | undefined&gt;
+export function shallowRef(value?: unknown) &#123;
+  return createRef(value, true)
+&#125;
+</code></pre>
+<p>所以：</p>
+<pre><code class="ts">const state = shallowRef(&#123; count: 0 &#125;)
+
+effect(() =&gt; &#123;
+  console.log(state.value.count)
+&#125;)
+
+state.value.count++       // 不触发，因为内部对象不是 reactive
+state.value = &#123; count: 1 &#125; // 触发，因为 .value 引用变了
+</code></pre>
+<p>如果你确实修改了内部属性，又想手动通知依赖，可以用 <code>triggerRef</code>：</p>
+<pre><code class="204:219:packages/reactivity/src/ref.ts">export function triggerRef(ref: Ref): void &#123;
+  // triggerRef 主要配合 shallowRef 使用：内部深层属性被改了，但 .value 引用没变时，可手动触发依赖。
+  // ref may be an instance of ObjectRefImpl
+  if ((ref as unknown as RefImpl).dep) &#123;
+    if (__DEV__) &#123;
+      ;(ref as unknown as RefImpl).dep.trigger(&#123;
+        target: ref,
+        type: TriggerOpTypes.SET,
+        key: &#39;value&#39;,
+        newValue: (ref as unknown as RefImpl)._value,
+      &#125;)
+    &#125; else &#123;
+      ;(ref as unknown as RefImpl).dep.trigger()
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>这也是 <code>shallowRef</code> 的典型使用方式：你自己负责内部对象的更新策略，必要时手动触发。</p>
+<h2 id="proxyRefs：为什么-setup-返回的-ref-可以少写-value"><a href="#proxyRefs：为什么-setup-返回的-ref-可以少写-value" class="headerlink" title="proxyRefs：为什么 setup 返回的 ref 可以少写 .value"></a>proxyRefs：为什么 setup 返回的 ref 可以少写 .value</h2><p><code>proxyRefs</code> 用一个代理做浅层自动解包。</p>
+<pre><code class="269:301:packages/reactivity/src/ref.ts">const shallowUnwrapHandlers: ProxyHandler&lt;any&gt; = &#123;
+  // 读取属性时浅层自动解包 ref，常用于 setup 返回对象，让模板/实例访问时不用写 .value。
+  get: (target, key, receiver) =&gt;
+    key === ReactiveFlags.RAW
+      ? target
+      : unref(Reflect.get(target, key, receiver)),
+  set: (target, key, value, receiver) =&gt; &#123;
+    const oldValue = target[key]
+    // 原属性是 ref、新值不是 ref 时，保持 ref 容器不变，只更新 oldValue.value。
+    if (isRef(oldValue) &amp;&amp; !isRef(value)) &#123;
+      oldValue.value = value
+      return true
+    &#125; else &#123;
+      return Reflect.set(target, key, value, receiver)
+    &#125;
+  &#125;,
+&#125;
+
+/**
+ * Returns a proxy for the given object that shallowly unwraps properties that
+ * are refs. If the object already is reactive, it&#39;s returned as-is. If not, a
+ * new reactive proxy is created.
+ *
+ * @param objectWithRefs - Either an already-reactive object or a simple object
+ * that contains refs.
+ */
+export function proxyRefs&lt;T extends object&gt;(
+  objectWithRefs: T,
+): ShallowUnwrapRef&lt;T&gt; &#123;
+  return isReactive(objectWithRefs)
+    ? (objectWithRefs as ShallowUnwrapRef&lt;T&gt;)
+    : new Proxy(objectWithRefs, shallowUnwrapHandlers)
+&#125;
+</code></pre>
+<p>它的行为大致是：</p>
+<pre><code class="ts">const user = proxyRefs(&#123; age: ref(18) &#125;)
+
+user.age      // 自动 unref，得到 18
+user.age = 20 // 等价于 ageRef.value = 20
+</code></pre>
+<p>这解释了为什么很多场景里你不用写 <code>.value</code>。不是 ref 本身不需要 <code>.value</code>，而是外面又包了一层代理帮你做了自动解包。</p>
+<h2 id="toRef-和-toRefs：把对象属性变成-ref"><a href="#toRef-和-toRefs：把对象属性变成-ref" class="headerlink" title="toRef 和 toRefs：把对象属性变成 ref"></a>toRef 和 toRefs：把对象属性变成 ref</h2><p><code>toRefs</code> 会把一个响应式对象的每个属性都转成 ref。</p>
+<pre><code class="361:371:packages/reactivity/src/ref.ts">export function toRefs&lt;T extends object&gt;(object: T): ToRefs&lt;T&gt; &#123;
+  if (__DEV__ &amp;&amp; !isProxy(object)) &#123;
+    warn(`toRefs() expects a reactive object but received a plain one.`)
+  &#125;
+  const ret: any = isArray(object) ? new Array(object.length) : &#123;&#125;
+  // 为每个 key 创建一个和原对象属性双向同步的 ObjectRefImpl。
+  for (const key in object) &#123;
+    ret[key] = propertyToRef(object, key)
+  &#125;
+  return ret
+&#125;
+</code></pre>
+<p>具体属性 ref 是 <code>ObjectRefImpl</code>：</p>
+<pre><code class="373:398:packages/reactivity/src/ref.ts">class ObjectRefImpl&lt;T extends object, K extends keyof T&gt; &#123;
+  public readonly [ReactiveFlags.IS_REF] = true
+  public _value: T[K] = undefined!
+
+  constructor(
+    private readonly _object: T,
+    private readonly _key: K,
+    private readonly _defaultValue?: T[K],
+  ) &#123;&#125;
+
+  get value() &#123;
+    // ObjectRefImpl 不自己创建 Dep，而是读原对象属性，让原对象的 reactive 依赖系统负责 track。
+    const val = this._object[this._key]
+    return (this._value = val === undefined ? this._defaultValue! : val)
+  &#125;
+
+  set value(newVal) &#123;
+    // 写入 ref.value 等价于写入原对象对应属性，从而触发原对象的 reactive 更新。
+    this._object[this._key] = newVal
+  &#125;
+
+  get dep(): Dep | undefined &#123;
+    // 暴露原对象属性对应的 Dep，便于 triggerRef 等工具复用。
+    return getDepFromReactive(toRaw(this._object), this._key)
+  &#125;
+&#125;
+</code></pre>
+<p>这个设计很巧妙：<code>ObjectRefImpl</code> 自己不创建新的 <code>Dep</code>，而是读写原对象属性。这样依赖仍然归属于原来的 reactive 对象属性。</p>
+<pre><code class="ts">const state = reactive(&#123; count: 0 &#125;)
+const count = toRef(state, &#39;count&#39;)
+
+count.value++
+console.log(state.count) // 1
+
+state.count++
+console.log(count.value) // 2
+</code></pre>
+<p><code>toRef</code> 的入口也支持几种不同形式：</p>
+<pre><code class="473:502:packages/reactivity/src/ref.ts">export function toRef(
+  source: Record&lt;string, any&gt; | MaybeRef,
+  key?: string,
+  defaultValue?: unknown,
+): Ref &#123;
+  if (isRef(source)) &#123;
+    return source
+  &#125; else if (isFunction(source)) &#123;
+    // getter 形式转成只读 ref。
+    return new GetterRefImpl(source) as any
+  &#125; else if (isObject(source) &amp;&amp; arguments.length &gt; 1) &#123;
+    // object + key 形式创建属性 ref，和源对象属性保持同步。
+    return propertyToRef(source, key!, defaultValue)
+  &#125; else &#123;
+    // 普通值转成常规 ref。
+    return ref(source)
+  &#125;
+&#125;
+
+function propertyToRef(
+  source: Record&lt;string, any&gt;,
+  key: string,
+  defaultValue?: unknown,
+) &#123;
+  const val = source[key]
+  // 如果源属性本身已经是 ref，直接复用；否则创建 ObjectRefImpl 代理这个属性。
+  return isRef(val)
+    ? val
+    : (new ObjectRefImpl(source, key, defaultValue) as any)
+&#125;
+</code></pre>
+<p>总结一下：</p>
+<table>
+<thead>
+<tr>
+<th>用法</th>
+<th>结果</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>toRef(existingRef)</code></td>
+<td>直接返回原 ref</td>
+</tr>
+<tr>
+<td><code>toRef(() =&gt; props.foo)</code></td>
+<td>创建只读 getter ref</td>
+</tr>
+<tr>
+<td><code>toRef(state, &#39;foo&#39;)</code></td>
+<td>创建和 <code>state.foo</code> 双向同步的属性 ref</td>
+</tr>
+<tr>
+<td><code>toRef(1)</code></td>
+<td>等价于 <code>ref(1)</code></td>
+</tr>
+</tbody></table>
+<h2 id="customRef：自己控制-track-和-trigger"><a href="#customRef：自己控制-track-和-trigger" class="headerlink" title="customRef：自己控制 track 和 trigger"></a>customRef：自己控制 track 和 trigger</h2><p><code>customRef</code> 允许用户自己决定什么时候收集依赖、什么时候触发更新。</p>
+<pre><code class="311:347:packages/reactivity/src/ref.ts">class CustomRefImpl&lt;T&gt; &#123;
+  public dep: Dep
+
+  private readonly _get: ReturnType&lt;CustomRefFactory&lt;T&gt;&gt;[&#39;get&#39;]
+  private readonly _set: ReturnType&lt;CustomRefFactory&lt;T&gt;&gt;[&#39;set&#39;]
+
+  public readonly [ReactiveFlags.IS_REF] = true
+
+  public _value: T = undefined!
+
+  constructor(factory: CustomRefFactory&lt;T&gt;) &#123;
+    const dep = (this.dep = new Dep())
+    // customRef 把 track/trigger 的控制权交给用户，用户可以决定何时收集、何时触发。
+    const &#123; get, set &#125; = factory(dep.track.bind(dep), dep.trigger.bind(dep))
+    this._get = get
+    this._set = set
+  &#125;
+
+  get value() &#123;
+    return (this._value = this._get())
+  &#125;
+
+  set value(newVal) &#123;
+    this._set(newVal)
+  &#125;
+&#125;
+
+/**
+ * Creates a customized ref with explicit control over its dependency tracking
+ * and updates triggering.
+ *
+ * @param factory - The function that receives the `track` and `trigger` callbacks.
+ * @see &#123;@link https://vuejs.org/api/reactivity-advanced.html#customref&#125;
+ */
+export function customRef&lt;T&gt;(factory: CustomRefFactory&lt;T&gt;): Ref&lt;T&gt; &#123;
+  return new CustomRefImpl(factory) as any
+&#125;
+</code></pre>
+<p>它常见的使用场景是防抖 ref：</p>
+<pre><code class="ts">function useDebouncedRef&lt;T&gt;(value: T, delay = 200) &#123;
+  let timer: ReturnType&lt;typeof setTimeout&gt;
+
+  return customRef&lt;T&gt;((track, trigger) =&gt; (&#123;
+    get() &#123;
+      track()
+      return value
+    &#125;,
+    set(newValue) &#123;
+      clearTimeout(timer)
+      timer = setTimeout(() =&gt; &#123;
+        value = newValue
+        trigger()
+      &#125;, delay)
+    &#125;,
+  &#125;))
+&#125;
+</code></pre>
+<p>这里读取时手动 <code>track()</code>，写入时不立刻 <code>trigger()</code>，而是在防抖结束后再触发。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li><code>ref</code> 通过 <code>.value</code> 创造可拦截的读写入口，所以基本类型也能响应式。</li>
+<li><code>RefImpl</code> 自带一个 <code>Dep</code>，读取 <code>.value</code> 时 <code>track</code>，写入 <code>.value</code> 时 <code>trigger</code>。</li>
+<li>普通 <code>ref</code> 包对象时，会把对象转成 <code>reactive</code>，所以对象内部属性也能响应式。</li>
+<li><code>shallowRef</code> 只追踪 <code>.value</code> 引用变化，内部深层变化需要 <code>triggerRef</code> 手动触发。</li>
+<li><code>proxyRefs</code> 是浅层自动解包工具，不是 ref 本身不需要 <code>.value</code>。</li>
+<li><code>toRef</code> &#x2F; <code>toRefs</code> 创建的是和源对象属性同步的 ref，适合解构响应式对象时保持响应式。</li>
+<li><code>customRef</code> 把 <code>track</code> &#x2F; <code>trigger</code> 暴露给用户，适合防抖、节流等自定义响应式策略。</li>
+</ol>
+<p>下一步可以继续看 <code>computed.ts</code>。<code>computed</code> 和 <code>ref</code> 一样暴露 <code>.value</code>，但它不是普通容器，而是带缓存、脏值标记和惰性求值的派生状态。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vue3/">Vue3</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><a class="post-meta__tags" href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F%E7%B3%BB%E7%BB%9F/">响应式系统</a><a class="post-meta__tags" href="/tags/ref/">ref</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/04-Vue%203%20ReactiveEffect%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9Aeffect%20%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E3%80%81%E8%B0%83%E5%BA%A6%E5%92%8C%E6%B8%85%E7%90%86%E7%9A%84/" title="Vue 3 ReactiveEffect 源码解析：effect 是如何执行、调度和清理的"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Vue 3 ReactiveEffect 源码解析：effect 是如何执行、调度和清理的</div></div></a></div><div class="next-post pull-right"><a href="/posts/06-Vue%203%20computed%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E7%BC%93%E5%AD%98%E3%80%81%E8%84%8F%E5%80%BC%E4%B8%8E%E6%83%B0%E6%80%A7%E6%B1%82%E5%80%BC/" title="Vue 3 computed 源码解析：缓存、脏值与惰性求值"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Vue 3 computed 源码解析：缓存、脏值与惰性求值</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E7%BB%99%E7%BB%93%E8%AE%BA"><span class="toc-number">1.</span> <span class="toc-text">先给结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-ref-%E9%9C%80%E8%A6%81-value"><span class="toc-number">2.</span> <span class="toc-text">为什么 ref 需要 .value</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ref-%E5%85%A5%E5%8F%A3%EF%BC%9A%E5%88%9B%E5%BB%BA-RefImpl"><span class="toc-number">3.</span> <span class="toc-text">ref 入口：创建 RefImpl</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RefImpl%EF%BC%9Aref-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%AE%9E%E7%8E%B0"><span class="toc-number">4.</span> <span class="toc-text">RefImpl：ref 的核心实现</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#get-value%EF%BC%9A%E8%AF%BB%E5%8F%96%E6%97%B6%E6%94%B6%E9%9B%86%E4%BE%9D%E8%B5%96"><span class="toc-number">5.</span> <span class="toc-text">get value：读取时收集依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#set-value%EF%BC%9A%E5%86%99%E5%85%A5%E6%97%B6%E8%A7%A6%E5%8F%91%E4%BE%9D%E8%B5%96"><span class="toc-number">6.</span> <span class="toc-text">set value：写入时触发依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ref-%E5%8C%85%E5%AF%B9%E8%B1%A1%E6%97%B6%EF%BC%8C%E5%86%85%E9%83%A8%E5%B1%9E%E6%80%A7%E4%B9%9F%E4%BC%9A%E5%93%8D%E5%BA%94%E5%BC%8F%E5%90%97"><span class="toc-number">7.</span> <span class="toc-text">ref 包对象时，内部属性也会响应式吗</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#shallowRef-%E5%92%8C-triggerRef"><span class="toc-number">8.</span> <span class="toc-text">shallowRef 和 triggerRef</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#proxyRefs%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88-setup-%E8%BF%94%E5%9B%9E%E7%9A%84-ref-%E5%8F%AF%E4%BB%A5%E5%B0%91%E5%86%99-value"><span class="toc-number">9.</span> <span class="toc-text">proxyRefs：为什么 setup 返回的 ref 可以少写 .value</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#toRef-%E5%92%8C-toRefs%EF%BC%9A%E6%8A%8A%E5%AF%B9%E8%B1%A1%E5%B1%9E%E6%80%A7%E5%8F%98%E6%88%90-ref"><span class="toc-number">10.</span> <span class="toc-text">toRef 和 toRefs：把对象属性变成 ref</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#customRef%EF%BC%9A%E8%87%AA%E5%B7%B1%E6%8E%A7%E5%88%B6-track-%E5%92%8C-trigger"><span class="toc-number">11.</span> <span class="toc-text">customRef：自己控制 track 和 trigger</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">12.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

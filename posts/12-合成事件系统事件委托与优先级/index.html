@@ -1,0 +1,375 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>React 18 源码解析 12：合成事件系统、事件委托与优先级 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：React 的事件系统不只是把 onClick 绑定到 DOM 上这么简单。它还涉及事件委托、捕获冒泡路径收集、合成事件对象，以及事件更新优先级。  配套源码仓库：https:&#x2F;&#x2F;github.com&#x2F;XY0987&#x2F;react18_ori.git 系列导航 上一篇：11：useTransition 源码与 TransitionLane 下一篇：13：Context 源码之 Provider">
+<meta property="og:type" content="article">
+<meta property="og:title" content="React 18 源码解析 12：合成事件系统、事件委托与优先级">
+<meta property="og:url" content="http://example.com/posts/12-%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BA%8B%E4%BB%B6%E5%A7%94%E6%89%98%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：React 的事件系统不只是把 onClick 绑定到 DOM 上这么简单。它还涉及事件委托、捕获冒泡路径收集、合成事件对象，以及事件更新优先级。  配套源码仓库：https:&#x2F;&#x2F;github.com&#x2F;XY0987&#x2F;react18_ori.git 系列导航 上一篇：11：useTransition 源码与 TransitionLane 下一篇：13：Context 源码之 Provider">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-24T02:47:00.000Z">
+<meta property="article:modified_time" content="2026-05-24T02:51:34.012Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="React18">
+<meta property="article:tag" content="Scheduler">
+<meta property="article:tag" content="合成事件">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/12-%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E7%B3%BB%E7%BB%9F%E4%BA%8B%E4%BB%B6%E5%A7%94%E6%89%98%E4%B8%8E%E4%BC%98%E5%85%88%E7%BA%A7/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'React 18 源码解析 12：合成事件系统、事件委托与优先级',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 10:51:34'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">React 18 源码解析 12：合成事件系统、事件委托与优先级</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-24T02:47:00.000Z" title="发表于 2026 10:47:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-24T02:51:34.012Z" title="更新于 2026 10:51:34">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/react/">React框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">954</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>3分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>前言：React 的事件系统不只是把 <code>onClick</code> 绑定到 DOM 上这么简单。它还涉及事件委托、捕获冒泡路径收集、合成事件对象，以及事件更新优先级。</p>
+</blockquote>
+<p>配套源码仓库：<code>https://github.com/XY0987/react18_ori.git</code></p>
+<h2 id="系列导航"><a href="#系列导航" class="headerlink" title="系列导航"></a>系列导航</h2><ul>
+<li>上一篇：<a href="/posts/11-useTransition%E6%BA%90%E7%A0%81TransitionLane/">11：useTransition 源码与 TransitionLane</a></li>
+<li>下一篇：<a href="/posts/13-Context%E6%BA%90%E7%A0%81Provider%E6%A0%88%E4%B8%8EuseContext/">13：Context 源码之 Provider 栈与 useContext</a></li>
+</ul>
+<h2 id="React-为什么要做合成事件"><a href="#React-为什么要做合成事件" class="headerlink" title="React 为什么要做合成事件"></a>React 为什么要做合成事件</h2><p>如果每个 DOM 节点都直接绑定事件，会有几个问题：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>合成事件的解决方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>事件绑定分散</td>
+<td>统一委托到根容器</td>
+</tr>
+<tr>
+<td>浏览器事件差异</td>
+<td>封装合成事件对象</td>
+</tr>
+<tr>
+<td>事件传播控制</td>
+<td>React 自己维护捕获&#x2F;冒泡流程</td>
+</tr>
+<tr>
+<td>事件更新优先级</td>
+<td>执行回调时切换 Scheduler priority</td>
+</tr>
+</tbody></table>
+<p>合成事件系统让 React 可以用统一方式管理事件和事件触发的更新。</p>
+<h2 id="事件委托：只在根容器监听"><a href="#事件委托：只在根容器监听" class="headerlink" title="事件委托：只在根容器监听"></a>事件委托：只在根容器监听</h2><p>简化实现中，<code>createRoot().render()</code> 时会初始化 click 事件：</p>
+<pre><code class="text">initEvent(container, &#39;click&#39;)
+  → container.addEventListener(&#39;click&#39;, dispatchEvent)
+</code></pre>
+<p>也就是说，React 并不是把 <code>onClick</code> 直接绑到具体按钮 DOM 上。</p>
+<p>真正点击按钮时，浏览器事件先冒泡到根容器，再由 React 的 <code>dispatchEvent</code> 接管。</p>
+<h2 id="props-如何和-DOM-节点关联"><a href="#props-如何和-DOM-节点关联" class="headerlink" title="props 如何和 DOM 节点关联"></a>props 如何和 DOM 节点关联</h2><p>既然事件不直接绑定在 DOM 节点上，那 React 怎么知道某个 DOM 节点有没有 <code>onClick</code>？</p>
+<p>答案是：把 props 缓存在 DOM 节点上。</p>
+<pre><code class="text">createInstance(type, props)
+  → updateFiberProps(dom, props)
+  → dom.__props = props
+</code></pre>
+<p>后续事件触发时，React 从真实事件的 <code>target</code> 开始向上找 DOM 节点，并读取节点上的 props。</p>
+<h2 id="收集捕获和冒泡路径"><a href="#收集捕获和冒泡路径" class="headerlink" title="收集捕获和冒泡路径"></a>收集捕获和冒泡路径</h2><p>事件触发后，React 会从 target 一路向上走到 container：</p>
+<pre><code class="text">target
+  → parent
+  → parent
+  → container
+</code></pre>
+<p>每经过一个 DOM 节点，就检查它的 props：</p>
+<pre><code class="text">onClickCapture → 加入 capture 队列
+onClick → 加入 bubble 队列
+</code></pre>
+<p>捕获和冒泡的顺序不同：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>执行顺序</th>
+<th>收集方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>捕获</td>
+<td>外层到内层</td>
+<td><code>unshift</code></td>
+</tr>
+<tr>
+<td>冒泡</td>
+<td>内层到外层</td>
+<td><code>push</code></td>
+</tr>
+</tbody></table>
+<p>所以最终执行顺序是：</p>
+<pre><code class="text">capture: outer → inner
+bubble: inner → outer
+</code></pre>
+<h2 id="合成事件对象"><a href="#合成事件对象" class="headerlink" title="合成事件对象"></a>合成事件对象</h2><p>React 会基于原生事件创建合成事件对象。</p>
+<p>简化实现里，主要增强了 <code>stopPropagation</code>：</p>
+<pre><code class="text">syntheticEvent.__stopPropagation = false
+syntheticEvent.stopPropagation = () =&gt; &#123;
+  __stopPropagation = true
+  原生 stopPropagation()
+&#125;
+</code></pre>
+<p>这样 React 自己的事件流也能被中断。</p>
+<p>如果捕获阶段调用了 <code>stopPropagation</code>，冒泡阶段就不会继续执行。</p>
+<h2 id="事件回调为什么要切换优先级"><a href="#事件回调为什么要切换优先级" class="headerlink" title="事件回调为什么要切换优先级"></a>事件回调为什么要切换优先级</h2><p>不同事件的紧急程度不同：</p>
+<table>
+<thead>
+<tr>
+<th>事件</th>
+<th>优先级倾向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>click &#x2F; keydown &#x2F; keyup</td>
+<td>高优先级</td>
+</tr>
+<tr>
+<td>scroll</td>
+<td>用户阻塞优先级</td>
+</tr>
+<tr>
+<td>普通事件</td>
+<td>默认优先级</td>
+</tr>
+</tbody></table>
+<p>执行事件回调时，React 会调用：</p>
+<pre><code class="text">unstable_runWithPriority(eventPriority, callback)
+</code></pre>
+<p>这样事件回调里触发的 <code>setState</code>，在 <code>requestUpdateLane()</code> 时就能拿到合适的 lane。</p>
+<p>换句话说：</p>
+<blockquote>
+<p>事件优先级会影响事件回调中产生的更新优先级。</p>
+</blockquote>
+<h2 id="从点击到更新的完整链路"><a href="#从点击到更新的完整链路" class="headerlink" title="从点击到更新的完整链路"></a>从点击到更新的完整链路</h2><pre><code class="text">用户点击按钮
+  │
+  ▼
+原生 click 冒泡到 root container
+  │
+  ▼
+dispatchEvent
+  │
+  ├─ collectPaths：收集 capture/bubble 回调
+  ├─ createSyntheticEvent：构造合成事件
+  └─ triggerEventFlow
+       │
+       └─ runWithPriority(clickPriority)
+             │
+             └─ onClick 回调里 setState
+                  │
+                  └─ requestUpdateLane → 高优先级 lane
+</code></pre>
+<h2 id="合成事件和-Fiber-的关系"><a href="#合成事件和-Fiber-的关系" class="headerlink" title="合成事件和 Fiber 的关系"></a>合成事件和 Fiber 的关系</h2><p>事件系统本身属于 renderer 层，但它会影响 reconciler 的调度。</p>
+<p>关系可以这样理解：</p>
+<pre><code class="text">react-dom SyntheticEvent
+  → 设置 Scheduler priority
+  → setState
+  → requestUpdateLane
+  → react-reconciler 调度更新
+</code></pre>
+<p>这就是 React 模块之间的边界：</p>
+<ul>
+<li><code>react-dom</code> 负责事件和 DOM；</li>
+<li><code>react-reconciler</code> 负责 Fiber 更新和调度；</li>
+<li>Scheduler priority 是两者之间的桥。</li>
+</ul>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>React 事件通常通过根容器委托，而不是直接绑定到每个 DOM 节点。</li>
+<li>DOM 节点会缓存最新 props，事件触发时从 target 向上读取回调。</li>
+<li>捕获阶段用 <code>unshift</code> 保证外到内，冒泡阶段用 <code>push</code> 保证内到外。</li>
+<li>合成事件接管 <code>stopPropagation</code>，让 React 自己的事件流可以被中断。</li>
+<li>事件回调执行时会切换 Scheduler 优先级，进而影响 setState 的 lane。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/React18/">React18</a><a class="post-meta__tags" href="/tags/Scheduler/">Scheduler</a><a class="post-meta__tags" href="/tags/%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6/">合成事件</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/11-useTransition%E6%BA%90%E7%A0%81TransitionLane/" title="React 18 源码解析 11：useTransition 源码与 TransitionLane"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">React 18 源码解析 11：useTransition 源码与 TransitionLane</div></div></a></div><div class="next-post pull-right"><a href="/posts/13-Context%E6%BA%90%E7%A0%81Provider%E6%A0%88%E4%B8%8EuseContext/" title="React 18 源码解析 13：Context 源码之 Provider 栈与 useContext"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">React 18 源码解析 13：Context 源码之 Provider 栈与 useContext</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E5%88%97%E5%AF%BC%E8%88%AA"><span class="toc-number">1.</span> <span class="toc-text">系列导航</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#React-%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%81%9A%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6"><span class="toc-number">2.</span> <span class="toc-text">React 为什么要做合成事件</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E5%A7%94%E6%89%98%EF%BC%9A%E5%8F%AA%E5%9C%A8%E6%A0%B9%E5%AE%B9%E5%99%A8%E7%9B%91%E5%90%AC"><span class="toc-number">3.</span> <span class="toc-text">事件委托：只在根容器监听</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#props-%E5%A6%82%E4%BD%95%E5%92%8C-DOM-%E8%8A%82%E7%82%B9%E5%85%B3%E8%81%94"><span class="toc-number">4.</span> <span class="toc-text">props 如何和 DOM 节点关联</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%94%B6%E9%9B%86%E6%8D%95%E8%8E%B7%E5%92%8C%E5%86%92%E6%B3%A1%E8%B7%AF%E5%BE%84"><span class="toc-number">5.</span> <span class="toc-text">收集捕获和冒泡路径</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E5%AF%B9%E8%B1%A1"><span class="toc-number">6.</span> <span class="toc-text">合成事件对象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E5%9B%9E%E8%B0%83%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%88%87%E6%8D%A2%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">7.</span> <span class="toc-text">事件回调为什么要切换优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E7%82%B9%E5%87%BB%E5%88%B0%E6%9B%B4%E6%96%B0%E7%9A%84%E5%AE%8C%E6%95%B4%E9%93%BE%E8%B7%AF"><span class="toc-number">8.</span> <span class="toc-text">从点击到更新的完整链路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6%E5%92%8C-Fiber-%E7%9A%84%E5%85%B3%E7%B3%BB"><span class="toc-number">9.</span> <span class="toc-text">合成事件和 Fiber 的关系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">10.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

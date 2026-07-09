@@ -1,0 +1,280 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>夜星的技术博客 - 系统化学习，深度技术沉淀</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客">
+<meta property="og:type" content="website">
+<meta property="og:title" content="全部文章">
+<meta property="og:url" content="http://example.com/posts/page/5/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="全栈,JavaScript,React,Vue,Node.js,AI,后端,架构,算法,工程化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/page/5/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '全部文章',
+  isPost: false,
+  isHome: true,
+  isHighlightShrink: false,
+  isToc: false,
+  postUpdate: '2026 22:05:55'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="page" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div class="recent-posts" id="recent-posts"><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/09-%E4%BE%9D%E8%B5%96%E4%B8%8E%E5%8C%85%E6%B2%BB%E7%90%86%E5%B7%A5%E7%A8%8B%E5%8C%96/" title="依赖与包治理工程化">依赖与包治理工程化</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-20T10:51:00.000Z" title="发表于 2026 18:51:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/engineering/">工程化</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/pnpm/">pnpm</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E4%BE%9D%E8%B5%96%E6%B2%BB%E7%90%86/">依赖治理</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/phantom-dependency/">phantom dependency</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Renovate/">Renovate</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Dependabot/">Dependabot</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/license/">license</a></span></div><div class="content">
+前言：依赖治理是很多团队容易忽略的一环。项目能安装成功，不代表依赖关系健康；没有安全告警，不代表没有供应链风险。工程化阶段二要开始把依赖也纳入质量体系。
+
+依赖治理到底治理什么前端项目的依赖数量通常很多。
+一个普通业务项目，直接依赖可能几十个，间接依赖可能上千个。
+依赖治理至少要关注六件事：
+
+
+
+维度
+问题
+
+
+
+安全
+是否存在已知漏洞
+
+
+license
+是否引入不合规开源协议
+
+
+版本
+多 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/10-CI%E6%B5%81%E6%B0%B4%E7%BA%BF%E4%B8%8E%E8%B4%A8%E9%87%8F%E5%BC%BA%E7%BA%A6%E6%9D%9F%E9%97%B8%E5%8F%A3/" title="CI 流水线与质量强约束闸口">CI 流水线与质量强约束闸口</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-20T10:50:00.000Z" title="发表于 2026 18:50:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/engineering/">工程化</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/">前端工程化</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/CI/">CI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/GitHub-Actions/">GitHub Actions</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/branch-protection/">branch protection</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E8%B4%A8%E9%87%8F%E9%97%B8%E5%8F%A3/">质量闸口</a></span></div><div class="content">
+前言：前面几篇把 ESLint、Prettier、Stylelint、提交约束、类型检查都讲了一遍。但有个问题一直没解决：这些本地约束，开发者其实都能绕过。真正让规范”无法被绕过”的那一层，是 CI 加分支保护。这篇就补上这个闸口。
+
+本地 hook 不是强约束前面讲提交约束时我反复强调”本地 hook 要快”，但要承认一个现实：
+
+本地的 pre-commit、commit-msg，开发者一行 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/35-%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8FAI%E5%BC%80%E5%8F%91%E6%A8%A1%E5%BC%8F%E6%8E%A5%E5%85%A5%E4%B8%8E%E9%95%BF%E6%9C%9F%E6%84%8F%E4%B9%89/" title="微信小程序 AI 开发模式接入与长期意义">微信小程序 AI 开发模式接入与长期意义</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-13T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/ai/">AI相关</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/AI/">AI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F/">微信小程序</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/MCP/">MCP</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Skills/">Skills</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%B7%A5%E7%A8%8B%E5%8C%96/">工程化</a></span></div><div class="content">
+前言：微信小程序 AI 开发模式不是简单地给小程序加一个聊天框，而是把小程序里的业务能力拆成 AI 可以理解、可以调用、可以展示的标准单元。本文基于微信官方文档，聊一下它怎么接、背后是什么机制、真正落地会遇到哪些挑战，以及它对小程序长期形态的影响。
+
+先说结论我的理解是：小程序 AI 开发模式，本质上是在小程序和大模型之间加了一层“业务能力协议”。
+以前用户使用小程序，大多是这样的：
+用户打开页 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/31-Claude-Code-Settings%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层">Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-05T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/ai/">AI相关</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/AI/">AI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Claude-Code/">Claude Code</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Settings/">Settings</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F/">配置系统</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E4%BC%81%E4%B8%9A%E6%B2%BB%E7%90%86/">企业治理</a></span></div><div class="content">
+前言：前面我写过 CLAUDE.md、权限系统、Hooks、Skills、MCP，但这些能力真正落地时，最后都会回到一个问题：配置到底放哪里？个人配置、项目配置、团队配置、企业配置怎么分层？ 这篇就专门把 Claude Code 的 Settings 配置体系讲清楚。
+
+为什么要单独讲 Settings很多人第一次用 Claude Code，会把所有规则都往 CLAUDE.md 里塞。
+比如：
+ ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/30-Claude-Code-Dynamic-Workflows%E5%8A%A8%E6%80%81%E5%B7%A5%E4%BD%9C%E6%B5%81%E8%A7%A3%E6%9E%90/" title="Claude Code Dynamic Workflows 动态工作流解析：让 Agent 学会给自己搭执行框架">Claude Code Dynamic Workflows 动态工作流解析：让 Agent 学会给自己搭执行框架</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-05T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/ai/">AI相关</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/AI/">AI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Agent/">Agent</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Claude-Code/">Claude Code</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%A4%9AAgent/">多Agent</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Dynamic-Workflows/">Dynamic Workflows</a></span></div><div class="content">
+前言：Claude Code 这次随 Opus 4.8 被讨论最多的新概念之一，是 Dynamic Workflows，中文一般叫“动态工作流”。我的理解是：它不是简单的“多开几个 Agent”，而是让 Claude Code 在执行复杂任务时，先为任务临时写一套可执行的调度框架，再用这套框架去组织多个子 Agent 干活。
+
+先说明一下信息来源：目前我能查到的公开资料里，Dynamic Wor ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/32-Claude-Code-Agent-View%E4%B8%8EBackground-Agents%E8%A7%A3%E6%9E%90/" title="Claude Code Agent View 与 Background Agents 解析：后台多任务怎么跑">Claude Code Agent View 与 Background Agents 解析：后台多任务怎么跑</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-05T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/ai/">AI相关</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/AI/">AI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Claude-Code/">Claude Code</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Agent-View/">Agent View</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Background-Agents/">Background Agents</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Worktree/">Worktree</a></span></div><div class="content">
+前言：Dynamic Workflows 是“让 Claude 写脚本编排一堆子 Agent”，而 Agent View / Background Agents 是另一条路线：让多个完整 Claude Code 会话在后台并行跑，用户只在需要介入时回来处理。 这篇讲清楚它解决什么问题、怎么工作、和 Subagents &#x2F; Workflows 有什么区别。
+
+Agent View 是什么 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/33-Claude-Code-Agent-Teams%E5%A4%9AAgent%E5%9B%A2%E9%98%9F%E5%8D%8F%E4%BD%9C%E8%A7%A3%E6%9E%90/" title="Claude Code Agent Teams 解析：让多个 Claude 会话像团队一样协作">Claude Code Agent Teams 解析：让多个 Claude 会话像团队一样协作</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-05T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/ai/">AI相关</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/AI/">AI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Claude-Code/">Claude Code</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%A4%9AAgent/">多Agent</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Agent-Teams/">Agent Teams</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/AI%E5%8D%8F%E4%BD%9C/">AI协作</a></span></div><div class="content">
+前言：前面讲 Subagents、Agent View、Dynamic Workflows 时，本质都在讲一件事：一个 Agent 不够用了。Agent Teams 则更进一步，它不是简单派子任务，也不是后台跑多个会话，而是让多个 Claude Code 会话组成一个“团队”，有负责人、有队友、有任务列表、有消息通信。
+
+Agent Teams 是什么Agent Teams 是 Claude C ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/34-Claude-Code-Worktree%E6%9C%BA%E5%88%B6%E8%A7%A3%E6%9E%90/" title="Claude Code Worktree 机制解析：AI 并行改代码如何避免互相打架">Claude Code Worktree 机制解析：AI 并行改代码如何避免互相打架</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-06-05T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/ai/">AI相关</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/AI/">AI</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Claude-Code/">Claude Code</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%A4%9AAgent/">多Agent</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Worktree/">Worktree</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Git/">Git</a></span></div><div class="content">
+前言：前面讲 Agent View、Background Agents、Agent Teams 和 Dynamic Workflows 时，反复提到一个词：worktree。它看起来只是 Git 的一个功能，但在 AI Coding 里非常关键——多个 Agent 同时改代码时，worktree 是避免互相覆盖的基础隔离层。
+
+为什么要专门讲 WorktreeAI Coding 进入多 Agen ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/00-Vue%203%20%E6%BA%90%E7%A0%81%E7%B3%BB%E7%BB%9F%E6%80%BB%E8%A7%88%EF%BC%9A%E4%BB%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E5%88%B0%E6%B8%B2%E6%9F%93%E9%97%AD%E7%8E%AF/" title="Vue 3 源码系统总览：从响应式到渲染闭环">Vue 3 源码系统总览：从响应式到渲染闭环</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-05-31T15:59:00.000Z" title="发表于 2026 23:59:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/vue/">Vue框架及周边库</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/Vue3/">Vue3</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E7%B3%BB%E7%BB%9F%E6%80%BB%E8%A7%88/">系统总览</a></span></div><div class="content">
+源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。
+
+
+前言：这一篇不急着钻进某个函数，而是先建立一张 Vue 3 源码地图。我的理解是，读 Vue 源码最重要的不是记住每个函数怎么写，而是先知道这些模块为什么被拆开、它们如何协作，以及每一层在系统里解决什么问题。
+
+先 ...</div></div></div><div class="recent-post-item"><div class="recent-post-info no-cover"><a class="article-title" href="/posts/01-Vue%203%20reactive%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9AProxy%20%E6%98%AF%E5%A6%82%E4%BD%95%E5%88%9B%E5%BB%BA%E5%93%8D%E5%BA%94%E5%BC%8F%E5%AF%B9%E8%B1%A1%E7%9A%84/" title="Vue 3 reactive 源码解析：Proxy 是如何创建响应式对象的">Vue 3 reactive 源码解析：Proxy 是如何创建响应式对象的</a><div class="article-meta-wrap"><span class="post-meta-date"><i class="far fa-calendar-alt"></i><span class="article-meta-label">发表于</span><time datetime="2026-05-31T15:58:00.000Z" title="发表于 2026 23:58:00">2026</time></span><span class="article-meta"><span class="article-meta-separator">|</span><i class="fas fa-inbox"></i><a class="article-meta__categories" href="/categories/vue/">Vue框架及周边库</a></span><span class="article-meta tags"><span class="article-meta-separator">|</span><i class="fas fa-tag"></i><a class="article-meta__tags" href="/tags/Vue3/">Vue3</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F%E7%B3%BB%E7%BB%9F/">响应式系统</a><span class="article-meta-link">•</span><a class="article-meta__tags" href="/tags/reactive/">reactive</a></span></div><div class="content">
+源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。
+
+
+前言：这一篇先看 Vue 3 响应式系统的入口 reactive。我的理解是，reactive 本身并不负责依赖收集和触发更新，它真正做的是判断目标对象能不能代理、选择合适的代理策略，并复用已经创建过的 Proxy ...</div></div></div><nav id="pagination"><div class="pagination"><a class="extend prev" rel="prev" href="/posts/page/4/#content-inner"><i class="fas fa-chevron-left fa-fw"></i></a><a class="page-number" href="/posts/">1</a><span class="space">&hellip;</span><a class="page-number" href="/posts/page/4/#content-inner">4</a><span class="page-number current">5</span><a class="page-number" href="/posts/page/6/#content-inner">6</a><span class="space">&hellip;</span><a class="page-number" href="/posts/page/21/#content-inner">21</a><a class="extend next" rel="next" href="/posts/page/6/#content-inner"><i class="fas fa-chevron-right fa-fw"></i></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div><div class="card-widget card-categories"><div class="item-headline">
+            <i class="fas fa-folder-open"></i>
+            <span>分类</span>
+            <a class="card-more-btn" href="/categories/" title="查看更多">
+    <i class="fas fa-angle-right"></i></a>
+            </div>
+            <ul class="card-category-list" id="aside-cat-list">
+            <li class="card-category-list-item "><a class="card-category-list-link" href="/categories/ai/"><span class="card-category-list-name">AI相关</span><span class="card-category-list-count">36</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/react/"><span class="card-category-list-name">React框架及周边库</span><span class="card-category-list-count">30</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/vue/"><span class="card-category-list-name">Vue框架及周边库</span><span class="card-category-list-count">31</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/backend/"><span class="card-category-list-name">全栈</span><span class="card-category-list-count">8</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/frontend-basics/"><span class="card-category-list-name">前端基础</span><span class="card-category-list-count">19</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/cs-fundamentals/"><span class="card-category-list-name">基础知识</span><span class="card-category-list-count">10</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/engineering/"><span class="card-category-list-name">工程化</span><span class="card-category-list-count">44</span></a></li><li class="card-category-list-item "><a class="card-category-list-link" href="/categories/notes/"><span class="card-category-list-name">杂记</span><span class="card-category-list-count">3</span></a></li>
+            </ul></div><div class="card-widget card-tags"><div class="item-headline"><i class="fas fa-tags"></i><span>标签</span></div><div class="card-tag-cloud"><a href="/tags/CSS-%E5%B7%A5%E7%A8%8B%E5%8C%96/" style="font-size: 1.1em; color: #999">CSS 工程化</a> <a href="/tags/%E8%AE%BE%E8%AE%A1%E6%A8%A1%E5%BC%8F/" style="font-size: 1.1em; color: #999">设计模式</a> <a href="/tags/UDP/" style="font-size: 1.1em; color: #999">UDP</a> <a href="/tags/Eino/" style="font-size: 1.1em; color: #999">Eino</a> <a href="/tags/%E4%BB%A3%E7%A0%81%E6%A0%BC%E5%BC%8F%E5%8C%96/" style="font-size: 1.1em; color: #999">代码格式化</a> <a href="/tags/%E5%87%BD%E6%95%B0%E5%BC%8F%E7%BC%96%E7%A8%8B/" style="font-size: 1.1em; color: #999">函数式编程</a> <a href="/tags/OpenSpec/" style="font-size: 1.1em; color: #999">OpenSpec</a> <a href="/tags/%E6%B5%8B%E8%AF%95/" style="font-size: 1.1em; color: #999">测试</a> <a href="/tags/%E6%9E%84%E5%BB%BA%E6%A3%80%E6%9F%A5/" style="font-size: 1.1em; color: #999">构建检查</a> <a href="/tags/%E7%BB%84%E4%BB%B6%E9%80%9A%E4%BF%A1/" style="font-size: 1.1em; color: #999">组件通信</a> <a href="/tags/%E6%96%87%E4%BB%B6%E7%B3%BB%E7%BB%9F/" style="font-size: 1.1em; color: #999">文件系统</a> <a href="/tags/AMD/" style="font-size: 1.1em; color: #999">AMD</a> <a href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F/" style="font-size: 1.1em; color: #999">响应式</a> <a href="/tags/%E5%A4%9AAgent/" style="font-size: 1.4em; color: #99a5b6">多Agent</a> <a href="/tags/Axios/" style="font-size: 1.1em; color: #999">Axios</a> <a href="/tags/WXML/" style="font-size: 1.1em; color: #999">WXML</a> <a href="/tags/ESM/" style="font-size: 1.1em; color: #999">ESM</a> <a href="/tags/Monaco-Editor/" style="font-size: 1.1em; color: #999">Monaco Editor</a> <a href="/tags/%E5%AE%B9%E5%99%A8%E5%8C%96/" style="font-size: 1.1em; color: #999">容器化</a> <a href="/tags/%E5%90%88%E6%88%90%E4%BA%8B%E4%BB%B6/" style="font-size: 1.1em; color: #999">合成事件</a> <a href="/tags/Corepack/" style="font-size: 1.2em; color: #999da3">Corepack</a> <a href="/tags/HTTP-1-1/" style="font-size: 1.1em; color: #999">HTTP/1.1</a> <a href="/tags/ReactElement/" style="font-size: 1.1em; color: #999">ReactElement</a> <a href="/tags/CSS-in-JS/" style="font-size: 1.1em; color: #999">CSS-in-JS</a> <a href="/tags/%E7%B3%BB%E7%BB%9F%E6%80%BB%E8%A7%88/" style="font-size: 1.1em; color: #999">系统总览</a> <a href="/tags/Context/" style="font-size: 1.1em; color: #999">Context</a> <a href="/tags/%E5%B7%A5%E7%A8%8B%E8%83%BD%E5%8A%9B/" style="font-size: 1.5em; color: #99a9bf">工程能力</a> <a href="/tags/PR-%E6%A8%A1%E6%9D%BF/" style="font-size: 1.1em; color: #999">PR 模板</a> <a href="/tags/%E6%8C%87%E4%BB%A4-transform/" style="font-size: 1.1em; color: #999">指令 transform</a> <a href="/tags/%E5%AD%97%E7%AC%A6%E4%B8%B2/" style="font-size: 1.1em; color: #999">字符串</a> <a href="/tags/%E5%BA%93%E6%9E%84%E5%BB%BA/" style="font-size: 1.1em; color: #999">库构建</a> <a href="/tags/%E5%8D%95%E8%B0%83%E6%A0%88/" style="font-size: 1.1em; color: #999">单调栈</a> <a href="/tags/Skyline/" style="font-size: 1.1em; color: #999">Skyline</a> <a href="/tags/giget/" style="font-size: 1.1em; color: #999">giget</a> <a href="/tags/rpx/" style="font-size: 1.1em; color: #999">rpx</a> <a href="/tags/%E6%B5%81%E5%BC%8F%E4%BC%A0%E8%BE%93/" style="font-size: 1.2em; color: #999da3">流式传输</a> <a href="/tags/%E4%BA%8B%E4%BB%B6%E5%BE%AA%E7%8E%AF/" style="font-size: 1.1em; color: #999">事件循环</a> <a href="/tags/%E9%97%AD%E5%8C%85/" style="font-size: 1.1em; color: #999">闭包</a> <a href="/tags/Prettier/" style="font-size: 1.3em; color: #99a1ac">Prettier</a> <a href="/tags/axe-core/" style="font-size: 1.1em; color: #999">axe-core</a></div></div><div class="card-widget card-archives"><div class="item-headline"><i class="fas fa-archive"></i><span>归档</span></div><ul class="card-archive-list"><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2026/"><span class="card-archive-list-date">2026年</span><span class="card-archive-list-count">125</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2025/"><span class="card-archive-list-date">2025年</span><span class="card-archive-list-count">16</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2024/"><span class="card-archive-list-date">2024年</span><span class="card-archive-list-count">8</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2023/"><span class="card-archive-list-date">2023年</span><span class="card-archive-list-count">44</span></a></li><li class="card-archive-list-item"><a class="card-archive-list-link" href="/archives/2022/"><span class="card-archive-list-date">2022年</span><span class="card-archive-list-count">11</span></a></li></ul></div><div class="card-widget card-webinfo"><div class="item-headline"><i class="fas fa-chart-line"></i><span>网站资讯</span></div><div class="webinfo"><div class="webinfo-item"><div class="item-name">文章数目 :</div><div class="item-count">204</div></div><div class="webinfo-item"><div class="item-name">本站总字数 :</div><div class="item-count">567.7k</div></div><div class="webinfo-item"><div class="item-name">最后更新时间 :</div><div class="item-count" id="last-push-date" data-lastPushDate="2026-07-09T14:05:51.772Z"><i class="fa-solid fa-spinner fa-spin"></i></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

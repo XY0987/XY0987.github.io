@@ -1,0 +1,1233 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Nginx 从入门到精通：一篇讲透静态服务、反向代理、负载均衡和 HTTPS | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="本文从这个心智模型讲起，再给一套可以直接跑的 Docker + Nginx + Node.js 实战项目，把静态服务、反向代理、负载均衡、gzip、SSE、HTTPS 常见配置一次讲清楚。  本文主要参考 Nginx 官方文档：Beginner&#39;s Guide、ngx_http_core_module、ngx_http_proxy_module、ngx_http_upstream_mod">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Nginx 从入门到精通：一篇讲透静态服务、反向代理、负载均衡和 HTTPS">
+<meta property="og:url" content="http://example.com/posts/nginx-from-beginner-to-master/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="本文从这个心智模型讲起，再给一套可以直接跑的 Docker + Nginx + Node.js 实战项目，把静态服务、反向代理、负载均衡、gzip、SSE、HTTPS 常见配置一次讲清楚。  本文主要参考 Nginx 官方文档：Beginner&#39;s Guide、ngx_http_core_module、ngx_http_proxy_module、ngx_http_upstream_mod">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-15T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-05-17T00:27:12.587Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Docker">
+<meta property="article:tag" content="Nginx">
+<meta property="article:tag" content="Node.js">
+<meta property="article:tag" content="反向代理">
+<meta property="article:tag" content="负载均衡">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/nginx-from-beginner-to-master/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Nginx 从入门到精通：一篇讲透静态服务、反向代理、负载均衡和 HTTPS',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 08:27:12'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Nginx 从入门到精通：一篇讲透静态服务、反向代理、负载均衡和 HTTPS</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-15T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-17T00:27:12.587Z" title="更新于 2026 08:27:12">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/backend/">全栈</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5.5k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>23分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>本文从这个心智模型讲起，再给一套可以直接跑的 Docker + Nginx + Node.js 实战项目，把静态服务、反向代理、负载均衡、gzip、SSE、HTTPS 常见配置一次讲清楚。</p>
+</blockquote>
+<p>本文主要参考 Nginx 官方文档：<code>Beginner&#39;s Guide</code>、<code>ngx_http_core_module</code>、<code>ngx_http_proxy_module</code>、<code>ngx_http_upstream_module</code>、<code>ngx_http_gzip_module</code>、<code>ngx_http_ssl_module</code>。不确定的线上安全参数，我不会硬编，生产环境请结合公司安全基线再做加固。</p>
+<h2 id="先说结论：Nginx-到底解决什么问题"><a href="#先说结论：Nginx-到底解决什么问题" class="headerlink" title="先说结论：Nginx 到底解决什么问题"></a>先说结论：Nginx 到底解决什么问题</h2><p>一句话：<strong>Nginx 是站在用户和后端服务之间的高性能流量入口</strong>。</p>
+<p>它最常见的工作有四类：</p>
+<table>
+<thead>
+<tr>
+<th>能力</th>
+<th>做什么</th>
+<th>典型场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>静态资源服务</td>
+<td>直接返回 HTML、CSS、JS、图片</td>
+<td>前端打包产物部署</td>
+</tr>
+<tr>
+<td>反向代理</td>
+<td>把请求转发给后端服务</td>
+<td><code>/api</code> 转发到 Node &#x2F; Java &#x2F; Go 服务</td>
+</tr>
+<tr>
+<td>负载均衡</td>
+<td>在多个后端实例之间分发请求</td>
+<td>多实例部署、扩容、容灾</td>
+</tr>
+<tr>
+<td>TLS 终止</td>
+<td>在 Nginx 层处理 HTTPS</td>
+<td>后端只跑 HTTP，证书集中管理</td>
+</tr>
+</tbody></table>
+<p>我的理解是：如果把一个 Web 系统比作商场，Nginx 就像入口大厅。静态资源可以在大厅直接发，复杂业务再转给后面的柜台，柜台多了还要排队分流。</p>
+<h2 id="Nginx-的核心心智模型"><a href="#Nginx-的核心心智模型" class="headerlink" title="Nginx 的核心心智模型"></a>Nginx 的核心心智模型</h2><p>先不要背指令，先把配置层级记住：</p>
+<pre><code class="text">nginx.conf
+├── main                 # 全局配置，例如 worker_processes
+├── events               # 连接事件配置，例如 worker_connections
+└── http                 # HTTP 服务配置
+    ├── upstream         # 后端服务组
+    └── server           # 一个虚拟主机
+        └── location     # 一组 URI 匹配规则
+</code></pre>
+<p>官方文档里有两个概念很重要：</p>
+<ul>
+<li><code>directive</code>：指令，比如 <code>listen 80;</code>、<code>root /usr/share/nginx/html;</code></li>
+<li><code>context</code>：上下文，比如 <code>http &#123;&#125;</code>、<code>server &#123;&#125;</code>、<code>location &#123;&#125;</code></li>
+</ul>
+<p>Nginx 配置不是随便写的，<strong>每个指令都有自己能出现的位置</strong>。比如 <code>upstream</code> 要写在 <code>http</code> 里，<code>listen</code> 要写在 <code>server</code> 里，<code>proxy_pass</code> 通常写在 <code>location</code> 里。</p>
+<h2 id="一个可以直接运行的完整项目"><a href="#一个可以直接运行的完整项目" class="headerlink" title="一个可以直接运行的完整项目"></a>一个可以直接运行的完整项目</h2><p>下面这个案例会跑起来：</p>
+<ul>
+<li>一个 Nginx 容器，监听 <code>http://localhost:8080</code></li>
+<li>两个 Node.js 后端实例：<code>app1</code>、<code>app2</code></li>
+<li>Nginx 提供静态页面</li>
+<li><code>/api/</code> 反向代理到 Node 后端，并做负载均衡</li>
+<li><code>/stream</code> 代理 SSE 流式接口</li>
+<li>开启 gzip 和静态资源缓存</li>
+</ul>
+<h3 id="环境要求"><a href="#环境要求" class="headerlink" title="环境要求"></a>环境要求</h3><p>我本地按下面环境验证过：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>建议版本</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Docker Desktop</td>
+<td>4.x 或以上</td>
+</tr>
+<tr>
+<td>Docker Compose</td>
+<td>v2</td>
+</tr>
+<tr>
+<td>curl</td>
+<td>macOS &#x2F; Linux 自带即可</td>
+</tr>
+</tbody></table>
+<p>不需要本地安装 Nginx，也不需要本地安装 Node.js，因为都跑在 Docker 里。</p>
+<h3 id="第一步：创建项目文件"><a href="#第一步：创建项目文件" class="headerlink" title="第一步：创建项目文件"></a>第一步：创建项目文件</h3><p>新建一个目录：</p>
+<pre><code class="bash">mkdir nginx-playground
+cd nginx-playground
+mkdir -p nginx app public/assets
+</code></pre>
+<p>创建 <code>docker-compose.yml</code>：</p>
+<pre><code class="yaml">services:
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: nginx-playground
+    ports:
+      - &quot;8080:80&quot;
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./public:/usr/share/nginx/html:ro
+    depends_on:
+      - app1
+      - app2
+
+  app1:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./app:/app:ro
+    environment:
+      - INSTANCE=app-1
+    command: [&quot;node&quot;, &quot;server.js&quot;]
+
+  app2:
+    image: node:20-alpine
+    working_dir: /app
+    volumes:
+      - ./app:/app:ro
+    environment:
+      - INSTANCE=app-2
+    command: [&quot;node&quot;, &quot;server.js&quot;]
+</code></pre>
+<p>创建 <code>app/server.js</code>，这里不用任何第三方依赖：</p>
+<pre><code class="javascript">const http = require(&quot;http&quot;);
+
+const instance = process.env.INSTANCE || &quot;app&quot;;
+
+function sendJson(res, data) &#123;
+  res.writeHead(200, &#123;
+    &quot;Content-Type&quot;: &quot;application/json; charset=utf-8&quot;,
+    &quot;Cache-Control&quot;: &quot;no-store&quot;,
+  &#125;);
+  res.end(JSON.stringify(data, null, 2));
+&#125;
+
+const server = http.createServer((req, res) =&gt; &#123;
+  if (req.url === &quot;/hello&quot;) &#123;
+    return sendJson(res, &#123;
+      instance,
+      message: &quot;hello from Node.js backend&quot;,
+      url: req.url,
+      host: req.headers.host,
+      realIp: req.headers[&quot;x-real-ip&quot;] || null,
+      forwardedFor: req.headers[&quot;x-forwarded-for&quot;] || null,
+      forwardedProto: req.headers[&quot;x-forwarded-proto&quot;] || null,
+      time: new Date().toISOString(),
+    &#125;);
+  &#125;
+
+  if (req.url === &quot;/slow&quot;) &#123;
+    setTimeout(() =&gt; &#123;
+      sendJson(res, &#123; instance, message: &quot;slow response done&quot; &#125;);
+    &#125;, 1500);
+    return;
+  &#125;
+
+  if (req.url === &quot;/sse&quot;) &#123;
+    res.writeHead(200, &#123;
+      &quot;Content-Type&quot;: &quot;text/event-stream; charset=utf-8&quot;,
+      &quot;Cache-Control&quot;: &quot;no-cache&quot;,
+      Connection: &quot;keep-alive&quot;,
+    &#125;);
+
+    let count = 0;
+    const timer = setInterval(() =&gt; &#123;
+      count += 1;
+      res.write(`data: $&#123;JSON.stringify(&#123; instance, count &#125;)&#125;\n\n`);
+
+      if (count === 5) &#123;
+        clearInterval(timer);
+        res.end();
+      &#125;
+    &#125;, 1000);
+
+    req.on(&quot;close&quot;, () =&gt; clearInterval(timer));
+    return;
+  &#125;
+
+  res.writeHead(404, &#123; &quot;Content-Type&quot;: &quot;text/plain; charset=utf-8&quot; &#125;);
+  res.end(`not found from $&#123;instance&#125;\n`);
+&#125;);
+
+server.listen(3000, &quot;0.0.0.0&quot;, () =&gt; &#123;
+  console.log(`$&#123;instance&#125; listening on 3000`);
+&#125;);
+</code></pre>
+<p>创建前端页面 <code>public/index.html</code>：</p>
+<pre><code class="html">&lt;!doctype html&gt;
+&lt;html lang=&quot;zh-CN&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;UTF-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot; /&gt;
+    &lt;title&gt;Nginx Playground&lt;/title&gt;
+    &lt;link rel=&quot;stylesheet&quot; href=&quot;/assets/style.css&quot; /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;main&gt;
+      &lt;h1&gt;Nginx Playground&lt;/h1&gt;
+      &lt;p&gt;这个页面由 Nginx 直接返回，下面的数据来自 Node.js 后端。&lt;/p&gt;
+      &lt;button id=&quot;btn&quot;&gt;请求 /api/hello&lt;/button&gt;
+      &lt;pre id=&quot;output&quot;&gt;点击按钮后查看响应&lt;/pre&gt;
+    &lt;/main&gt;
+
+    &lt;script&gt;
+      document.querySelector(&quot;#btn&quot;).addEventListener(&quot;click&quot;, async () =&gt; &#123;
+        const res = await fetch(&quot;/api/hello&quot;);
+        const data = await res.json();
+        document.querySelector(&quot;#output&quot;).textContent = JSON.stringify(data, null, 2);
+      &#125;);
+    &lt;/script&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+<p>创建样式文件 <code>public/assets/style.css</code>：</p>
+<pre><code class="css">body &#123;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, &quot;Segoe UI&quot;, sans-serif;
+  background: #f6f8fa;
+  color: #24292f;
+&#125;
+
+main &#123;
+  max-width: 760px;
+  margin: 80px auto;
+  padding: 32px;
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08);
+&#125;
+
+button &#123;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  color: #fff;
+  background: #0969da;
+&#125;
+
+pre &#123;
+  overflow: auto;
+  padding: 16px;
+  background: #0d1117;
+  color: #c9d1d9;
+  border-radius: 8px;
+&#125;
+</code></pre>
+<p>创建核心配置 <code>nginx/nginx.conf</code>：</p>
+<pre><code class="nginx">worker_processes auto;
+
+error_log /var/log/nginx/error.log notice;
+pid /var/run/nginx.pid;
+
+events &#123;
+    worker_connections 1024;
+&#125;
+
+http &#123;
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    log_format main &#39;$remote_addr - $host &quot;$request&quot; &#39;
+                    &#39;$status $body_bytes_sent &quot;$http_referer&quot; &#39;
+                    &#39;&quot;$http_user_agent&quot; upstream=$upstream_addr &#39;
+                    &#39;request_time=$request_time upstream_time=$upstream_response_time&#39;;
+
+    access_log /var/log/nginx/access.log main;
+
+    sendfile on;
+    keepalive_timeout 65s;
+
+    gzip on;
+    gzip_min_length 256;
+    gzip_comp_level 5;
+    gzip_types
+        text/plain
+        text/css
+        application/json
+        application/javascript
+        application/xml
+        text/xml;
+
+    upstream node_backend &#123;
+        least_conn;
+        server app1:3000 max_fails=3 fail_timeout=10s;
+        server app2:3000 max_fails=3 fail_timeout=10s;
+        keepalive 16;
+    &#125;
+
+    server &#123;
+        listen 80;
+        server_name localhost;
+
+        root /usr/share/nginx/html;
+        index index.html;
+
+        location = /health &#123;
+            access_log off;
+            return 200 &quot;ok\n&quot;;
+        &#125;
+
+        location /assets/ &#123;
+            alias /usr/share/nginx/html/assets/;
+            expires 7d;
+            add_header Cache-Control &quot;public&quot;;
+        &#125;
+
+        location / &#123;
+            try_files $uri $uri/ /index.html;
+        &#125;
+
+        location /api/ &#123;
+            proxy_pass http://node_backend/;
+            proxy_http_version 1.1;
+            proxy_set_header Connection &quot;&quot;;
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+            proxy_next_upstream error timeout http_502 http_503 http_504;
+        &#125;
+
+        location = /stream &#123;
+            proxy_pass http://node_backend/sse;
+            proxy_http_version 1.1;
+            proxy_set_header Connection &quot;&quot;;
+            proxy_set_header Host $host;
+            proxy_buffering off;
+            proxy_cache off;
+            proxy_read_timeout 3600s;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>启动：</p>
+<pre><code class="bash">docker compose up --build
+</code></pre>
+<p>另开一个终端测试：</p>
+<pre><code class="bash">curl http://localhost:8080/health
+</code></pre>
+<p>预期输出：</p>
+<pre><code class="text">ok
+</code></pre>
+<p>测试静态页面：</p>
+<pre><code class="bash">curl -I http://localhost:8080/
+</code></pre>
+<p>预期能看到 <code>HTTP/1.1 200 OK</code>。</p>
+<p>测试反向代理和负载均衡：</p>
+<pre><code class="bash">for i in &#123;1..6&#125;; do curl -s http://localhost:8080/api/hello | grep instance; done
+</code></pre>
+<p>预期能看到 <code>app-1</code> 和 <code>app-2</code> 都出现。由于这里用了 <code>least_conn</code>，结果不一定严格一人一次，但会在两个实例之间分发。</p>
+<p>测试 SSE：</p>
+<pre><code class="bash">curl -N http://localhost:8080/stream
+</code></pre>
+<p>预期每秒输出一条：</p>
+<pre><code class="text">data: &#123;&quot;instance&quot;:&quot;app-1&quot;,&quot;count&quot;:1&#125;
+
+data: &#123;&quot;instance&quot;:&quot;app-1&quot;,&quot;count&quot;:2&#125;
+</code></pre>
+<p>测试 gzip：</p>
+<pre><code class="bash">curl -H &quot;Accept-Encoding: gzip&quot; -s -D - http://localhost:8080/ -o /dev/null | grep -i content-encoding
+</code></pre>
+<p>预期输出：</p>
+<pre><code class="text">Content-Encoding: gzip
+</code></pre>
+<h2 id="静态资源：root、alias、try-files-怎么选"><a href="#静态资源：root、alias、try-files-怎么选" class="headerlink" title="静态资源：root、alias、try_files 怎么选"></a>静态资源：<code>root</code>、<code>alias</code>、<code>try_files</code> 怎么选</h2><p>静态资源是 Nginx 最基础也最常用的能力。</p>
+<h3 id="root：把-URI-拼到目录后面"><a href="#root：把-URI-拼到目录后面" class="headerlink" title="root：把 URI 拼到目录后面"></a><code>root</code>：把 URI 拼到目录后面</h3><pre><code class="nginx">location / &#123;
+    root /usr/share/nginx/html;
+&#125;
+</code></pre>
+<p>请求：</p>
+<pre><code class="text">/index.html
+</code></pre>
+<p>实际查找：</p>
+<pre><code class="text">/usr/share/nginx/html/index.html
+</code></pre>
+<p><code>root</code> 的规则很简单：<strong>文件路径 &#x3D; root 路径 + 请求 URI</strong>。</p>
+<h3 id="alias：把匹配前缀替换成目录"><a href="#alias：把匹配前缀替换成目录" class="headerlink" title="alias：把匹配前缀替换成目录"></a><code>alias</code>：把匹配前缀替换成目录</h3><pre><code class="nginx">location /assets/ &#123;
+    alias /usr/share/nginx/html/assets/;
+&#125;
+</code></pre>
+<p>请求：</p>
+<pre><code class="text">/assets/style.css
+</code></pre>
+<p>实际查找：</p>
+<pre><code class="text">/usr/share/nginx/html/assets/style.css
+</code></pre>
+<p><code>alias</code> 的心智模型是：<strong>把 <code>/assets/</code> 这段 URI 替换成指定目录</strong>。</p>
+<p>最容易踩坑的是结尾斜杠：</p>
+<pre><code class="nginx"># ✅ 正面案例：location 和 alias 都以 / 结尾
+location /assets/ &#123;
+    alias /usr/share/nginx/html/assets/;
+&#125;
+
+# ❌ 反面案例：路径容易拼错
+location /assets/ &#123;
+    alias /usr/share/nginx/html/assets;
+&#125;
+</code></pre>
+<p>我的建议：普通站点根目录用 <code>root</code>，特殊路径映射用 <code>alias</code>。如果 <code>location</code> 最后一段和目录最后一段一样，优先用 <code>root</code>，这也是官方文档里的建议方向。</p>
+<h3 id="try-files：前端-SPA-部署的关键"><a href="#try-files：前端-SPA-部署的关键" class="headerlink" title="try_files：前端 SPA 部署的关键"></a><code>try_files</code>：前端 SPA 部署的关键</h3><pre><code class="nginx">location / &#123;
+    try_files $uri $uri/ /index.html;
+&#125;
+</code></pre>
+<p>它的意思是：</p>
+<ol>
+<li>先找 <code>$uri</code> 对应文件</li>
+<li>再找 <code>$uri/</code> 对应目录</li>
+<li>都没有就返回 <code>/index.html</code></li>
+</ol>
+<p>这就是 Vue &#x2F; React SPA 部署后刷新子路由不 404 的核心。</p>
+<p>比如访问：</p>
+<pre><code class="text">/user/profile
+</code></pre>
+<p>服务器上并没有这个真实文件，Nginx 会 fallback 到 <code>/index.html</code>，再交给前端路由接管。</p>
+<h2 id="location-匹配规则：不用背，但要知道优先级"><a href="#location-匹配规则：不用背，但要知道优先级" class="headerlink" title="location 匹配规则：不用背，但要知道优先级"></a><code>location</code> 匹配规则：不用背，但要知道优先级</h2><p>常见 <code>location</code> 写法：</p>
+<table>
+<thead>
+<tr>
+<th>写法</th>
+<th>含义</th>
+<th>示例</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>location = /</code></td>
+<td>精确匹配</td>
+<td>只匹配 <code>/</code></td>
+</tr>
+<tr>
+<td><code>location /api/</code></td>
+<td>普通前缀匹配</td>
+<td>匹配 <code>/api/users</code></td>
+</tr>
+<tr>
+<td><code>location ^~ /assets/</code></td>
+<td>优先前缀匹配</td>
+<td>命中后不再检查正则</td>
+</tr>
+<tr>
+<td><code>location ~ \.png$</code></td>
+<td>区分大小写正则</td>
+<td>匹配 <code>.png</code></td>
+</tr>
+<tr>
+<td><code>location ~* \.jpg$</code></td>
+<td>不区分大小写正则</td>
+<td>匹配 <code>.jpg</code>、<code>.JPG</code></td>
+</tr>
+</tbody></table>
+<p>优先级可以简化记成：</p>
+<pre><code class="text">精确匹配 =
+  ↓
+最长前缀匹配，若带 ^~ 则直接使用
+  ↓
+按配置顺序检查正则 location
+  ↓
+没有正则命中，则使用之前记录的最长前缀
+</code></pre>
+<p>实战里我最常用三种：</p>
+<pre><code class="nginx">location = /health &#123; ... &#125;
+location /api/ &#123; ... &#125;
+location / &#123; try_files $uri $uri/ /index.html; &#125;
+</code></pre>
+<p>够用了，别一上来写一堆正则，把自己绕进去。</p>
+<h2 id="反向代理：proxy-pass-是最容易踩坑的指令"><a href="#反向代理：proxy-pass-是最容易踩坑的指令" class="headerlink" title="反向代理：proxy_pass 是最容易踩坑的指令"></a>反向代理：<code>proxy_pass</code> 是最容易踩坑的指令</h2><p>反向代理的最小配置是：</p>
+<pre><code class="nginx">location /api/ &#123;
+    proxy_pass http://node_backend/;
+&#125;
+</code></pre>
+<p>这行看着简单，真正容易出问题的是：**<code>proxy_pass</code> 后面有没有 URI，尤其是有没有最后那个 <code>/</code>**。</p>
+<h3 id="三种写法对比"><a href="#三种写法对比" class="headerlink" title="三种写法对比"></a>三种写法对比</h3><p>假设请求是：</p>
+<pre><code class="text">/api/users?id=1
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>配置</th>
+<th>后端收到的路径</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>proxy_pass http://backend;</code></td>
+<td><code>/api/users?id=1</code></td>
+<td>保留原始 URI</td>
+</tr>
+<tr>
+<td><code>proxy_pass http://backend/;</code></td>
+<td><code>/users?id=1</code></td>
+<td>去掉 <code>/api/</code> 前缀</td>
+</tr>
+<tr>
+<td><code>proxy_pass http://backend/v1/;</code></td>
+<td><code>/v1/users?id=1</code></td>
+<td>把 <code>/api/</code> 替换成 <code>/v1/</code></td>
+</tr>
+</tbody></table>
+<p>本文示例里：</p>
+<pre><code class="nginx">location /api/ &#123;
+    proxy_pass http://node_backend/;
+&#125;
+</code></pre>
+<p>所以浏览器请求 <code>/api/hello</code>，后端 Node 实际收到的是 <code>/hello</code>。</p>
+<p>这也是我写项目时最常见的坑：前端明明请求 <code>/api/users</code>，后端却一直 404，最后发现是 Nginx 把路径前缀改了。</p>
+<h3 id="代理时建议带上的请求头"><a href="#代理时建议带上的请求头" class="headerlink" title="代理时建议带上的请求头"></a>代理时建议带上的请求头</h3><pre><code class="nginx">proxy_set_header Host $host;
+proxy_set_header X-Real-IP $remote_addr;
+proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+proxy_set_header X-Forwarded-Proto $scheme;
+</code></pre>
+<p>这几行的作用：</p>
+<table>
+<thead>
+<tr>
+<th>Header</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Host</code></td>
+<td>把用户访问的域名传给后端</td>
+</tr>
+<tr>
+<td><code>X-Real-IP</code></td>
+<td>传递客户端 IP</td>
+</tr>
+<tr>
+<td><code>X-Forwarded-For</code></td>
+<td>追加代理链路 IP</td>
+</tr>
+<tr>
+<td><code>X-Forwarded-Proto</code></td>
+<td>告诉后端原始协议是 HTTP 还是 HTTPS</td>
+</tr>
+</tbody></table>
+<p>注意一个细节：<code>proxy_set_header</code> 有继承规则。如果你在某个层级写了任意一个 <code>proxy_set_header</code>，上层的其他 <code>proxy_set_header</code> 不一定会继续继承。为了少踩坑，我更倾向于在代理的 <code>location</code> 里把关键 header 写全。</p>
+<h2 id="负载均衡：upstream-不只是把机器列出来"><a href="#负载均衡：upstream-不只是把机器列出来" class="headerlink" title="负载均衡：upstream 不只是把机器列出来"></a>负载均衡：<code>upstream</code> 不只是把机器列出来</h2><p>在示例里我们写了：</p>
+<pre><code class="nginx">upstream node_backend &#123;
+    least_conn;
+    server app1:3000 max_fails=3 fail_timeout=10s;
+    server app2:3000 max_fails=3 fail_timeout=10s;
+    keepalive 16;
+&#125;
+</code></pre>
+<p><code>upstream</code> 定义的是一个后端服务组，<code>proxy_pass http://node_backend/;</code> 才是真正引用它。</p>
+<h3 id="三种常用分发策略"><a href="#三种常用分发策略" class="headerlink" title="三种常用分发策略"></a>三种常用分发策略</h3><table>
+<thead>
+<tr>
+<th>策略</th>
+<th>配置</th>
+<th>适合场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>加权轮询</td>
+<td>默认行为，或配置 <code>weight</code></td>
+<td>通用场景</td>
+</tr>
+<tr>
+<td>最少连接</td>
+<td><code>least_conn;</code></td>
+<td>请求耗时差异大</td>
+</tr>
+<tr>
+<td>IP 哈希</td>
+<td><code>ip_hash;</code></td>
+<td>后端本地存 session，需要会话保持</td>
+</tr>
+</tbody></table>
+<p>默认是加权轮询：</p>
+<pre><code class="nginx">upstream backend &#123;
+    server app1:3000 weight=3;
+    server app2:3000 weight=1;
+&#125;
+</code></pre>
+<p>大致表示 app1 接收更多流量。</p>
+<p>请求耗时差异大时，用 <code>least_conn</code> 更稳：</p>
+<pre><code class="nginx">upstream backend &#123;
+    least_conn;
+    server app1:3000;
+    server app2:3000;
+&#125;
+</code></pre>
+<p>如果后端 session 放在本机内存里，可以用 <code>ip_hash</code> 让同一个客户端尽量打到同一台机器：</p>
+<pre><code class="nginx">upstream backend &#123;
+    ip_hash;
+    server app1:3000;
+    server app2:3000;
+&#125;
+</code></pre>
+<p>但我的建议是：<strong>能不用 sticky session 就不用</strong>。更好的方式是把 session 放到 Redis 这类共享存储里，这样后端实例才是真正无状态的。</p>
+<h3 id="max-fails-和-fail-timeout-不等于完整健康检查"><a href="#max-fails-和-fail-timeout-不等于完整健康检查" class="headerlink" title="max_fails 和 fail_timeout 不等于完整健康检查"></a><code>max_fails</code> 和 <code>fail_timeout</code> 不等于完整健康检查</h3><pre><code class="nginx">server app1:3000 max_fails=3 fail_timeout=10s;
+</code></pre>
+<p>这表示：在 <code>10s</code> 内失败达到 <code>3</code> 次，就暂时认为这个后端不可用。这里的失败通常由 <code>proxy_next_upstream</code> 这类指令配合判断。</p>
+<p>但要注意：开源 Nginx 这里不是主动定时探测健康检查，它更像是<strong>请求过程中发现失败后临时摘除</strong>。如果你需要更完整的主动健康检查，要考虑 Nginx Plus、网关层能力，或者在 Kubernetes 里交给 readinessProbe &#x2F; livenessProbe。</p>
+<h2 id="gzip：别迷信压缩等级-9"><a href="#gzip：别迷信压缩等级-9" class="headerlink" title="gzip：别迷信压缩等级 9"></a>gzip：别迷信压缩等级 9</h2><p>示例配置：</p>
+<pre><code class="nginx">gzip on;
+gzip_min_length 256;
+gzip_comp_level 5;
+gzip_types
+    text/plain
+    text/css
+    application/json
+    application/javascript
+    application/xml
+    text/xml;
+</code></pre>
+<p>几个点说人话：</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>作用</th>
+<th>我的建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>gzip on</code></td>
+<td>开启 gzip</td>
+<td>大多数 Web 站点都应该开</td>
+</tr>
+<tr>
+<td><code>gzip_min_length</code></td>
+<td>小于这个大小不压缩</td>
+<td>太小的响应压缩意义不大</td>
+</tr>
+<tr>
+<td><code>gzip_comp_level</code></td>
+<td>压缩等级 1-9</td>
+<td>通常 4-6 就够了</td>
+</tr>
+<tr>
+<td><code>gzip_types</code></td>
+<td>额外压缩哪些类型</td>
+<td>JS、CSS、JSON、XML 常见</td>
+</tr>
+</tbody></table>
+<p>为什么不建议无脑 <code>gzip_comp_level 9</code>？因为压缩率提升有限，但 CPU 消耗会增加。我的实战习惯是先用 <code>5</code>，除非有非常明确的压缩率要求。</p>
+<h2 id="SSE-流式响应：一定注意-proxy-buffering"><a href="#SSE-流式响应：一定注意-proxy-buffering" class="headerlink" title="SSE &#x2F; 流式响应：一定注意 proxy_buffering"></a>SSE &#x2F; 流式响应：一定注意 <code>proxy_buffering</code></h2><p>很多 AI 流式输出、消息推送会用 SSE。这个场景下，Nginx 默认缓冲可能让你看到一个现象：</p>
+<blockquote>
+<p>后端明明一秒返回一段，浏览器却等到最后一次性收到。</p>
+</blockquote>
+<p>原因通常是代理层把上游响应缓冲了。</p>
+<p>示例里我们专门写了：</p>
+<pre><code class="nginx">location = /stream &#123;
+    proxy_pass http://node_backend/sse;
+    proxy_http_version 1.1;
+    proxy_set_header Connection &quot;&quot;;
+    proxy_buffering off;
+    proxy_cache off;
+    proxy_read_timeout 3600s;
+&#125;
+</code></pre>
+<p>重点是：</p>
+<pre><code class="nginx">proxy_buffering off;
+</code></pre>
+<p>我的判断：只要是 SSE、AI token 流式输出、长轮询这种实时响应，先检查 <code>proxy_buffering</code> 和 <code>proxy_read_timeout</code>，这两个配置非常容易被忽略。</p>
+<h2 id="HTTPS：Nginx-做-TLS-终止"><a href="#HTTPS：Nginx-做-TLS-终止" class="headerlink" title="HTTPS：Nginx 做 TLS 终止"></a>HTTPS：Nginx 做 TLS 终止</h2><p>线上一般不会让每个后端服务自己处理证书，而是在 Nginx 层做 TLS 终止：</p>
+<pre><code class="text">用户浏览器
+  ↓ HTTPS
+Nginx
+  ↓ HTTP 或内网 HTTPS
+后端服务
+</code></pre>
+<p>最小骨架：</p>
+<pre><code class="nginx">server &#123;
+    listen 443 ssl;
+    server_name example.com;
+
+    ssl_certificate /etc/nginx/ssl/example.com.crt;
+    ssl_certificate_key /etc/nginx/ssl/example.com.key;
+
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    location / &#123;
+        proxy_pass http://backend;
+    &#125;
+&#125;
+</code></pre>
+<p>本地自签名证书也能跑。先生成证书：</p>
+<pre><code class="bash">mkdir -p nginx/certs
+openssl req -x509 -nodes -days 365 \
+  -newkey rsa:2048 \
+  -keyout nginx/certs/localhost.key \
+  -out nginx/certs/localhost.crt \
+  -subj &quot;/CN=localhost&quot;
+</code></pre>
+<p>把 <code>docker-compose.yml</code> 的 Nginx 端口和挂载补上：</p>
+<pre><code class="yaml">services:
+  nginx:
+    image: nginx:1.27-alpine
+    ports:
+      - &quot;8080:80&quot;
+      - &quot;8443:443&quot;
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/certs:/etc/nginx/certs:ro
+      - ./public:/usr/share/nginx/html:ro
+</code></pre>
+<p>再在 <code>nginx.conf</code> 的 <code>http &#123;&#125;</code> 里增加一个 HTTPS server：</p>
+<pre><code class="nginx">server &#123;
+    listen 443 ssl;
+    server_name localhost;
+
+    ssl_certificate /etc/nginx/certs/localhost.crt;
+    ssl_certificate_key /etc/nginx/certs/localhost.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    location / &#123;
+        proxy_pass http://node_backend/;
+        proxy_http_version 1.1;
+        proxy_set_header Connection &quot;&quot;;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    &#125;
+&#125;
+</code></pre>
+<p>重启：</p>
+<pre><code class="bash">docker compose down
+docker compose up --build
+</code></pre>
+<p>测试：</p>
+<pre><code class="bash">curl -k https://localhost:8443/hello
+</code></pre>
+<p>如果按上面的 HTTPS 配置走 <code>proxy_pass http://node_backend/;</code>，这里后端收到的路径就是 <code>/hello</code>。预期返回 JSON，并且 <code>forwardedProto</code> 是 <code>https</code>。</p>
+<p>生产环境别直接用自签名证书，要用正式 CA 证书。证书链文件顺序也要注意：通常是服务器证书在前，中间证书在后。</p>
+<h2 id="配置变更：先-nginx-t，再-reload"><a href="#配置变更：先-nginx-t，再-reload" class="headerlink" title="配置变更：先 nginx -t，再 reload"></a>配置变更：先 <code>nginx -t</code>，再 reload</h2><p>修改配置后不要直接重启，先检查语法：</p>
+<pre><code class="bash">docker compose exec nginx nginx -t
+</code></pre>
+<p>预期：</p>
+<pre><code class="text">nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+</code></pre>
+<p>再平滑重载：</p>
+<pre><code class="bash">docker compose exec nginx nginx -s reload
+</code></pre>
+<p>Nginx 的 master 进程会读取新配置，如果配置没问题，就启动新的 worker，并让旧 worker 优雅退出。这个能力在线上很重要，因为它通常不会粗暴中断正在处理的请求。</p>
+<h2 id="常见坑位"><a href="#常见坑位" class="headerlink" title="常见坑位"></a>常见坑位</h2><h3 id="坑-1：前端刷新路由-404"><a href="#坑-1：前端刷新路由-404" class="headerlink" title="坑 1：前端刷新路由 404"></a>坑 1：前端刷新路由 404</h3><p>现象：<code>/</code> 可以打开，但刷新 <code>/user/profile</code> 直接 404。</p>
+<p>原因：Nginx 去磁盘找 <code>/user/profile</code> 这个文件，当然找不到。</p>
+<p>解决：</p>
+<pre><code class="nginx">location / &#123;
+    try_files $uri $uri/ /index.html;
+&#125;
+</code></pre>
+<h3 id="坑-2：接口路径多了一段或少了一段"><a href="#坑-2：接口路径多了一段或少了一段" class="headerlink" title="坑 2：接口路径多了一段或少了一段"></a>坑 2：接口路径多了一段或少了一段</h3><p>现象：前端请求 <code>/api/users</code>，后端日志里却是 <code>/users</code> 或 <code>/api/users</code>，和预期不一致。</p>
+<p>原因：<code>proxy_pass</code> 有没有尾部 <code>/</code> 会改变 URI 转发规则。</p>
+<p>解决：先明确后端到底要不要 <code>/api</code> 前缀，再固定写法：</p>
+<pre><code class="nginx"># 后端需要 /api/users
+location /api/ &#123;
+    proxy_pass http://backend;
+&#125;
+
+# 后端只需要 /users
+location /api/ &#123;
+    proxy_pass http://backend/;
+&#125;
+</code></pre>
+<h3 id="坑-3：上传文件报-413"><a href="#坑-3：上传文件报-413" class="headerlink" title="坑 3：上传文件报 413"></a>坑 3：上传文件报 413</h3><p>现象：小文件能上传，大文件报 <code>413 Request Entity Too Large</code>。</p>
+<p>原因：<code>client_max_body_size</code> 默认值比较小，官方文档中默认是 <code>1m</code>。</p>
+<p>解决：</p>
+<pre><code class="nginx">location /upload/ &#123;
+    client_max_body_size 100m;
+    proxy_pass http://backend;
+&#125;
+</code></pre>
+<h3 id="坑-4：SSE-不流式输出"><a href="#坑-4：SSE-不流式输出" class="headerlink" title="坑 4：SSE 不流式输出"></a>坑 4：SSE 不流式输出</h3><p>现象：后端一秒一条，前端最后一次性收到。</p>
+<p>原因：代理缓冲。</p>
+<p>解决：</p>
+<pre><code class="nginx">location /stream &#123;
+    proxy_pass http://backend/sse;
+    proxy_buffering off;
+    proxy_read_timeout 3600s;
+&#125;
+</code></pre>
+<h3 id="坑-5：真实-IP-丢失"><a href="#坑-5：真实-IP-丢失" class="headerlink" title="坑 5：真实 IP 丢失"></a>坑 5：真实 IP 丢失</h3><p>现象：后端拿到的 IP 永远是 Nginx 容器或内网 IP。</p>
+<p>原因：没有传递 <code>X-Forwarded-For</code> &#x2F; <code>X-Real-IP</code>，或者后端没有信任代理头。</p>
+<p>解决：Nginx 传头，后端按框架要求开启 trust proxy。比如 Express 里通常要配置：</p>
+<pre><code class="javascript">app.set(&quot;trust proxy&quot;, true);
+</code></pre>
+<h2 id="一份偏生产的配置骨架"><a href="#一份偏生产的配置骨架" class="headerlink" title="一份偏生产的配置骨架"></a>一份偏生产的配置骨架</h2><p>下面这份不是让你直接复制上线，而是给一个“配置应该长什么样”的参考。为了不让它变成一坨看不懂的配置，我把关键说明直接写在注释里：</p>
+<pre><code class="nginx"># worker 进程数，auto 表示按 CPU 核心数自动设置，通常比手写数字更稳
+worker_processes auto;
+
+# events 负责连接事件模型，worker_connections 表示每个 worker 最多处理多少连接
+events &#123;
+    worker_connections 4096;
+&#125;
+
+http &#123;
+    # 引入 MIME 类型映射，否则 CSS / JS 可能会被当成普通二进制返回
+    include /etc/nginx/mime.types;
+    default_type application/octet-stream;
+
+    # 自定义访问日志格式，重点记录请求、状态码、上游地址、总耗时、上游耗时
+    log_format main &#39;$remote_addr - $host &quot;$request&quot; &#39;
+                    &#39;$status $body_bytes_sent upstream=$upstream_addr &#39;
+                    &#39;request_time=$request_time upstream_time=$upstream_response_time&#39;;
+
+    # access_log 看流量和耗时，error_log 看错误和告警
+    access_log /var/log/nginx/access.log main;
+    error_log /var/log/nginx/error.log warn;
+
+    # sendfile 让 Nginx 更高效地发送静态文件
+    sendfile on;
+
+    # 客户端 keep-alive 连接保持时间，减少频繁建连成本
+    keepalive_timeout 65s;
+
+    # 请求体大小限制，上传接口经常需要按业务调大
+    client_max_body_size 20m;
+
+    # gzip 压缩：适合文本类资源，比如 HTML / CSS / JS / JSON
+    gzip on;
+    gzip_min_length 1024;
+    gzip_comp_level 5;
+    gzip_types text/plain text/css application/json application/javascript application/xml text/xml;
+
+    # 后端服务组，Nginx 会把请求转发到这里面的实例
+    upstream backend &#123;
+        # 请求耗时不均时，用 least_conn 比简单轮询更稳
+        least_conn;
+
+        # weight 是权重，max_fails + fail_timeout 控制失败后的临时摘除
+        server 10.0.0.11:3000 weight=1 max_fails=3 fail_timeout=30s;
+        server 10.0.0.12:3000 weight=1 max_fails=3 fail_timeout=30s;
+
+        # 缓存到后端的空闲长连接，减少 Nginx 到后端的建连成本
+        keepalive 32;
+    &#125;
+
+    # HTTP 入口：只负责跳转到 HTTPS
+    server &#123;
+        listen 80;
+        server_name example.com;
+
+        # 保留原始 host 和 URI，统一跳转到 HTTPS
+        return 301 https://$host$request_uri;
+    &#125;
+
+    # HTTPS 入口：真正承载静态资源和 API 代理
+    server &#123;
+        listen 443 ssl;
+        server_name example.com;
+
+        # TLS 证书和私钥，生产环境换成真实证书路径
+        ssl_certificate /etc/nginx/ssl/example.com.crt;
+        ssl_certificate_key /etc/nginx/ssl/example.com.key;
+
+        # 只启用较新的 TLS 协议版本
+        ssl_protocols TLSv1.2 TLSv1.3;
+
+        # TLS 会话复用，降低重复握手成本
+        ssl_session_cache shared:SSL:10m;
+        ssl_session_timeout 10m;
+
+        # 前端静态资源根目录
+        root /usr/share/nginx/html;
+        index index.html;
+
+        # 健康检查接口，给负载均衡器或发布系统探活用
+        location = /health &#123;
+            access_log off;
+            return 200 &quot;ok\n&quot;;
+        &#125;
+
+        # 静态资源目录，通常带长期缓存
+        location /assets/ &#123;
+            alias /usr/share/nginx/html/assets/;
+            expires 30d;
+            add_header Cache-Control &quot;public, immutable&quot;;
+        &#125;
+
+        # API 反向代理，/api/users 会转发成后端的 /users
+        location /api/ &#123;
+            proxy_pass http://backend/;
+
+            # 使用 HTTP/1.1 并清理 Connection，便于 upstream keepalive 复用连接
+            proxy_http_version 1.1;
+            proxy_set_header Connection &quot;&quot;;
+
+            # 把原始请求信息传给后端，方便后端拿域名、真实 IP、协议
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # 三类超时：连接后端、向后端发送请求、读取后端响应
+            proxy_connect_timeout 5s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+
+            # 当前后端异常时，允许切到下一个 upstream 实例
+            proxy_next_upstream error timeout http_502 http_503 http_504;
+        &#125;
+
+        # 前端 SPA 兜底：真实文件不存在时回退到 index.html
+        location / &#123;
+            try_files $uri $uri/ /index.html;
+        &#125;
+    &#125;
+&#125;
+</code></pre>
+<p>如果把上面的配置再压缩成一张说明表，大概是这样：</p>
+<table>
+<thead>
+<tr>
+<th>配置块 &#x2F; 指令</th>
+<th>主要作用</th>
+<th>实战关注点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>worker_processes</code></td>
+<td>控制 worker 进程数</td>
+<td>通常用 <code>auto</code></td>
+</tr>
+<tr>
+<td><code>worker_connections</code></td>
+<td>控制单个 worker 的连接上限</td>
+<td>高并发时需要结合系统文件句柄一起看</td>
+</tr>
+<tr>
+<td><code>log_format</code></td>
+<td>定义访问日志字段</td>
+<td>建议记录 <code>$upstream_addr</code> 和耗时</td>
+</tr>
+<tr>
+<td><code>sendfile</code></td>
+<td>提升静态文件发送效率</td>
+<td>静态资源服务建议开启</td>
+</tr>
+<tr>
+<td><code>keepalive_timeout</code></td>
+<td>客户端长连接超时</td>
+<td>过短会频繁建连，过长会占连接</td>
+</tr>
+<tr>
+<td><code>client_max_body_size</code></td>
+<td>限制请求体大小</td>
+<td>上传接口常见 413 就看它</td>
+</tr>
+<tr>
+<td><code>gzip</code></td>
+<td>压缩文本响应</td>
+<td>压缩等级别无脑拉满</td>
+</tr>
+<tr>
+<td><code>upstream</code></td>
+<td>定义后端实例组</td>
+<td>负载均衡和容错都从这里开始</td>
+</tr>
+<tr>
+<td><code>least_conn</code></td>
+<td>最少连接负载均衡</td>
+<td>适合接口耗时不均的服务</td>
+</tr>
+<tr>
+<td><code>server 80</code></td>
+<td>HTTP 入口</td>
+<td>通常只做 HTTPS 跳转</td>
+</tr>
+<tr>
+<td><code>server 443 ssl</code></td>
+<td>HTTPS 入口</td>
+<td>配证书、静态资源、代理规则</td>
+</tr>
+<tr>
+<td><code>ssl_session_cache</code></td>
+<td>TLS 会话复用</td>
+<td>降低重复握手成本</td>
+</tr>
+<tr>
+<td><code>location /assets/</code></td>
+<td>静态资源缓存</td>
+<td>文件名带 hash 时适合长期缓存</td>
+</tr>
+<tr>
+<td><code>location /api/</code></td>
+<td>反向代理 API</td>
+<td>注意 <code>proxy_pass</code> 尾部 <code>/</code></td>
+</tr>
+<tr>
+<td><code>proxy_set_header</code></td>
+<td>传递原始请求信息</td>
+<td>后端拿真实 IP、协议会用到</td>
+</tr>
+<tr>
+<td><code>proxy_*_timeout</code></td>
+<td>控制代理超时</td>
+<td>慢接口、长连接接口要单独调</td>
+</tr>
+<tr>
+<td><code>try_files</code></td>
+<td>静态文件查找和兜底</td>
+<td>SPA 刷新 404 的关键</td>
+</tr>
+</tbody></table>
+<p>我的实战建议：不要一开始就把配置写得特别花。先把静态资源、反向代理、日志、HTTPS、超时、上传大小这些基础项跑稳，再逐步加缓存、限流、灰度、WAF 等高级能力。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Nginx 的核心模型是 <code>http → server → location</code>，先理解层级再记指令。</li>
+<li>静态服务优先搞懂 <code>root</code>、<code>alias</code>、<code>try_files</code>，SPA 刷新 404 基本靠 <code>try_files</code> 解决。</li>
+<li>反向代理最容易踩坑的是 <code>proxy_pass</code> 的尾部 <code>/</code>，它会影响后端收到的 URI。</li>
+<li>负载均衡通过 <code>upstream</code> 配置，通用场景用默认轮询，请求耗时不均可以用 <code>least_conn</code>。</li>
+<li>SSE 和 AI 流式输出要重点检查 <code>proxy_buffering off</code> 和超时配置。</li>
+<li>线上变更配置先 <code>nginx -t</code>，再 <code>nginx -s reload</code>，不要直接盲目重启。</li>
+<li>真正的生产配置不是堆指令，而是把流量路径、超时、日志、证书、回源策略都讲清楚。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Docker/">Docker</a><a class="post-meta__tags" href="/tags/Nginx/">Nginx</a><a class="post-meta__tags" href="/tags/Node-js/">Node.js</a><a class="post-meta__tags" href="/tags/%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86/">反向代理</a><a class="post-meta__tags" href="/tags/%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1/">负载均衡</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/docker-from-zero-to-pro/" title="Docker 从入门到实战精通：镜像、容器、网络、数据卷和 Compose 一次讲清楚"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Docker 从入门到实战精通：镜像、容器、网络、数据卷和 Compose 一次讲清楚</div></div></a></div><div class="next-post pull-right"><a href="/posts/29-Hermes-Agent%E4%B8%8EOpenClaw%E5%B7%A5%E7%A8%8B%E5%8C%96%E5%AF%B9%E6%AF%94%E5%AE%9E%E6%88%98/" title="Hermes Agent 与 OpenClaw 工程化对比：架构、多 Agent 与落地选型"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Hermes Agent 与 OpenClaw 工程化对比：架构、多 Agent 与落地选型</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E8%AF%B4%E7%BB%93%E8%AE%BA%EF%BC%9ANginx-%E5%88%B0%E5%BA%95%E8%A7%A3%E5%86%B3%E4%BB%80%E4%B9%88%E9%97%AE%E9%A2%98"><span class="toc-number">1.</span> <span class="toc-text">先说结论：Nginx 到底解决什么问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Nginx-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%BF%83%E6%99%BA%E6%A8%A1%E5%9E%8B"><span class="toc-number">2.</span> <span class="toc-text">Nginx 的核心心智模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%8F%AF%E4%BB%A5%E7%9B%B4%E6%8E%A5%E8%BF%90%E8%A1%8C%E7%9A%84%E5%AE%8C%E6%95%B4%E9%A1%B9%E7%9B%AE"><span class="toc-number">3.</span> <span class="toc-text">一个可以直接运行的完整项目</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%8E%AF%E5%A2%83%E8%A6%81%E6%B1%82"><span class="toc-number">3.1.</span> <span class="toc-text">环境要求</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%88%9B%E5%BB%BA%E9%A1%B9%E7%9B%AE%E6%96%87%E4%BB%B6"><span class="toc-number">3.2.</span> <span class="toc-text">第一步：创建项目文件</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%EF%BC%9Aroot%E3%80%81alias%E3%80%81try-files-%E6%80%8E%E4%B9%88%E9%80%89"><span class="toc-number">4.</span> <span class="toc-text">静态资源：root、alias、try_files 怎么选</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#root%EF%BC%9A%E6%8A%8A-URI-%E6%8B%BC%E5%88%B0%E7%9B%AE%E5%BD%95%E5%90%8E%E9%9D%A2"><span class="toc-number">4.1.</span> <span class="toc-text">root：把 URI 拼到目录后面</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#alias%EF%BC%9A%E6%8A%8A%E5%8C%B9%E9%85%8D%E5%89%8D%E7%BC%80%E6%9B%BF%E6%8D%A2%E6%88%90%E7%9B%AE%E5%BD%95"><span class="toc-number">4.2.</span> <span class="toc-text">alias：把匹配前缀替换成目录</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#try-files%EF%BC%9A%E5%89%8D%E7%AB%AF-SPA-%E9%83%A8%E7%BD%B2%E7%9A%84%E5%85%B3%E9%94%AE"><span class="toc-number">4.3.</span> <span class="toc-text">try_files：前端 SPA 部署的关键</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#location-%E5%8C%B9%E9%85%8D%E8%A7%84%E5%88%99%EF%BC%9A%E4%B8%8D%E7%94%A8%E8%83%8C%EF%BC%8C%E4%BD%86%E8%A6%81%E7%9F%A5%E9%81%93%E4%BC%98%E5%85%88%E7%BA%A7"><span class="toc-number">5.</span> <span class="toc-text">location 匹配规则：不用背，但要知道优先级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%EF%BC%9Aproxy-pass-%E6%98%AF%E6%9C%80%E5%AE%B9%E6%98%93%E8%B8%A9%E5%9D%91%E7%9A%84%E6%8C%87%E4%BB%A4"><span class="toc-number">6.</span> <span class="toc-text">反向代理：proxy_pass 是最容易踩坑的指令</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E5%86%99%E6%B3%95%E5%AF%B9%E6%AF%94"><span class="toc-number">6.1.</span> <span class="toc-text">三种写法对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%A3%E7%90%86%E6%97%B6%E5%BB%BA%E8%AE%AE%E5%B8%A6%E4%B8%8A%E7%9A%84%E8%AF%B7%E6%B1%82%E5%A4%B4"><span class="toc-number">6.2.</span> <span class="toc-text">代理时建议带上的请求头</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%EF%BC%9Aupstream-%E4%B8%8D%E5%8F%AA%E6%98%AF%E6%8A%8A%E6%9C%BA%E5%99%A8%E5%88%97%E5%87%BA%E6%9D%A5"><span class="toc-number">7.</span> <span class="toc-text">负载均衡：upstream 不只是把机器列出来</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E7%A7%8D%E5%B8%B8%E7%94%A8%E5%88%86%E5%8F%91%E7%AD%96%E7%95%A5"><span class="toc-number">7.1.</span> <span class="toc-text">三种常用分发策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#max-fails-%E5%92%8C-fail-timeout-%E4%B8%8D%E7%AD%89%E4%BA%8E%E5%AE%8C%E6%95%B4%E5%81%A5%E5%BA%B7%E6%A3%80%E6%9F%A5"><span class="toc-number">7.2.</span> <span class="toc-text">max_fails 和 fail_timeout 不等于完整健康检查</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#gzip%EF%BC%9A%E5%88%AB%E8%BF%B7%E4%BF%A1%E5%8E%8B%E7%BC%A9%E7%AD%89%E7%BA%A7-9"><span class="toc-number">8.</span> <span class="toc-text">gzip：别迷信压缩等级 9</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SSE-%E6%B5%81%E5%BC%8F%E5%93%8D%E5%BA%94%EF%BC%9A%E4%B8%80%E5%AE%9A%E6%B3%A8%E6%84%8F-proxy-buffering"><span class="toc-number">9.</span> <span class="toc-text">SSE &#x2F; 流式响应：一定注意 proxy_buffering</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#HTTPS%EF%BC%9ANginx-%E5%81%9A-TLS-%E7%BB%88%E6%AD%A2"><span class="toc-number">10.</span> <span class="toc-text">HTTPS：Nginx 做 TLS 终止</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E5%8F%98%E6%9B%B4%EF%BC%9A%E5%85%88-nginx-t%EF%BC%8C%E5%86%8D-reload"><span class="toc-number">11.</span> <span class="toc-text">配置变更：先 nginx -t，再 reload</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E5%9D%91%E4%BD%8D"><span class="toc-number">12.</span> <span class="toc-text">常见坑位</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%91-1%EF%BC%9A%E5%89%8D%E7%AB%AF%E5%88%B7%E6%96%B0%E8%B7%AF%E7%94%B1-404"><span class="toc-number">12.1.</span> <span class="toc-text">坑 1：前端刷新路由 404</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%91-2%EF%BC%9A%E6%8E%A5%E5%8F%A3%E8%B7%AF%E5%BE%84%E5%A4%9A%E4%BA%86%E4%B8%80%E6%AE%B5%E6%88%96%E5%B0%91%E4%BA%86%E4%B8%80%E6%AE%B5"><span class="toc-number">12.2.</span> <span class="toc-text">坑 2：接口路径多了一段或少了一段</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%91-3%EF%BC%9A%E4%B8%8A%E4%BC%A0%E6%96%87%E4%BB%B6%E6%8A%A5-413"><span class="toc-number">12.3.</span> <span class="toc-text">坑 3：上传文件报 413</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%91-4%EF%BC%9ASSE-%E4%B8%8D%E6%B5%81%E5%BC%8F%E8%BE%93%E5%87%BA"><span class="toc-number">12.4.</span> <span class="toc-text">坑 4：SSE 不流式输出</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9D%91-5%EF%BC%9A%E7%9C%9F%E5%AE%9E-IP-%E4%B8%A2%E5%A4%B1"><span class="toc-number">12.5.</span> <span class="toc-text">坑 5：真实 IP 丢失</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%BB%BD%E5%81%8F%E7%94%9F%E4%BA%A7%E7%9A%84%E9%85%8D%E7%BD%AE%E9%AA%A8%E6%9E%B6"><span class="toc-number">13.</span> <span class="toc-text">一份偏生产的配置骨架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">14.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

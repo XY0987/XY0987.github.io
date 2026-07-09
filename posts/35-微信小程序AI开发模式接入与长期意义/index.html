@@ -1,0 +1,805 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>微信小程序 AI 开发模式接入与长期意义 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：微信小程序 AI 开发模式不是简单地给小程序加一个聊天框，而是把小程序里的业务能力拆成 AI 可以理解、可以调用、可以展示的标准单元。本文基于微信官方文档，聊一下它怎么接、背后是什么机制、真正落地会遇到哪些挑战，以及它对小程序长期形态的影响。  先说结论我的理解是：小程序 AI 开发模式，本质上是在小程序和大模型之间加了一层“业务能力协议”。 以前用户使用小程序，大多是这样的： 用户打开页">
+<meta property="og:type" content="article">
+<meta property="og:title" content="微信小程序 AI 开发模式接入与长期意义">
+<meta property="og:url" content="http://example.com/posts/35-%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8FAI%E5%BC%80%E5%8F%91%E6%A8%A1%E5%BC%8F%E6%8E%A5%E5%85%A5%E4%B8%8E%E9%95%BF%E6%9C%9F%E6%84%8F%E4%B9%89/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：微信小程序 AI 开发模式不是简单地给小程序加一个聊天框，而是把小程序里的业务能力拆成 AI 可以理解、可以调用、可以展示的标准单元。本文基于微信官方文档，聊一下它怎么接、背后是什么机制、真正落地会遇到哪些挑战，以及它对小程序长期形态的影响。  先说结论我的理解是：小程序 AI 开发模式，本质上是在小程序和大模型之间加了一层“业务能力协议”。 以前用户使用小程序，大多是这样的： 用户打开页">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-06-13T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-06-20T07:04:18.726Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="微信小程序">
+<meta property="article:tag" content="MCP">
+<meta property="article:tag" content="Skills">
+<meta property="article:tag" content="工程化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/35-%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8FAI%E5%BC%80%E5%8F%91%E6%A8%A1%E5%BC%8F%E6%8E%A5%E5%85%A5%E4%B8%8E%E9%95%BF%E6%9C%9F%E6%84%8F%E4%B9%89/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '微信小程序 AI 开发模式接入与长期意义',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:04:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">微信小程序 AI 开发模式接入与长期意义</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-06-13T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-06-20T07:04:18.726Z" title="更新于 2026 15:04:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>18分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：微信小程序 AI 开发模式不是简单地给小程序加一个聊天框，而是把小程序里的业务能力拆成 AI 可以理解、可以调用、可以展示的标准单元。本文基于微信官方文档，聊一下它怎么接、背后是什么机制、真正落地会遇到哪些挑战，以及它对小程序长期形态的影响。</p>
+</blockquote>
+<h2 id="先说结论"><a href="#先说结论" class="headerlink" title="先说结论"></a>先说结论</h2><p>我的理解是：<strong>小程序 AI 开发模式，本质上是在小程序和大模型之间加了一层“业务能力协议”。</strong></p>
+<p>以前用户使用小程序，大多是这样的：</p>
+<pre><code class="txt">用户打开页面 -&gt; 找入口 -&gt; 填表单 -&gt; 点按钮 -&gt; 看结果
+</code></pre>
+<p>接入 AI 后，流程会更像这样：</p>
+<pre><code class="txt">用户说需求 -&gt; AI 理解意图 -&gt; 调用原子接口 -&gt; 展示原子组件 -&gt; 用户确认/修改 -&gt; 继续执行
+</code></pre>
+<p>这里最关键的变化不是“多了一个 AI 对话入口”，而是小程序的能力要被重新封装成：</p>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>作用</th>
+<th>类比</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>全局提示词 <code>AGENTS.md</code></td>
+<td>描述小程序整体服务范围和多个 SKILL 的关系</td>
+<td>公司介绍</td>
+</tr>
+<tr>
+<td><code>SKILL.md</code></td>
+<td>描述某个业务能力的流程、规则、意图分流</td>
+<td>岗位手册</td>
+</tr>
+<tr>
+<td><code>mcp.json</code></td>
+<td>声明 AI 可以调用哪些原子接口、参数怎么填、结果怎么展示</td>
+<td>接口契约</td>
+</tr>
+<tr>
+<td>原子接口</td>
+<td>真正执行业务逻辑，返回结果和下一步指引</td>
+<td>后端接口 &#x2F; 工具函数</td>
+</tr>
+<tr>
+<td>原子组件</td>
+<td>把结构化结果渲染成对话流里的 GUI 卡片</td>
+<td>小程序卡片组件</td>
+</tr>
+</tbody></table>
+<p>所以这件事对前端开发者的要求也变了：不只是会写页面，还要会把业务能力拆成 AI 能稳定调用的“工具”。</p>
+<h2 id="小程序-AI-开发模式是什么"><a href="#小程序-AI-开发模式是什么" class="headerlink" title="小程序 AI 开发模式是什么"></a>小程序 AI 开发模式是什么</h2><p>根据微信官方文档，小程序 AI 开发模式会让开发者把小程序功能抽象为原子接口和原子组件，并封装成 <code>SKILL</code>，供小程序 AI 调用。</p>
+<p>当用户通过小程序 AI 发起对话时，小程序 AI 会通过小程序 MCP 协议分析用户意图，选择合适的原子接口和原子组件，完成数据处理、任务执行和结果展示。</p>
+<p>这里有一个容易混淆的点：</p>
+<blockquote>
+<p>小程序 MCP 不是标准 MCP 的简单照搬，而是微信针对小程序运行环境做过适配的一套协议。</p>
+</blockquote>
+<p>标准 MCP 更像通用工具协议，小程序 MCP 更贴近微信生态内的小程序能力开放。开发者不需要从零实现 MCP Server，而是按微信约定提供 <code>SKILL</code>、<code>mcp.json</code>、原子接口和原子组件。</p>
+<p>整体关系可以这样理解：</p>
+<pre><code class="txt">┌──────────────────────────────────┐
+│            用户自然语言           │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│          小程序 AI / 推理层        │
+│  选择 SKILL、选择接口、生成参数      │
+└────────────────┬─────────────────┘
+                 │
+                 ▼
+┌──────────────────────────────────┐
+│              SKILL                │
+│  SKILL.md + mcp.json + index.js    │
+└───────────────┬──────────────────┘
+                │
+      ┌─────────┴─────────┐
+      ▼                   ▼
+┌──────────────┐    ┌──────────────┐
+│   原子接口    │    │   原子组件    │
+│  执行业务逻辑  │    │  渲染 GUI 卡片 │
+└──────────────┘    └──────────────┘
+</code></pre>
+<h2 id="如何接入：从一个最小-SKILL-开始"><a href="#如何接入：从一个最小-SKILL-开始" class="headerlink" title="如何接入：从一个最小 SKILL 开始"></a>如何接入：从一个最小 SKILL 开始</h2><p>官方文档里给出的接入路径大概可以拆成这几步：</p>
+<ol>
+<li>在微信公众平台或微信开发者助手中申请 AI 能力的“开发模式”。</li>
+<li>在小程序中声明 <code>agent.skills</code>。</li>
+<li>为每个业务能力创建独立分包。</li>
+<li>在分包里编写 <code>SKILL.md</code>、<code>mcp.json</code>、<code>index.js</code>、原子接口和原子组件。</li>
+<li>使用微信开发者工具 Nightly 的“小程序 AI 编译”模式调试。</li>
+</ol>
+<p>需要注意：官方文档明确说明，当前小程序 AI 开发模式还处于 beta &#x2F; 内测阶段，暂未开放相关代码提审。所以现在更适合做技术预研、内部 Demo 和业务能力梳理，不建议直接合入正式版本发布链路。</p>
+<h3 id="第一步：在-app-json-声明-SKILL"><a href="#第一步：在-app-json-声明-SKILL" class="headerlink" title="第一步：在 app.json 声明 SKILL"></a>第一步：在 <code>app.json</code> 声明 SKILL</h3><p>官方要求 <code>SKILL</code> 必须封装在独立分包里，同时需要全局开启按需注入 <code>lazyCodeLoading</code>。</p>
+<p>一个简化版配置如下：</p>
+<pre><code class="json">&#123;
+  &quot;lazyCodeLoading&quot;: &quot;requiredComponents&quot;,
+  &quot;subPackages&quot;: [
+    &#123;
+      &quot;root&quot;: &quot;package-ai&quot;,
+      &quot;independent&quot;: true,
+      &quot;pages&quot;: []
+    &#125;
+  ],
+  &quot;agent&quot;: &#123;
+    &quot;instruction&quot;: &quot;AGENTS.md&quot;,
+    &quot;skills&quot;: [
+      &#123;
+        &quot;name&quot;: &quot;shop&quot;,
+        &quot;description&quot;: &quot;商品推荐与订单确认能力&quot;,
+        &quot;path&quot;: &quot;package-ai/shop-skill&quot;
+      &#125;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>这里有两个点要特别注意：</p>
+<ul>
+<li><code>agent.skills[].path</code> 要指向具体的 SKILL 目录；</li>
+<li><code>instruction</code> 指向的是全局提示词文件，官方文档里提到通常是 <code>AGENTS.md</code>，目前不是必填。</li>
+</ul>
+<h3 id="第二步：组织-SKILL-目录"><a href="#第二步：组织-SKILL-目录" class="headerlink" title="第二步：组织 SKILL 目录"></a>第二步：组织 SKILL 目录</h3><p>一个比较清晰的目录可以这样放：</p>
+<pre><code class="txt">package-ai/
+└── shop-skill/
+    ├── SKILL.md
+    ├── mcp.json
+    ├── index.js
+    ├── apis/
+    │   └── getRecommendedProducts.js
+    └── components/
+        └── product-card/
+            ├── index.js
+            ├── index.json
+            ├── index.wxml
+            └── index.wxss
+</code></pre>
+<p>官方文档里也提到几个大小限制：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>说明</th>
+<th>限制</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>AGENTS.md</code></td>
+<td>全局提示词</td>
+<td>最大 10000 字节</td>
+</tr>
+<tr>
+<td><code>SKILL.md</code></td>
+<td>单个 SKILL 的业务说明</td>
+<td>最大 16000 字节</td>
+</tr>
+<tr>
+<td><code>mcp.json</code></td>
+<td>原子接口能力声明</td>
+<td>最大 24000 字节</td>
+</tr>
+</tbody></table>
+<p>这意味着我们不能把所有业务规则都堆进一个大文档里。真正工程化时，需要把“接口怎么用”“业务流程怎么走”“本次调用结果是什么”分别放在正确的位置。</p>
+<h2 id="mcp-json：告诉-AI-有哪些工具可用"><a href="#mcp-json：告诉-AI-有哪些工具可用" class="headerlink" title="mcp.json：告诉 AI 有哪些工具可用"></a><code>mcp.json</code>：告诉 AI 有哪些工具可用</h2><p><code>mcp.json</code> 是模型可调用能力的声明文件，里面会声明原子接口的名称、描述、入参、出参，以及结果是否绑定原子组件。</p>
+<p>例如一个“推荐商品”的原子接口可以这样写：</p>
+<pre><code class="json">&#123;
+  &quot;apis&quot;: [
+    &#123;
+      &quot;name&quot;: &quot;getRecommendedProducts&quot;,
+      &quot;description&quot;: &quot;推荐商品。根据用户的自然语言需求返回可购买商品列表；用户没有明确品类时，不要编造商品，应返回适合继续选择的推荐列表。&quot;,
+      &quot;_meta&quot;: &#123;
+        &quot;ui&quot;: &#123;
+          &quot;componentPath&quot;: &quot;components/product-card/index&quot;
+        &#125;
+      &#125;,
+      &quot;inputSchema&quot;: &#123;
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: &#123;
+          &quot;keyword&quot;: &#123;
+            &quot;type&quot;: &quot;string&quot;,
+            &quot;description&quot;: &quot;商品关键词，例如『咖啡』『蛋糕』『轻食』。用户未说出具体品类时不要填写本字段。&quot;
+          &#125;
+        &#125;
+      &#125;,
+      &quot;outputSchema&quot;: &#123;
+        &quot;type&quot;: &quot;object&quot;,
+        &quot;properties&quot;: &#123;
+          &quot;products&quot;: &#123;
+            &quot;type&quot;: &quot;array&quot;,
+            &quot;items&quot;: &#123;
+              &quot;type&quot;: &quot;object&quot;,
+              &quot;properties&quot;: &#123;
+                &quot;productId&quot;: &#123; &quot;type&quot;: &quot;string&quot; &#125;,
+                &quot;name&quot;: &#123; &quot;type&quot;: &quot;string&quot; &#125;,
+                &quot;price&quot;: &#123; &quot;type&quot;: &quot;number&quot; &#125;,
+                &quot;reason&quot;: &#123; &quot;type&quot;: &quot;string&quot; &#125;
+              &#125;,
+              &quot;required&quot;: [&quot;productId&quot;, &quot;name&quot;, &quot;price&quot;, &quot;reason&quot;]
+            &#125;
+          &#125;
+        &#125;,
+        &quot;required&quot;: [&quot;products&quot;]
+      &#125;
+    &#125;
+  ],
+  &quot;components&quot;: [
+    &#123;
+      &quot;path&quot;: &quot;components/product-card/index&quot;,
+      &quot;relatedPage&quot;: &quot;/pages/product/detail&quot;
+    &#125;
+  ]
+&#125;
+</code></pre>
+<p>这里最重要的不是 JSON 格式，而是 <code>description</code> 怎么写。</p>
+<p>官方最佳实践里强调，<code>mcp.json</code> 的接口描述会强烈影响模型“选不选这个接口”，<code>inputSchema.description</code> 会影响模型“怎么填参数”。所以不要只写：</p>
+<pre><code class="json">&#123;
+  &quot;description&quot;: &quot;获取商品列表&quot;
+&#125;
+</code></pre>
+<p>这种描述对人类开发者够用，但对 AI 不够。更好的写法应该包含：</p>
+<ul>
+<li>这个接口处理什么业务对象；</li>
+<li>什么时候该调用；</li>
+<li>什么情况下不该调用；</li>
+<li>字段从哪里来；</li>
+<li>缺字段时应该怎么办。</li>
+</ul>
+<p>我的建议是：<strong>把 <code>mcp.json</code> 当成写给 AI 的 OpenAPI，不要当成普通接口文档。</strong></p>
+<h2 id="原子接口：返回结果，也返回下一步动作"><a href="#原子接口：返回结果，也返回下一步动作" class="headerlink" title="原子接口：返回结果，也返回下一步动作"></a>原子接口：返回结果，也返回下一步动作</h2><p>原子接口是真正执行业务逻辑的地方，可以通过 <code>wx.request</code> 调后端，也可以通过微信云开发调用云函数或数据库。</p>
+<p>下面这个示例不依赖后端，便于看清返回结构。它需要运行在小程序 AI 原子接口环境中：</p>
+<pre><code class="js">// package-ai/shop-skill/apis/getRecommendedProducts.js
+module.exports = async function getRecommendedProducts(&#123; keyword &#125;) &#123;
+  const allProducts = [
+    &#123;
+      productId: &#39;coffee_001&#39;,
+      name: &#39;冰美式&#39;,
+      price: 16,
+      reason: &#39;清爽、低糖，适合想喝点提神饮品的场景&#39;
+    &#125;,
+    &#123;
+      productId: &#39;cake_001&#39;,
+      name: &#39;原味芝士蛋糕&#39;,
+      price: 28,
+      reason: &#39;口味稳定，适合搭配咖啡&#39;
+    &#125;
+  ]
+
+  const products = keyword
+    ? allProducts.filter((item) =&gt; item.name.includes(keyword))
+    : allProducts
+
+  if (products.length === 0) &#123;
+    return &#123;
+      isError: true,
+      content: [
+        &#123;
+          type: &#39;text&#39;,
+          text: `未找到和「$&#123;keyword&#125;」相关的商品。请提示用户换一个关键词，或展示当前推荐商品供用户选择。不要继续用相同关键词重复调用本接口。`
+        &#125;
+      ]
+    &#125;
+  &#125;
+
+  return &#123;
+    isError: false,
+    structuredContent: &#123;
+      products
+    &#125;,
+    content: [
+      &#123;
+        type: &#39;text&#39;,
+        text: &#39;已找到可推荐商品。请展示商品推荐卡片，并用一句话引导用户选择想要的商品。&#39;
+      &#125;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>注意这里返回了三类信息：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>给谁看</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>isError</code></td>
+<td>小程序 AI</td>
+<td>标识是否异常，异常时通常不渲染 GUI 卡片</td>
+</tr>
+<tr>
+<td><code>structuredContent</code></td>
+<td>小程序 AI + 原子组件</td>
+<td>结构化数据，供模型理解和组件渲染</td>
+</tr>
+<tr>
+<td><code>content</code></td>
+<td>小程序 AI</td>
+<td>本次结果说明，以及下一步动作引导</td>
+</tr>
+<tr>
+<td><code>_meta</code></td>
+<td>原子组件</td>
+<td>对模型不可见，适合放图片地址、冗余字段等私有数据</td>
+</tr>
+</tbody></table>
+<p>官方最佳实践里有一个很关键的建议：<code>content</code> 最好采用“事实 + 动作”的两段式。</p>
+<p>反面写法：</p>
+<pre><code class="js">return &#123;
+  content: [&#123; type: &#39;text&#39;, text: &#39;接下来请展示商品卡片。&#39; &#125;]
+&#125;
+</code></pre>
+<p>正面写法：</p>
+<pre><code class="js">return &#123;
+  content: [
+    &#123;
+      type: &#39;text&#39;,
+      text: &#39;已根据用户需求找到 2 个推荐商品。请展示商品推荐卡片，并引导用户选择。&#39;
+    &#125;
+  ]
+&#125;
+</code></pre>
+<p>原因也很简单：AI 不只是读你的数据，还会读你的动作指令。如果只给动作，不说明事实，模型可能误解当前流程状态。</p>
+<h2 id="index-js：注册原子接口"><a href="#index-js：注册原子接口" class="headerlink" title="index.js：注册原子接口"></a><code>index.js</code>：注册原子接口</h2><p>有了接口实现之后，需要在 SKILL 入口文件里注册。</p>
+<pre><code class="js">// package-ai/shop-skill/index.js
+const getRecommendedProducts = require(&#39;./apis/getRecommendedProducts&#39;)
+
+const skill = wx.modelContext.createSkill(&#39;/package-ai/shop-skill&#39;)
+
+skill.registerAPI(&#39;getRecommendedProducts&#39;, getRecommendedProducts)
+</code></pre>
+<p>这里的 <code>getRecommendedProducts</code> 必须和 <code>mcp.json</code> 里的 <code>apis[].name</code> 保持一致。</p>
+<p>如果业务复杂，还可以用官方提供的中间件机制做统一登录态、错误捕获、埋点上报等公共逻辑。但我的建议是：早期不要急着抽复杂中间件，先把每个原子接口的输入、输出、异常分支写稳定。</p>
+<h2 id="SKILL-md：描述整个业务怎么跑"><a href="#SKILL-md：描述整个业务怎么跑" class="headerlink" title="SKILL.md：描述整个业务怎么跑"></a><code>SKILL.md</code>：描述整个业务怎么跑</h2><p><code>mcp.json</code> 负责描述“单个接口怎么用”，<code>SKILL.md</code> 负责描述“整个业务怎么跑”。</p>
+<p>比如商品推荐 SKILL 可以这样写：</p>
+<pre><code class="md"># 商品推荐与订单确认
+
+## 能力范围
+
+本 SKILL 用于根据用户需求推荐商品，并引导用户选择商品。
+
+## 业务流程
+
+1. 用户表达模糊需求，例如“想喝点清爽的”，调用 getRecommendedProducts，不填写 keyword。
+2. 用户表达明确需求，例如“有咖啡吗”，调用 getRecommendedProducts，并把 keyword 填为“咖啡”。
+3. 返回商品列表后，必须展示商品推荐卡片，不要只用纯文本罗列。
+4. 用户选择商品后，再进入订单确认流程。
+
+## 约束
+
+- 不要编造 productId，productId 必须来自 getRecommendedProducts 的返回结果。
+- 未调用下单接口前，不要对用户说“已下单”。
+- 商品为空时，先说明未找到，再引导用户换关键词或从推荐商品中选择。
+</code></pre>
+<p>这个文件最适合写：</p>
+<ul>
+<li>用户意图如何分流；</li>
+<li>多个接口之间的前后依赖；</li>
+<li>哪些场景必须出卡片；</li>
+<li>哪些动作必须等用户确认；</li>
+<li>哪些 ID 只能来自上游接口，不能从自然语言里猜。</li>
+</ul>
+<p>不要把所有单个接口的字段说明都重复写进 <code>SKILL.md</code>，否则很容易和 <code>mcp.json</code> 产生冲突。</p>
+<h2 id="原子组件：不是普通页面，而是对话流卡片"><a href="#原子组件：不是普通页面，而是对话流卡片" class="headerlink" title="原子组件：不是普通页面，而是对话流卡片"></a>原子组件：不是普通页面，而是对话流卡片</h2><p>原子组件负责把原子接口返回的结构化数据渲染成 GUI 卡片。</p>
+<p>它写起来接近小程序自定义组件，但运行环境和普通小程序页面不完全一样。官方文档里提到了一些限制：</p>
+<ul>
+<li>原子组件和原子接口运行环境隔离；</li>
+<li>组件初始化时决定卡片高度，后续不可再改变高度；</li>
+<li>默认不支持网络请求和云开发接口；</li>
+<li>默认不支持定时器；</li>
+<li>不支持动画；</li>
+<li>禁止上下滚动；</li>
+<li>支持点击后帮用户上行一条文本消息；</li>
+<li>需要关联小程序页面，方便用户从卡片进入完整页面。</li>
+</ul>
+<p>我的理解是：<strong>原子组件更像“对话里的业务卡片”，不是一个缩小版页面。</strong></p>
+<p>所以组件设计要克制，适合展示关键结果和关键操作，不适合塞进完整业务流程。</p>
+<p>例如商品推荐卡片只需要展示：</p>
+<ul>
+<li>商品名；</li>
+<li>价格；</li>
+<li>推荐理由；</li>
+<li>一个“选择这个”的操作。</li>
+</ul>
+<p>更复杂的规格选择、地址管理、支付流程，最好还是通过半屏、小程序页面或后续原子接口继续承接。</p>
+<h2 id="调试方式：要按-AI-流程调，不只是按页面调"><a href="#调试方式：要按-AI-流程调，不只是按页面调" class="headerlink" title="调试方式：要按 AI 流程调，不只是按页面调"></a>调试方式：要按 AI 流程调，不只是按页面调</h2><p>小程序 AI 开发模式的调试方式和普通小程序也不一样。</p>
+<p>官方调试指南里提到，需要使用微信开发者工具 Nightly Electron Build，并在编译模式里切换到“小程序 AI 编译”，调试基础库切到 <code>3.16.1</code>。</p>
+<p>这个模式支持：</p>
+<table>
+<thead>
+<tr>
+<th>调试对象</th>
+<th>可以看到什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>单个 SKILL</td>
+<td>AI 是否能识别并进入对应能力</td>
+</tr>
+<tr>
+<td>单个原子接口</td>
+<td>入参、出参、错误分支是否符合预期</td>
+</tr>
+<tr>
+<td>单个原子组件</td>
+<td>卡片渲染和尺寸是否正常</td>
+</tr>
+<tr>
+<td>完整对话流程</td>
+<td>用户意图、接口调用、组件展示是否能连起来</td>
+</tr>
+</tbody></table>
+<p>这其实说明一个问题：接入 AI 后，测试对象从“页面状态”变成了“对话流程 + 工具调用链”。</p>
+<p>以前前端测试一个页面，重点看接口返回后 UI 对不对。现在还要看：</p>
+<ul>
+<li>AI 有没有选错接口；</li>
+<li>参数有没有填错；</li>
+<li>空结果会不会无限重试；</li>
+<li>用户修改需求后上下文能不能承接；</li>
+<li>卡片和对话文案是不是自然；</li>
+<li>写操作有没有提前执行。</li>
+</ul>
+<h2 id="真正的挑战不在接入，而在稳定性"><a href="#真正的挑战不在接入，而在稳定性" class="headerlink" title="真正的挑战不在接入，而在稳定性"></a>真正的挑战不在接入，而在稳定性</h2><p>从代码角度看，小程序 AI 开发模式的接入并不算特别复杂。真正难的是让 AI 在复杂业务里稳定运行。</p>
+<h3 id="挑战一：业务能力要重新拆分"><a href="#挑战一：业务能力要重新拆分" class="headerlink" title="挑战一：业务能力要重新拆分"></a>挑战一：业务能力要重新拆分</h3><p>传统小程序里，很多业务逻辑是藏在页面里的：</p>
+<pre><code class="txt">页面 onLoad -&gt; 拉数据 -&gt; 用户点击 -&gt; 修改 data -&gt; 调接口 -&gt; 弹 toast
+</code></pre>
+<p>AI 接入后，这种写法不够用了。因为 AI 需要知道：</p>
+<ul>
+<li>当前有哪些动作可以调用；</li>
+<li>每个动作需要什么参数；</li>
+<li>参数从哪里来；</li>
+<li>调用成功后下一步做什么；</li>
+<li>失败时怎么给用户出口。</li>
+</ul>
+<p>所以原来的页面逻辑需要被抽出来，变成可声明、可调用、可验证的原子接口。</p>
+<p>这对老项目是一个挑战，因为很多小程序的业务边界并不干净。页面、接口、状态、埋点、权限混在一起时，AI 接入会倒逼你做一次业务能力治理。</p>
+<h3 id="挑战二：描述质量决定调用质量"><a href="#挑战二：描述质量决定调用质量" class="headerlink" title="挑战二：描述质量决定调用质量"></a>挑战二：描述质量决定调用质量</h3><p>小程序 AI 接入里有一个很反直觉的点：<strong>不是代码写对了，AI 就一定用得对。</strong></p>
+<p>模型会根据多个信息源做判断。官方最佳实践里给出的权重大概是：</p>
+<table>
+<thead>
+<tr>
+<th>信息源</th>
+<th>主要影响</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>原子接口返回的 <code>content</code></td>
+<td>当前事实和下一步动作</td>
+</tr>
+<tr>
+<td><code>mcp.json</code> 的接口 <code>description</code></td>
+<td>选不选这个接口</td>
+</tr>
+<tr>
+<td><code>inputSchema.description</code></td>
+<td>参数怎么填</td>
+</tr>
+<tr>
+<td><code>SKILL.md</code></td>
+<td>跨接口流程和业务规则</td>
+</tr>
+</tbody></table>
+<p>这意味着描述不是文档附属品，而是运行时的一部分。</p>
+<p>如果 <code>description</code> 写得模糊，模型可能选错接口；如果字段说明没有写清取值来源，模型可能编造 ID；如果 <code>content</code> 没有写清下一步动作，模型可能跳过用户确认。</p>
+<p>我的实战建议是：把提示词、接口描述、返回文案都纳入代码评审，不要只 review JavaScript。</p>
+<h3 id="挑战三：写操作必须谨慎"><a href="#挑战三：写操作必须谨慎" class="headerlink" title="挑战三：写操作必须谨慎"></a>挑战三：写操作必须谨慎</h3><p>查询类能力相对简单，比如查天气、查订单、查库存。</p>
+<p>真正危险的是写操作：</p>
+<ul>
+<li>下单；</li>
+<li>退款；</li>
+<li>修改地址；</li>
+<li>使用优惠券；</li>
+<li>预约服务；</li>
+<li>删除数据。</li>
+</ul>
+<p>这类能力必须明确区分“推荐”“确认”“执行”三个阶段。</p>
+<pre><code class="txt">推荐阶段：AI 可以主动调用接口获取候选项
+确认阶段：必须让用户明确选择或确认
+执行阶段：调用写接口前后都要有明确状态
+</code></pre>
+<p>一个很重要的约束是：未调用成功前，不要向用户宣称“已完成”。调用失败时，也不能只说“失败了”，要告诉用户失败原因和下一步可以怎么做。</p>
+<h3 id="挑战四：组件不是万能容器"><a href="#挑战四：组件不是万能容器" class="headerlink" title="挑战四：组件不是万能容器"></a>挑战四：组件不是万能容器</h3><p>很多前端开发者看到“原子组件”，第一反应可能是把现有页面搬进去。</p>
+<p>我不建议这么做。</p>
+<p>原子组件的高度、事件、滚动、网络请求、动画都有约束，它更适合做轻量卡片。把复杂页面塞进去，最后会变成一个既不好调试、也不好交互的半成品。</p>
+<p>更合理的拆法是：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>放在哪里</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>核心结果展示</td>
+<td>原子组件</td>
+</tr>
+<tr>
+<td>复杂筛选、编辑、支付</td>
+<td>小程序页面或半屏</td>
+</tr>
+<tr>
+<td>数据获取和业务判断</td>
+<td>原子接口</td>
+</tr>
+<tr>
+<td>跨接口流程规则</td>
+<td><code>SKILL.md</code></td>
+</tr>
+<tr>
+<td>单接口参数约束</td>
+<td><code>mcp.json</code></td>
+</tr>
+</tbody></table>
+<h2 id="微信小程序融入-AI-的长期意义"><a href="#微信小程序融入-AI-的长期意义" class="headerlink" title="微信小程序融入 AI 的长期意义"></a>微信小程序融入 AI 的长期意义</h2><p>我觉得这件事长期看会带来三个变化。</p>
+<h3 id="第一，小程序入口会从“页面导航”变成“意图导航”"><a href="#第一，小程序入口会从“页面导航”变成“意图导航”" class="headerlink" title="第一，小程序入口会从“页面导航”变成“意图导航”"></a>第一，小程序入口会从“页面导航”变成“意图导航”</h3><p>过去小程序的核心体验是页面结构：</p>
+<pre><code class="txt">首页 -&gt; 分类页 -&gt; 详情页 -&gt; 表单页 -&gt; 结果页
+</code></pre>
+<p>用户必须理解你的信息架构，才能找到自己要的功能。</p>
+<p>AI 接入后，用户可以直接说：</p>
+<ul>
+<li>“帮我查一下上次买的那杯咖啡”；</li>
+<li>“找一个适合下午喝的低糖饮品”；</li>
+<li>“把明天上午的预约改到下午”；</li>
+<li>“用积分换一张优惠券”。</li>
+</ul>
+<p>这会让小程序从“用户找功能”逐步变成“功能理解用户”。</p>
+<p>当然，这不代表页面不重要。页面仍然适合复杂浏览、强视觉展示和精细操作。但高频、明确、可被流程化的任务，会越来越适合被 AI 入口承接。</p>
+<h3 id="第二，前端工程会更重视业务语义"><a href="#第二，前端工程会更重视业务语义" class="headerlink" title="第二，前端工程会更重视业务语义"></a>第二，前端工程会更重视业务语义</h3><p>以前前端工程化更多关注：</p>
+<ul>
+<li>组件复用；</li>
+<li>状态管理；</li>
+<li>构建性能；</li>
+<li>类型检查；</li>
+<li>代码规范；</li>
+<li>请求封装。</li>
+</ul>
+<p>这些依然重要，但 AI 接入会新增一层工程问题：业务语义怎么表达给模型。</p>
+<p>例如：</p>
+<ul>
+<li><code>productId</code> 不能从用户口语里猜；</li>
+<li>“再来一杯”需要查历史订单；</li>
+<li>“清爽一点”不是一个固定枚举，需要推荐逻辑；</li>
+<li>“下单”必须经过确认；</li>
+<li>“修改地址”涉及隐私和权限。</li>
+</ul>
+<p>这些不是单纯的 UI 问题，也不是单纯的接口问题，而是业务规则、用户语义和模型调用之间的契约问题。</p>
+<p>长期看，优秀的小程序团队可能会沉淀出一套自己的 AI 能力工程规范，包括：</p>
+<ul>
+<li>SKILL 拆分规范；</li>
+<li>原子接口命名规范；</li>
+<li>参数描述规范；</li>
+<li>content 返回文案规范；</li>
+<li>写操作确认规范；</li>
+<li>对话流程评测用例；</li>
+<li>AI 入口灰度和监控方案。</li>
+</ul>
+<h3 id="第三，AI-会倒逼业务能力服务化"><a href="#第三，AI-会倒逼业务能力服务化" class="headerlink" title="第三，AI 会倒逼业务能力服务化"></a>第三，AI 会倒逼业务能力服务化</h3><p>很多小程序项目的历史包袱是：业务能力散落在页面里，复用靠复制，流程靠人记。</p>
+<p>AI 接入会让这些问题暴露得更明显。因为模型不能调用“某个页面里的某段点击逻辑”，它只能调用被明确声明出来的原子接口。</p>
+<p>这会倒逼团队把能力拆成更清楚的单元：</p>
+<pre><code class="txt">搜索商品
+获取推荐
+生成订单草稿
+确认订单
+查询订单状态
+取消订单
+修改预约时间
+</code></pre>
+<p>一旦这些能力被拆出来，不只是 AI 能用，普通页面、运营活动、客服系统、自动化测试也都能复用。</p>
+<p>所以我更愿意把小程序 AI 接入看成一次“业务能力结构化”的机会，而不是一次单纯的 AI 功能尝鲜。</p>
+<h2 id="我的接入建议"><a href="#我的接入建议" class="headerlink" title="我的接入建议"></a>我的接入建议</h2><p>如果现在要在真实项目里尝试，我会按这个顺序推进：</p>
+<ol>
+<li>先选一个低风险、高频、查询或推荐类场景，不要一上来做支付、退款、删除这类写操作。</li>
+<li>先拆 1 个 SKILL，控制在 2 到 5 个原子接口内，把链路跑通。</li>
+<li><code>mcp.json</code> 重点写清接口触发条件、字段来源和缺省处理。</li>
+<li><code>SKILL.md</code> 只写跨接口流程，不重复堆单接口字段说明。</li>
+<li>原子接口返回的 <code>content</code> 统一采用“事实 + 动作”格式。</li>
+<li>原子组件只做关键展示和关键选择，不要把完整页面搬进去。</li>
+<li>把对话用例纳入测试，比如模糊意图、明确意图、空结果、用户修改需求、异常分支。</li>
+</ol>
+<p>我的判断是：小程序 AI 短期内不会替代现有页面体系，但会优先改造那些“用户知道自己要什么，只是不想一步步点”的场景。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>小程序 AI 开发模式的核心是把业务能力封装成 <code>SKILL</code>，供小程序 AI 通过小程序 MCP 调用。</li>
+<li>接入重点不是写一个聊天框，而是设计 <code>SKILL.md</code>、<code>mcp.json</code>、原子接口和原子组件之间的职责边界。</li>
+<li><code>description</code>、<code>inputSchema.description</code> 和接口返回的 <code>content</code> 会直接影响 AI 的调用质量，必须当成运行时契约来写。</li>
+<li>真正的落地挑战在于业务拆分、写操作确认、异常出口、组件限制和对话流程评测。</li>
+<li>长期看，小程序 AI 会推动小程序从页面导航走向意图导航，也会倒逼业务能力更加结构化和服务化。</li>
+</ol>
+<p>参考资料：</p>
+<ul>
+<li><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/ai/guide">小程序 AI 开发模式（beta）接入指南</a></li>
+<li><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/ai/integration">接入方式</a></li>
+<li><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/ai/best-practices">最佳实践</a></li>
+<li><a target="_blank" rel="noopener" href="https://developers.weixin.qq.com/miniprogram/dev/ai/debugging">调试指南</a></li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F/">微信小程序</a><a class="post-meta__tags" href="/tags/MCP/">MCP</a><a class="post-meta__tags" href="/tags/Skills/">Skills</a><a class="post-meta__tags" href="/tags/%E5%B7%A5%E7%A8%8B%E5%8C%96/">工程化</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/10-CI%E6%B5%81%E6%B0%B4%E7%BA%BF%E4%B8%8E%E8%B4%A8%E9%87%8F%E5%BC%BA%E7%BA%A6%E6%9D%9F%E9%97%B8%E5%8F%A3/" title="CI 流水线与质量强约束闸口"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">CI 流水线与质量强约束闸口</div></div></a></div><div class="next-post pull-right"><a href="/posts/31-Claude-Code-Settings%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F%E5%85%A8%E8%A7%A3%E6%9E%90/" title="Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E8%AF%B4%E7%BB%93%E8%AE%BA"><span class="toc-number">1.</span> <span class="toc-text">先说结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%A8%8B%E5%BA%8F-AI-%E5%BC%80%E5%8F%91%E6%A8%A1%E5%BC%8F%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">2.</span> <span class="toc-text">小程序 AI 开发模式是什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A6%82%E4%BD%95%E6%8E%A5%E5%85%A5%EF%BC%9A%E4%BB%8E%E4%B8%80%E4%B8%AA%E6%9C%80%E5%B0%8F-SKILL-%E5%BC%80%E5%A7%8B"><span class="toc-number">3.</span> <span class="toc-text">如何接入：从一个最小 SKILL 开始</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%9C%A8-app-json-%E5%A3%B0%E6%98%8E-SKILL"><span class="toc-number">3.1.</span> <span class="toc-text">第一步：在 app.json 声明 SKILL</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E7%BB%84%E7%BB%87-SKILL-%E7%9B%AE%E5%BD%95"><span class="toc-number">3.2.</span> <span class="toc-text">第二步：组织 SKILL 目录</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mcp-json%EF%BC%9A%E5%91%8A%E8%AF%89-AI-%E6%9C%89%E5%93%AA%E4%BA%9B%E5%B7%A5%E5%85%B7%E5%8F%AF%E7%94%A8"><span class="toc-number">4.</span> <span class="toc-text">mcp.json：告诉 AI 有哪些工具可用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E6%8E%A5%E5%8F%A3%EF%BC%9A%E8%BF%94%E5%9B%9E%E7%BB%93%E6%9E%9C%EF%BC%8C%E4%B9%9F%E8%BF%94%E5%9B%9E%E4%B8%8B%E4%B8%80%E6%AD%A5%E5%8A%A8%E4%BD%9C"><span class="toc-number">5.</span> <span class="toc-text">原子接口：返回结果，也返回下一步动作</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#index-js%EF%BC%9A%E6%B3%A8%E5%86%8C%E5%8E%9F%E5%AD%90%E6%8E%A5%E5%8F%A3"><span class="toc-number">6.</span> <span class="toc-text">index.js：注册原子接口</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SKILL-md%EF%BC%9A%E6%8F%8F%E8%BF%B0%E6%95%B4%E4%B8%AA%E4%B8%9A%E5%8A%A1%E6%80%8E%E4%B9%88%E8%B7%91"><span class="toc-number">7.</span> <span class="toc-text">SKILL.md：描述整个业务怎么跑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E5%AD%90%E7%BB%84%E4%BB%B6%EF%BC%9A%E4%B8%8D%E6%98%AF%E6%99%AE%E9%80%9A%E9%A1%B5%E9%9D%A2%EF%BC%8C%E8%80%8C%E6%98%AF%E5%AF%B9%E8%AF%9D%E6%B5%81%E5%8D%A1%E7%89%87"><span class="toc-number">8.</span> <span class="toc-text">原子组件：不是普通页面，而是对话流卡片</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%B0%83%E8%AF%95%E6%96%B9%E5%BC%8F%EF%BC%9A%E8%A6%81%E6%8C%89-AI-%E6%B5%81%E7%A8%8B%E8%B0%83%EF%BC%8C%E4%B8%8D%E5%8F%AA%E6%98%AF%E6%8C%89%E9%A1%B5%E9%9D%A2%E8%B0%83"><span class="toc-number">9.</span> <span class="toc-text">调试方式：要按 AI 流程调，不只是按页面调</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%9C%9F%E6%AD%A3%E7%9A%84%E6%8C%91%E6%88%98%E4%B8%8D%E5%9C%A8%E6%8E%A5%E5%85%A5%EF%BC%8C%E8%80%8C%E5%9C%A8%E7%A8%B3%E5%AE%9A%E6%80%A7"><span class="toc-number">10.</span> <span class="toc-text">真正的挑战不在接入，而在稳定性</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%91%E6%88%98%E4%B8%80%EF%BC%9A%E4%B8%9A%E5%8A%A1%E8%83%BD%E5%8A%9B%E8%A6%81%E9%87%8D%E6%96%B0%E6%8B%86%E5%88%86"><span class="toc-number">10.1.</span> <span class="toc-text">挑战一：业务能力要重新拆分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%91%E6%88%98%E4%BA%8C%EF%BC%9A%E6%8F%8F%E8%BF%B0%E8%B4%A8%E9%87%8F%E5%86%B3%E5%AE%9A%E8%B0%83%E7%94%A8%E8%B4%A8%E9%87%8F"><span class="toc-number">10.2.</span> <span class="toc-text">挑战二：描述质量决定调用质量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%91%E6%88%98%E4%B8%89%EF%BC%9A%E5%86%99%E6%93%8D%E4%BD%9C%E5%BF%85%E9%A1%BB%E8%B0%A8%E6%85%8E"><span class="toc-number">10.3.</span> <span class="toc-text">挑战三：写操作必须谨慎</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%91%E6%88%98%E5%9B%9B%EF%BC%9A%E7%BB%84%E4%BB%B6%E4%B8%8D%E6%98%AF%E4%B8%87%E8%83%BD%E5%AE%B9%E5%99%A8"><span class="toc-number">10.4.</span> <span class="toc-text">挑战四：组件不是万能容器</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%BE%AE%E4%BF%A1%E5%B0%8F%E7%A8%8B%E5%BA%8F%E8%9E%8D%E5%85%A5-AI-%E7%9A%84%E9%95%BF%E6%9C%9F%E6%84%8F%E4%B9%89"><span class="toc-number">11.</span> <span class="toc-text">微信小程序融入 AI 的长期意义</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%EF%BC%8C%E5%B0%8F%E7%A8%8B%E5%BA%8F%E5%85%A5%E5%8F%A3%E4%BC%9A%E4%BB%8E%E2%80%9C%E9%A1%B5%E9%9D%A2%E5%AF%BC%E8%88%AA%E2%80%9D%E5%8F%98%E6%88%90%E2%80%9C%E6%84%8F%E5%9B%BE%E5%AF%BC%E8%88%AA%E2%80%9D"><span class="toc-number">11.1.</span> <span class="toc-text">第一，小程序入口会从“页面导航”变成“意图导航”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%EF%BC%8C%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E4%BC%9A%E6%9B%B4%E9%87%8D%E8%A7%86%E4%B8%9A%E5%8A%A1%E8%AF%AD%E4%B9%89"><span class="toc-number">11.2.</span> <span class="toc-text">第二，前端工程会更重视业务语义</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%EF%BC%8CAI-%E4%BC%9A%E5%80%92%E9%80%BC%E4%B8%9A%E5%8A%A1%E8%83%BD%E5%8A%9B%E6%9C%8D%E5%8A%A1%E5%8C%96"><span class="toc-number">11.3.</span> <span class="toc-text">第三，AI 会倒逼业务能力服务化</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%9A%84%E6%8E%A5%E5%85%A5%E5%BB%BA%E8%AE%AE"><span class="toc-number">12.</span> <span class="toc-text">我的接入建议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">13.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

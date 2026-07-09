@@ -1,0 +1,576 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vue 3 SSR 与 hydration 源码解析：服务端字符串如何被客户端接管 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：SSR 的目标不是只在服务端生成 HTML，还要让客户端在已有 DOM 上恢复交互能力。服务端负责把组件树渲染成字符串，客户端 hydration 负责让 VNode 认领这些 DOM，并在不一致时修正。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 3 SSR 与 hydration 源码解析：服务端字符串如何被客户端接管">
+<meta property="og:url" content="http://example.com/posts/23-Vue%203%20SSR%20%E4%B8%8E%20hydration%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%A6%82%E4%BD%95%E8%A2%AB%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%8E%A5%E7%AE%A1/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：SSR 的目标不是只在服务端生成 HTML，还要让客户端在已有 DOM 上恢复交互能力。服务端负责把组件树渲染成字符串，客户端 hydration 负责让 VNode 认领这些 DOM，并在不一致时修正。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-31T15:36:00.000Z">
+<meta property="article:modified_time" content="2026-05-31T07:26:04.964Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="SSR">
+<meta property="article:tag" content="Vue3">
+<meta property="article:tag" content="源码解析">
+<meta property="article:tag" content="hydration">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/23-Vue%203%20SSR%20%E4%B8%8E%20hydration%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%AD%97%E7%AC%A6%E4%B8%B2%E5%A6%82%E4%BD%95%E8%A2%AB%E5%AE%A2%E6%88%B7%E7%AB%AF%E6%8E%A5%E7%AE%A1/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vue 3 SSR 与 hydration 源码解析：服务端字符串如何被客户端接管',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:26:04'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vue 3 SSR 与 hydration 源码解析：服务端字符串如何被客户端接管</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-31T15:36:00.000Z" title="发表于 2026 23:36:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-31T07:26:04.964Z" title="更新于 2026 15:26:04">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>源码说明：本文分析的源码基于 <code>vue@3.5.21</code>，对应官方仓库为 <a target="_blank" rel="noopener" href="https://github.com/vuejs/core/tree/v3.5.21">vuejs&#x2F;core</a>，本文所在学习仓库为 <a target="_blank" rel="noopener" href="https://github.com/XY0987/vue_ori_learning">XY0987&#x2F;vue_ori_learning</a>。</p>
+</blockquote>
+<blockquote>
+<p>前言：SSR 的目标不是只在服务端生成 HTML，还要让客户端在已有 DOM 上恢复交互能力。服务端负责把组件树渲染成字符串，客户端 hydration 负责让 VNode 认领这些 DOM，并在不一致时修正。</p>
+</blockquote>
+<h2 id="整体链路"><a href="#整体链路" class="headerlink" title="整体链路"></a>整体链路</h2><pre><code class="text">服务端：
+createSSRApp(App)
+  -&gt; renderToString(app)
+  -&gt; renderComponentVNode(rootVNode)
+  -&gt; renderVNode / renderElementVNode
+  -&gt; SSRBuffer
+  -&gt; HTML string
+
+客户端：
+createSSRApp(App).mount(container)
+  -&gt; hydrate(rootVNode, container)
+  -&gt; hydrateNode(container.firstChild, vnode)
+  -&gt; hydrateElement / hydrateChildren / mountComponent
+  -&gt; 绑定事件、ref、指令 hooks
+</code></pre>
+<p>服务端渲染和客户端接管是两条不同链路，但它们共享 VNode、组件实例、render 结果这些核心结构。</p>
+<h2 id="服务端入口：renderToString"><a href="#服务端入口：renderToString" class="headerlink" title="服务端入口：renderToString"></a>服务端入口：renderToString</h2><pre><code class="70:97:packages/server-renderer/src/renderToString.ts">export async function renderToString(input: App | VNode, context: SSRContext = &#123;&#125;): Promise&lt;string&gt; &#123;
+  if (isVNode(input)) &#123;
+    return renderToString(createApp(&#123; render: () =&gt; input &#125;), context)
+  &#125;
+
+  const vnode = createVNode(input._component, input._props)
+  vnode.appContext = input._context
+  input.provide(ssrContextKey, context)
+  const buffer = await renderComponentVNode(vnode)
+
+  const result = await unrollBuffer(buffer as SSRBuffer)
+  await resolveTeleports(context)
+  return result
+&#125;
+</code></pre>
+<p><code>renderToString</code> 做了几件事：</p>
+<ol>
+<li>如果传入的是裸 VNode，先包成 App。</li>
+<li>创建根组件 VNode，并继承 app context。</li>
+<li>通过 <code>provide</code> 把 SSR context 注入组件树。</li>
+<li>调用 <code>renderComponentVNode</code> 得到 buffer。</li>
+<li>展开 buffer，得到最终 HTML 字符串。</li>
+</ol>
+<h2 id="为什么-SSR-使用-Buffer"><a href="#为什么-SSR-使用-Buffer" class="headerlink" title="为什么 SSR 使用 Buffer"></a>为什么 SSR 使用 Buffer</h2><p>这里的 <code>Buffer</code> 不是 Node.js 的二进制 <code>Buffer</code>，而是 Vue SSR 自己用的一个临时收集容器。</p>
+<p>可以简单理解成：服务端渲染时，Vue 不会一开始就把所有内容拼成最终 HTML 字符串，而是先把普通 HTML 片段、子组件渲染结果、异步组件结果都放进一个数组里。这个数组就是 <code>SSRBuffer</code>。</p>
+<p>比如它内部可能长这样：</p>
+<pre><code class="ts">[
+  &#39;&lt;div&gt;&#39;,
+  &#39;&lt;span&gt;hello&lt;/span&gt;&#39;,
+  Promise.resolve([&#39;&lt;p&gt;async component&lt;/p&gt;&#39;]),
+  &#39;&lt;/div&gt;&#39;,
+]
+</code></pre>
+<p>最后 Vue 再把这个 buffer 展开成最终 HTML：</p>
+<pre><code class="html">&lt;div&gt;&lt;span&gt;hello&lt;/span&gt;&lt;p&gt;async component&lt;/p&gt;&lt;/div&gt;
+</code></pre>
+<p>服务端渲染不是简单同步拼接字符串，因为组件里可能有：</p>
+<ul>
+<li><code>async setup()</code></li>
+<li><code>serverPrefetch</code></li>
+<li>异步组件</li>
+<li>Teleport</li>
+</ul>
+<p>所以 Vue 先收集为 <code>SSRBuffer</code>：</p>
+<pre><code class="60:89:packages/server-renderer/src/render.ts">export function createBuffer() &#123;
+  let appendable = false
+  const buffer: SSRBuffer = []
+  return &#123;
+    getBuffer(): SSRBuffer &#123;
+      return buffer
+    &#125;,
+    push(item: SSRBufferItem): void &#123;
+      const isStringItem = isString(item)
+      if (appendable &amp;&amp; isStringItem) &#123;
+        buffer[buffer.length - 1] += item as string
+        return
+      &#125;
+      buffer.push(item)
+      appendable = isStringItem
+      if (isPromise(item) || (isArray(item) &amp;&amp; item.hasAsync)) &#123;
+        buffer.hasAsync = true
+      &#125;
+    &#125;,
+  &#125;
+&#125;
+</code></pre>
+<p>这个 buffer 可以包含三类内容：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>string</code></td>
+<td>普通 HTML 片段</td>
+</tr>
+<tr>
+<td><code>SSRBuffer</code></td>
+<td>子组件 &#x2F; 子树的嵌套 buffer</td>
+</tr>
+<tr>
+<td><code>Promise&lt;SSRBuffer&gt;</code></td>
+<td>异步组件或异步 setup 的结果</td>
+</tr>
+</tbody></table>
+<p><code>appendable</code> 是一个小优化：连续字符串会合并，减少数组项数量。</p>
+<h2 id="renderComponentVNode：SSR-中也会创建组件实例"><a href="#renderComponentVNode：SSR-中也会创建组件实例" class="headerlink" title="renderComponentVNode：SSR 中也会创建组件实例"></a>renderComponentVNode：SSR 中也会创建组件实例</h2><pre><code class="91:123:packages/server-renderer/src/render.ts">export function renderComponentVNode(vnode: VNode, parentComponent: ComponentInternalInstance | null = null): SSRBuffer | Promise&lt;SSRBuffer&gt; &#123;
+  const instance = (vnode.component = createComponentInstance(vnode, parentComponent, null))
+  const res = setupComponent(instance, true /* isSSR */)
+  const hasAsyncSetup = isPromise(res)
+  let prefetches = instance.sp
+  if (hasAsyncSetup || prefetches) &#123;
+    const p = Promise.resolve(res).then(() =&gt; &#123;
+      if (hasAsyncSetup) prefetches = instance.sp
+      if (prefetches) return Promise.all(prefetches.map(prefetch =&gt; prefetch.call(instance.proxy)))
+    &#125;)
+    return p.then(() =&gt; renderComponentSubTree(instance, slotScopeId))
+  &#125; else &#123;
+    return renderComponentSubTree(instance, slotScopeId)
+  &#125;
+&#125;
+</code></pre>
+<p>SSR 不会挂载真实 DOM，但仍然需要组件实例，因为：</p>
+<ul>
+<li><code>setup()</code> 要执行。</li>
+<li>props &#x2F; slots &#x2F; attrs 要初始化。</li>
+<li>组件上下文和依赖注入要可用。</li>
+<li><code>serverPrefetch</code> 要收集并等待。</li>
+</ul>
+<h2 id="renderVNode：把-VNode-写成-HTML"><a href="#renderVNode：把-VNode-写成-HTML" class="headerlink" title="renderVNode：把 VNode 写成 HTML"></a>renderVNode：把 VNode 写成 HTML</h2><pre><code class="223:279:packages/server-renderer/src/render.ts">export function renderVNode(push: PushFn, vnode: VNode, parentComponent: ComponentInternalInstance, slotScopeId?: string): void &#123;
+  const &#123; type, shapeFlag, children, dirs, props &#125; = vnode
+  if (dirs) &#123;
+    vnode.props = applySSRDirectives(vnode, props, dirs)
+  &#125;
+
+  switch (type) &#123;
+    case Text:
+      push(escapeHtml(children as string))
+      break
+    case Comment:
+      push(children ? `&lt;!--$&#123;escapeHtmlComment(children as string)&#125;--&gt;` : `&lt;!----&gt;`)
+      break
+    case Fragment:
+      push(`&lt;!--[--&gt;`)
+      renderVNodeChildren(push, children as VNodeArrayChildren, parentComponent, slotScopeId)
+      push(`&lt;!--]--&gt;`)
+      break
+    default:
+      if (shapeFlag &amp; ShapeFlags.ELEMENT) renderElementVNode(push, vnode, parentComponent, slotScopeId)
+      else if (shapeFlag &amp; ShapeFlags.COMPONENT) push(renderComponentVNode(vnode, parentComponent, slotScopeId))
+  &#125;
+&#125;
+</code></pre>
+<p>可以看到，Fragment 在 SSR 中会被渲染为注释锚点：</p>
+<pre><code class="html">&lt;!--[--&gt;
+  ...children
+&lt;!--]--&gt;
+</code></pre>
+<p>这些锚点对客户端 hydration 很重要，因为 Fragment 没有真实包裹元素，客户端需要靠锚点知道它的边界。</p>
+<h2 id="客户端入口：createHydrationFunctions"><a href="#客户端入口：createHydrationFunctions" class="headerlink" title="客户端入口：createHydrationFunctions"></a>客户端入口：createHydrationFunctions</h2><p><code>hydration.ts</code> 位于 <code>runtime-core</code>，但它强依赖 DOM renderer 的 host 操作，所以会接收 <code>rendererInternals</code>：</p>
+<pre><code class="87:117:packages/runtime-core/src/hydration.ts">export function createHydrationFunctions(rendererInternals: RendererInternals&lt;Node, Element&gt;) &#123;
+  const &#123;
+    mt: mountComponent,
+    p: patch,
+    o: &#123; patchProp, createText, nextSibling, parentNode, remove, insert, createComment &#125;,
+  &#125; = rendererInternals
+&#125;
+</code></pre>
+<p>根 hydrate 函数：</p>
+<pre><code class="119:135:packages/runtime-core/src/hydration.ts">const hydrate: RootHydrateFunction = (vnode, container) =&gt; &#123;
+  if (!container.hasChildNodes()) &#123;
+    patch(null, vnode, container)
+    flushPostFlushCbs()
+    container._vnode = vnode
+    return
+  &#125;
+
+  hydrateNode(container.firstChild!, vnode, null, null, null)
+  flushPostFlushCbs()
+  container._vnode = vnode
+&#125;
+</code></pre>
+<p>如果容器为空，就退化为普通 mount。否则从第一个 DOM 节点开始，让根 VNode 认领 DOM。</p>
+<h2 id="hydrateNode：按-VNode-类型认领-DOM"><a href="#hydrateNode：按-VNode-类型认领-DOM" class="headerlink" title="hydrateNode：按 VNode 类型认领 DOM"></a>hydrateNode：按 VNode 类型认领 DOM</h2><pre><code class="137:171:packages/runtime-core/src/hydration.ts">const hydrateNode = (node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized = false): Node | null =&gt; &#123;
+  optimized = optimized || !!vnode.dynamicChildren
+  const isFragmentStart = isComment(node) &amp;&amp; node.data === &#39;[&#39;
+  const onMismatch = () =&gt; handleMismatch(node, vnode, parentComponent, parentSuspense, slotScopeIds, isFragmentStart)
+  const &#123; type, ref, shapeFlag, patchFlag &#125; = vnode
+  let domType = node.nodeType
+  vnode.el = node
+&#125;
+</code></pre>
+<p><code>hydrateNode</code> 的核心动作是：</p>
+<ol>
+<li>把 <code>vnode.el</code> 指向浏览器中由服务端 HTML 解析出来的现有 DOM。</li>
+<li>根据 VNode 类型检查 DOM 类型是否匹配。</li>
+<li>匹配则继续 hydrate 子树。</li>
+<li>不匹配则进入 <code>handleMismatch</code>。</li>
+</ol>
+<h3 id="文本节点-mismatch"><a href="#文本节点-mismatch" class="headerlink" title="文本节点 mismatch"></a>文本节点 mismatch</h3><pre><code class="173:198:packages/runtime-core/src/hydration.ts">case Text:
+  if (domType !== DOMNodeTypes.TEXT) &#123;
+    nextNode = onMismatch()
+  &#125; else &#123;
+    if ((node as Text).data !== vnode.children) &#123;
+      warn(`Hydration text mismatch in`, node.parentNode, ...)
+      logMismatchError()
+      ;(node as Text).data = vnode.children as string
+    &#125;
+    nextNode = nextSibling(node)
+  &#125;
+  break
+</code></pre>
+<p>文本不一致时，Vue 会告警并把 DOM 文本修正为客户端期望值。</p>
+<h3 id="元素节点-hydration"><a href="#元素节点-hydration" class="headerlink" title="元素节点 hydration"></a>元素节点 hydration</h3><pre><code class="368:551:packages/runtime-core/src/hydration.ts">const hydrateElement = (el, vnode, parentComponent, parentSuspense, slotScopeIds, optimized) =&gt; &#123;
+  const &#123; type, props, patchFlag, shapeFlag, dirs, transition &#125; = vnode
+  const forcePatch = type === &#39;input&#39; || type === &#39;option&#39;
+
+  if (shapeFlag &amp; ShapeFlags.ARRAY_CHILDREN &amp;&amp; !(props &amp;&amp; (props.innerHTML || props.textContent))) &#123;
+    let next = hydrateChildren(el.firstChild, vnode, el, parentComponent, parentSuspense, slotScopeIds, optimized)
+    while (next) &#123;
+      remove(next)
+      next = next.nextSibling
+    &#125;
+  &#125; else if (shapeFlag &amp; ShapeFlags.TEXT_CHILDREN) &#123;
+    if (el.textContent !== clientText) &#123;
+      el.textContent = vnode.children as string
+    &#125;
+  &#125;
+
+  if (props) &#123;
+    patchProp(el, key, null, props[key], undefined, parentComponent)
+  &#125;
+
+  return el.nextSibling
+&#125;
+</code></pre>
+<p>元素 hydration 主要做三类工作：</p>
+<table>
+<thead>
+<tr>
+<th>工作</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>hydrate children</td>
+<td>让子 VNode 继续认领子 DOM</td>
+</tr>
+<tr>
+<td>检查文本 &#x2F; children mismatch</td>
+<td>服务端多出来的删掉，少了的挂载</td>
+</tr>
+<tr>
+<td>patch 必要 props</td>
+<td>事件监听、表单值、<code>.prop</code>、自定义元素等需要客户端补丁</td>
+</tr>
+</tbody></table>
+<p>注意：大部分静态属性并不会重新 patch，因为服务端 HTML 已经包含它们。客户端重点补的是事件监听，以及 hydration 时发现和客户端 VNode 不一致、必须修正的 DOM 状态。</p>
+<p>这里的“必须修正”主要包括几类：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>为什么要修正</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>文本内容不一致</td>
+<td>以客户端 VNode 计算结果为准，直接更新 <code>textContent</code></td>
+</tr>
+<tr>
+<td>子节点数量不一致</td>
+<td>服务端多出来的节点要删除，少了的节点要补挂载</td>
+</tr>
+<tr>
+<td>表单状态</td>
+<td><code>value</code>、<code>checked</code>、<code>indeterminate</code> 等需要以客户端运行时状态为准</td>
+</tr>
+<tr>
+<td>事件监听</td>
+<td>HTML 里没有真正绑定 JS 函数，必须客户端重新绑定</td>
+</tr>
+</tbody></table>
+<h2 id="children-不匹配时如何处理"><a href="#children-不匹配时如何处理" class="headerlink" title="children 不匹配时如何处理"></a>children 不匹配时如何处理</h2><pre><code class="554:632:packages/runtime-core/src/hydration.ts">const hydrateChildren = (node, parentVNode, container, parentComponent, parentSuspense, slotScopeIds, optimized): Node | null =&gt; &#123;
+  const children = parentVNode.children as VNode[]
+  for (let i = 0; i &lt; children.length; i++) &#123;
+    const vnode = optimized ? children[i] : (children[i] = normalizeVNode(children[i]))
+    if (node) &#123;
+      node = hydrateNode(node, vnode, parentComponent, parentSuspense, slotScopeIds, optimized)
+    &#125; else &#123;
+      patch(null, vnode, container, null, parentComponent, parentSuspense, getContainerType(container), slotScopeIds)
+    &#125;
+  &#125;
+  return node
+&#125;
+</code></pre>
+<p>如果服务端 DOM 比客户端 VNode 少，Vue 会用 <code>patch(null, vnode, ...)</code> 挂载缺失节点。</p>
+<p>如果服务端 DOM 比客户端 VNode 多，则在 <code>hydrateElement</code> 中继续删除多余 DOM：</p>
+<pre><code class="431:450:packages/runtime-core/src/hydration.ts">while (next) &#123;
+  logMismatchError()
+  const cur = next
+  next = next.nextSibling
+  remove(cur)
+&#125;
+</code></pre>
+<h2 id="mismatch-的兜底：handleMismatch"><a href="#mismatch-的兜底：handleMismatch" class="headerlink" title="mismatch 的兜底：handleMismatch"></a>mismatch 的兜底：handleMismatch</h2><p><code>handleMismatch</code> 的思路是：当前 DOM 无法被当前 VNode 认领，那就移除错误 DOM，并按客户端 VNode 重新 patch。</p>
+<pre><code class="673:697:packages/runtime-core/src/hydration.ts">const handleMismatch = (node, vnode, parentComponent, parentSuspense, slotScopeIds, isFragment): Node | null =&gt; &#123;
+  warn(`Hydration node mismatch`, ...)
+  logMismatchError()
+  vnode.el = null
+  // 后续移除旧 DOM，并调用 patch(null, vnode, container, next, ...)
+&#125;
+</code></pre>
+<p>这也是 hydration 的底线：尽量复用服务端 DOM，但一致性比复用更重要。</p>
+<h2 id="SSR-与-hydration-的关键设计"><a href="#SSR-与-hydration-的关键设计" class="headerlink" title="SSR 与 hydration 的关键设计"></a>SSR 与 hydration 的关键设计</h2><table>
+<thead>
+<tr>
+<th>设计</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>SSRBuffer</td>
+<td>同时容纳同步字符串和异步子树</td>
+</tr>
+<tr>
+<td>Fragment 注释锚点</td>
+<td>让无包裹节点的片段在客户端可定位</td>
+</tr>
+<tr>
+<td><code>vnode.el = node</code></td>
+<td>让客户端 VNode 认领服务端 DOM</td>
+</tr>
+<tr>
+<td>mismatch 修正</td>
+<td>保证最终 DOM 与客户端 VNode 一致</td>
+</tr>
+<tr>
+<td>props 选择性 patch</td>
+<td>避免重复设置静态属性，只补事件和必须状态</td>
+</tr>
+<tr>
+<td><code>flushPostFlushCbs</code></td>
+<td>hydration 完成后执行 mounted &#x2F; directive 等后置副作用</td>
+</tr>
+</tbody></table>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><blockquote>
+<p>SSR 负责在服务端把组件输出成 HTML，hydration 负责在客户端复用这份 HTML 对应的 DOM，让 VNode 和真实 DOM 对齐，并恢复事件、组件实例和响应式更新能力，最终让页面获得和 SPA 类似的交互体验。</p>
+</blockquote>
+<p>SSR 与 hydration 可以分成两句话理解：</p>
+<ol>
+<li>服务端：组件树先渲染成 <code>SSRBuffer</code>，再展开成 HTML 字符串。</li>
+<li>客户端：VNode 不重新创建 DOM，而是认领现有 DOM；不一致时再修正或重新挂载。</li>
+</ol>
+<p>所以 hydration 不是“再渲染一遍”，而是“在服务端 DOM 基础上恢复 VNode、事件、ref 和组件副作用”。这正是 Vue 3 SSR 能兼顾首屏性能和客户端交互的关键。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/SSR/">SSR</a><a class="post-meta__tags" href="/tags/Vue3/">Vue3</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><a class="post-meta__tags" href="/tags/hydration/">hydration</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/22-Vue%203%20compiler-sfc%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A.vue%20%E6%96%87%E4%BB%B6%E5%A6%82%E4%BD%95%E8%A2%AB%E6%8B%86%E5%88%86%E3%80%81%E7%BC%96%E8%AF%91%E5%92%8C%E7%BB%84%E8%A3%85/" title="Vue 3 compiler-sfc 源码解析：.vue 文件如何被拆分、编译和组装"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Vue 3 compiler-sfc 源码解析：.vue 文件如何被拆分、编译和组装</div></div></a></div><div class="next-post pull-right"><a href="/posts/24-Vue%203%20%E6%BA%90%E7%A0%81%E9%98%85%E8%AF%BB%E8%B7%AF%E7%BA%BF%E5%92%8C%E6%8C%87%E5%8D%97%EF%BC%9A%E4%B8%8D%E8%A6%81%E4%BB%8E%E6%96%87%E4%BB%B6%E5%BC%80%E5%A7%8B%EF%BC%8C%E8%A6%81%E4%BB%8E%E9%97%AE%E9%A2%98%E5%BC%80%E5%A7%8B/" title="Vue 3 源码阅读路线和指南：不要从文件开始，要从问题开始"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Vue 3 源码阅读路线和指南：不要从文件开始，要从问题开始</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%95%B4%E4%BD%93%E9%93%BE%E8%B7%AF"><span class="toc-number">1.</span> <span class="toc-text">整体链路</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%8D%E5%8A%A1%E7%AB%AF%E5%85%A5%E5%8F%A3%EF%BC%9ArenderToString"><span class="toc-number">2.</span> <span class="toc-text">服务端入口：renderToString</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88-SSR-%E4%BD%BF%E7%94%A8-Buffer"><span class="toc-number">3.</span> <span class="toc-text">为什么 SSR 使用 Buffer</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#renderComponentVNode%EF%BC%9ASSR-%E4%B8%AD%E4%B9%9F%E4%BC%9A%E5%88%9B%E5%BB%BA%E7%BB%84%E4%BB%B6%E5%AE%9E%E4%BE%8B"><span class="toc-number">4.</span> <span class="toc-text">renderComponentVNode：SSR 中也会创建组件实例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#renderVNode%EF%BC%9A%E6%8A%8A-VNode-%E5%86%99%E6%88%90-HTML"><span class="toc-number">5.</span> <span class="toc-text">renderVNode：把 VNode 写成 HTML</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%A2%E6%88%B7%E7%AB%AF%E5%85%A5%E5%8F%A3%EF%BC%9AcreateHydrationFunctions"><span class="toc-number">6.</span> <span class="toc-text">客户端入口：createHydrationFunctions</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#hydrateNode%EF%BC%9A%E6%8C%89-VNode-%E7%B1%BB%E5%9E%8B%E8%AE%A4%E9%A2%86-DOM"><span class="toc-number">7.</span> <span class="toc-text">hydrateNode：按 VNode 类型认领 DOM</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%96%87%E6%9C%AC%E8%8A%82%E7%82%B9-mismatch"><span class="toc-number">7.1.</span> <span class="toc-text">文本节点 mismatch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%83%E7%B4%A0%E8%8A%82%E7%82%B9-hydration"><span class="toc-number">7.2.</span> <span class="toc-text">元素节点 hydration</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#children-%E4%B8%8D%E5%8C%B9%E9%85%8D%E6%97%B6%E5%A6%82%E4%BD%95%E5%A4%84%E7%90%86"><span class="toc-number">8.</span> <span class="toc-text">children 不匹配时如何处理</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#mismatch-%E7%9A%84%E5%85%9C%E5%BA%95%EF%BC%9AhandleMismatch"><span class="toc-number">9.</span> <span class="toc-text">mismatch 的兜底：handleMismatch</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SSR-%E4%B8%8E-hydration-%E7%9A%84%E5%85%B3%E9%94%AE%E8%AE%BE%E8%AE%A1"><span class="toc-number">10.</span> <span class="toc-text">SSR 与 hydration 的关键设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">11.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

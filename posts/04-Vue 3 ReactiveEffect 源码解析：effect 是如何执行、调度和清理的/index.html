@@ -1,0 +1,829 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 204;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vue 3 ReactiveEffect 源码解析：effect 是如何执行、调度和清理的 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：前面已经看完 reactive、baseHandlers、track 和 trigger。这一篇继续看 effect.ts。我的理解是，ReactiveEffect 是响应式系统里的“可执行订阅者”：它负责执">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 3 ReactiveEffect 源码解析：effect 是如何执行、调度和清理的">
+<meta property="og:url" content="http://example.com/posts/04-Vue%203%20ReactiveEffect%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9Aeffect%20%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E3%80%81%E8%B0%83%E5%BA%A6%E5%92%8C%E6%B8%85%E7%90%86%E7%9A%84/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="源码说明：本文分析的源码基于 vue@3.5.21，对应官方仓库为 vuejs&#x2F;core，本文所在学习仓库为 XY0987&#x2F;vue_ori_learning。   前言：前面已经看完 reactive、baseHandlers、track 和 trigger。这一篇继续看 effect.ts。我的理解是，ReactiveEffect 是响应式系统里的“可执行订阅者”：它负责执">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-31T15:55:00.000Z">
+<meta property="article:modified_time" content="2026-05-31T07:26:04.969Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vue3">
+<meta property="article:tag" content="源码解析">
+<meta property="article:tag" content="响应式系统">
+<meta property="article:tag" content="ReactiveEffect">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/04-Vue%203%20ReactiveEffect%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9Aeffect%20%E6%98%AF%E5%A6%82%E4%BD%95%E6%89%A7%E8%A1%8C%E3%80%81%E8%B0%83%E5%BA%A6%E5%92%8C%E6%B8%85%E7%90%86%E7%9A%84/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vue 3 ReactiveEffect 源码解析：effect 是如何执行、调度和清理的',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:26:04'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vue 3 ReactiveEffect 源码解析：effect 是如何执行、调度和清理的</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-31T15:55:00.000Z" title="发表于 2026 23:55:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-05-31T07:26:04.969Z" title="更新于 2026 15:26:04">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>16分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>源码说明：本文分析的源码基于 <code>vue@3.5.21</code>，对应官方仓库为 <a target="_blank" rel="noopener" href="https://github.com/vuejs/core/tree/v3.5.21">vuejs&#x2F;core</a>，本文所在学习仓库为 <a target="_blank" rel="noopener" href="https://github.com/XY0987/vue_ori_learning">XY0987&#x2F;vue_ori_learning</a>。</p>
+</blockquote>
+<blockquote>
+<p>前言：前面已经看完 <code>reactive</code>、<code>baseHandlers</code>、<code>track</code> 和 <code>trigger</code>。这一篇继续看 <code>effect.ts</code>。我的理解是，<code>ReactiveEffect</code> 是响应式系统里的“可执行订阅者”：它负责执行副作用函数、打开依赖收集窗口、接收依赖变化通知，并在必要时清理旧依赖。</p>
+</blockquote>
+<h2 id="先给结论"><a href="#先给结论" class="headerlink" title="先给结论"></a>先给结论</h2><p><code>ReactiveEffect</code> 主要解决四个问题：</p>
+<table>
+<thead>
+<tr>
+<th>问题</th>
+<th>对应实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>如何让读取响应式数据时能收集当前 effect</td>
+<td>执行前设置 <code>activeSub = this</code></td>
+</tr>
+<tr>
+<td>如何避免分支切换后旧依赖仍然触发</td>
+<td><code>prepareDeps</code> + <code>cleanupDeps</code></td>
+</tr>
+<tr>
+<td>如何避免同一轮变更重复执行</td>
+<td><code>batch</code> + <code>NOTIFIED</code> 标记</td>
+</tr>
+<tr>
+<td>如何停止一个 effect</td>
+<td><code>stop</code> 从所有 Dep 里移除当前 effect</td>
+</tr>
+</tbody></table>
+<p>可以把 <code>effect</code> 的完整生命周期理解成：</p>
+<pre><code class="text">effect(fn)
+  │
+  ▼
+new ReactiveEffect(fn)
+  │
+  ▼
+e.run() 立即执行一次
+  │
+  ├─ 设置 activeSub
+  ├─ 执行 fn
+  ├─ fn 内部读取响应式数据
+  ├─ track 收集当前 effect
+  └─ 清理本轮没用到的旧依赖
+
+响应式数据变化
+  │
+  ▼
+trigger
+  │
+  ▼
+Dep.notify
+  │
+  ▼
+ReactiveEffect.notify
+  │
+  ▼
+batch 入队
+  │
+  ▼
+endBatch flush
+  │
+  ▼
+e.trigger() / e.runIfDirty() / e.run()
+</code></pre>
+<h2 id="Subscriber：effect-和-computed-的共同抽象"><a href="#Subscriber：effect-和-computed-的共同抽象" class="headerlink" title="Subscriber：effect 和 computed 的共同抽象"></a>Subscriber：effect 和 computed 的共同抽象</h2><p>在 Vue 3.5 里，<code>ReactiveEffect</code> 和 <code>ComputedRefImpl</code> 都可以作为订阅者。源码里用 <code>Subscriber</code> 抽象它们：</p>
+<pre><code class="57:88:packages/reactivity/src/effect.ts">/**
+ * Subscriber 是响应式系统中的“订阅者”抽象。
+ * ReactiveEffect 和 ComputedRefImpl 都是 Subscriber：它们会订阅 Dep，也会在 Dep 变化时被通知。
+ */
+export interface Subscriber extends DebuggerOptions &#123;
+  /**
+   * 当前订阅者依赖的 Dep 链表头部。
+   * @internal
+   */
+  deps?: Link
+  /**
+   * 当前订阅者依赖的 Dep 链表尾部。
+   * @internal
+   */
+  depsTail?: Link
+  /**
+   * 标记当前订阅者的运行、追踪、暂停、脏值等状态。
+   * @internal
+   */
+  flags: EffectFlags
+  /**
+   * 批处理队列中的下一个订阅者。
+   * @internal
+   */
+  next?: Subscriber
+  /**
+   * returning `true` indicates it&#39;s a computed that needs to call notify
+   * on its dep too
+   * @internal
+   */
+  notify(): true | void
+&#125;
+</code></pre>
+<p>这里有两个字段很关键：</p>
+<ul>
+<li><code>deps</code> &#x2F; <code>depsTail</code>：当前订阅者依赖了哪些 <code>Dep</code>。</li>
+<li><code>notify</code>：当依赖变化时，<code>Dep</code> 会调用它通知订阅者。</li>
+</ul>
+<p>所以响应式依赖不是单向的。上一篇讲 <code>Dep</code> 能找到订阅它的 effect；这里反过来看，effect 自己也知道它依赖了哪些 <code>Dep</code>。这个双向关系靠 <code>Link</code> 串起来。</p>
+<h2 id="activeSub：依赖收集窗口的开关"><a href="#activeSub：依赖收集窗口的开关" class="headerlink" title="activeSub：依赖收集窗口的开关"></a>activeSub：依赖收集窗口的开关</h2><p><code>activeSub</code> 是理解 effect 执行的关键。</p>
+<pre><code class="39:41:packages/reactivity/src/effect.ts">// 当前正在执行并允许收集依赖的订阅者。
+// ReactiveEffect.run / refreshComputed 会在执行用户函数前设置它，track 会读取它来建立依赖关系。
+export let activeSub: Subscriber | undefined
+</code></pre>
+<p>当 <code>effect</code> 执行用户函数时，Vue 会把当前 effect 放到 <code>activeSub</code> 上。之后用户函数里读取响应式属性，就会触发 <code>baseHandlers.get -&gt; track</code>，而 <code>track</code> 会读取 <code>activeSub</code>，把当前 effect 收集到对应属性的 <code>Dep</code> 中。</p>
+<p>这就解释了一个常见问题：为什么只有在 <code>effect</code> 里读取响应式数据才会建立依赖？</p>
+<p>因为普通代码执行时没有设置 <code>activeSub</code>，<code>track</code> 找不到当前订阅者，自然不会收集。</p>
+<h2 id="ReactiveEffect-的核心字段"><a href="#ReactiveEffect-的核心字段" class="headerlink" title="ReactiveEffect 的核心字段"></a>ReactiveEffect 的核心字段</h2><p><code>ReactiveEffect</code> 本身是一个可执行的订阅者。</p>
+<pre><code class="92:130:packages/reactivity/src/effect.ts">export class ReactiveEffect&lt;T = any&gt;
+  implements Subscriber, ReactiveEffectOptions
+&#123;
+  /**
+   * 当前 effect 依赖的 Dep 链表头部。
+   * @internal
+   */
+  deps?: Link = undefined
+  /**
+   * 当前 effect 依赖的 Dep 链表尾部。
+   * @internal
+   */
+  depsTail?: Link = undefined
+  /**
+   * effect 创建后默认处于激活和可追踪状态。
+   * @internal
+   */
+  flags: EffectFlags = EffectFlags.ACTIVE | EffectFlags.TRACKING
+  /**
+   * 批处理队列中的下一个订阅者。
+   * @internal
+   */
+  next?: Subscriber = undefined
+  /**
+   * 下一次执行前或 stop 时需要调用的清理函数。
+   * @internal
+   */
+  cleanup?: () =&gt; void = undefined
+
+  scheduler?: EffectScheduler = undefined
+  onStop?: () =&gt; void
+  onTrack?: (event: DebuggerEvent) =&gt; void
+  onTrigger?: (event: DebuggerEvent) =&gt; void
+
+  constructor(public fn: () =&gt; T) &#123;
+    // 如果当前处于 effectScope 中，自动把 effect 记录到 scope，方便统一 stop。
+    if (activeEffectScope &amp;&amp; activeEffectScope.active) &#123;
+      activeEffectScope.effects.push(this)
+    &#125;
+  &#125;
+</code></pre>
+<p>几个字段可以这样理解：</p>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>fn</code></td>
+<td>用户传进来的副作用函数</td>
+</tr>
+<tr>
+<td><code>deps</code> &#x2F; <code>depsTail</code></td>
+<td>当前 effect 依赖的所有 Dep</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td>当前 effect 的状态集合</td>
+</tr>
+<tr>
+<td><code>scheduler</code></td>
+<td>自定义调度器，有的话触发时不直接执行 <code>run</code></td>
+</tr>
+<tr>
+<td><code>cleanup</code></td>
+<td>下一次执行前或停止时要执行的清理函数</td>
+</tr>
+<tr>
+<td><code>next</code></td>
+<td>批处理队列中的链表指针</td>
+</tr>
+</tbody></table>
+<p><code>constructor</code> 里还有一个细节：如果当前处在 <code>effectScope</code> 中，这个 effect 会自动登记到 scope。这样后面可以通过停止 scope 一次性停止一批 effect。</p>
+<h2 id="effect-fn-：创建后为什么会立即执行一次"><a href="#effect-fn-：创建后为什么会立即执行一次" class="headerlink" title="effect(fn)：创建后为什么会立即执行一次"></a>effect(fn)：创建后为什么会立即执行一次</h2><p>用户调用的 <code>effect(fn)</code> 入口在这里：</p>
+<pre><code class="504:528:packages/reactivity/src/effect.ts">export function effect&lt;T = any&gt;(
+  fn: () =&gt; T,
+  options?: ReactiveEffectOptions,
+): ReactiveEffectRunner&lt;T&gt; &#123;
+  // 如果传入的是已有 runner，则复用它背后的原始副作用函数，避免 effect 套 effect。
+  if ((fn as ReactiveEffectRunner).effect instanceof ReactiveEffect) &#123;
+    fn = (fn as ReactiveEffectRunner).effect.fn
+  &#125;
+
+  const e = new ReactiveEffect(fn)
+  if (options) &#123;
+    extend(e, options)
+  &#125;
+  try &#123;
+    // effect 创建后会立即执行一次，用这次执行完成初始依赖收集。
+    e.run()
+  &#125; catch (err) &#123;
+    e.stop()
+    throw err
+  &#125;
+  // 返回 runner，用户后续可以手动重新执行，也可以通过 runner.effect.stop() 停止。
+  const runner = e.run.bind(e) as ReactiveEffectRunner
+  runner.effect = e
+  return runner
+&#125;
+</code></pre>
+<p>这里的关键是：<code>effect</code> 创建后会立刻 <code>e.run()</code>。</p>
+<p>为什么要立即执行？因为只有执行用户函数，才能知道它读取了哪些响应式属性。也就是说，初始依赖收集不是静态分析出来的，而是通过第一次运行动态收集出来的。</p>
+<p>举个例子：</p>
+<pre><code class="ts">const state = reactive(&#123; count: 0 &#125;)
+
+effect(() =&gt; &#123;
+  console.log(state.count)
+&#125;)
+</code></pre>
+<p>第一次执行 <code>fn</code> 时读取 <code>state.count</code>，才会建立：</p>
+<pre><code class="text">state.count 的 Dep ──► 当前 ReactiveEffect
+</code></pre>
+<p>最后返回的 <code>runner</code> 本质上是 <code>e.run.bind(e)</code>。所以用户手动调用 runner，其实就是重新执行这个 effect。</p>
+<h2 id="run：打开依赖收集窗口"><a href="#run：打开依赖收集窗口" class="headerlink" title="run：打开依赖收集窗口"></a>run：打开依赖收集窗口</h2><p><code>run</code> 是 <code>ReactiveEffect</code> 最核心的方法。</p>
+<pre><code class="166:201:packages/reactivity/src/effect.ts">  // 执行副作用函数，并在执行期间打开依赖收集窗口。
+  run(): T &#123;
+    // TODO cleanupEffect
+
+    if (!(this.flags &amp; EffectFlags.ACTIVE)) &#123;
+      // 已 stop 的 effect 再执行 runner 时，只调用原函数，不再收集依赖。
+      return this.fn()
+    &#125;
+
+    this.flags |= EffectFlags.RUNNING
+    // 执行前先调用上一次注册的 cleanup，避免旧副作用残留。
+    cleanupEffect(this)
+    // 把旧依赖标记为待确认；本轮执行中再次访问到的依赖会被重新激活。
+    prepareDeps(this)
+    const prevEffect = activeSub
+    const prevShouldTrack = shouldTrack
+    // 设置全局 activeSub，后续响应式属性 get 时，track 就能收集到当前 effect。
+    activeSub = this
+    shouldTrack = true
+
+    try &#123;
+      return this.fn()
+    &#125; finally &#123;
+      if (__DEV__ &amp;&amp; activeSub !== this) &#123;
+        warn(
+          &#39;Active effect was not restored correctly - &#39; +
+            &#39;this is likely a Vue internal bug.&#39;,
+        )
+      &#125;
+      // 清理本轮没有再次访问到的旧依赖，避免分支切换后仍被无效触发。
+      cleanupDeps(this)
+      activeSub = prevEffect
+      shouldTrack = prevShouldTrack
+      this.flags &amp;= ~EffectFlags.RUNNING
+    &#125;
+  &#125;
+</code></pre>
+<p>这段逻辑可以拆成五步：</p>
+<ol>
+<li>如果 effect 已经停止，直接执行原函数，不收集依赖。</li>
+<li>标记当前 effect 正在运行。</li>
+<li>执行前处理 cleanup，并把旧依赖标记为待确认。</li>
+<li>设置 <code>activeSub = this</code>，打开依赖收集窗口。</li>
+<li>执行结束后清理无效依赖，并恢复上一个 <code>activeSub</code>。</li>
+</ol>
+<p>最重要的是这两行：</p>
+<pre><code class="182:184:packages/reactivity/src/effect.ts">    // 设置全局 activeSub，后续响应式属性 get 时，track 就能收集到当前 effect。
+    activeSub = this
+    shouldTrack = true
+</code></pre>
+<p>没有这两行，<code>track</code> 就不知道当前应该收集谁。</p>
+<h3 id="第-3-步里的两个清理不要混在一起"><a href="#第-3-步里的两个清理不要混在一起" class="headerlink" title="第 3 步里的两个清理不要混在一起"></a>第 3 步里的两个清理不要混在一起</h3><p>第 3 步同时出现了两个动作：</p>
+<pre><code class="ts">cleanupEffect(this)
+prepareDeps(this)
+</code></pre>
+<p>它们处理的不是同一类东西：</p>
+<table>
+<thead>
+<tr>
+<th>代码</th>
+<th>处理对象</th>
+<th>简单理解</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>cleanupEffect(this)</code></td>
+<td>上一次注册的 cleanup 函数</td>
+<td>清理定时器、事件监听、请求等副作用资源</td>
+</tr>
+<tr>
+<td><code>prepareDeps(this)</code></td>
+<td>旧的依赖 <code>Link</code></td>
+<td>先把旧依赖标记为待确认，后面再决定是否移除</td>
+</tr>
+</tbody></table>
+<p>先看 <code>cleanupEffect</code>。它执行的是用户通过 <code>onEffectCleanup</code> 注册的函数：</p>
+<pre><code class="587:612:packages/reactivity/src/effect.ts">export function onEffectCleanup(fn: () =&gt; void, failSilently = false): void &#123;
+  // 只能在 effect 正在执行时注册 cleanup，注册结果会挂到当前 activeSub 上。
+  if (activeSub instanceof ReactiveEffect) &#123;
+    activeSub.cleanup = fn
+  &#125; else if (__DEV__ &amp;&amp; !failSilently) &#123;
+    warn(
+      `onEffectCleanup() was called when there was no active effect` +
+        ` to associate with.`,
+    )
+  &#125;
+&#125;
+
+function cleanupEffect(e: ReactiveEffect) &#123;
+  const &#123; cleanup &#125; = e
+  e.cleanup = undefined
+  if (cleanup) &#123;
+    // cleanup 自身不应该参与依赖收集，所以执行期间临时清空 activeSub。
+    const prevSub = activeSub
+    activeSub = undefined
+    try &#123;
+      cleanup()
+    &#125; finally &#123;
+      activeSub = prevSub
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>比如一个 effect 里开启了定时器：</p>
+<pre><code class="ts">import &#123; effect, onEffectCleanup, reactive &#125; from &#39;@vue/reactivity&#39;
+
+const state = reactive(&#123; count: 0 &#125;)
+
+effect(() =&gt; &#123;
+  const timer = setInterval(() =&gt; &#123;
+    console.log(state.count)
+  &#125;, 1000)
+
+  onEffectCleanup(() =&gt; &#123;
+    clearInterval(timer)
+  &#125;)
+&#125;)
+</code></pre>
+<p>如果 effect 以后重新执行，上一轮创建的定时器就应该先被清掉，否则每执行一次 effect 就会多一个定时器。<code>cleanupEffect(this)</code> 处理的就是这种“副作用资源”的清理。</p>
+<p><code>prepareDeps(this)</code> 处理的是另一件事：把旧的依赖 <code>Link</code> 标记为待确认。后面“依赖清理”小节会展开，这里先记住一句话：</p>
+<blockquote>
+<p><code>cleanupEffect</code> 清理副作用资源，<code>prepareDeps</code> 为依赖关系的重新确认做准备。</p>
+</blockquote>
+<h2 id="notify-与-batch：为什么不是立刻执行"><a href="#notify-与-batch：为什么不是立刻执行" class="headerlink" title="notify 与 batch：为什么不是立刻执行"></a>notify 与 batch：为什么不是立刻执行</h2><p>当响应式数据变化时，<code>Dep.notify</code> 会通知每个 subscriber。对于普通 effect，最终会进入 <code>ReactiveEffect.notify</code>。</p>
+<pre><code class="148:164:packages/reactivity/src/effect.ts">  /**
+   * @internal
+   */
+  notify(): void &#123;
+    // 正在运行中的 effect 默认不能再次触发自己，除非显式允许递归。
+    if (
+      this.flags &amp; EffectFlags.RUNNING &amp;&amp;
+      !(this.flags &amp; EffectFlags.ALLOW_RECURSE)
+    ) &#123;
+      return
+    &#125;
+    // 同一轮批处理中只入队一次，避免重复调度。
+    if (!(this.flags &amp; EffectFlags.NOTIFIED)) &#123;
+      batch(this)
+    &#125;
+  &#125;
+</code></pre>
+<p>这里没有直接调用 <code>run()</code>，而是调用 <code>batch(this)</code>。原因很简单：同一轮同步代码里，响应式数据可能被改很多次，如果每次都立刻执行 effect，开销会很大。</p>
+<p>批处理相关代码在这里：</p>
+<pre><code class="261:329:packages/reactivity/src/effect.ts">let batchDepth = 0
+let batchedSub: Subscriber | undefined
+let batchedComputed: Subscriber | undefined
+
+// 将订阅者加入批处理队列。同一个 subscriber 会通过 NOTIFIED 标记避免重复入队。
+export function batch(sub: Subscriber, isComputed = false): void &#123;
+  sub.flags |= EffectFlags.NOTIFIED
+  // computed 先进入独立队列，只清理 NOTIFIED 标记，不在这里直接求值，保持 computed 的惰性。
+  if (isComputed) &#123;
+    sub.next = batchedComputed
+    batchedComputed = sub
+    return
+  &#125;
+  // 普通 effect 进入 batchedSub，待最外层 batch 结束后统一触发。
+  sub.next = batchedSub
+  batchedSub = sub
+&#125;
+
+/**
+ * @internal
+ */
+export function startBatch(): void &#123;
+  batchDepth++
+&#125;
+
+/**
+ * Run batched effects when all batches have ended
+ * @internal
+ */
+export function endBatch(): void &#123;
+  // 支持嵌套批处理：只有回到最外层时，才真正 flush 队列。
+  if (--batchDepth &gt; 0) &#123;
+    return
+  &#125;
+
+  if (batchedComputed) &#123;
+    let e: Subscriber | undefined = batchedComputed
+    batchedComputed = undefined
+    while (e) &#123;
+      const next: Subscriber | undefined = e.next
+      e.next = undefined
+      e.flags &amp;= ~EffectFlags.NOTIFIED
+      e = next
+    &#125;
+  &#125;
+
+  let error: unknown
+  // 普通 effect 队列可能在执行过程中继续产生新任务，所以这里用 while 持续刷新到队列为空。
+  while (batchedSub) &#123;
+    let e: Subscriber | undefined = batchedSub
+    batchedSub = undefined
+    while (e) &#123;
+      const next: Subscriber | undefined = e.next
+      e.next = undefined
+      e.flags &amp;= ~EffectFlags.NOTIFIED
+      if (e.flags &amp; EffectFlags.ACTIVE) &#123;
+        try &#123;
+          // ACTIVE flag is effect-only
+          ;(e as ReactiveEffect).trigger()
+        &#125; catch (err) &#123;
+          if (!error) error = err
+        &#125;
+      &#125;
+      e = next
+    &#125;
+  &#125;
+
+  if (error) throw error
+&#125;
+</code></pre>
+<p>这里有几个设计点：</p>
+<ul>
+<li><code>NOTIFIED</code> 标记保证同一个 subscriber 一轮只入队一次。</li>
+<li><code>batchDepth</code> 支持嵌套批处理，只有最外层结束才 flush。</li>
+<li><code>computed</code> 和普通 effect 分开处理，computed 保持惰性，不在这里直接求值。</li>
+<li>普通 effect 队列使用 <code>while</code>，因为执行 effect 的过程中可能继续触发新的 effect。</li>
+</ul>
+<p>这里的“重复入队”可以用一个简单场景理解：一个 effect 可能同时依赖多个属性。</p>
+<pre><code class="ts">effect(() =&gt; &#123;
+  console.log(state.a)
+  console.log(state.b)
+&#125;)
+</code></pre>
+<p>如果一次更新同时触发了 <code>state.a</code> 和 <code>state.b</code> 对应的 <code>Dep</code>，这个 effect 就可能被通知两次。Vue 不希望它在同一轮里执行两次，所以第一次通知时会设置 <code>NOTIFIED</code> 并入队；后面同一轮再通知时，发现已经有 <code>NOTIFIED</code>，就不会重复入队。</p>
+<p>等队列真正执行时，Vue 会清掉 <code>NOTIFIED</code>，这样下一轮更新还能正常入队。</p>
+<h2 id="trigger：scheduler、pause-和-dirty-判断"><a href="#trigger：scheduler、pause-和-dirty-判断" class="headerlink" title="trigger：scheduler、pause 和 dirty 判断"></a>trigger：scheduler、pause 和 dirty 判断</h2><p>effect 真正被触发时，会走到 <code>ReactiveEffect.trigger</code>：</p>
+<pre><code class="216:241:packages/reactivity/src/effect.ts">  // 响应式数据变化后，Dep 最终会通过这里触发 effect。
+  trigger(): void &#123;
+    if (this.flags &amp; EffectFlags.PAUSED) &#123;
+      // 暂停期间不立即执行，只记录“恢复后需要补触发”。
+      pausedQueueEffects.add(this)
+    &#125; else if (this.scheduler) &#123;
+      // 如果用户传入 scheduler，则把执行权交给调度器。
+      this.scheduler()
+    &#125; else &#123;
+      this.runIfDirty()
+    &#125;
+  &#125;
+
+  /**
+   * @internal
+   */
+  runIfDirty(): void &#123;
+    // 只有依赖版本发生变化时才重新执行，避免无效运行。
+    if (isDirty(this)) &#123;
+      this.run()
+    &#125;
+  &#125;
+
+  get dirty(): boolean &#123;
+    return isDirty(this)
+  &#125;
+</code></pre>
+<p>这里的优先级是：</p>
+<ol>
+<li>如果 effect 暂停了，不执行，只记录到 <code>pausedQueueEffects</code>。</li>
+<li>如果有自定义 <code>scheduler</code>，交给调度器。</li>
+<li>否则通过 <code>runIfDirty</code> 判断是否真的需要重新执行。</li>
+</ol>
+<p><code>scheduler</code> 是很重要的扩展点。Vue 运行时里的组件渲染 effect 就会配合调度器，把组件更新放到任务队列中，而不是每次响应式变化都立刻同步渲染。</p>
+<h2 id="依赖清理：分支切换时避免旧依赖误触发"><a href="#依赖清理：分支切换时避免旧依赖误触发" class="headerlink" title="依赖清理：分支切换时避免旧依赖误触发"></a>依赖清理：分支切换时避免旧依赖误触发</h2><p>上一篇讲过 <code>Link.version</code>，这里再从 <code>effect.ts</code> 角度看一次。</p>
+<pre><code class="330:389:packages/reactivity/src/effect.ts">function prepareDeps(sub: Subscriber) &#123;
+  // 执行前把旧依赖全部标记为 -1。
+  // 如果本轮执行中再次访问到这个依赖，Dep.track 会把 version 同步回来。
+  for (let link = sub.deps; link; link = link.nextDep) &#123;
+    link.version = -1
+    // 保存 Dep 当前 activeLink，执行结束后恢复，避免嵌套 effect/computed 互相覆盖。
+    link.prevActiveLink = link.dep.activeLink
+    link.dep.activeLink = link
+  &#125;
+&#125;
+
+function cleanupDeps(sub: Subscriber) &#123;
+  // 执行后清理本轮没有再次访问到的依赖，也就是 version 仍为 -1 的 Link。
+  let head
+  let tail = sub.depsTail
+  let link = tail
+  while (link) &#123;
+    const prev = link.prevDep
+    if (link.version === -1) &#123;
+      if (link === tail) tail = prev
+      // unused - remove it from the dep&#39;s subscribing effect list
+      removeSub(link)
+      // also remove it from this effect&#39;s dep list
+      removeDep(link)
+    &#125; else &#123;
+      // The new head is the last node seen which wasn&#39;t removed
+      // from the doubly-linked list
+      head = link
+    &#125;
+
+    // restore previous active link if any
+    link.dep.activeLink = link.prevActiveLink
+    link.prevActiveLink = undefined
+    link = prev
+  &#125;
+  // set the new head &amp; tail
+  sub.deps = head
+  sub.depsTail = tail
+&#125;
+
+function isDirty(sub: Subscriber): boolean &#123;
+  for (let link = sub.deps; link; link = link.nextDep) &#123;
+    // 依赖 Dep 的版本号和 Link 记录的版本号不同，说明依赖发生过变化。
+    // 如果依赖的是 computed，需要先尝试刷新 computed，再重新比较版本。
+    if (
+      link.dep.version !== link.version ||
+      (link.dep.computed &amp;&amp;
+        (refreshComputed(link.dep.computed) ||
+          link.dep.version !== link.version))
+    ) &#123;
+      return true
+    &#125;
+  &#125;
+</code></pre>
+<p>用一个例子理解：</p>
+<pre><code class="ts">const state = reactive(&#123; ok: true, a: 1, b: 2 &#125;)
+
+effect(() =&gt; &#123;
+  console.log(state.ok ? state.a : state.b)
+&#125;)
+</code></pre>
+<p>第一次执行依赖 <code>ok</code> 和 <code>a</code>。当 <code>ok</code> 改成 <code>false</code> 后，下一次执行依赖 <code>ok</code> 和 <code>b</code>。这时旧的 <code>a</code> 依赖应该被清掉，否则以后修改 <code>a</code> 还会触发这个 effect。</p>
+<p><code>prepareDeps</code> 和 <code>cleanupDeps</code> 解决的就是这个问题：</p>
+<ol>
+<li>执行前把旧依赖都标记为 <code>-1</code>。</li>
+<li>本轮执行中访问到的依赖会被重新同步版本。</li>
+<li>执行后仍然是 <code>-1</code> 的依赖说明本轮没访问到，移除。</li>
+</ol>
+<h2 id="stop：停止-effect-后发生什么"><a href="#stop：停止-effect-后发生什么" class="headerlink" title="stop：停止 effect 后发生什么"></a>stop：停止 effect 后发生什么</h2><p><code>stop</code> 的作用是让 effect 不再被响应式依赖触发。</p>
+<pre><code class="203:214:packages/reactivity/src/effect.ts">  stop(): void &#123;
+    if (this.flags &amp; EffectFlags.ACTIVE) &#123;
+      // 从所有 Dep 的订阅链表中移除当前 effect。
+      for (let link = this.deps; link; link = link.nextDep) &#123;
+        removeSub(link)
+      &#125;
+      this.deps = this.depsTail = undefined
+      cleanupEffect(this)
+      this.onStop &amp;&amp; this.onStop()
+      this.flags &amp;= ~EffectFlags.ACTIVE
+    &#125;
+  &#125;
+</code></pre>
+<p>停止时主要做四件事：</p>
+<ol>
+<li>从所有依赖的 <code>Dep</code> 订阅链表里移除当前 effect。</li>
+<li>清空自己的 <code>deps</code> &#x2F; <code>depsTail</code>。</li>
+<li>执行 cleanup。</li>
+<li>去掉 <code>ACTIVE</code> 标记。</li>
+</ol>
+<p>外部的 <code>stop(runner)</code> 只是一个很薄的封装：</p>
+<pre><code class="530:537:packages/reactivity/src/effect.ts">/**
+ * Stops the effect associated with the given runner.
+ *
+ * @param runner - Association with the effect to stop tracking.
+ */
+export function stop(runner: ReactiveEffectRunner): void &#123;
+  runner.effect.stop()
+&#125;
+</code></pre>
+<p>需要注意的是：停止后的 runner 仍然可以手动执行，只是不会再参与依赖收集。</p>
+<h2 id="cleanup：下一次执行前清理副作用"><a href="#cleanup：下一次执行前清理副作用" class="headerlink" title="cleanup：下一次执行前清理副作用"></a>cleanup：下一次执行前清理副作用</h2><p>前面讲 <code>run()</code> 时已经看过 <code>cleanupEffect(this)</code>：它会执行上一轮通过 <code>onEffectCleanup</code> 注册的清理函数。</p>
+<p>这里再补充两个时机：</p>
+<ol>
+<li>effect 下一次重新执行前，会先执行 cleanup。</li>
+<li>effect 被 <code>stop()</code> 时，也会执行 cleanup。</li>
+</ol>
+<p>还有一个细节：执行 cleanup 时会临时把 <code>activeSub</code> 清空。</p>
+<p>原因是 cleanup 本身只是清理逻辑，不应该因为读取了响应式数据而被收集为新的依赖。否则清理函数可能反过来污染 effect 的依赖关系。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li><code>ReactiveEffect</code> 是响应式系统中的可执行订阅者，负责执行副作用函数并维护依赖链表。</li>
+<li><code>run</code> 会设置 <code>activeSub</code>，让用户函数里的响应式读取可以被 <code>track</code> 收集。</li>
+<li><code>notify</code> 不直接执行 effect，而是通过 <code>batch</code> 入队，避免同一轮变更重复执行。</li>
+<li><code>trigger</code> 支持暂停、调度器和脏值判断，是 effect 被依赖变化唤醒后的入口。</li>
+<li><code>prepareDeps</code> &#x2F; <code>cleanupDeps</code> 通过 <code>Link.version</code> 清理分支切换后的旧依赖。</li>
+<li><code>stop</code> 会把 effect 从所有 Dep 中移除，之后响应式变化不再触发它。</li>
+</ol>
+<p>到这里，响应式系统的核心链路已经比较完整：<code>reactive</code> 创建代理，<code>baseHandlers</code> 拦截读写，<code>track/trigger</code> 维护依赖，<code>ReactiveEffect</code> 负责执行和调度。下一步可以继续看 <code>ref.ts</code>，理解为什么 <code>ref</code> 要用 <code>.value</code>，以及它和 <code>reactive</code> 在依赖收集上的差异。</p>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vue3/">Vue3</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/">源码解析</a><a class="post-meta__tags" href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F%E7%B3%BB%E7%BB%9F/">响应式系统</a><a class="post-meta__tags" href="/tags/ReactiveEffect/">ReactiveEffect</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/03-Vue%203%20track%20%E4%B8%8E%20trigger%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E4%BE%9D%E8%B5%96%E6%98%AF%E5%A6%82%E4%BD%95%E6%94%B6%E9%9B%86%E5%92%8C%E8%A7%A6%E5%8F%91%E7%9A%84/" title="Vue 3 track 与 trigger 源码解析：依赖是如何收集和触发的"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Vue 3 track 与 trigger 源码解析：依赖是如何收集和触发的</div></div></a></div><div class="next-post pull-right"><a href="/posts/05-Vue%203%20ref%20%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%20ref%20%E9%9C%80%E8%A6%81%20.value/" title="Vue 3 ref 源码解析：为什么 ref 需要 .value"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Vue 3 ref 源码解析：为什么 ref 需要 .value</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">204</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">440</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E7%BB%99%E7%BB%93%E8%AE%BA"><span class="toc-number">1.</span> <span class="toc-text">先给结论</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Subscriber%EF%BC%9Aeffect-%E5%92%8C-computed-%E7%9A%84%E5%85%B1%E5%90%8C%E6%8A%BD%E8%B1%A1"><span class="toc-number">2.</span> <span class="toc-text">Subscriber：effect 和 computed 的共同抽象</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#activeSub%EF%BC%9A%E4%BE%9D%E8%B5%96%E6%94%B6%E9%9B%86%E7%AA%97%E5%8F%A3%E7%9A%84%E5%BC%80%E5%85%B3"><span class="toc-number">3.</span> <span class="toc-text">activeSub：依赖收集窗口的开关</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ReactiveEffect-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%AD%97%E6%AE%B5"><span class="toc-number">4.</span> <span class="toc-text">ReactiveEffect 的核心字段</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#effect-fn-%EF%BC%9A%E5%88%9B%E5%BB%BA%E5%90%8E%E4%B8%BA%E4%BB%80%E4%B9%88%E4%BC%9A%E7%AB%8B%E5%8D%B3%E6%89%A7%E8%A1%8C%E4%B8%80%E6%AC%A1"><span class="toc-number">5.</span> <span class="toc-text">effect(fn)：创建后为什么会立即执行一次</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#run%EF%BC%9A%E6%89%93%E5%BC%80%E4%BE%9D%E8%B5%96%E6%94%B6%E9%9B%86%E7%AA%97%E5%8F%A3"><span class="toc-number">6.</span> <span class="toc-text">run：打开依赖收集窗口</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC-3-%E6%AD%A5%E9%87%8C%E7%9A%84%E4%B8%A4%E4%B8%AA%E6%B8%85%E7%90%86%E4%B8%8D%E8%A6%81%E6%B7%B7%E5%9C%A8%E4%B8%80%E8%B5%B7"><span class="toc-number">6.1.</span> <span class="toc-text">第 3 步里的两个清理不要混在一起</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#notify-%E4%B8%8E-batch%EF%BC%9A%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E6%98%AF%E7%AB%8B%E5%88%BB%E6%89%A7%E8%A1%8C"><span class="toc-number">7.</span> <span class="toc-text">notify 与 batch：为什么不是立刻执行</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#trigger%EF%BC%9Ascheduler%E3%80%81pause-%E5%92%8C-dirty-%E5%88%A4%E6%96%AD"><span class="toc-number">8.</span> <span class="toc-text">trigger：scheduler、pause 和 dirty 判断</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BE%9D%E8%B5%96%E6%B8%85%E7%90%86%EF%BC%9A%E5%88%86%E6%94%AF%E5%88%87%E6%8D%A2%E6%97%B6%E9%81%BF%E5%85%8D%E6%97%A7%E4%BE%9D%E8%B5%96%E8%AF%AF%E8%A7%A6%E5%8F%91"><span class="toc-number">9.</span> <span class="toc-text">依赖清理：分支切换时避免旧依赖误触发</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#stop%EF%BC%9A%E5%81%9C%E6%AD%A2-effect-%E5%90%8E%E5%8F%91%E7%94%9F%E4%BB%80%E4%B9%88"><span class="toc-number">10.</span> <span class="toc-text">stop：停止 effect 后发生什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#cleanup%EF%BC%9A%E4%B8%8B%E4%B8%80%E6%AC%A1%E6%89%A7%E8%A1%8C%E5%89%8D%E6%B8%85%E7%90%86%E5%89%AF%E4%BD%9C%E7%94%A8"><span class="toc-number">11.</span> <span class="toc-text">cleanup：下一次执行前清理副作用</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">12.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/36-Loop-Engineering-AI%E5%B7%A5%E4%BD%9C%E8%8C%83%E5%BC%8F%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Loop Engineering：AI工作范式的新一层">Loop Engineering：AI工作范式的新一层</a><time datetime="2026-07-04T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/08-CLI%E5%B7%A5%E5%85%B7%E7%9A%84%E6%B5%8B%E8%AF%95%E4%B8%8E%E5%8F%91%E5%B8%83/" title="CLI 工具的测试与发布">CLI 工具的测试与发布</a><time datetime="2026-06-28T12:30:00.000Z" title="发表于 2026 20:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/07-%E8%84%9A%E6%89%8B%E6%9E%B6%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1%EF%BC%9A%E5%8F%AF%E6%89%A9%E5%B1%95%E3%80%81%E6%8F%92%E4%BB%B6%E5%8C%96%E4%B8%8E%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86/" title="脚手架架构设计：可扩展、插件化与错误处理">脚手架架构设计：可扩展、插件化与错误处理</a><time datetime="2026-06-28T11:00:00.000Z" title="发表于 2026 19:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-%E6%A8%A1%E6%9D%BF%E7%AE%A1%E7%90%86%EF%BC%9A%E6%9C%AC%E5%9C%B0%E6%A8%A1%E6%9D%BF%E3%80%81%E8%BF%9C%E7%A8%8B%E6%A8%A1%E6%9D%BF%E4%B8%8E%E7%89%88%E6%9C%AC%E6%B2%BB%E7%90%86/" title="模板管理：本地模板、远程模板与版本治理">模板管理：本地模板、远程模板与版本治理</a><time datetime="2026-06-28T09:30:00.000Z" title="发表于 2026 17:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-%E5%AD%90%E8%BF%9B%E7%A8%8B%E4%B8%8E%E5%91%BD%E4%BB%A4%E6%89%A7%E8%A1%8C%EF%BC%9Aexeca%E4%B8%8E%E8%87%AA%E5%8A%A8%E5%AE%89%E8%A3%85%E4%BE%9D%E8%B5%96/" title="子进程与命令执行：execa 与自动安装依赖">子进程与命令执行：execa 与自动安装依赖</a><time datetime="2026-06-28T08:30:00.000Z" title="发表于 2026 16:30:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
