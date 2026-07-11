@@ -1,0 +1,440 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 241;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>性能门禁：Lighthouse CI 与 Performance Budget | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：上一篇讲清了性能指标。但指标如果只是「偶尔手动测一下」，性能一定会慢慢劣化——每个人都加一点点代码、一张图，日积月累就胖了，谁也说不清是哪次变慢的。这一篇讲怎么把性能变成流水线里的自动门禁：Web 应用可以用 Lighthouse CI 和 Performance Budget，小程序、跨端、原生应用也要有自己的首屏、包体积、帧率、崩溃率门禁，让「性能倒退」像「测试失败」一样被自动拦住。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="性能门禁：Lighthouse CI 与 Performance Budget">
+<meta property="og:url" content="http://example.com/posts/02-%E6%80%A7%E8%83%BD%E9%97%A8%E7%A6%81%EF%BC%9ALighthouse-CI%E4%B8%8EPerformance-Budget/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：上一篇讲清了性能指标。但指标如果只是「偶尔手动测一下」，性能一定会慢慢劣化——每个人都加一点点代码、一张图，日积月累就胖了，谁也说不清是哪次变慢的。这一篇讲怎么把性能变成流水线里的自动门禁：Web 应用可以用 Lighthouse CI 和 Performance Budget，小程序、跨端、原生应用也要有自己的首屏、包体积、帧率、崩溃率门禁，让「性能倒退」像「测试失败」一样被自动拦住。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T14:55:00.000Z">
+<meta property="article:modified_time" content="2026-07-11T08:45:46.164Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="前端工程化">
+<meta property="article:tag" content="质量门禁">
+<meta property="article:tag" content="Lighthouse CI">
+<meta property="article:tag" content="Performance Budget">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/02-%E6%80%A7%E8%83%BD%E9%97%A8%E7%A6%81%EF%BC%9ALighthouse-CI%E4%B8%8EPerformance-Budget/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '性能门禁：Lighthouse CI 与 Performance Budget',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 16:45:46'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">532</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">性能门禁：Lighthouse CI 与 Performance Budget</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T14:55:00.000Z" title="发表于 2026 22:55:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-07-11T08:45:46.164Z" title="更新于 2026 16:45:46">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>11分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：上一篇讲清了性能指标。但指标如果只是「偶尔手动测一下」，性能一定会慢慢劣化——每个人都加一点点代码、一张图，日积月累就胖了，谁也说不清是哪次变慢的。这一篇讲怎么把性能变成<strong>流水线里的自动门禁</strong>：Web 应用可以用 Lighthouse CI 和 Performance Budget，小程序、跨端、原生应用也要有自己的首屏、包体积、帧率、崩溃率门禁，让「性能倒退」像「测试失败」一样被自动拦住。</p>
+</blockquote>
+<h2 id="性能会「熵增」，所以需要门禁"><a href="#性能会「熵增」，所以需要门禁" class="headerlink" title="性能会「熵增」，所以需要门禁"></a>性能会「熵增」，所以需要门禁</h2><p>一个残酷的现实：<strong>性能是会自然劣化的</strong>。没有约束的话，代码库的性能几乎总是随时间变差——因为「加功能」有明确的推动力，「保持轻快」没人负责。每个 PR 加一个库、一张图、几个组件，单看都无所谓，累积起来就是首屏从 1.5s 变成 5s。</p>
+<p>而且性能倒退<strong>很难在 review 时发现</strong>——diff 里看不出「这个 import 会让包大 300KB」。等用户投诉慢了再回头查，已经积重难返，根本定位不到是哪次改动引入的。</p>
+<p>解法和代码质量一样：<strong>把它变成自动化门禁，卡在合并入口</strong>。这和《CI 流水线与质量强约束闸口》是同一个哲学——靠自觉守不住，得靠机器在 PR 上自动拦。</p>
+<p>Web 应用最常见的门禁分两层：<strong>Lighthouse CI</strong>（跑综合评分和实验室指标）和 <strong>Performance Budget</strong>（卡具体的体积&#x2F;资源阈值）。其他端也类似，只是工具换了：小程序看启动和包体积，跨端看首帧和掉帧，原生看冷启动、帧率、崩溃和 ANR。</p>
+<h2 id="Lighthouse-CI：把性能评分接进流水线"><a href="#Lighthouse-CI：把性能评分接进流水线" class="headerlink" title="Lighthouse CI：把性能评分接进流水线"></a>Lighthouse CI：把性能评分接进流水线</h2><p>Lighthouse 就是 Chrome DevTools 里那个「跑一下给你打分」的工具。<strong>Lighthouse CI（<code>@lhci/cli</code>）</strong>是它的自动化版本——在 CI 里对构建产物跑 Lighthouse，拿到性能&#x2F;可访问性&#x2F;最佳实践&#x2F;SEO 的分数和各项指标，不达标就让流水线失败。</p>
+<pre><code class="bash">pnpm add -D @lhci/cli
+</code></pre>
+<p>配置 <code>lighthouserc.js</code>：</p>
+<pre><code class="js">export default &#123;
+  ci: &#123;
+    collect: &#123;
+      staticDistDir: &#39;./dist&#39;,   // 对构建产物起本地服务跑
+      numberOfRuns: 3,           // 跑多次取中位数，减少波动
+    &#125;,
+    assert: &#123;
+      assertions: &#123;
+        // 分类总分门槛
+        &#39;categories:performance&#39;: [&#39;error&#39;, &#123; minScore: 0.9 &#125;],
+        &#39;categories:accessibility&#39;: [&#39;error&#39;, &#123; minScore: 0.9 &#125;],
+        // 具体指标门槛（实验室数据）
+        &#39;largest-contentful-paint&#39;: [&#39;error&#39;, &#123; maxNumericValue: 2500 &#125;],
+        &#39;cumulative-layout-shift&#39;: [&#39;warn&#39;, &#123; maxNumericValue: 0.1 &#125;],
+      &#125;,
+    &#125;,
+    upload: &#123; target: &#39;temporary-public-storage&#39; &#125;,  // 报告存到临时公共空间
+  &#125;,
+&#125;
+</code></pre>
+<p>接进 CI：</p>
+<pre><code class="yaml">      - run: pnpm build
+      - run: npx lhci autorun    # collect → assert → upload
+</code></pre>
+<p>几个关键设计点：</p>
+<p><strong><code>numberOfRuns: 3</code> 取中位数</strong>：Lighthouse 单次跑波动不小（CI 机器负载、网络抖动都影响）。跑多次取中位数是标配，否则门禁会因为随机波动误报，很快被团队当成「又抽风了」而忽略。</p>
+<p><strong><code>error</code> vs <code>warn</code> 分级</strong>：核心指标（性能总分、LCP）用 <code>error</code>（挂了阻断合并），次要的用 <code>warn</code>（只提醒不阻断）。这个分级和依赖 audit 的分级思路一样——<strong>门禁只在真正重要的地方卡死，否则噪音多了大家就学会无视它了</strong>。</p>
+<p><strong>LCP&#x2F;INP 的局限</strong>：上一篇说过，Lighthouse 是实验室数据，INP&#x2F;CLS 测不准。所以 Lighthouse CI 门禁重点卡 <strong>LCP、总分、包体积</strong>这些实验室能稳定测的，INP&#x2F;CLS 的真实情况靠 RUM 监控盯（监控篇）。别指望 Lighthouse CI 帮你守住 INP。</p>
+<h2 id="Performance-Budget：给资源设「预算」"><a href="#Performance-Budget：给资源设「预算」" class="headerlink" title="Performance Budget：给资源设「预算」"></a>Performance Budget：给资源设「预算」</h2><p>Lighthouse 给的是「综合评分」，比较宏观。更直接、更好守的是 <strong>Performance Budget（性能预算）</strong>——给具体的资源指标设硬阈值：</p>
+<pre><code class="txt">JS 总体积      ≤ 300 KB (gzip)
+CSS 总体积     ≤ 80 KB
+单张图片       ≤ 200 KB
+请求总数       ≤ 50
+首屏字体       ≤ 2 个
+</code></pre>
+<p>预算的价值在于<strong>它是具体、可执行、好定位的</strong>。「性能分低了」很抽象，「JS 超了 300KB 预算」很具体——一看就知道是这次 PR 加的某个大依赖，改起来有明确目标。</p>
+<p>Lighthouse CI 支持直接配预算文件 <code>budget.json</code>：</p>
+<pre><code class="json">[
+  &#123;
+    &quot;resourceSizes&quot;: [
+      &#123; &quot;resourceType&quot;: &quot;script&quot;, &quot;budget&quot;: 300 &#125;,
+      &#123; &quot;resourceType&quot;: &quot;stylesheet&quot;, &quot;budget&quot;: 80 &#125;,
+      &#123; &quot;resourceType&quot;: &quot;total&quot;, &quot;budget&quot;: 500 &#125;
+    ],
+    &quot;resourceCounts&quot;: [
+      &#123; &quot;resourceType&quot;: &quot;third-party&quot;, &quot;budget&quot;: 10 &#125;
+    ]
+  &#125;
+]
+</code></pre>
+<p>（<code>budget</code> 单位是 KB。）超预算就告警&#x2F;阻断。</p>
+<h2 id="产物体积回归报警：盯住「增量」"><a href="#产物体积回归报警：盯住「增量」" class="headerlink" title="产物体积回归报警：盯住「增量」"></a>产物体积回归报警：盯住「增量」</h2><p>比「绝对阈值」更敏感的一招是<strong>盯增量</strong>——不只看「现在多大」，更看「这个 PR 让它大了多少」。因为绝对阈值往往设得比较宽松（怕误伤），而「一个 PR 突然让包大了 300KB」即使还没超总阈值，也值得警惕。</p>
+<p>Web &#x2F; H5 场景，社区常用 <code>size-limit</code> 做这件事：</p>
+<pre><code class="bash">pnpm add -D size-limit @size-limit/preset-app
+</code></pre>
+<p><code>package.json</code> 里声明每个入口的体积上限：</p>
+<pre><code class="json">&#123;
+  &quot;size-limit&quot;: [
+    &#123; &quot;path&quot;: &quot;dist/assets/index.*.js&quot;, &quot;limit&quot;: &quot;200 KB&quot; &#125;
+  ],
+  &quot;scripts&quot;: &#123;
+    &quot;size&quot;: &quot;size-limit&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>配合 CI，<code>size-limit</code> 能在 PR 上评论出「这个 PR 让包从 180KB 变成了 195KB（+15KB）」。<strong>把体积变化摆到 PR 上，让每个人对自己引入的体积负责</strong>——这比一个遥远的总阈值有效得多。很多「顺手 <code>import</code> 了整个 lodash &#x2F; moment」的问题，就是被这种增量报警当场抓住的。</p>
+<p>但一换到小程序、跨端、原生 App，「包体积」就不只是 JS bundle 了，要盯的是最终交付给用户的那份产物：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>需要盯的增量</th>
+<th>常见问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>小程序</td>
+<td>主包、分包、图片、字体、WXML&#x2F;WXSS&#x2F;JS 资源</td>
+<td>图片没压缩、公共依赖进主包、分包拆得不合理</td>
+</tr>
+<tr>
+<td>WebView &#x2F; Hybrid</td>
+<td>H5 bundle、离线包、内置资源、桥接 SDK</td>
+<td>离线包持续膨胀、重复内置公共库</td>
+</tr>
+<tr>
+<td>React Native</td>
+<td>JS bundle、Hermes bytecode、图片资源、Native SDK</td>
+<td>npm 依赖变大、图片资源进包、Native SDK 体积上涨</td>
+</tr>
+<tr>
+<td>Flutter</td>
+<td>Dart AOT 产物、Asset、字体、图片、Plugin 引入的原生依赖</td>
+<td>图片和字体过大、插件带入大体积 Native 库</td>
+</tr>
+<tr>
+<td>原生 App</td>
+<td>APK &#x2F; AAB &#x2F; IPA、动态库、资源包、ABI 切分产物</td>
+<td>SDK 堆叠、so 库重复、未做资源压缩和架构裁剪</td>
+</tr>
+</tbody></table>
+<p>工程实现上不一定非要找一个通吃的工具。更现实的做法是：<strong>构建完成后产出一份体积清单，和基线清单做 diff</strong>。</p>
+<pre><code class="txt">当前 PR:
+  app-release.apk        42.3 MB  (+1.8 MB)
+  assets/images          8.1 MB   (+900 KB)
+  lib/arm64-v8a          12.6 MB  (+700 KB)
+  miniapp/main-package   1.7 MB   (+220 KB)
+
+规则:
+  单次 PR 总产物增量 &gt; 1 MB       → warn
+  主包 / 首页关键包增量 &gt; 200 KB  → error
+  单张图片 &gt; 300 KB              → error
+</code></pre>
+<p>这个思路对跨端尤其重要。比如 React Native 的 JS bundle 没怎么变，但新增了一个 Native SDK，最终 APK &#x2F; IPA 变大很多；Flutter 的 Dart 代码没多少变化，但资源目录塞了几张大图，安装包一样会涨。<strong>用户下载的是最终产物，不是某一个技术栈的局部 bundle</strong>。</p>
+<h2 id="Web-之外：小程序、跨端、原生怎么设门禁"><a href="#Web-之外：小程序、跨端、原生怎么设门禁" class="headerlink" title="Web 之外：小程序、跨端、原生怎么设门禁"></a>Web 之外：小程序、跨端、原生怎么设门禁</h2><p>Lighthouse CI 主要服务 Web 页面，但性能门禁的思想不是 Web 专属。换到小程序、React Native、Flutter、原生 App，本质还是同一件事：<strong>先定义预算，再在 PR、构建、发布前自动验证</strong>。</p>
+<p>可以先用这张表定口径：</p>
+<table>
+<thead>
+<tr>
+<th>应用类型</th>
+<th>适合卡什么</th>
+<th>常见门禁位置</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Web &#x2F; H5</td>
+<td>Lighthouse 分数、LCP、资源体积、请求数</td>
+<td>PR CI、预览环境</td>
+<td>实验室数据可复现，适合防止明显倒退</td>
+</tr>
+<tr>
+<td>小程序</td>
+<td>主包体积、分包体积、启动耗时、页面首屏、接口耗时</td>
+<td>构建 CI、体验版、发布前检查</td>
+<td>平台限制强，包体积和启动速度非常关键</td>
+</tr>
+<tr>
+<td>WebView &#x2F; Hybrid</td>
+<td>H5 体积、离线包大小、WebView 初始化、JSBridge 耗时</td>
+<td>App 构建、离线包发布、灰度流程</td>
+<td>只测 H5 不够，还要看容器层耗时</td>
+</tr>
+<tr>
+<td>React Native &#x2F; Flutter</td>
+<td>包体积、首帧时间、FPS、掉帧率、页面切换耗时</td>
+<td>真机自动化、集成测试、灰度前</td>
+<td>性能问题常出在渲染线程、JS 线程或桥通信</td>
+</tr>
+<tr>
+<td>原生 App</td>
+<td>冷启动、热启动、帧率、卡顿、崩溃率、ANR</td>
+<td>真机测试、发布流水线、灰度监控</td>
+<td>既要卡性能，也要卡稳定性</td>
+</tr>
+</tbody></table>
+<h3 id="小程序门禁"><a href="#小程序门禁" class="headerlink" title="小程序门禁"></a>小程序门禁</h3><p>小程序最应该先卡两类东西：<strong>包体积</strong>和<strong>启动&#x2F;首屏耗时</strong>。</p>
+<p>包体积很好理解：平台本身就有主包、分包大小限制，超过了可能直接发不了版；即使没超过，包越大下载越慢、启动越慢。所以小程序 CI 里至少应该有这些检查：</p>
+<pre><code class="txt">主包体积      ≤ 设定阈值
+单个分包体积  ≤ 设定阈值
+图片资源体积  ≤ 设定阈值
+未使用资源    不允许持续增长
+</code></pre>
+<p>启动和首屏就更接近上一篇讲的「用户看见了吗」。我的建议是不要一上来追求很复杂的指标，先把页面分成关键路径和普通路径：</p>
+<pre><code class="txt">首页 / 核心交易页 / 核心列表页  → 阻断门禁
+低频设置页 / 活动页              → 提醒门禁
+</code></pre>
+<p>小程序平台通常会提供自己的开发者工具、质量面板和性能数据能力，具体字段要以微信、支付宝等平台官方文档为准。工程上要做的是把这些数据接进流水线或发布检查，而不是只在开发者工具里手动看一眼。</p>
+<h3 id="跨端应用门禁"><a href="#跨端应用门禁" class="headerlink" title="跨端应用门禁"></a>跨端应用门禁</h3><p>跨端应用的麻烦在于：它既不像纯 Web 那样只有浏览器，也不像纯原生那样全是 Native。React Native 有 JS 线程、UI 线程、Native Bridge；Flutter 有 Dart 层、渲染管线和平台通道。门禁要盯的不是 Lighthouse 分数，而是这些更贴近运行时的指标：</p>
+<pre><code class="txt">首帧时间
+页面切换耗时
+FPS / 掉帧率
+长任务 / 主线程阻塞
+桥通信或平台通道耗时
+图片解码和列表渲染耗时
+</code></pre>
+<p>这里最好上真机或稳定的模拟器跑自动化用例。比如打开首页、进入列表、滚动 10 秒、进入详情页，记录首帧和掉帧。如果这次 PR 让核心路径掉帧明显变多，就算功能测试全绿，也应该拦一下。</p>
+<h3 id="原生-App-门禁"><a href="#原生-App-门禁" class="headerlink" title="原生 App 门禁"></a>原生 App 门禁</h3><p>原生应用的性能门禁更接近「性能 + 稳定性」一起守。因为用户感知里的「慢」经常和「卡死、闪退、白屏」混在一起。可以从这几项起步：</p>
+<pre><code class="txt">冷启动耗时
+热启动耗时
+核心页面首帧
+滑动 FPS / 卡顿率
+崩溃率
+ANR / 卡死率
+安装包体积
+</code></pre>
+<p>原生端还有一个特点：<strong>机型差异非常大</strong>。高端机测出来没问题，不代表低端机也没问题。所以门禁最好有固定设备池，至少覆盖一台中低端设备。没有设备池时，也要把低端机型的灰度数据单独看，别用全量平均值把问题盖掉。</p>
+<h3 id="非-Web-门禁的核心原则"><a href="#非-Web-门禁的核心原则" class="headerlink" title="非 Web 门禁的核心原则"></a>非 Web 门禁的核心原则</h3><p>非 Web 场景不要照搬 Lighthouse 的指标名，而要照搬它的治理思路：</p>
+<ol>
+<li><strong>先卡可重复的指标</strong>：包体积、启动耗时、首帧、核心路径耗时，比复杂的线上体验分更适合做 CI 阻断。</li>
+<li><strong>真机数据优先</strong>：跨端和原生的卡顿、掉帧、启动，更依赖设备性能，模拟环境只能做参考。</li>
+<li><strong>核心路径更严</strong>：首页、登录、支付、下单、列表滚动这些路径可以阻断；低频页面先提醒。</li>
+<li><strong>CI 防倒退，线上监控看真实体验</strong>：门禁负责守住不要明显变差，真实用户数据负责发现长尾问题。</li>
+</ol>
+<h2 id="门禁怎么设才不会被架空"><a href="#门禁怎么设才不会被架空" class="headerlink" title="门禁怎么设才不会被架空"></a>门禁怎么设才不会被架空</h2><p>性能门禁最大的失败模式不是「没配」，而是<strong>「配了但被无视」</strong>——阈值太严天天误报，团队要么天天加白名单，要么直接把它设成非阻断然后没人看。几条让门禁活下去的经验：</p>
+<ol>
+<li><strong>阈值从「当前值 + 少量余量」开始，而不是理想值</strong>。比如现在 JS 是 280KB，就把预算设成 300KB，守住「别再涨」。等优化下去了再收紧。一上来就设个够不着的理想值，只会天天红。</li>
+<li><strong>区分「阻断」和「提醒」</strong>：只有最核心的少数几项用阻断（error），其余用提醒（warn）。宁可少卡几项但每次卡都当真，也别卡一堆然后大家全忽略。</li>
+<li><strong>门禁要能定位</strong>：报警得能说清「哪个资源超了、超了多少、大概是什么引入的」。只说「性能不达标」的门禁没人改得动。</li>
+<li><strong>和真实数据对齐</strong>：门禁用的实验室阈值，要偶尔和 RUM、灰度、真机测试数据对一对，别守着一个和用户真实体验脱节的实验室数字。</li>
+</ol>
+<p>我的核心判断：<strong>性能门禁的目标是「防止倒退」，不是「追求满分」</strong>。守住「别越来越慢」这条线，比偶尔冲一次高分有用得多。它和覆盖率门禁是一个哲学——看趋势、设够用的线、别当 KPI 刷。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>性能会自然熵增，且倒退很难在 review 时发现，必须靠自动门禁卡在合并入口，和质量闸口同一哲学。</li>
+<li>Web 应用可以用 Lighthouse CI 在 PR 上跑实验室指标，用 <code>assert</code> 设分数和指标门槛。</li>
+<li>Performance Budget 给 JS&#x2F;CSS&#x2F;图片&#x2F;请求数设具体阈值，体积回归要盯最终产物增量，而不只是 Web 的 JS bundle。</li>
+<li>Lighthouse 是实验室数据，门禁重点卡 LCP&#x2F;总分&#x2F;体积，INP&#x2F;CLS 的真实情况靠 RUM。</li>
+<li>小程序重点卡主包&#x2F;分包体积、启动耗时、页面首屏和核心接口耗时。</li>
+<li>跨端和原生应用重点卡首帧、页面切换、FPS、掉帧、冷启动、崩溃率和 ANR。</li>
+<li>阈值从「当前值 + 少量余量」起步、分阻断&#x2F;提醒、能定位、和真实数据对齐；门禁目标是防倒退不是刷满分。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><a class="post-meta__tags" href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/">前端工程化</a><a class="post-meta__tags" href="/tags/%E8%B4%A8%E9%87%8F%E9%97%A8%E7%A6%81/">质量门禁</a><a class="post-meta__tags" href="/tags/Lighthouse-CI/">Lighthouse CI</a><a class="post-meta__tags" href="/tags/Performance-Budget/">Performance Budget</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/01-%E6%80%A7%E8%83%BD%E6%8C%87%E6%A0%87%EF%BC%9ACore-Web-Vitals%E4%B8%8E%E5%85%B3%E9%94%AE%E6%8C%87%E6%A0%87%E8%A7%A3%E8%AF%BB/" title="性能指标：Core Web Vitals 与关键指标解读"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">性能指标：Core Web Vitals 与关键指标解读</div></div></a></div><div class="next-post pull-right"><a href="/posts/03-%E8%B5%84%E6%BA%90%E4%BC%98%E5%8C%96%EF%BC%9A%E5%9B%BE%E7%89%87%E3%80%81%E5%AD%97%E4%BD%93%E5%AD%90%E9%9B%86%E5%8C%96%E4%B8%8E%E7%8E%B0%E4%BB%A3%E6%A0%BC%E5%BC%8F/" title="资源优化：图片、字体子集化与现代格式"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">资源优化：图片、字体子集化与现代格式</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">241</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">532</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E4%BC%9A%E3%80%8C%E7%86%B5%E5%A2%9E%E3%80%8D%EF%BC%8C%E6%89%80%E4%BB%A5%E9%9C%80%E8%A6%81%E9%97%A8%E7%A6%81"><span class="toc-number">1.</span> <span class="toc-text">性能会「熵增」，所以需要门禁</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Lighthouse-CI%EF%BC%9A%E6%8A%8A%E6%80%A7%E8%83%BD%E8%AF%84%E5%88%86%E6%8E%A5%E8%BF%9B%E6%B5%81%E6%B0%B4%E7%BA%BF"><span class="toc-number">2.</span> <span class="toc-text">Lighthouse CI：把性能评分接进流水线</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Performance-Budget%EF%BC%9A%E7%BB%99%E8%B5%84%E6%BA%90%E8%AE%BE%E3%80%8C%E9%A2%84%E7%AE%97%E3%80%8D"><span class="toc-number">3.</span> <span class="toc-text">Performance Budget：给资源设「预算」</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%A7%E7%89%A9%E4%BD%93%E7%A7%AF%E5%9B%9E%E5%BD%92%E6%8A%A5%E8%AD%A6%EF%BC%9A%E7%9B%AF%E4%BD%8F%E3%80%8C%E5%A2%9E%E9%87%8F%E3%80%8D"><span class="toc-number">4.</span> <span class="toc-text">产物体积回归报警：盯住「增量」</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Web-%E4%B9%8B%E5%A4%96%EF%BC%9A%E5%B0%8F%E7%A8%8B%E5%BA%8F%E3%80%81%E8%B7%A8%E7%AB%AF%E3%80%81%E5%8E%9F%E7%94%9F%E6%80%8E%E4%B9%88%E8%AE%BE%E9%97%A8%E7%A6%81"><span class="toc-number">5.</span> <span class="toc-text">Web 之外：小程序、跨端、原生怎么设门禁</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%8F%E7%A8%8B%E5%BA%8F%E9%97%A8%E7%A6%81"><span class="toc-number">5.1.</span> <span class="toc-text">小程序门禁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%A8%E7%AB%AF%E5%BA%94%E7%94%A8%E9%97%A8%E7%A6%81"><span class="toc-number">5.2.</span> <span class="toc-text">跨端应用门禁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8E%9F%E7%94%9F-App-%E9%97%A8%E7%A6%81"><span class="toc-number">5.3.</span> <span class="toc-text">原生 App 门禁</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%9D%9E-Web-%E9%97%A8%E7%A6%81%E7%9A%84%E6%A0%B8%E5%BF%83%E5%8E%9F%E5%88%99"><span class="toc-number">5.4.</span> <span class="toc-text">非 Web 门禁的核心原则</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%97%A8%E7%A6%81%E6%80%8E%E4%B9%88%E8%AE%BE%E6%89%8D%E4%B8%8D%E4%BC%9A%E8%A2%AB%E6%9E%B6%E7%A9%BA"><span class="toc-number">6.</span> <span class="toc-text">门禁怎么设才不会被架空</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-%E7%8E%B0%E4%BB%A3%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%B7%A5%E7%A8%8B%E5%8C%96/" title="现代前端项目为什么需要工程化">现代前端项目为什么需要工程化</a><time datetime="2026-07-11T15:59:00.000Z" title="发表于 2026 23:59:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/02-%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E8%AE%BE%E8%AE%A1%E4%B8%8E%E9%A1%B9%E7%9B%AE%E8%A7%84%E8%8C%83/" title="前端项目目录设计与项目规范">前端项目目录设计与项目规范</a><time datetime="2026-07-11T15:58:00.000Z" title="发表于 2026 23:58:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-npm-pnpm-yarn%E4%B8%8ECorepack%E9%80%89%E5%9E%8B/" title="npm、pnpm、yarn 与 Corepack 选型">npm、pnpm、yarn 与 Corepack 选型</a><time datetime="2026-07-11T15:57:00.000Z" title="发表于 2026 23:57:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/02-package-json%E5%AD%97%E6%AE%B5%E5%85%A8%E8%A7%A3%E6%9E%90/" title="package.json 字段全解析">package.json 字段全解析</a><time datetime="2026-07-11T15:56:00.000Z" title="发表于 2026 23:56:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/03-Node%E7%89%88%E6%9C%AC%E4%B8%8E%E8%B7%A8%E5%B9%B3%E5%8F%B0%E8%84%9A%E6%9C%AC%E6%B2%BB%E7%90%86/" title="Node 版本与跨平台脚本治理">Node 版本与跨平台脚本治理</a><time datetime="2026-07-11T15:55:00.000Z" title="发表于 2026 23:55:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
