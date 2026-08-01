@@ -1,0 +1,506 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 244;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>MCP新版规范正式发布：无状态 HTTP 核心 + OAuth 2.1 加固 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：之前我写过一篇 MCP 协议深度解析，讲了 Streamable HTTP 怎么替换掉 HTTP+SSE。一年多过去，MCP 月下载量已经冲到 4 亿+，成了 AI Agent 连接外部世界的事实标准。而 2026-07-28 这版规范 是 MCP 诞生以来改动最大的一版：核心从有状态双向协议彻底变成了无状态的请求&#x2F;响应模型，而且官方明确标注这是一次 breaking chang">
+<meta property="og:type" content="article">
+<meta property="og:title" content="MCP新版规范正式发布：无状态 HTTP 核心 + OAuth 2.1 加固">
+<meta property="og:url" content="http://example.com/posts/37-MCP%E6%96%B0%E7%89%88%E8%A7%84%E8%8C%83-%E6%97%A0%E7%8A%B6%E6%80%81HTTP%E6%A0%B8%E5%BF%83%E4%B8%8EOAuth2.1%E5%8A%A0%E5%9B%BA/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：之前我写过一篇 MCP 协议深度解析，讲了 Streamable HTTP 怎么替换掉 HTTP+SSE。一年多过去，MCP 月下载量已经冲到 4 亿+，成了 AI Agent 连接外部世界的事实标准。而 2026-07-28 这版规范 是 MCP 诞生以来改动最大的一版：核心从有状态双向协议彻底变成了无状态的请求&#x2F;响应模型，而且官方明确标注这是一次 breaking chang">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-01T08:12:54.986Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="MCP">
+<meta property="article:tag" content="Streamable HTTP">
+<meta property="article:tag" content="无状态协议">
+<meta property="article:tag" content="OAuth2.1">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/37-MCP%E6%96%B0%E7%89%88%E8%A7%84%E8%8C%83-%E6%97%A0%E7%8A%B6%E6%80%81HTTP%E6%A0%B8%E5%BF%83%E4%B8%8EOAuth2.1%E5%8A%A0%E5%9B%BA/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'MCP新版规范正式发布：无状态 HTTP 核心 + OAuth 2.1 加固',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 16:12:54'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">536</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">MCP新版规范正式发布：无状态 HTTP 核心 + OAuth 2.1 加固</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-29T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-01T08:12:54.986Z" title="更新于 2026 16:12:54">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">6.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>20分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：之前我写过一篇 <a href="/posts/06-MCP%E5%8D%8F%E8%AE%AE%E6%B7%B1%E5%BA%A6%E8%A7%A3%E6%9E%90/">MCP 协议深度解析</a>，讲了 Streamable HTTP 怎么替换掉 HTTP+SSE。一年多过去，MCP 月下载量已经冲到 4 亿+，成了 AI Agent 连接外部世界的事实标准。而 <a target="_blank" rel="noopener" href="https://blog.modelcontextprotocol.io/posts/2026-07-28/">2026-07-28 这版规范</a> 是 MCP 诞生以来改动最大的一版：核心从有状态双向协议彻底变成了无状态的请求&#x2F;响应模型，而且官方明确标注这是一次 breaking change。这篇就讲清楚：到底改了什么、为什么改、以及要不要迁移。</p>
+</blockquote>
+<h2 id="行业时间线"><a href="#行业时间线" class="headerlink" title="行业时间线"></a>行业时间线</h2><table>
+<thead>
+<tr>
+<th>MCP 规范版本</th>
+<th>关键变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2024-11（初版）</td>
+<td>stdio + HTTP+SSE 两种传输，有状态双向协议</td>
+</tr>
+<tr>
+<td>2025-03-26</td>
+<td>Streamable HTTP 取代 HTTP+SSE，统一端点、按需升级流</td>
+</tr>
+<tr>
+<td>2025-11-25</td>
+<td>授权体系细化、Elicitation URL 模式等</td>
+</tr>
+<tr>
+<td>2026-07-28</td>
+<td><strong>无状态核心</strong>：移除握手与 Session，OAuth 2.1 加固，扩展框架正式化</td>
+</tr>
+</tbody></table>
+<p>这几次变化背后，其实是在连续解决三个工程问题：</p>
+<ul>
+<li>2025-03 的 Streamable HTTP，解决的是<strong>传输入口割裂</strong>：以前服务器要同时维护普通 HTTP 请求端点和 SSE 流端点；现在统一走同一个 <code>/mcp</code> 端点，普通响应和流式响应按需切换。</li>
+<li>2025-11 的授权细化，解决的是<strong>接入生产系统时的安全边界</strong>：不能只靠协议会话本身来默认信任客户端，授权、回调、用户确认都要更明确。</li>
+<li>2026-07 的无状态核心，解决的是<strong>云上横向扩展的会话负担</strong>：请求不再依赖握手和 Session，负载均衡后面任意实例都能独立处理。</li>
+</ul>
+<h2 id="一句话看懂这次更新"><a href="#一句话看懂这次更新" class="headerlink" title="一句话看懂这次更新"></a>一句话看懂这次更新</h2><p>MCP 从”打电话”变成了”发短信”。</p>
+<p>之前的 MCP 像打电话：先拨号建立连接（<code>initialize</code> 握手），通话过程中双方都记着”我们正在通话”（<code>Mcp-Session-Id</code> 会话），中途还能互相插话（服务端主动发起请求）。这套模型在单机 stdio 下很自然，但放到需要横向扩展的云上就很别扭——负载均衡后面的每台实例都得共享会话状态。</p>
+<p>现在的 MCP 像发短信：每条消息都是自包含的，写清楚”我是谁、用哪个协议版本、要干什么”，发到哪台服务器都能独立处理。这就是<strong>无状态核心（Stateless Core）</strong>。</p>
+<p>这里有两个容易误解的点。</p>
+<p>第一，旧 MCP 的”有状态”不一定是永远保存同一条 TCP 连接，更准确地说，是服务端要保存一份 MCP 协议会话状态。客户端先 <code>initialize</code>，服务端记住这个客户端是谁、支持什么能力、当前会话是什么，再通过 <code>Mcp-Session-Id</code> 把后续请求串起来。生产环境里，要么做粘性会话，让同一个会话尽量打到同一台机器；要么把 Session 放到 Redis 这类共享存储里。</p>
+<p>无状态之后，这部分协议状态被挪回到每次请求里。客户端把协议版本、客户端信息、能力声明、认证信息等必要上下文带上来，负载均衡后面任意一台服务实例都可以独立处理。当然，这不代表业务系统完全没有状态。用户登录态、OAuth token、数据库里的任务状态、工具调用产生的数据，仍然可以存在。无状态说的是<strong>MCP 协议层不再维护会话状态</strong>。</p>
+<p>第二，无状态之后，MCP 看起来确实更像普通 HTTP 后台接口了。这也是我第一眼的感觉：如果都变成请求&#x2F;响应了，那是不是直接写 HTTP API 就够了？</p>
+<p>我的理解是：如果只是自己业务里的前后端调用，MCP 确实没必要，普通 HTTP API 更直接。MCP 的价值不在”怎么发请求”，而在”AI 客户端如何用统一语言发现和调用外部能力”。普通 API 通常只定义某个服务怎么调，MCP 还标准化了 <code>tools</code>、<code>resources</code>、<code>prompts</code>、能力声明、输入输出 schema、错误模型和授权边界。传输层越普通，反而越说明 MCP 的价值正在从连接形态，转向能力描述和生态互操作。</p>
+<pre><code>有状态（旧）                          无状态（2026-07-28）
+─────────────                        ───────────────────
+Client ──initialize──→ Server        Client ──单条自包含请求──→ 任意实例
+       ←──initialized──               （请求里带上版本+身份+能力）
+Client ──带 Session-Id 的请求──→
+       （必须命中同一个会话）           轮询 LB 后面随便哪台都行
+                                      无需共享存储
+</code></pre>
+<h2 id="无状态核心：告别握手和会话"><a href="#无状态核心：告别握手和会话" class="headerlink" title="无状态核心：告别握手和会话"></a>无状态核心：告别握手和会话</h2><h3 id="旧协议到底怎么有状态"><a href="#旧协议到底怎么有状态" class="headerlink" title="旧协议到底怎么有状态"></a>旧协议到底怎么有状态</h3><p>如果没看过旧 MCP 的交互流程，直接看”删掉 <code>initialize</code>、删掉 <code>Mcp-Session-Id</code>“会有点懵。旧模型可以简化成这几步：</p>
+<pre><code>1. Client ──initialize──→ Server
+   带上 protocolVersion、clientInfo、clientCapabilities
+
+2. Server ──initialize result──→ Client
+   返回 serverInfo、serverCapabilities
+   HTTP 场景下还可能返回 Mcp-Session-Id
+
+3. Client ──notifications/initialized──→ Server
+   告诉服务端：握手完成，可以开始正常通信
+
+4. Client ──后续 tools/call 等请求──→ Server
+   每次带上 Mcp-Session-Id，服务端用它找到同一个协议会话
+</code></pre>
+<p>如果需要服务端持续推消息，旧模型还会引入 HTTP GET 流端点：客户端打开一个 SSE 流，服务端通过这个流把通知或长任务结果推回来；如果中间断开，再靠 <code>Last-Event-ID</code> 做断线续传。</p>
+<p>所以旧协议的状态主要藏在两处：一是握手阶段协商出来的客户端&#x2F;服务端能力，二是 <code>Mcp-Session-Id</code> 对应的协议会话。后续请求本身不一定带齐完整上下文，服务端要先根据 Session 找回”这个客户端是谁、支持什么、当前会话到哪一步了”。</p>
+<h3 id="这次到底删了什么"><a href="#这次到底删了什么" class="headerlink" title="这次到底删了什么"></a>这次到底删了什么</h3><p>2026-07-28 这版删得很干脆（SEP-2575、SEP-2567）：</p>
+<ul>
+<li>删掉 <code>initialize</code> &#x2F; <code>notifications/initialized</code> 握手</li>
+<li>删掉 <code>Mcp-Session-Id</code> 请求头</li>
+<li>删掉 HTTP GET 流端点、SSE 断线重连（<code>Last-Event-ID</code>）</li>
+<li>删掉 <code>ping</code>、<code>logging/setLevel</code>、<code>notifications/roots/list_changed</code></li>
+</ul>
+<p>取而代之，<strong>每个请求自己携带全部上下文</strong>，塞在 <code>_meta</code> 里：</p>
+<pre><code class="http">POST /mcp HTTP/1.1
+MCP-Protocol-Version: 2026-07-28
+Mcp-Method: tools/call
+Mcp-Name: search
+
+&#123;
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;id&quot;: 1,
+  &quot;method&quot;: &quot;tools/call&quot;,
+  &quot;params&quot;: &#123;
+    &quot;name&quot;: &quot;search&quot;,
+    &quot;arguments&quot;: &#123; &quot;q&quot;: &quot;otters&quot; &#125;,
+    &quot;_meta&quot;: &#123;
+      &quot;io.modelcontextprotocol/protocolVersion&quot;: &quot;2026-07-28&quot;,
+      &quot;io.modelcontextprotocol/clientInfo&quot;: &#123; &quot;name&quot;: &quot;my-app&quot;, &quot;version&quot;: &quot;1.0&quot; &#125;,
+      &quot;io.modelcontextprotocol/clientCapabilities&quot;: &#123;&#125;
+    &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>几个约定要记住：</p>
+<ul>
+<li>客户端 <strong>SHOULD</strong> 在每个请求带上 <code>io.modelcontextprotocol/clientInfo</code></li>
+<li>服务端 <strong>SHOULD</strong> 在每个响应的 <code>_meta</code> 里带上 <code>io.modelcontextprotocol/serverInfo</code></li>
+<li>协议版本对不上，服务端返回 <code>UnsupportedProtocolVersionError</code></li>
+</ul>
+<h3 id="握手删了以后，能力发现怎么办"><a href="#握手删了以后，能力发现怎么办" class="headerlink" title="握手删了以后，能力发现怎么办"></a>握手删了以后，能力发现怎么办</h3><p>这里会冒出一个新问题：以前 <code>initialize</code> 不只是建立会话，它还顺手完成了能力发现。客户端通过握手知道服务端支持哪些协议版本、有哪些能力、服务端身份是什么。现在握手删了，这些信息从哪里来？</p>
+<p>答案是新的 RPC：<code>server/discover</code>。规范规定<strong>服务端必须实现</strong>它，用来广播支持的协议版本、能力和身份；但<strong>客户端可以按需调用</strong>——你可以先探一次做版本选择，也可以直接发业务请求跳过它。这是”发现”和”调用”解耦的关键：发现不再是通信的前置门槛。</p>
+<h3 id="无状态-≠-你的业务不能有状态"><a href="#无状态-≠-你的业务不能有状态" class="headerlink" title="无状态 ≠ 你的业务不能有状态"></a>无状态 ≠ 你的业务不能有状态</h3><p>这里要分清两层状态：</p>
+<ul>
+<li><strong>协议层状态</strong>：MCP 自己记住”这个客户端已经握手过、支持哪些能力、当前 Session 是谁”。2026-07-28 这版要删的是这一层。</li>
+<li><strong>业务状态</strong>：你的工具执行过程中产生的中间结果，比如查询 ID、上传任务 ID、长任务 ID、临时文件 ID。这一层仍然可以存在。</li>
+</ul>
+<p>所以关键不是”业务不能保存状态”，而是<strong>不要把业务状态藏在 MCP Session 里</strong>。如果一个工具调用的结果要给下一个工具继续用，就把这个状态变成一个显式 ID 返回给模型，让模型在下一次请求里带回来。</p>
+<pre><code class="javascript">// 第一次调用：发起一个分页查询
+&#123;
+  &quot;name&quot;: &quot;search_logs&quot;,
+  &quot;arguments&quot;: &#123;
+    &quot;keyword&quot;: &quot;oauth error&quot;
+  &#125;
+&#125;
+
+// 服务端可以把查询进度存在数据库或 Redis 里，
+// 但要把 query_id 这个业务句柄显式返回给模型。
+&#123;
+  &quot;items&quot;: [&quot;log-1&quot;, &quot;log-2&quot;],
+  &quot;query_id&quot;: &quot;query_abc123&quot;
+&#125;
+
+// 第二次调用：模型把 query_id 当普通参数传回来
+&#123;
+  &quot;name&quot;: &quot;fetch_next_logs&quot;,
+  &quot;arguments&quot;: &#123;
+    &quot;query_id&quot;: &quot;query_abc123&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>这样一来，请求落到哪台 MCP Server 实例都可以处理：它只要拿着 <code>query_abc123</code> 去数据库或 Redis 查业务状态即可，不需要依赖某个 MCP 协议 Session。这就是”协议层无状态”和”业务可以有状态”之间的关系：<strong>状态可以有，但必须显式、可寻址、可跨实例恢复</strong>。</p>
+<h2 id="配套的传输层改造"><a href="#配套的传输层改造" class="headerlink" title="配套的传输层改造"></a>配套的传输层改造</h2><p>无状态是地基，地基之上还有一套配套改动，都是为了让 MCP 真正像一个普通 HTTP 工作负载那样跑起来。</p>
+<h3 id="请求头路由：Mcp-Method-和-Mcp-Name"><a href="#请求头路由：Mcp-Method-和-Mcp-Name" class="headerlink" title="请求头路由：Mcp-Method 和 Mcp-Name"></a>请求头路由：Mcp-Method 和 Mcp-Name</h3><p>Streamable HTTP 请求现在<strong>必须</strong>带上 <code>Mcp-Method</code> 和 <code>Mcp-Name</code> 两个头（SEP-2243）。</p>
+<p>减负点在网关这一层。MCP 请求本质上都是 <code>POST /mcp</code>，真正的方法名以前藏在 JSON body 里，比如 <code>tools/call</code>、<code>tools/list</code>、<code>resources/read</code>。如果网关想对不同方法做不同策略，就必须打开 body、解析 JSON、再读取 <code>method</code> 和 <code>params.name</code>。这对网关、限流器、WAF 都很别扭：要多做一次解析，还可能遇到大 body、流式 body、解析失败、性能开销和规则配置复杂度。</p>
+<p>现在方法和名称直接放到请求头里，基础设施只看 header 就能做判断：<code>tools/call</code> 走更严格的限流，<code>tools/list</code> 可以走缓存，某个高危工具名可以被 WAF 单独拦截。也就是说，业务语义从 JSON body 里被”提到”HTTP 元数据层，网关不用懂 MCP 的完整 JSON-RPC 结构，也能做路由、计量和安全策略。</p>
+<h3 id="List-结果可缓存：ttlMs-和-cacheScope"><a href="#List-结果可缓存：ttlMs-和-cacheScope" class="headerlink" title="List 结果可缓存：ttlMs 和 cacheScope"></a>List 结果可缓存：ttlMs 和 cacheScope</h3><p><code>ttlMs</code> 和 <code>cacheScope</code> 不是 HTTP 响应头，而是 MCP 响应体里 <code>result</code> 对象上的缓存提示字段（SEP-2549）。它们的语义有点像 HTTP <code>Cache-Control</code>，但承载位置在 MCP 协议层。</p>
+<pre><code class="javascript">&#123;
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;id&quot;: 1,
+  &quot;result&quot;: &#123;
+    &quot;tools&quot;: [
+      &#123; &quot;name&quot;: &quot;search&quot;, &quot;description&quot;: &quot;Search docs&quot; &#125;
+    ],
+    &quot;ttlMs&quot;: 60000,
+    &quot;cacheScope&quot;: &quot;public&quot;
+  &#125;
+&#125;
+</code></pre>
+<p><code>ttlMs</code> 表示客户端可以把这份结果当作新鲜数据缓存多久，单位是毫秒；<code>cacheScope</code> 表示缓存范围，<code>public</code> 代表共享网关或代理也可以缓存，<code>private</code> 代表只能在当前用户授权上下文里复用。<code>tools/list</code>、<code>prompts/list</code>、<code>resources/list</code>、<code>resources/templates/list</code>、<code>resources/read</code>、<code>server/discover</code> 这类结果都可以用这套字段。</p>
+<p>同时规范建议 <code>tools/list</code> 返回<strong>确定性顺序</strong>，这样客户端能稳定缓存工具目录，上游的 prompt cache 命中率也更稳。以前每次重连都得重新拉一遍工具列表，这个坑算是填了。</p>
+<h3 id="从双向会话到多轮请求：MRTR"><a href="#从双向会话到多轮请求：MRTR" class="headerlink" title="从双向会话到多轮请求：MRTR"></a>从双向会话到多轮请求：MRTR</h3><p>前面几个改动偏基础设施：网关怎么路由，列表结果怎么缓存。接下来这个改动讲的是交互模型：旧 MCP 允许服务端在协议会话里主动”反问”客户端；无状态之后，这个能力不能再依赖 Session 和双向会话通道了。</p>
+<p>这里先补一个容易混淆的点：<strong>SSE 的确是一条长连接，但长连接不等于协议会话</strong>。</p>
+<p>SSE 解决的是”服务端能持续往客户端推事件”。比如一次 <code>tools/call</code> 很耗时，服务端可以在这个 POST 响应里用 SSE 持续吐进度，最后吐结果；后面的 <code>subscriptions/listen</code> 也还是一个长连 POST 流，用来接收订阅通知。</p>
+<p>但 SSE 是单向的：服务端往客户端推，客户端不能在同一条 SSE 连接里把回答再发回去。也就是说，SSE 可以把”需要你确认一下”这件事推给客户端，但用户点了”确认”之后，客户端必须再发一个新的请求回来。</p>
+<p>旧协议里的会话更重，它不只是有一条流，还记着 <code>Mcp-Session-Id</code>、握手状态、客户端能力，并允许服务端在这个会话里主动发起 <code>elicitation/create</code> &#x2F; <code>sampling/createMessage</code> &#x2F; <code>roots/list</code> 这类反向请求。为了等用户回答，服务端通常还要把”当前工具调用卡在第几步、正在等哪个确认”这类上下文挂在会话上。</p>
+<p>所以无状态不是说”再也没有长连接”，而是说”不再依赖一个长期存在的 MCP Session 来维持交互上下文”。SSE 可以继续用来推当前请求的事件，但如果工具执行到一半需要用户确认（比如”确定要删这批数据吗？”），客户端的回答要通过下一次请求显式带回来。</p>
+<p>无状态之后，这种”等用户回答的上下文”不能再藏在会话里。那工具执行到一半确实需要用户补输入时怎么办？</p>
+<p>答案是 <strong>Multi Round-Trip Requests（MRTR，SEP-2322）</strong>：服务端不主动推，而是<strong>在响应里说”我还需要输入”<strong>，客户端补齐信息后</strong>重发原请求</strong>。</p>
+<pre><code class="javascript">// 第 1 轮请求：客户端发起 tools/call
+&#123;
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;id&quot;: 1,
+  &quot;method&quot;: &quot;tools/call&quot;,
+  &quot;params&quot;: &#123;
+    &quot;name&quot;: &quot;delete_records&quot;,
+    &quot;arguments&quot;: &#123; &quot;ids&quot;: [1, 2, 3] &#125;
+  &#125;
+&#125;
+
+// 第 1 轮响应：服务端发现需要用户确认，返回 input_required
+&#123;
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;id&quot;: 1,
+  &quot;result&quot;: &#123;
+    &quot;resultType&quot;: &quot;input_required&quot;,
+    &quot;inputRequests&quot;: [
+      &#123; &quot;type&quot;: &quot;elicitation&quot;, &quot;message&quot;: &quot;确认删除 3 条记录？&quot;, &quot;id&quot;: &quot;confirm_1&quot; &#125;
+    ]
+  &#125;
+&#125;
+
+// 第 2 轮请求：客户端拿到用户回答后，重发原请求并带上 inputResponses
+&#123;
+  &quot;jsonrpc&quot;: &quot;2.0&quot;,
+  &quot;id&quot;: 2,
+  &quot;method&quot;: &quot;tools/call&quot;,
+  &quot;params&quot;: &#123;
+    &quot;name&quot;: &quot;delete_records&quot;,
+    &quot;arguments&quot;: &#123; &quot;ids&quot;: [1, 2, 3] &#125;,
+    &quot;inputResponses&quot;: [ &#123; &quot;id&quot;: &quot;confirm_1&quot;, &quot;value&quot;: true &#125; ]
+  &#125;
+&#125;
+</code></pre>
+<p>配套地，<strong>所有响应现在都必须带 <code>resultType</code> 字段</strong>：普通结果是 <code>&quot;complete&quot;</code>，需要补输入的中间态是 <code>&quot;input_required&quot;</code>。为了兼容旧服务端，客户端 <strong>必须</strong> 把没有这个字段的结果当作 <code>&quot;complete&quot;</code> 处理。</p>
+<p>服务端到客户端的变更通知也顺势重构了：旧的 GET 流端点和 <code>resources/subscribe</code>&#x2F;<code>unsubscribe</code> 被一个 <code>subscriptions/listen</code> 长连 POST 流替代，客户端<strong>按通知类型逐一 opt-in</strong>（<code>toolsListChanged</code>、<code>resourcesListChanged</code> 等），不再是全量推送。</p>
+<h2 id="OAuth-2-1-加固：从”能跑就行”到”企业级合规”"><a href="#OAuth-2-1-加固：从”能跑就行”到”企业级合规”" class="headerlink" title="OAuth 2.1 加固：从”能跑就行”到”企业级合规”"></a>OAuth 2.1 加固：从”能跑就行”到”企业级合规”</h2><p>授权是实现者花时间最多的地方。这版把 MCP 的授权彻底往<strong>主流 OAuth 2.1 &#x2F; OIDC 生产实践</strong>上靠。核心一句话：<strong>远程 MCP Server 现在就是一个标准的 OAuth 2.1 Resource Server。</strong></p>
+<p>这张图景可以先用人话理解：客户端要访问远程 MCP Server，不能再靠”我认识你”这种隐式信任，而是要走一套标准登录链路——去授权服务器登录，拿 token，再拿 token 调 MCP Server。2026 版加固的重点，就是把这条链路里几个容易出错的地方补上。</p>
+<table>
+<thead>
+<tr>
+<th>加固点</th>
+<th>用人话说</th>
+<th>解决的坑</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>OAuth 2.1 + PKCE</td>
+<td>登录和换 token 必须按现代 OAuth 2.1 流程走</td>
+<td>不再自定义一套半吊子授权，对接 Entra&#x2F;Okta 这类企业身份系统更顺</td>
+</tr>
+<tr>
+<td><code>iss</code> 校验</td>
+<td>换 token 前，先确认这个授权码到底是谁发的</td>
+<td>防止客户端把 A 授权服务器发的 code 拿去 B 授权服务器换 token，也就是 mix-up 攻击</td>
+</tr>
+<tr>
+<td><code>application_type</code></td>
+<td>注册客户端时说明自己是 Web、桌面还是 CLI</td>
+<td>桌面&#x2F;CLI 常用的 <code>localhost</code> 回调不会被当成异常 Web 回调拒掉</td>
+</tr>
+<tr>
+<td>凭证绑定 issuer</td>
+<td>每个授权服务器的凭证分开存，不能串用</td>
+<td>换了授权服务器必须重新注册，避免一个地方拿到的凭证被带到另一个地方用</td>
+</tr>
+<tr>
+<td>受保护资源元数据</td>
+<td>MCP Server 明确告诉客户端：”我的授权服务器在这里”</td>
+<td>客户端不用猜登录入口，可以自动发现该去哪里拿 token</td>
+</tr>
+</tbody></table>
+<p>这些名字看着吓人，但本质上都是在回答同一个问题：<strong>当 MCP Server 变成远程服务以后，客户端、资源服务器、授权服务器三方之间怎么互相信任。</strong></p>
+<h3 id="DCR-被废弃，改用-CIMD"><a href="#DCR-被废弃，改用-CIMD" class="headerlink" title="DCR 被废弃，改用 CIMD"></a>DCR 被废弃，改用 CIMD</h3><p>这个变化讲的是”客户端怎么登记身份”。</p>
+<p>在 OAuth 里，客户端也要有身份。授权服务器需要知道：这个客户端叫什么、允许跳回哪些回调地址、是不是桌面应用、用什么方式认证。传统做法是 <strong>DCR（动态客户端注册）</strong>：客户端第一次来时，先向授权服务器提交一份注册申请，授权服务器给它发一个 <code>client_id</code>，并把这份注册信息存下来。</p>
+<p>这在 MCP 里会变麻烦：一个 Cursor、Claude Desktop 这样的客户端，可能要连接很多 MCP Server；每个 Server 背后又可能接不同的授权服务器。如果都靠 DCR，就意味着客户端要到处动态注册，授权服务器也要维护一堆运行时写入的客户端记录。</p>
+<p>CIMD 的思路更像”公开名片页”：客户端把自己的身份信息放在一个稳定的 HTTPS URL 上，然后直接把这个 URL 当作 <code>client_id</code>。授权服务器看到这个 URL，就去拉取里面的 JSON，校验通过后使用。</p>
+<p>可以粗暴理解为：以前是”客户端到每个授权服务器那里现场填表注册”，现在是”客户端提前把自己的名片页放好，授权服务器需要时自己去看”。</p>
+<pre><code class="json">&#123;
+  &quot;client_id&quot;: &quot;https://my-client.example.com/oauth/client-metadata.json&quot;,
+  &quot;client_name&quot;: &quot;My MCP Client&quot;,
+  &quot;redirect_uris&quot;: [&quot;http://localhost:3000/callback&quot;],
+  &quot;application_type&quot;: &quot;native&quot;
+&#125;
+</code></pre>
+<p>这样授权服务器不一定要先写入一条注册记录，而是按需读取、校验、缓存这份元数据。它更适合 MCP”一个客户端、连接很多服务器”的开放生态。</p>
+<p>需要注意：<strong>DCR 并没有立刻消失</strong>。如果某个授权服务器还不支持 CIMD，或者企业就是想要服务端登记、审计、审批那套流程，DCR 仍然可以作为兼容方案。只是新实现应该优先按 CIMD 设计。关于 CIMD 的完整字段格式，建议直接查<a target="_blank" rel="noopener" href="https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization/client-registration">官方客户端注册文档</a>，这里我不逐字列字段，避免后续规范调整导致文章过时。</p>
+<h2 id="扩展框架与废弃策略"><a href="#扩展框架与废弃策略" class="headerlink" title="扩展框架与废弃策略"></a>扩展框架与废弃策略</h2><h3 id="核心瘦身，能力进”扩展”"><a href="#核心瘦身，能力进”扩展”" class="headerlink" title="核心瘦身，能力进”扩展”"></a>核心瘦身，能力进”扩展”</h3><p>这版把一批”实验性&#x2F;边缘”能力从核心协议里挪了出去，塞进了正式的<strong>扩展框架（Extensions）</strong>：</p>
+<ul>
+<li><strong>Tasks</strong>（<code>io.modelcontextprotocol/tasks</code>，SEP-2663）：长任务能力。从阻塞式的 <code>tasks/result</code> 改成轮询式 <code>tasks/get</code> + 新增 <code>tasks/update</code>（客户端向服务端补输入），去掉了 <code>tasks/list</code>。</li>
+<li><strong>MCP Apps</strong>：服务端渲染 UI。</li>
+<li><strong>EMA（Enterprise Managed Authorization）</strong>：企业托管授权。</li>
+</ul>
+<p>思路是”核心保持精简、能力按自己的节奏演进”，扩展通过 <code>ClientCapabilities</code> &#x2F; <code>ServerCapabilities</code> 里新增的 <code>extensions</code> 字段协商。</p>
+<h3 id="废弃了什么，多久移除"><a href="#废弃了什么，多久移除" class="headerlink" title="废弃了什么，多久移除"></a>废弃了什么，多久移除</h3><p>这版第一次有了正式的<strong>功能生命周期与废弃策略</strong>（SEP-2596）。简单说，就是给协议里的功能打三种状态标签：</p>
+<ul>
+<li><strong>Active</strong>：正常推荐使用。</li>
+<li><strong>Deprecated</strong>：还可以用，但不建议新项目继续采用，后面会移除。</li>
+<li><strong>Removed</strong>：已经从规范里移除，新实现不应该再支持。</li>
+</ul>
+<p>关键点是：从 Deprecated 到 Removed 之间，规范要求有<strong>最短 12 个月的废弃窗口</strong>。也就是说，被标记废弃的东西至少还能再用一年，你可以从容规划升级，而不是被动救火。</p>
+<p>本次进入废弃状态的：</p>
+<ul>
+<li><strong>Roots、Sampling、Logging</strong>（SEP-2577）——仍可用，但新实现不应再采用。官方给了迁移建议：用工具参数&#x2F;资源 URI 传目录替代 Roots；直连 LLM 厂商 API 替代 Sampling；用 stderr 或 OpenTelemetry 替代 Logging。</li>
+<li><strong>HTTP+SSE 传输</strong>——从 2025-03-26 就软废弃了，这次正式归入 Deprecated，一年缓冲期后移除。</li>
+</ul>
+<p>顺带还统一了错误码：资源未找到从 <code>-32002</code> 改成 <code>-32602</code>（对齐 JSON-RPC 的 Invalid Params），并划定 <code>-32020</code> ~ <code>-32099</code> 为 MCP 规范专用区间。</p>
+<h2 id="迁移建议：这是一次破坏性升级"><a href="#迁移建议：这是一次破坏性升级" class="headerlink" title="迁移建议：这是一次破坏性升级"></a>迁移建议：这是一次破坏性升级</h2><p>必须说清楚：<strong>2026-07-28 是向后不兼容的</strong>。也就是说，新版协议的客户端连不上旧版的服务端，反过来也一样。所以现实的迁移路径只有一条——<strong>同时支持新旧两版，靠版本协商过渡</strong>。</p>
+<p>好在升级是 <strong>opt-in（选择性加入）</strong> 的：服务端可以同时声明支持 <code>2025-11-25</code> 和 <code>2026-07-28</code>，客户端在<strong>每个请求</strong>里选版本。只请求旧版的客户端行为完全不变，只有主动请求 <code>2026-07-28</code> 的客户端才会走新逻辑。</p>
+<p>SDK 层面，官方第一梯队维护的四个 SDK（TypeScript、Python、Go、C#）当天就支持了新版规范，Rust SDK 提供 beta 支持。这里的”第一梯队”可以理解为官方优先保障、优先跟进规范变化的 SDK。官方也针对”依赖 Session ID”这类破坏性改动给了详细迁移说明。</p>
+<ol>
+<li><strong>先别急着删旧代码</strong>。服务端加上 <code>2026-07-28</code> 的支持，和旧版并存跑一段时间。</li>
+<li><strong>重点排查会话依赖</strong>。凡是靠 <code>Mcp-Session-Id</code> 维持的状态，改成”工具返回句柄、模型回传参数”的模式。</li>
+<li><strong>授权栈先自检</strong>。你的授权服务器现在返回 <code>iss</code> 吗？规范虽然当前只要求客户端校验”存在的 <code>iss</code>“，但明确警告未来版本会要求客户端<strong>拒绝没有 <code>iss</code> 的响应</strong>——现在不补，以后就是坑。</li>
+<li><strong>升级 SDK 而不是手写协议</strong>。协议细节这版改动很大，跟着官方 SDK 的迁移指南走，比自己对着 changelog 手搓靠谱得多。</li>
+</ol>
+<h2 id="我的看法"><a href="#我的看法" class="headerlink" title="我的看法"></a>我的看法</h2><p>把这次更新连起来看，我的感受是：它不是在给 MCP 加更多花哨能力，而是在把 MCP 改造成一个更像标准 Web 服务的东西。</p>
+<p>无状态核心解决的是云上横向扩展；<code>Mcp-Method</code> &#x2F; <code>Mcp-Name</code> 让网关、限流、WAF 能看懂请求；<code>ttlMs</code> &#x2F; <code>cacheScope</code> 让工具列表和资源结果能被缓存；MRTR 把”中途问用户一句”从隐式会话改成显式多轮请求；OAuth 2.1、<code>iss</code> 校验、CIMD 则是把远程 MCP Server 接进现有企业身份体系。</p>
+<p>所以我觉得这次变化的重点不是”协议更酷了”，而是”协议更普通了”。普通到可以被负载均衡、缓存、网关、IAM、审计系统这些成熟基础设施接住。对想在生产环境大规模铺 Agent 的团队来说，这反而是最重要的信号。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><p>MCP 2026-07-28 核心要点：</p>
+<ol>
+<li>无状态核心是主角：删掉 <code>initialize</code> 握手和 <code>Mcp-Session-Id</code>，每个请求自带协议版本、身份和能力</li>
+<li>能力发现解耦：<code>server/discover</code> 由服务端必须实现、客户端可选调用，不再是通信前置门槛</li>
+<li>状态改由应用管：服务端铸造显式句柄，模型当参数回传，比藏在传输层更可控</li>
+<li>配套三件套：<code>Mcp-Method</code>&#x2F;<code>Mcp-Name</code> 头路由、<code>ttlMs</code>&#x2F;<code>cacheScope</code> 可缓存列表、MRTR 无状态交互</li>
+<li>OAuth 2.1 加固：强制 OAuth 2.1、RFC 9207 <code>iss</code> 校验、凭证绑定 issuer，DCR 废弃转向 CIMD</li>
+<li>核心瘦身：Tasks&#x2F;MCP Apps&#x2F;EMA 归入扩展框架，Roots&#x2F;Sampling&#x2F;Logging 与 HTTP+SSE 进入 12 个月废弃窗口</li>
+<li>这是破坏性升级但 opt-in：新旧版本靠协商共存，迁移重点是排查会话依赖和授权合规</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/MCP/">MCP</a><a class="post-meta__tags" href="/tags/Streamable-HTTP/">Streamable HTTP</a><a class="post-meta__tags" href="/tags/%E6%97%A0%E7%8A%B6%E6%80%81%E5%8D%8F%E8%AE%AE/">无状态协议</a><a class="post-meta__tags" href="/tags/OAuth2-1/">OAuth2.1</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/38-Harness%E7%9A%84%E6%96%B0%E6%80%9D%E8%80%83-%E6%A8%A1%E5%9E%8B%E5%8F%98%E5%BC%BA%E5%90%8E%E7%BC%B0%E7%BB%B3%E8%AF%A5%E6%80%8E%E4%B9%88%E8%B0%83/" title="Harness 的新思考：模型变强之后，缰绳该松哪几根"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Harness 的新思考：模型变强之后，缰绳该松哪几根</div></div></a></div><div class="next-post pull-right"><a href="/posts/01-%E7%8E%B0%E4%BB%A3%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%B7%A5%E7%A8%8B%E5%8C%96/" title="现代前端项目为什么需要工程化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">现代前端项目为什么需要工程化</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">244</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">536</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">12</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%8C%E4%B8%9A%E6%97%B6%E9%97%B4%E7%BA%BF"><span class="toc-number">1.</span> <span class="toc-text">行业时间线</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%9C%8B%E6%87%82%E8%BF%99%E6%AC%A1%E6%9B%B4%E6%96%B0"><span class="toc-number">2.</span> <span class="toc-text">一句话看懂这次更新</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%97%A0%E7%8A%B6%E6%80%81%E6%A0%B8%E5%BF%83%EF%BC%9A%E5%91%8A%E5%88%AB%E6%8F%A1%E6%89%8B%E5%92%8C%E4%BC%9A%E8%AF%9D"><span class="toc-number">3.</span> <span class="toc-text">无状态核心：告别握手和会话</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A7%E5%8D%8F%E8%AE%AE%E5%88%B0%E5%BA%95%E6%80%8E%E4%B9%88%E6%9C%89%E7%8A%B6%E6%80%81"><span class="toc-number">3.1.</span> <span class="toc-text">旧协议到底怎么有状态</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%99%E6%AC%A1%E5%88%B0%E5%BA%95%E5%88%A0%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">3.2.</span> <span class="toc-text">这次到底删了什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8F%A1%E6%89%8B%E5%88%A0%E4%BA%86%E4%BB%A5%E5%90%8E%EF%BC%8C%E8%83%BD%E5%8A%9B%E5%8F%91%E7%8E%B0%E6%80%8E%E4%B9%88%E5%8A%9E"><span class="toc-number">3.3.</span> <span class="toc-text">握手删了以后，能力发现怎么办</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A0%E7%8A%B6%E6%80%81-%E2%89%A0-%E4%BD%A0%E7%9A%84%E4%B8%9A%E5%8A%A1%E4%B8%8D%E8%83%BD%E6%9C%89%E7%8A%B6%E6%80%81"><span class="toc-number">3.4.</span> <span class="toc-text">无状态 ≠ 你的业务不能有状态</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E5%A5%97%E7%9A%84%E4%BC%A0%E8%BE%93%E5%B1%82%E6%94%B9%E9%80%A0"><span class="toc-number">4.</span> <span class="toc-text">配套的传输层改造</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%B7%E6%B1%82%E5%A4%B4%E8%B7%AF%E7%94%B1%EF%BC%9AMcp-Method-%E5%92%8C-Mcp-Name"><span class="toc-number">4.1.</span> <span class="toc-text">请求头路由：Mcp-Method 和 Mcp-Name</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#List-%E7%BB%93%E6%9E%9C%E5%8F%AF%E7%BC%93%E5%AD%98%EF%BC%9AttlMs-%E5%92%8C-cacheScope"><span class="toc-number">4.2.</span> <span class="toc-text">List 结果可缓存：ttlMs 和 cacheScope</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BB%8E%E5%8F%8C%E5%90%91%E4%BC%9A%E8%AF%9D%E5%88%B0%E5%A4%9A%E8%BD%AE%E8%AF%B7%E6%B1%82%EF%BC%9AMRTR"><span class="toc-number">4.3.</span> <span class="toc-text">从双向会话到多轮请求：MRTR</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OAuth-2-1-%E5%8A%A0%E5%9B%BA%EF%BC%9A%E4%BB%8E%E2%80%9D%E8%83%BD%E8%B7%91%E5%B0%B1%E8%A1%8C%E2%80%9D%E5%88%B0%E2%80%9D%E4%BC%81%E4%B8%9A%E7%BA%A7%E5%90%88%E8%A7%84%E2%80%9D"><span class="toc-number">5.</span> <span class="toc-text">OAuth 2.1 加固：从”能跑就行”到”企业级合规”</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#DCR-%E8%A2%AB%E5%BA%9F%E5%BC%83%EF%BC%8C%E6%94%B9%E7%94%A8-CIMD"><span class="toc-number">5.1.</span> <span class="toc-text">DCR 被废弃，改用 CIMD</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%89%A9%E5%B1%95%E6%A1%86%E6%9E%B6%E4%B8%8E%E5%BA%9F%E5%BC%83%E7%AD%96%E7%95%A5"><span class="toc-number">6.</span> <span class="toc-text">扩展框架与废弃策略</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A0%B8%E5%BF%83%E7%98%A6%E8%BA%AB%EF%BC%8C%E8%83%BD%E5%8A%9B%E8%BF%9B%E2%80%9D%E6%89%A9%E5%B1%95%E2%80%9D"><span class="toc-number">6.1.</span> <span class="toc-text">核心瘦身，能力进”扩展”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%9F%E5%BC%83%E4%BA%86%E4%BB%80%E4%B9%88%EF%BC%8C%E5%A4%9A%E4%B9%85%E7%A7%BB%E9%99%A4"><span class="toc-number">6.2.</span> <span class="toc-text">废弃了什么，多久移除</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%81%E7%A7%BB%E5%BB%BA%E8%AE%AE%EF%BC%9A%E8%BF%99%E6%98%AF%E4%B8%80%E6%AC%A1%E7%A0%B4%E5%9D%8F%E6%80%A7%E5%8D%87%E7%BA%A7"><span class="toc-number">7.</span> <span class="toc-text">迁移建议：这是一次破坏性升级</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%9A%84%E7%9C%8B%E6%B3%95"><span class="toc-number">8.</span> <span class="toc-text">我的看法</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">9.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/39-Graph-Engineering-%E5%A4%9AAgent%E7%BC%96%E6%8E%92%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Graph Engineering：多 Agent 编排的新一层">Graph Engineering：多 Agent 编排的新一层</a><time datetime="2026-07-31T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/38-Harness%E7%9A%84%E6%96%B0%E6%80%9D%E8%80%83-%E6%A8%A1%E5%9E%8B%E5%8F%98%E5%BC%BA%E5%90%8E%E7%BC%B0%E7%BB%B3%E8%AF%A5%E6%80%8E%E4%B9%88%E8%B0%83/" title="Harness 的新思考：模型变强之后，缰绳该松哪几根">Harness 的新思考：模型变强之后，缰绳该松哪几根</a><time datetime="2026-07-30T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/37-MCP%E6%96%B0%E7%89%88%E8%A7%84%E8%8C%83-%E6%97%A0%E7%8A%B6%E6%80%81HTTP%E6%A0%B8%E5%BF%83%E4%B8%8EOAuth2.1%E5%8A%A0%E5%9B%BA/" title="MCP新版规范正式发布：无状态 HTTP 核心 + OAuth 2.1 加固">MCP新版规范正式发布：无状态 HTTP 核心 + OAuth 2.1 加固</a><time datetime="2026-07-29T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-%E7%8E%B0%E4%BB%A3%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81%E5%B7%A5%E7%A8%8B%E5%8C%96/" title="现代前端项目为什么需要工程化">现代前端项目为什么需要工程化</a><time datetime="2026-07-11T15:59:00.000Z" title="发表于 2026 23:59:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/02-%E5%89%8D%E7%AB%AF%E9%A1%B9%E7%9B%AE%E7%9B%AE%E5%BD%95%E8%AE%BE%E8%AE%A1%E4%B8%8E%E9%A1%B9%E7%9B%AE%E8%A7%84%E8%8C%83/" title="前端项目目录设计与项目规范">前端项目目录设计与项目规范</a><time datetime="2026-07-11T15:58:00.000Z" title="发表于 2026 23:58:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
