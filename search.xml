@@ -4,6 +4,41 @@
   
     
     <entry>
+      <title>DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</title>
+      <link href="/posts/41-DeepSeek-Harness%E5%BC%80%E6%BA%90-%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84Agent%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/"/>
+      <url>/posts/41-DeepSeek-Harness%E5%BC%80%E6%BA%90-%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84Agent%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/</url>
+      
+        <content type="html"><![CDATA[<blockquote><p><strong>前言</strong>：2026-08-13 晚上，DeepSeek 正式开源了自己的 Agent 运行框架 <strong>DeepSeek Harness（CLI 叫 <code>dsh</code>）</strong>，MIT 协议，开发者预览版。一个做基础模型出身的公司，亲自下场开源一套 Harness，这件事非常值得说道说道。</p></blockquote><h2 id="行业时间线"><a href="#行业时间线" class="headerlink" title="行业时间线"></a>行业时间线</h2><table><thead><tr><th>时间</th><th>事件</th></tr></thead><tbody><tr><td>2026-02-25</td><td>Nous Research 开源 Hermes Agent，主打 Learning Loop + Skills 自我沉淀</td></tr><tr><td>2026-07</td><td>Anthropic 升级 Claude 5，把 Claude Code 的 System Prompt 砍掉 80%（unhobbling）</td></tr><tr><td>2026-08-13</td><td>DeepSeek 开源 DeepSeek Harness（<code>dsh</code>）开发者预览版 v0.1，MIT 协议</td></tr><tr><td>2026-08-14</td><td>内测两周社区贡献插件约 300 个，官方插件覆盖工具&#x2F;技能&#x2F;会话&#x2F;沙箱&#x2F;存储&#x2F;调度&#x2F;UI 等 120+</td></tr></tbody></table><blockquote><p>这条线的重点：Harness 从一个”概念热词”，变成了各家争相开源的<strong>基础设施层</strong>。LangChain 的 Harrison Chase 和黄仁勋公开对话时那句”未来的公司将建立在 Harness 之上”，现在 DeepSeek 用一个开源仓库给它做了注脚。</p></blockquote><h2 id="先说清楚-DSH-是什么、不是什么"><a href="#先说清楚-DSH-是什么、不是什么" class="headerlink" title="先说清楚 DSH 是什么、不是什么"></a>先说清楚 DSH 是什么、不是什么</h2><p>很多人一看”DeepSeek 又发新东西”，第一反应是”新模型？”。不是。把这个搞清楚，后面才不会误解。</p><ul><li><strong>不是</strong> 新的基础模型</li><li><strong>不是</strong> 又一个 API 客户端 &#x2F; 套壳聊天框</li><li><strong>是</strong> 一套 Agent Harness——负责把模型接到文件系统、终端、网页、代码工具和其他 Agent 上，并组织上下文、工具调用和任务执行的<strong>运行框架</strong></li></ul><p>用我在 <a href="/posts/13-Harness-Engineering-AI%E6%97%B6%E4%BB%A3%E7%9A%84%E5%B7%A5%E7%A8%8B%E9%A9%BE%E9%A9%AD%E5%8A%9B/">Harness Engineering</a> 里的老比喻：模型是发动机，Harness 是整车。DeepSeek 以前只卖发动机，现在把整车的图纸也开源了。官方仓库在 <a href="https://github.com/deepseek-ai/deepseek-harness">github.com&#x2F;deepseek-ai&#x2F;deepseek-harness</a>，当前版本 <code>0.1.0-rc.5</code>。</p><h2 id="先从”用起来”说：用户眼里的-dsh-是什么"><a href="#先从”用起来”说：用户眼里的-dsh-是什么" class="headerlink" title="先从”用起来”说：用户眼里的 dsh 是什么"></a>先从”用起来”说：用户眼里的 dsh 是什么</h2><p>先抛开所有架构名词。你作为使用者拿到 dsh，体验是这样的：</p><p>装好之后（安装步骤后面讲），运行一行命令，浏览器弹出一个聊天界面，跟 ChatGPT 长得差不多。你在输入框里说”帮我把这个项目里的 <code>console.log</code> 全删掉”，它就真的去读文件、改代码、跑命令，一步步把活干完，而且每一步你都看得见。</p><p>这一层你<strong>根本不需要知道什么插件、什么 Cordis</strong>。对普通用户来说，dsh 就是”一个能动手干活、还能看着它每一步在干嘛的 AI 助手”，用起来跟 Hermes、Claude Code 没太大差别。</p><p>真正的不一样，从你想”改点什么”的那一刻才开始。</p><h2 id="再往上一层：开发者想配置什么"><a href="#再往上一层：开发者想配置什么" class="headerlink" title="再往上一层：开发者想配置什么"></a>再往上一层：开发者想配置什么</h2><p>用一阵子，你多半会冒出这几个念头：</p><ul><li>默认接的是 <code>deepseek-v4-pro</code>，我想换成本地模型，或者别家的模型</li><li>我想给它加一个”查我司内部工单”的自定义工具</li><li>每次改文件都弹审批太烦，我想关掉</li><li>我不要浏览器界面，我想把它塞进 CI 脚本，跑完就退</li></ul><p>换别的框架，这几件事有的能配、有的得改源码。<strong>在 dsh 里，这四件全是”改配置”就能搞定</strong>：换模型、加工具、关审批、去界面，一行源码都不用碰。</p><p>而你调好的这一整套设定，dsh 允许你<strong>存成一份带名字的配置，下次一行命令直接拉起来</strong>——这份东西官方叫 <strong>Profile</strong>。它自带两份现成的，正好对应两类最常见的用法：</p><table><thead><tr><th>Profile</th><th>你什么时候会用它</th></tr></thead><tbody><tr><td><code>web</code></td><td>想在本地开个浏览器界面，跟 Agent 对话、盯着它干活</td></tr><tr><td><code>headless</code></td><td>不要界面、不起服务器，跑一次性任务就退，塞进 CI &#x2F; 脚本 &#x2F; 批量跑分</td></tr></tbody></table><p>你也能自己攒一份，比如叫 <code>mycompany</code>：默认那套 + 你司内部工具 + 关掉沙箱，存好，团队里谁都能一行命令拉起同一套环境。</p><p><strong>到这里为止，你干的所有事——换模型、加工具、开关能力——都只是在一份配置里选装&#x2F;替换零件，没动过 dsh 一行源码。</strong> 那它凭什么能做到这点？</p><h2 id="再往底层：凭什么什么都能配（一切皆插件-Cordis）"><a href="#再往底层：凭什么什么都能配（一切皆插件-Cordis）" class="headerlink" title="再往底层：凭什么什么都能配（一切皆插件 + Cordis）"></a>再往底层：凭什么什么都能配（一切皆插件 + Cordis）</h2><p>答案就一条设计原则：</p><blockquote><p><strong>Everything is a Plugin（一切皆插件）。</strong></p></blockquote><p>模型、工具、技能、会话、沙箱、审批、存储、界面……甚至连 <strong>Agent 主循环本身</strong>，在 dsh 里全都是插件。你上面那些”换模型 &#x2F; 加工具 &#x2F; 关审批”，本质就是在插拔这些插件。既然什么都是插件，”配一下就换掉”自然就成立了。</p><p>这套插件能力，建立在一个叫 <strong>Cordis</strong> 的框架上。<a href="https://github.com/cordiverse/cordis">Cordis</a> 你可以粗暴理解成 **”给程序用的 Docker Compose”**：每个功能是一个能独立启停的插件，Cordis 只负责按依赖关系把它们装起来、随时热插拔——它不懂”模型””工具”这些业务，只管装卸和依赖。</p><p>把这几层摆到一张图上，从下往上盖楼看：</p><pre><code>   你的配置 Profile（web / headless / 自定义）   ← 一份清单，不是运行时的一层   = 装哪些插件 / 换掉哪些 / 关掉哪些                    │                    │ dsh 照着它，把下面这棵插件树拼出来                    ▼============ dsh 运行时 = 一棵插件树 ============  可选件    dsh-web-app（浏览器界面）/ dsh-headless（无界面·跑完即退）  --------------------------------------------------  开箱基线  dsh-base = 官方默认帮你装好的一批插件：              模型 · 工具 · 持久化 · 沙箱 · 审批 · 凭据 · 遥测              （每一样都是独立插件，都能换掉或关掉）  --------------------------------------------------  地基      Cordis：唯一拆不动，只管插件的装卸 + 依赖================================================</code></pre><p><strong>图怎么读</strong>（从下往上）：</p><ul><li>最底 <strong>Cordis</strong>：唯一拆不动的地基，只管把插件装上&#x2F;卸下。</li><li>往上 <strong>dsh-base</strong>：官方默认帮你装好的一批插件，也就是你啥都不配时的”开箱状态”。</li><li>再往上 <strong>可选件</strong>：要界面叠 <code>web-app</code>，要无头运行叠 <code>headless</code>。</li><li>最顶上 <strong>你的配置 Profile</strong>：它<strong>不是运行时的一层</strong>，而是你那份”装哪些、换哪些、关哪些”的清单，dsh 照着它把下面这棵插件树拼出来。</li></ul><p>回头看前面开发者那四个诉求，落到这张图上就一目了然了：换模型 &#x3D; 换掉 dsh-base 里的模型插件；加工具 &#x3D; 往里加个工具插件；关审批 &#x3D; 关掉审批插件；去界面 &#x3D; 不叠 <code>web-app</code>。全是在这棵树上插拔零件，没碰源码。</p><h3 id="dsh-base-是写死的吗？——不是，它也是一堆插件"><a href="#dsh-base-是写死的吗？——不是，它也是一堆插件" class="headerlink" title="dsh-base 是写死的吗？——不是，它也是一堆插件"></a>dsh-base 是写死的吗？——不是，它也是一堆插件</h3><p>这点最容易误会：<code>dsh-base</code> 名字听着像”内核”，其实它<strong>只是官方帮你打包好的一批插件</strong>，里面模型、工具、沙箱、审批、凭据每一样都是独立插件。所以对它你能：</p><ul><li><strong>覆盖</strong>：把默认沙箱换成你自己的实现</li><li><strong>关掉</strong>：不想要审批，禁用那个插件就行</li><li><strong>不用</strong>：极简 &#x2F; 跑分场景，可以完全不装 dsh-base，直接在 Cordis 上搭一套最小组合</li></ul><p>一句话：<strong>整套 dsh 里唯一拆不动的只有 Cordis，其余全是可换的插件；<code>dsh-base</code> 只是官方预设的那批，不是特权层。</strong> 这就是它敢讲”配置即架构”的底气——别人换个主循环、换个沙箱得改源码，dsh 里改配置就行。</p><p>顺便把两个官方术语点一下，后面会用到，也就不绕了：</p><ul><li><strong>Bundle</strong>：像 <code>dsh-base</code>、<code>dsh-web-app</code> 这种”打包好的一批插件”，官方就叫 Bundle。你可以理解成”一个功能套装”，装它就等于一次性把里面的插件都装上。</li><li><strong>patch</strong>：在装好的插件树上做的<strong>局部微调</strong>（对应前面说的”覆盖 &#x2F; 关掉”），比如”把默认沙箱换成我的””禁用审批”。</li></ul><p>所以前面反复说的 <strong>Profile</strong>，说白了就是一句话：<strong>挑几个 Bundle 叠起来，再打几处 patch</strong>，存成一份带名字的配置。三个词的关系就是这么简单，不用记复杂了。</p><h3 id="那”换东西”到底是换-Bundle-还是打-patch？"><a href="#那”换东西”到底是换-Bundle-还是打-patch？" class="headerlink" title="那”换东西”到底是换 Bundle 还是打 patch？"></a>那”换东西”到底是换 Bundle 还是打 patch？</h3><p>这是我自己一开始也绕不清的点：改一个东西，我是该换掉整个 <code>dsh-base</code>，还是在它上面改配置？答案是——<strong>两者都支持，而且它俩是同一套机制的不同力度</strong>。dsh 的插件树是”按层叠加、上层覆盖下层”，<code>patch</code> 只是这套叠加里最顶上的那一层。按改动力度从小到大，是一根连续的梯子：</p><table><thead><tr><th>力度</th><th>你干了啥</th><th>底层机制</th><th>典型场景</th></tr></thead><tbody><tr><td>轻：打 patch</td><td>留着 dsh-base，只覆盖&#x2F;关掉<strong>其中某个插件</strong></td><td>在 base 之上盖一层覆盖</td><td>换模型、把默认沙箱换成自己的、关审批</td></tr><tr><td>中：换&#x2F;加 Bundle</td><td>选择叠不叠某个套装，或叠上自己的套装</td><td>多叠一层 Bundle</td><td>去掉界面（不叠 web-app）、加一整套”内部工具”Bundle</td></tr><tr><td>重：完全自定义</td><td>干脆不叠 dsh-base，从 Cordis 起自己攒一批插件</td><td>只留地基、自己搭树</td><td>极简 &#x2F; 跑分，或深度定制的产品</td></tr></tbody></table><p>要澄清一个最容易误会的点：<strong>换”单个能力”（模型 &#x2F; 沙箱 &#x2F; 主循环），你不是换掉整个 <code>dsh-base</code>，而是用 patch 在它之上覆盖那一个插件，base 里其余的照旧。</strong> 所以根本不是二选一——真实用法几乎都是混着来：大部分插件用 dsh-base 的现成货，个别不满意的用 patch 覆盖，再额外叠一两个自己的 Bundle。</p><p>一句话记：<strong>能靠 patch 微调就别动 Bundle；要成套替换&#x2F;新增才动 Bundle；想彻底自己说了算就不叠 base、从 Cordis 裸搭。</strong> 三档共用同一个”叠加 + 覆盖”引擎。</p><p>想再往下看一层的话，dsh 把这些能力按 <code>ctx</code>（共享上下文）上的键暴露出来，粒度大概是这样（不关心可跳过）：</p><table><thead><tr><th>包</th><th>职责</th><th><code>ctx</code> 键</th></tr></thead><tbody><tr><td><code>core/tools</code></td><td>工具注册表 + 带审批把关的执行</td><td><code>ctx.tools</code></td></tr><tr><td><code>core/session</code></td><td>仅追加的会话事件日志</td><td><code>ctx.sessions</code></td></tr><tr><td><code>core/agent-loop</code></td><td>Agent 主循环的默认实现（可替换）</td><td><code>ctx.agentLoop</code></td></tr><tr><td><code>llm/llm</code></td><td>消息与流式、模型适配器接缝</td><td><code>ctx.llm</code></td></tr></tbody></table><p>连 <code>agent-loop</code> 都单独成包、还标着”可替换”，信号很明确：<strong>DSH 不想替你决定 Agent 该怎么循环，它只想给你一个能随便拆装的骨架。</strong></p><h2 id="四种运行模式"><a href="#四种运行模式" class="headerlink" title="四种运行模式"></a>四种运行模式</h2><p>DSH 内置了四种模式，覆盖从日常干活到跑分的不同场景：</p><table><thead><tr><th>模式</th><th>工具组合</th><th>典型场景</th></tr></thead><tbody><tr><td>标准</td><td>完整工具组合</td><td>日常开发、常规任务</td></tr><tr><td>PTC</td><td>由模型生成一段代码，用代码去组合多轮工具调用</td><td>复杂多步任务</td></tr><tr><td>极简</td><td>只保留一个 shell 工具 + 一个文件编辑工具</td><td>最小环境下的模型基准测试</td></tr><tr><td>创造</td><td>检查当前运行时、在内存里试验 Cordis 插件、据此组合出新模式</td><td>探索、自定义模式</td></tr></tbody></table><p>PTC（让模型写代码来编排工具调用，而不是一轮一轮手动调）和”创造模式”（能在内存里现场捏插件、拼新模式）这两个，是我觉得最有意思的地方——它把”改 Harness”这件事从”改代码、重启”变成了”运行时热试验”。</p><h2 id="快速上手"><a href="#快速上手" class="headerlink" title="快速上手"></a>快速上手</h2><p>前置依赖：<strong>Node.js ≥ 20.12（推荐 22）</strong> —— 它内部用到了 <code>util.parseEnv</code>，这是 Node 20.12 才加的 API，用 过低版本 会直接在启动前报 <code>parseEnv</code> 的 SyntaxError。官方文档给的最快方式是一行 npx，但<strong>我实测这条路在 macOS 上会翻车</strong>（原因见下面的坑），更稳的是装进一个项目里再跑：</p><pre><code class="bash"># 推荐：装进一个真实项目再跑（能把平台原生依赖装全）mkdir dsh &amp;&amp; cd dshnpm init -ynpm install @deepseek-ai/dshnpx dsh web# 跑起来会打印： dsh web: http://127.0.0.1:3080</code></pre><p>想读源码、做二次开发就走克隆构建：</p><pre><code class="bash"># 想改源码/做插件开发选这个git clone https://github.com/deepseek-ai/deepseek-harness.gitcd deepseek-harnesspnpm installpnpm run buildpnpm dsh web</code></pre><p>跑起来之后，浏览器打开就是一个 Web UI，可以接自己的模型开始用。仓库是个 Monorepo：<code>apps/</code> 下是 <code>cli</code> 和 <code>web</code> 两个应用，<code>packages/</code> 下是 core、llm、mcp、sandbox、context、plan、goal 等几十个包——光看目录结构就能感受到它开箱能力的广度。它已经支持 subagent（后台子代理）、MCP 和 Skill 这些扩展。</p><p><strong>坑：直接 <code>npx @deepseek-ai/dsh web</code> 启动失败，报一长串 <code>sharp</code> 错误</strong></p><p>我第一次就是照官方那行 npx 跑的，结果启动崩了，核心报错是这句（外面还套了好几层，最外层停在 <code>dsh-app-boot/lib/index.js</code> 的 <code>throw</code> 那行，很容易被误导成是它的问题）：</p><pre><code class="text">dsh: plugin tree failed to load: ...  @deepseek-ai/dsh-attachment-local: Could not load the &quot;sharp&quot; module using the darwin-arm64 runtime</code></pre><ul><li><strong>现象</strong>：Node 版本明明够（≥20），但一启动就挂在 <code>sharp</code> 上。</li><li><strong>原因</strong>：dsh 的图片附件插件 <code>dsh-attachment-local</code> 依赖原生模块 <code>sharp</code>。<code>npx</code> 那种一次性安装有个老毛病——<strong>不会把平台专属的原生二进制装全</strong>：我去翻 npx 缓存，<code>@img/</code> 下只有 <code>sharp-libvips-darwin-arm64</code>（libvips 库），<strong>缺了 <code>@img/sharp-darwin-arm64</code>（真正的 .node 绑定）</strong>，于是加载即崩。这跟 Node 版本半毛钱关系没有。</li><li><strong>解决</strong>：别用 npx，改成上面”装进项目”的方式（<code>npm install</code> 会正确解析 optional 依赖，把 <code>@img/sharp-darwin-arm64</code> 装上），或者全局装 <code>npm i -g @deepseek-ai/dsh</code> 再 <code>dsh web</code>。装完 <code>@img/</code> 下能看到 <code>sharp-darwin-arm64</code>，<code>dsh web</code> 就正常起来了。</li></ul><p><strong>一个自定义插件长什么样</strong>（下面是基于架构文档的示意写法，预览版 API 仍在迭代，具体签名以官方文档为准）：</p><pre><code class="typescript">// 一个最小的 dsh 插件：往工具注册表里加一个 &quot;现在几点&quot; 工具// 插件本质就是一个拿到共享上下文 ctx 的函数，往上面挂能力import type &#123; Context &#125; from &#39;@deepseek-ai/dsh&#39;;export const name = &#39;tool-now&#39;;export function apply(ctx: Context) &#123;  // core/tools 通过 ctx.tools 暴露作用域化的工具注册表  ctx.tools.register(&#123;    name: &#39;now&#39;,    description: &#39;返回当前时间的 ISO 字符串&#39;,    // 无参数工具，schema 给个空对象    parameters: &#123; type: &#39;object&#39;, properties: &#123;&#125; &#125;,    async handler() &#123;      return new Date().toISOString();    &#125;,  &#125;);&#125;</code></pre><p>这段代码的重点不在语法细节，而在那个心智模型：**你不是在”配置一个框架”，你是在”往一棵插件树上挂一根新枝”**。装卸、依赖、生命周期这些脏活，Cordis 帮你兜了。</p><h2 id="和-Hermes、Claude-Code-放一起比"><a href="#和-Hermes、Claude-Code-放一起比" class="headerlink" title="和 Hermes、Claude Code 放一起比"></a>和 Hermes、Claude Code 放一起比</h2><p>之前写过 <a href="/posts/29-Hermes-Agent%E4%B8%8EOpenClaw%E5%B7%A5%E7%A8%8B%E5%8C%96%E5%AF%B9%E6%AF%94%E5%AE%9E%E6%88%98/">Hermes Agent 与 OpenClaw 工程化对比</a>，正好把 DSH 拉进来对一下，选型时心里有数：</p><table><thead><tr><th>维度</th><th>DeepSeek Harness (DSH)</th><th>Hermes Agent</th><th>Claude Code</th></tr></thead><tbody><tr><td>开发方</td><td>DeepSeek</td><td>Nous Research</td><td>Anthropic</td></tr><tr><td>协议</td><td>MIT</td><td>MIT</td><td>闭源（商业）</td></tr><tr><td>主语言</td><td>TypeScript &#x2F; Node</td><td>Python</td><td>TypeScript</td></tr><tr><td>核心抽象</td><td>一切皆插件 &#x2F; Cordis 插件树</td><td>单体 Agent + Learning Loop</td><td>内置相对固定的 harness</td></tr><tr><td>模型绑定</td><td>不绑定（可接 40+ 模型）</td><td>不绑定</td><td>绑定 Claude</td></tr><tr><td>可替换粒度</td><td>连 Agent Loop 都是插件</td><td>配置 + Skills 层</td><td>有限</td></tr><tr><td>生态</td><td>预览两周约 300 社区插件</td><td>Skills &#x2F; 社区插件</td><td>官方为主</td></tr></tbody></table><p>我的看法：</p><ul><li><strong>要极致的可组合、想连主循环都换掉</strong>——DSH 的抽象最彻底，Cordis 这套”配置即架构”给的自由度最大。代价是概念（Profile &#x2F; Bundle &#x2F; patch）有学习成本。</li><li><strong>要开箱即用、看重自进化 Learning Loop</strong>——Hermes 更省心，理念也更收敛。</li><li><strong>在 Anthropic 生态里、追求稳定体验</strong>——Claude Code 依然顺手，但你别指望能把它的 harness 拆开重装。</li></ul><p>一句话：<strong>DSH 是”给工程师玩的乐高”，Hermes 是”配好的成品套装”，Claude Code 是”精装样板间”。</strong> 没有谁绝对更好，看你想要多少控制权。</p><h2 id="战略意义：从卖模型到卖结果"><a href="#战略意义：从卖模型到卖结果" class="headerlink" title="战略意义：从卖模型到卖结果"></a>战略意义：从卖模型到卖结果</h2><p>这事不能只当技术新闻看。DeepSeek 亲自下场开源 Harness，背后是一次定位转变——从”模型提供商”往”全链路 AI 工作流解决方案构建者”走。</p><p>用 MIT 这种最宽松的协议、还刻意做”不绑定模型”（DSH 能接包括 DeepSeek 在内的 40 多种模型），我的解读是它想赌<strong>生态</strong>：把整车图纸开源出去、让全世界开发者往上挂插件，比自己闷头做一个封闭产品跑得快。内测两周 300 个插件的增速，某种程度上验证了这条路走得通。</p><p>对照 <a href="/posts/38-Harness%E7%9A%84%E6%96%B0%E6%80%9D%E8%80%83-%E6%A8%A1%E5%9E%8B%E5%8F%98%E5%BC%BA%E5%90%8E%E7%BC%B0%E7%BB%B3%E8%AF%A5%E6%80%8E%E4%B9%88%E8%B0%83/">Harness 的新思考</a> 那篇的判断——模型越来越强、越来越商品化，价值就越往”怎么驾驭模型干活”这一层迁移。DSH 正是把这层”驾驭力”产品化、开源化的一个动作。<strong>模型竞赛卷不动了，Harness 竞赛开始了。</strong></p><h2 id="我的判断"><a href="#我的判断" class="headerlink" title="我的判断"></a>我的判断</h2><ol><li>DSH 不是新模型，是一套 Agent 运行框架，看它别用看模型的眼光</li><li>“一切皆插件 + Cordis 元框架”是它的灵魂，连 Agent Loop 都能换，可组合性目前这一档里最强</li><li>Profile &#x2F; Bundle &#x2F; dsh-base 分层是理解它的钥匙，本质是”配置即架构”</li><li>四种模式里，PTC 和创造模式最值得玩，把”改 Harness”变成了运行时热试验</li><li>选型上：要控制权选 DSH，要省心选 Hermes，要稳定体验用 Claude Code</li><li>它现在是 <code>0.1.0-rc.5</code> 开发者预览版，接口会变，尝鲜可以、别急着压生产</li><li>更大的信号是：竞争正从”模型竞赛”转向”Harness 竞赛”，基础设施层的仗才刚开打</li></ol><h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol><li>DeepSeek 于 2026-08-13 开源 DeepSeek Harness（<code>dsh</code>）开发者预览版，MIT 协议，是一套把模型接到文件&#x2F;终端&#x2F;工具上的 Agent 运行框架</li><li>核心理念是”一切皆插件”，基于 Cordis 插件系统，连 Agent Loop 都是可替换插件</li><li>运行时是一棵按序叠加的插件树，用 Profile 组装、用 Bundle 分发，<code>dsh-base</code> 是每个 profile 的第一层</li><li>内置标准、PTC、极简、创造四种模式，分别对应日常开发、复杂编排、跑分和自定义探索</li><li><code>npx @deepseek-ai/dsh web</code> 一行起 Web UI，支持 subagent、MCP、Skill 扩展</li><li>相比 Hermes 和 Claude Code，DSH 的可组合粒度最细，代价是概念学习成本</li><li>更深层的意义：DeepSeek 从”卖模型”转向”卖结果”，行业竞争从模型竞赛进入 Harness 竞赛</li></ol>]]></content>
+      
+      
+      <categories>
+          
+          <category> AI相关 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> AI </tag>
+            
+            <tag> AI Agent </tag>
+            
+            <tag> DeepSeek </tag>
+            
+            <tag> Harness </tag>
+            
+            <tag> Cordis </tag>
+            
+            <tag> 开源 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
       <title>研发提效的思考：从软件工程本质到 AI 时代的两条路</title>
       <link href="/posts/%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/"/>
       <url>/posts/%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/</url>
@@ -509,9 +544,9 @@
             
             <tag> Vite </tag>
             
-            <tag> 环境变量 </tag>
-            
             <tag> 多环境 </tag>
+            
+            <tag> 环境变量 </tag>
             
             <tag> 配置治理 </tag>
             
@@ -1469,11 +1504,11 @@
       
         <tags>
             
+            <tag> 架构设计 </tag>
+            
             <tag> 脚手架 </tag>
             
             <tag> CLI </tag>
-            
-            <tag> 架构设计 </tag>
             
             <tag> 插件化 </tag>
             
@@ -1564,11 +1599,11 @@
             
             <tag> 类型声明 </tag>
             
+            <tag> ESM </tag>
+            
             <tag> 库构建 </tag>
             
             <tag> 组件库 </tag>
-            
-            <tag> ESM </tag>
             
             <tag> UMD </tag>
             
@@ -1828,9 +1863,9 @@
             
             <tag> 前端工程化 </tag>
             
-            <tag> 单元测试 </tag>
-            
             <tag> Vitest </tag>
+            
+            <tag> 单元测试 </tag>
             
             <tag> 测试覆盖率 </tag>
             
@@ -1861,11 +1896,11 @@
             
             <tag> 前端工程化 </tag>
             
-            <tag> Vitest </tag>
-            
             <tag> 组件测试 </tag>
             
             <tag> Testing Library </tag>
+            
+            <tag> Vitest </tag>
             
             <tag> 无障碍 </tag>
             
@@ -2158,9 +2193,9 @@
             
             <tag> 前端工程化 </tag>
             
-            <tag> 多环境 </tag>
-            
             <tag> 部署 </tag>
+            
+            <tag> 多环境 </tag>
             
             <tag> 配置注入 </tag>
             
@@ -2323,9 +2358,9 @@
             
             <tag> 性能优化 </tag>
             
-            <tag> SSR </tag>
-            
             <tag> 前端工程化 </tag>
+            
+            <tag> SSR </tag>
             
             <tag> SSG </tag>
             
@@ -2420,11 +2455,11 @@
       
         <tags>
             
+            <tag> 前端工程化 </tag>
+            
             <tag> 小程序 </tag>
             
             <tag> Web Vitals </tag>
-            
-            <tag> 前端工程化 </tag>
             
             <tag> 前端监控 </tag>
             
@@ -2956,9 +2991,9 @@
             
             <tag> 架构设计 </tag>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 系统总览 </tag>
             
@@ -2985,9 +3020,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3016,9 +3051,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3047,9 +3082,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3080,9 +3115,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3111,9 +3146,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3142,9 +3177,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3173,9 +3208,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 响应式系统 </tag>
             
@@ -3204,9 +3239,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> runtime-core </tag>
             
@@ -3235,9 +3270,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> renderer </tag>
             
@@ -3266,9 +3301,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件系统 </tag>
             
@@ -3297,9 +3332,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件通信 </tag>
             
@@ -3330,9 +3365,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件系统 </tag>
             
@@ -3361,9 +3396,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 组件系统 </tag>
             
@@ -3392,9 +3427,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> scheduler </tag>
             
@@ -3423,9 +3458,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> renderer </tag>
             
@@ -3454,9 +3489,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 内置组件 </tag>
             
@@ -3489,9 +3524,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -3520,9 +3555,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -3551,9 +3586,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -3584,9 +3619,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译器 </tag>
             
@@ -3615,9 +3650,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> 编译时优化 </tag>
             
@@ -3650,9 +3685,9 @@
       
         <tags>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> compiler-sfc </tag>
             
@@ -3683,9 +3718,9 @@
             
             <tag> SSR </tag>
             
-            <tag> 源码解析 </tag>
-            
             <tag> Vue3 </tag>
+            
+            <tag> 源码解析 </tag>
             
             <tag> hydration </tag>
             
@@ -3712,11 +3747,11 @@
       
         <tags>
             
+            <tag> Vue3 </tag>
+            
             <tag> 源码解析 </tag>
             
             <tag> 源码阅读 </tag>
-            
-            <tag> Vue3 </tag>
             
             <tag> 阅读路线 </tag>
             
@@ -3743,11 +3778,11 @@
       
         <tags>
             
+            <tag> Vue3 </tag>
+            
             <tag> 源码解析 </tag>
             
             <tag> 设计哲学 </tag>
-            
-            <tag> Vue3 </tag>
             
             <tag> 源码总结 </tag>
             
@@ -3805,11 +3840,11 @@
       
         <tags>
             
+            <tag> 源码解析 </tag>
+            
             <tag> React18 </tag>
             
             <tag> Fiber </tag>
-            
-            <tag> 源码解析 </tag>
             
         </tags>
       
@@ -4329,9 +4364,9 @@
       
         <tags>
             
-            <tag> React18 </tag>
-            
             <tag> 源码阅读 </tag>
+            
+            <tag> React18 </tag>
             
             <tag> 调试指南 </tag>
             
@@ -4358,9 +4393,9 @@
       
         <tags>
             
-            <tag> React18 </tag>
-            
             <tag> 设计哲学 </tag>
+            
+            <tag> React18 </tag>
             
             <tag> 框架设计 </tag>
             
@@ -4455,9 +4490,9 @@
             
             <tag> Docker </tag>
             
-            <tag> Node.js </tag>
-            
             <tag> Nginx </tag>
+            
+            <tag> Node.js </tag>
             
             <tag> 反向代理 </tag>
             
@@ -6824,31 +6859,6 @@
     
     
     <entry>
-      <title>哈希表专题</title>
-      <link href="/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/"/>
-      <url>/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/</url>
-      
-        <content type="html"><![CDATA[<p>哈希表是一种根据关键码值(Key value)而直接进行访问的数据结构，本文整理了哈希表相关的经典算法题目。</p><h2 id="哈希表基础"><a href="#哈希表基础" class="headerlink" title="哈希表基础"></a>哈希表基础</h2><p>哈希表常用的数据结构有：数组、Set、Map</p><h2 id="有效的字母异位词"><a href="#有效的字母异位词" class="headerlink" title="有效的字母异位词"></a>有效的字母异位词</h2><h3 id="方法一：用数组"><a href="#方法一：用数组" class="headerlink" title="方法一：用数组"></a>方法一：用数组</h3><p>定义一个可以存放26个字母的数组，第一个字符串做加法，第二个字符串做减法，最后判断数组中元素是不是全部是0</p><h3 id="方法二：字符串排序"><a href="#方法二：字符串排序" class="headerlink" title="方法二：字符串排序"></a>方法二：字符串排序</h3><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;boolean&#125; */var isAnagram = function (s, t) &#123;  if (s.length !== t.length || s === t) &#123;    return false;  &#125;  const arrS = s.split(&#39;&#39;);  const arrT = t.split(&#39;&#39;);  arrS.sort();  arrT.sort();  for (let i = 0; i &lt; arrS.length; i++) &#123;    if (arrS[i] !== arrT[i]) &#123;      return false;    &#125;  &#125;  return true;&#125;;</code></pre><h2 id="两个数组的交集"><a href="#两个数组的交集" class="headerlink" title="两个数组的交集"></a>两个数组的交集</h2><h3 id="方法一：哈希表-set"><a href="#方法一：哈希表-set" class="headerlink" title="方法一：哈希表(set)"></a>方法一：哈希表(set)</h3><p>将第一个数组中的数据存放到哈希表中，遍历第二个数组然后出现过就加到结果数组中</p><h3 id="方法二：set-排序"><a href="#方法二：set-排序" class="headerlink" title="方法二：set+排序"></a>方法二：set+排序</h3><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @return &#123;number[]&#125; */var intersection = function (nums1, nums2) &#123;  nums1 = Array.from(new Set(nums1));  nums2 = Array.from(new Set(nums2));  const tem = [...nums1, ...nums2];  tem.sort((a, b) =&gt; &#123;    return a - b;  &#125;)  const res = []  tem.forEach((elem) =&gt; &#123;    if (tem.indexOf(elem) !== tem.lastIndexOf(elem) &amp;&amp; res.indexOf(elem) === -1) &#123;      res.push(elem);    &#125;  &#125;)  return res;&#125;;</code></pre><h2 id="两数之和"><a href="#两数之和" class="headerlink" title="两数之和"></a>两数之和</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[]&#125; */var twoSum = function (nums, target) &#123;  let map = new Map();  for (let i = 0, len = nums.length; i &lt; len; i++) &#123;    if (map.has(target - nums[i])) &#123;      return [map.get(target - nums[i]), i];    &#125; else &#123;      map.set(nums[i], i);    &#125;  &#125;  return [];&#125;;</code></pre><h2 id="四数之和"><a href="#四数之和" class="headerlink" title="四数之和"></a>四数之和</h2><ol><li>暴力解法，四重for循环</li><li>遍历两个数组之和相加，存储到map中，另外需要存储出现的次数，再遍历另外两个数组，去map中查看是否有需要的元素</li></ol><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @param &#123;number[]&#125; nums3 * @param &#123;number[]&#125; nums4 * @return &#123;number&#125; */var fourSumCount = function (nums1, nums2, nums3, nums4) &#123;  const map = new Map();  // 遍历前两个数组将和存储到map中，并统计次数  for (let i = 0; i &lt; nums1.length; i++) &#123;    for (let j = 0; j &lt; nums2.length; j++) &#123;      const sum = nums1[i] + nums2[j]      map.set(sum, (map.get(sum) || 0) + 1)    &#125;  &#125;  // 遍历剩余两个数组，判断map中是否具有目标元素(出现多少次就加多少个)  let res = 0  for (let i = 0; i &lt; nums3.length; i++) &#123;    for (let j = 0; j &lt; nums4.length; j++) &#123;      const sum = 0 - (nums3[i] + nums4[j]);      res += map.get(sum) || 0    &#125;  &#125;  return res&#125;;</code></pre><h2 id="三数之和"><a href="#三数之和" class="headerlink" title="三数之和"></a>三数之和</h2><p>一个数组中找到三个元素，三个元素之和为0</p><h3 id="方法一：hash法"><a href="#方法一：hash法" class="headerlink" title="方法一：hash法"></a>方法一：hash法</h3><p>需要考虑去重，a、b、c都需要考虑去重</p><h3 id="方法二：双指针"><a href="#方法二：双指针" class="headerlink" title="方法二：双指针"></a>方法二：双指针</h3><p>对数组进行排序<br>a值固定，b和c用双指针去找，如果三个数的值相加大了，就移动右指针，如果小了就移动左指针</p><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @return &#123;number[][]&#125; */var threeSum = function (nums) &#123;  if (nums.length &lt; 3) &#123;    return []  &#125;  // 数组排序  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 目标结果是0，如果第一个元素都大于0，那么不可能获得结果  if (nums[0] &gt; 0) &#123;    return []  &#125;  const res = []  for (let i = 0; i &lt; nums.length; i++) &#123;    /*         判断第一个数是否重复,如果判断后一个的话判断的是数组中是否有重复元素，        [-1,-1,2]        所有判断前一个是否用过    */    if (i &gt; 0 &amp;&amp; nums[i] === nums[i - 1]) &#123;      continue;    &#125;    let left = i + 1    let right = nums.length - 1    while (right &gt; left) &#123;      const sum = nums[i] + nums[right] + nums[left]      if (sum &gt; 0) &#123;        right--;      &#125; else if (sum &lt; 0) &#123;        left++;      &#125; else if (sum == 0) &#123;        res.push([nums[i], nums[left], nums[right]])        /*           收获结果之后再进行去重操作          去重,如果数组中元素是[0,-1,-1,-1,-1,1,1,1,1]          left指针和right指针移动后指针指向的值是相同的，需要进行去重操作        */        while (left &lt; right &amp;&amp; nums[left] == nums[left + 1]) &#123;          left++        &#125;        while (left &lt; right &amp;&amp; nums[right] == nums[right - 1]) &#123;          right--        &#125;        // 去重完成之和继续循环        left++        right--      &#125;    &#125;  &#125;  return res&#125;;</code></pre><h2 id="四数之和（数组）"><a href="#四数之和（数组）" class="headerlink" title="四数之和（数组）"></a>四数之和（数组）</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[][]&#125; */var fourSum = function (nums, target) &#123;  if (nums.length &lt; 4) &#123;    return []  &#125;  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 剪枝操作,这里需要加上target大于0  if (nums[0] &gt; target &amp;&amp; target &gt; 0) &#123;    return []  &#125;  /*    双重for循环+定义两指针去寻找    */  const res = []  for (let k = 0; k &lt; nums.length; k++) &#123;    // 去重,判断是否与前一个数相等相等表示已经用过了    if (k &gt; 0 &amp;&amp; nums[k] === nums[k - 1]) &#123;      continue    &#125;    for (let i = k + 1; i &lt; nums.length; i++) &#123;      // 去重,判断是否与前一个数相等相等表示已经用过了      if (i &gt; k + 1 &amp;&amp; nums[i] === nums[i - 1]) continue;      let left = i + 1;      let right = nums.length - 1;      while (right &gt; left) &#123;        // 获得结果        const sum = nums[k] + nums[i] + nums[left] + nums[right]        if (sum &gt; target) &#123;          right--        &#125;        if (sum &lt; target) &#123;          left++        &#125;        if (sum === target) &#123;          res.push([nums[k], nums[i], nums[left], nums[right]])          // 去重          while (right &gt; left &amp;&amp; nums[left] === nums[left + 1]) &#123;            left++          &#125;          while (right &gt; left &amp;&amp; nums[right] === nums[right - 1]) &#123;            right--          &#125;          left++          right--        &#125;      &#125;    &#125;  &#125;  return res&#125;;</code></pre>]]></content>
-      
-      
-      <categories>
-          
-          <category> 算法 </category>
-          
-      </categories>
-      
-      
-        <tags>
-            
-            <tag> 哈希表 </tag>
-            
-        </tags>
-      
-    </entry>
-    
-    
-    
-    <entry>
       <title>链表专题</title>
       <link href="/posts/02-%E9%93%BE%E8%A1%A8%E4%B8%93%E9%A2%98/"/>
       <url>/posts/02-%E9%93%BE%E8%A1%A8%E4%B8%93%E9%A2%98/</url>
@@ -6866,6 +6876,31 @@
         <tags>
             
             <tag> 链表 </tag>
+            
+        </tags>
+      
+    </entry>
+    
+    
+    
+    <entry>
+      <title>哈希表专题</title>
+      <link href="/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/"/>
+      <url>/posts/03-%E5%93%88%E5%B8%8C%E8%A1%A8%E4%B8%93%E9%A2%98/</url>
+      
+        <content type="html"><![CDATA[<p>哈希表是一种根据关键码值(Key value)而直接进行访问的数据结构，本文整理了哈希表相关的经典算法题目。</p><h2 id="哈希表基础"><a href="#哈希表基础" class="headerlink" title="哈希表基础"></a>哈希表基础</h2><p>哈希表常用的数据结构有：数组、Set、Map</p><h2 id="有效的字母异位词"><a href="#有效的字母异位词" class="headerlink" title="有效的字母异位词"></a>有效的字母异位词</h2><h3 id="方法一：用数组"><a href="#方法一：用数组" class="headerlink" title="方法一：用数组"></a>方法一：用数组</h3><p>定义一个可以存放26个字母的数组，第一个字符串做加法，第二个字符串做减法，最后判断数组中元素是不是全部是0</p><h3 id="方法二：字符串排序"><a href="#方法二：字符串排序" class="headerlink" title="方法二：字符串排序"></a>方法二：字符串排序</h3><pre><code class="javascript">/** * @param &#123;string&#125; s * @param &#123;string&#125; t * @return &#123;boolean&#125; */var isAnagram = function (s, t) &#123;  if (s.length !== t.length || s === t) &#123;    return false;  &#125;  const arrS = s.split(&#39;&#39;);  const arrT = t.split(&#39;&#39;);  arrS.sort();  arrT.sort();  for (let i = 0; i &lt; arrS.length; i++) &#123;    if (arrS[i] !== arrT[i]) &#123;      return false;    &#125;  &#125;  return true;&#125;;</code></pre><h2 id="两个数组的交集"><a href="#两个数组的交集" class="headerlink" title="两个数组的交集"></a>两个数组的交集</h2><h3 id="方法一：哈希表-set"><a href="#方法一：哈希表-set" class="headerlink" title="方法一：哈希表(set)"></a>方法一：哈希表(set)</h3><p>将第一个数组中的数据存放到哈希表中，遍历第二个数组然后出现过就加到结果数组中</p><h3 id="方法二：set-排序"><a href="#方法二：set-排序" class="headerlink" title="方法二：set+排序"></a>方法二：set+排序</h3><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @return &#123;number[]&#125; */var intersection = function (nums1, nums2) &#123;  nums1 = Array.from(new Set(nums1));  nums2 = Array.from(new Set(nums2));  const tem = [...nums1, ...nums2];  tem.sort((a, b) =&gt; &#123;    return a - b;  &#125;)  const res = []  tem.forEach((elem) =&gt; &#123;    if (tem.indexOf(elem) !== tem.lastIndexOf(elem) &amp;&amp; res.indexOf(elem) === -1) &#123;      res.push(elem);    &#125;  &#125;)  return res;&#125;;</code></pre><h2 id="两数之和"><a href="#两数之和" class="headerlink" title="两数之和"></a>两数之和</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[]&#125; */var twoSum = function (nums, target) &#123;  let map = new Map();  for (let i = 0, len = nums.length; i &lt; len; i++) &#123;    if (map.has(target - nums[i])) &#123;      return [map.get(target - nums[i]), i];    &#125; else &#123;      map.set(nums[i], i);    &#125;  &#125;  return [];&#125;;</code></pre><h2 id="四数之和"><a href="#四数之和" class="headerlink" title="四数之和"></a>四数之和</h2><ol><li>暴力解法，四重for循环</li><li>遍历两个数组之和相加，存储到map中，另外需要存储出现的次数，再遍历另外两个数组，去map中查看是否有需要的元素</li></ol><pre><code class="javascript">/** * @param &#123;number[]&#125; nums1 * @param &#123;number[]&#125; nums2 * @param &#123;number[]&#125; nums3 * @param &#123;number[]&#125; nums4 * @return &#123;number&#125; */var fourSumCount = function (nums1, nums2, nums3, nums4) &#123;  const map = new Map();  // 遍历前两个数组将和存储到map中，并统计次数  for (let i = 0; i &lt; nums1.length; i++) &#123;    for (let j = 0; j &lt; nums2.length; j++) &#123;      const sum = nums1[i] + nums2[j]      map.set(sum, (map.get(sum) || 0) + 1)    &#125;  &#125;  // 遍历剩余两个数组，判断map中是否具有目标元素(出现多少次就加多少个)  let res = 0  for (let i = 0; i &lt; nums3.length; i++) &#123;    for (let j = 0; j &lt; nums4.length; j++) &#123;      const sum = 0 - (nums3[i] + nums4[j]);      res += map.get(sum) || 0    &#125;  &#125;  return res&#125;;</code></pre><h2 id="三数之和"><a href="#三数之和" class="headerlink" title="三数之和"></a>三数之和</h2><p>一个数组中找到三个元素，三个元素之和为0</p><h3 id="方法一：hash法"><a href="#方法一：hash法" class="headerlink" title="方法一：hash法"></a>方法一：hash法</h3><p>需要考虑去重，a、b、c都需要考虑去重</p><h3 id="方法二：双指针"><a href="#方法二：双指针" class="headerlink" title="方法二：双指针"></a>方法二：双指针</h3><p>对数组进行排序<br>a值固定，b和c用双指针去找，如果三个数的值相加大了，就移动右指针，如果小了就移动左指针</p><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @return &#123;number[][]&#125; */var threeSum = function (nums) &#123;  if (nums.length &lt; 3) &#123;    return []  &#125;  // 数组排序  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 目标结果是0，如果第一个元素都大于0，那么不可能获得结果  if (nums[0] &gt; 0) &#123;    return []  &#125;  const res = []  for (let i = 0; i &lt; nums.length; i++) &#123;    /*         判断第一个数是否重复,如果判断后一个的话判断的是数组中是否有重复元素，        [-1,-1,2]        所有判断前一个是否用过    */    if (i &gt; 0 &amp;&amp; nums[i] === nums[i - 1]) &#123;      continue;    &#125;    let left = i + 1    let right = nums.length - 1    while (right &gt; left) &#123;      const sum = nums[i] + nums[right] + nums[left]      if (sum &gt; 0) &#123;        right--;      &#125; else if (sum &lt; 0) &#123;        left++;      &#125; else if (sum == 0) &#123;        res.push([nums[i], nums[left], nums[right]])        /*           收获结果之后再进行去重操作          去重,如果数组中元素是[0,-1,-1,-1,-1,1,1,1,1]          left指针和right指针移动后指针指向的值是相同的，需要进行去重操作        */        while (left &lt; right &amp;&amp; nums[left] == nums[left + 1]) &#123;          left++        &#125;        while (left &lt; right &amp;&amp; nums[right] == nums[right - 1]) &#123;          right--        &#125;        // 去重完成之和继续循环        left++        right--      &#125;    &#125;  &#125;  return res&#125;;</code></pre><h2 id="四数之和（数组）"><a href="#四数之和（数组）" class="headerlink" title="四数之和（数组）"></a>四数之和（数组）</h2><pre><code class="javascript">/** * @param &#123;number[]&#125; nums * @param &#123;number&#125; target * @return &#123;number[][]&#125; */var fourSum = function (nums, target) &#123;  if (nums.length &lt; 4) &#123;    return []  &#125;  nums.sort((a, b) =&gt; &#123;    return a - b  &#125;)  // 剪枝操作,这里需要加上target大于0  if (nums[0] &gt; target &amp;&amp; target &gt; 0) &#123;    return []  &#125;  /*    双重for循环+定义两指针去寻找    */  const res = []  for (let k = 0; k &lt; nums.length; k++) &#123;    // 去重,判断是否与前一个数相等相等表示已经用过了    if (k &gt; 0 &amp;&amp; nums[k] === nums[k - 1]) &#123;      continue    &#125;    for (let i = k + 1; i &lt; nums.length; i++) &#123;      // 去重,判断是否与前一个数相等相等表示已经用过了      if (i &gt; k + 1 &amp;&amp; nums[i] === nums[i - 1]) continue;      let left = i + 1;      let right = nums.length - 1;      while (right &gt; left) &#123;        // 获得结果        const sum = nums[k] + nums[i] + nums[left] + nums[right]        if (sum &gt; target) &#123;          right--        &#125;        if (sum &lt; target) &#123;          left++        &#125;        if (sum === target) &#123;          res.push([nums[k], nums[i], nums[left], nums[right]])          // 去重          while (right &gt; left &amp;&amp; nums[left] === nums[left + 1]) &#123;            left++          &#125;          while (right &gt; left &amp;&amp; nums[right] === nums[right - 1]) &#123;            right--          &#125;          left++          right--        &#125;      &#125;    &#125;  &#125;  return res&#125;;</code></pre>]]></content>
+      
+      
+      <categories>
+          
+          <category> 算法 </category>
+          
+      </categories>
+      
+      
+        <tags>
+            
+            <tag> 哈希表 </tag>
             
         </tags>
       
