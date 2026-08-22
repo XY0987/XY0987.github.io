@@ -1,0 +1,611 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：OpenAI 最近放出的 Codex 官方最佳实践里，有个信号很明显：AI 编程工具已经不只是”问一句答一句”的代码助手，而是在往”长期队友”方向演进。这篇借 Codex 做一个切入，但重点不在某个具体工具，而是重新总结我们应该怎么和 AI Agent 协作。  Codex 官方指南真正想强调什么先把资料来源说清楚。OpenAI 在 Codex 的 Best practices、Promp">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">
+<meta property="og:url" content="http://example.com/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：OpenAI 最近放出的 Codex 官方最佳实践里，有个信号很明显：AI 编程工具已经不只是”问一句答一句”的代码助手，而是在往”长期队友”方向演进。这篇借 Codex 做一个切入，但重点不在某个具体工具，而是重新总结我们应该怎么和 AI Agent 协作。  Codex 官方指南真正想强调什么先把资料来源说清楚。OpenAI 在 Codex 的 Best practices、Promp">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-08-02T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.400Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="AI编程">
+<meta property="article:tag" content="Harness Engineering">
+<meta property="article:tag" content="Context Engineering">
+<meta property="article:tag" content="Codex">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.400Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>12分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：OpenAI 最近放出的 Codex 官方最佳实践里，有个信号很明显：AI 编程工具已经不只是”问一句答一句”的代码助手，而是在往”长期队友”方向演进。这篇借 Codex 做一个切入，但重点不在某个具体工具，而是重新总结我们应该怎么和 AI Agent 协作。</p>
+</blockquote>
+<h2 id="Codex-官方指南真正想强调什么"><a href="#Codex-官方指南真正想强调什么" class="headerlink" title="Codex 官方指南真正想强调什么"></a>Codex 官方指南真正想强调什么</h2><p>先把资料来源说清楚。OpenAI 在 Codex 的 <a target="_blank" rel="noopener" href="https://developers.openai.com/codex/learn/best-practices">Best practices</a>、<a target="_blank" rel="noopener" href="https://developers.openai.com/codex/prompting">Prompting</a>、<a target="_blank" rel="noopener" href="https://developers.openai.com/codex/guides/agents-md">AGENTS.md 指南</a> 里反复强调了几件事：</p>
+<ol>
+<li>提示词最好包含 <code>Goal</code>（目标）、<code>Context</code>（上下文）、<code>Constraints</code>（遵守规则与边界）、<code>Done when</code>（完成状态，什么状态才算真的完成）四件事</li>
+<li>复杂任务先用计划模式，让 Agent 读代码、澄清问题、提出方案</li>
+<li>用 <code>AGENTS.md</code> 沉淀项目长期规则，而不是每次聊天重新交代</li>
+<li>让测试、lint、类型检查、代码审查成为 AI 工作的验证闭环</li>
+<li>重复工作可以抽成 Skills，外部系统可以通过 MCP 接进来</li>
+<li>对有明确目标和停止条件的长任务，可以让 Agent 持续推进，而不是每一步都等人催</li>
+</ol>
+<p>这些建议单独看都不新。我们之前聊过 Prompt Engineering、Context Engineering、Harness Engineering、Loop Engineering，很多概念都能对应上。</p>
+<p>但把它们放在一起看，重点就不是”Codex 有哪些命令”，而是：</p>
+<blockquote>
+<p>AI 编程正在从”聊天式工具”变成”可被管理、可被交接、可被验证的工程参与者”。</p>
+</blockquote>
+<p>这才是这份指南最有价值的地方。</p>
+<h2 id="从问答机器到长期队友"><a href="#从问答机器到长期队友" class="headerlink" title="从问答机器到长期队友"></a>从问答机器到长期队友</h2><p>过去很多人使用 AI 编程，大概是这种模式：</p>
+<pre><code class="text">我：帮我写一个登录页面
+AI：给你代码
+我：这里报错了，修一下
+AI：改好了
+我：样式不对，再调一下
+AI：再改
+</code></pre>
+<p>这本质上是”问答机器”模式。AI 每次只处理当前这一轮上下文，人的主要工作是不断追问、纠错、补充背景。</p>
+<p>长期队友模式不一样。你不会把一个真实同事当成搜索框用，你会做几件事：</p>
+<table>
+<thead>
+<tr>
+<th>协作动作</th>
+<th>对真实同事</th>
+<th>对 AI Agent</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>入职交接</td>
+<td>讲项目背景、技术栈、踩坑点</td>
+<td>写 <code>AGENTS.md</code>、项目规则、架构说明</td>
+</tr>
+<tr>
+<td>分配任务</td>
+<td>说明目标、边界、完成标准</td>
+<td>prompt 里写清 <code>Goal / Context / Constraints / Done when</code></td>
+</tr>
+<tr>
+<td>过程管理</td>
+<td>先让他出方案，再评审方案</td>
+<td>复杂任务先 plan，再 implement</td>
+</tr>
+<tr>
+<td>质量验收</td>
+<td>看 PR、跑测试、做 code review</td>
+<td>让 AI 跑检查，人审 diff 和风险</td>
+</tr>
+<tr>
+<td>经验沉淀</td>
+<td>把反复出现的问题写进规范</td>
+<td>把重复纠正写回 <code>AGENTS.md</code> 或 Skill</td>
+</tr>
+</tbody></table>
+<p>我对”长期队友”的理解不是拟人化，也不是说 AI 真的有责任感，而是把它放进一个工程协作系统里：<strong>给它上下文，给它边界，给它验证方式，也给它可持续学习的项目记忆</strong>。目的很简单：不是让 AI “看起来像同事”，而是让它少猜、少跑偏、可验收，最终更稳定地完成任务。</p>
+<h2 id="第一件事：别再写一次性-prompt"><a href="#第一件事：别再写一次性-prompt" class="headerlink" title="第一件事：别再写一次性 prompt"></a>第一件事：别再写一次性 prompt</h2><p>Codex 官方建议一个好 prompt 至少包含四类信息：</p>
+<pre><code class="text">Goal：你要改什么、做什么
+Context：相关文件、错误日志、设计文档、历史实现
+Constraints：不能改什么、必须遵守什么、有哪些安全边界
+Done when：什么状态算完成，跑哪些检查，验收什么行为
+</code></pre>
+<p>这个模板很朴素，但非常实用。</p>
+<p>反面案例：</p>
+<pre><code class="markdown">帮我优化一下这个页面。
+</code></pre>
+<p>这句话最大的问题不是短，而是没有”完成标准”。优化性能？优化样式？优化代码结构？减少请求？AI 只能猜。</p>
+<p>更好的写法：</p>
+<pre><code class="markdown">Goal：
+优化用户列表页的首屏加载体验，重点减少首次进入时的阻塞请求。
+
+Context：
+- 页面入口：src/pages/user-list/index.tsx
+- 数据请求在 src/services/user.ts
+- 现在的问题：首屏会同时请求用户列表、筛选项、统计卡片，弱网下白屏时间明显
+
+Constraints：
+- 不改接口协议
+- 不引入新的状态管理库
+- 保持现有 UI 行为不变
+
+Done when：
+- 首屏只阻塞用户列表必需数据
+- 非核心统计卡片延后加载
+- npm run lint 和相关单测通过
+- 总结改动和潜在风险
+</code></pre>
+<p>这不是”提示词工程玄学”，这就是正常的任务交接。</p>
+<p>当你开始用这种方式给 AI 分配任务，AI 的输出会明显稳定。因为你不再要求它”读心”，而是在给它一个可执行的工作包。</p>
+<h2 id="第二件事：把项目规则写进-AGENTS-md"><a href="#第二件事：把项目规则写进-AGENTS-md" class="headerlink" title="第二件事：把项目规则写进 AGENTS.md"></a>第二件事：把项目规则写进 <code>AGENTS.md</code></h2><p>OpenAI 官方把 <code>AGENTS.md</code> 定位成”给 Agent 看的 README”。它不替代 <code>README.md</code>，而是专门存那些对 AI 工作有帮助、但对普通读者不一定重要的信息。</p>
+<p>比如：</p>
+<pre><code class="markdown"># AGENTS.md
+
+## Project Overview
+- This is a React + TypeScript admin dashboard.
+- API clients live in src/services.
+- Shared UI components live in src/components.
+
+## Commands
+- npm run lint: run ESLint and TypeScript checks.
+- npm test: run unit tests.
+- npm run build: verify production build.
+
+## Engineering Rules
+- Do not call fetch directly. Use src/services/request.ts.
+- Do not add production dependencies without confirmation.
+- Keep route-level components thin; move reusable logic into hooks.
+
+## Done Means
+- Relevant tests pass.
+- Lint passes.
+- The final response includes changed files, verification result, and risks.
+</code></pre>
+<p>这份文件的价值不在于”写得多”，而在于”长期有效”。</p>
+<p>OpenAI 的建议也很克制：<code>AGENTS.md</code> 要短、准、重要。不要把所有编码常识都塞进去，比如”变量命名要清晰”、”代码要可读”这种强模型本来就知道的东西。真正值得写进去的是：</p>
+<table>
+<thead>
+<tr>
+<th>规则类型</th>
+<th>适合写进 <code>AGENTS.md</code> 吗</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>项目特有约定</td>
+<td>适合</td>
+<td>请求只能走 <code>request.ts</code></td>
+</tr>
+<tr>
+<td>构建和测试命令</td>
+<td>适合</td>
+<td><code>pnpm test --filter web</code></td>
+</tr>
+<tr>
+<td>安全红线</td>
+<td>适合</td>
+<td>禁止输出用户隐私字段</td>
+</tr>
+<tr>
+<td>架构边界</td>
+<td>适合</td>
+<td>页面层不能直接访问数据库</td>
+</tr>
+<tr>
+<td>通用好习惯</td>
+<td>不太适合</td>
+<td>命名要有意义、函数要短</td>
+</tr>
+<tr>
+<td>机械格式规则</td>
+<td>不太适合</td>
+<td>缩进、分号、换行，交给 lint</td>
+</tr>
+</tbody></table>
+<p>这里有个很重要的心态转变：</p>
+<blockquote>
+<p>不要把 <code>AGENTS.md</code> 当提示词仓库，要把它当团队的 AI 入职手册。</p>
+</blockquote>
+<p>当你连续三次纠正 AI 同一个问题，比如它总是直接用 <code>fetch</code>、总是忘记跑某个测试、总是改错目录，这就说明它不是一次性问题，而是项目规则没有沉淀。这个时候不要继续在聊天里骂它，应该把规则写回 <code>AGENTS.md</code>。</p>
+<h2 id="第三件事：先-plan，再动手"><a href="#第三件事：先-plan，再动手" class="headerlink" title="第三件事：先 plan，再动手"></a>第三件事：先 plan，再动手</h2><p>复杂任务最怕 AI 一上来就改代码。</p>
+<p>这和真实开发一样。你给同事一个大需求，他如果不读代码、不问边界、不确认方案，直接交一坨 diff 过来，你大概率也不放心。</p>
+<p>Codex 官方建议复杂或模糊任务先进入计划阶段。这背后的原则很简单：</p>
+<pre><code class="text">读上下文 → 识别风险 → 提出方案 → 人确认 → 再执行
+</code></pre>
+<p>适合先 plan 的场景：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>为什么要先 plan</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>跨多个模块的重构</td>
+<td>容易误伤边界，需要先看依赖</td>
+</tr>
+<tr>
+<td>业务规则不清楚</td>
+<td>需要先澄清需求，而不是猜</td>
+</tr>
+<tr>
+<td>涉及数据迁移</td>
+<td>回滚、兼容、验证都要提前想</td>
+</tr>
+<tr>
+<td>性能优化</td>
+<td>需要先定位瓶颈，不能凭感觉改</td>
+</tr>
+<tr>
+<td>安全相关改动</td>
+<td>需要明确威胁模型和验收标准</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>小任务让 AI 直接做，大任务先让 AI 写方案；方案不靠谱，代码大概率也不靠谱。</p>
+</blockquote>
+<p>这里的 plan 不是形式主义。好的计划至少要回答四个问题：</p>
+<ol>
+<li>准备改哪些文件</li>
+<li>每一步为什么这么改</li>
+<li>有哪些风险和替代方案</li>
+<li>怎么验证它真的完成了</li>
+</ol>
+<p>如果 AI 的计划只是在复述你的需求，没有体现它读过代码，那就让它继续补上下文，不要急着开工。</p>
+<h2 id="第四件事：把验证做成闭环"><a href="#第四件事：把验证做成闭环" class="headerlink" title="第四件事：把验证做成闭环"></a>第四件事：把验证做成闭环</h2><p>长期队友不是”我相信你”，而是”我知道怎么验收你”。</p>
+<p>Codex 官方把测试、lint、类型检查、review 都放在最佳实践里，这点我非常认同。AI 写代码最大的问题不是它会犯错，而是它犯错时经常看起来很合理。</p>
+<p>所以 AI 编程一定要有验证闭环：</p>
+<pre><code class="text">┌────────────┐
+│  分配任务   │
+└─────┬──────┘
+      ▼
+┌────────────┐
+│  AI 实现    │
+└─────┬──────┘
+      ▼
+┌────────────┐
+│  自动检查   │  lint / typecheck / test / build
+└─────┬──────┘
+      ▼
+┌────────────┐
+│  人审 diff  │  业务逻辑 / 风险 / 边界 / 可维护性
+└─────┬──────┘
+      ▼
+┌────────────┐
+│  规则沉淀   │  AGENTS.md / Skill / Review Rule
+└────────────┘
+</code></pre>
+<p>这里最容易犯的坑是：只看 AI 的最终解释，不看 diff。</p>
+<p>AI 很擅长总结自己做了什么，但总结不等于事实。真正可靠的检查顺序应该是：</p>
+<ol>
+<li>先看 diff，确认改动范围是否合理</li>
+<li>再看测试和构建结果</li>
+<li>再看它的总结有没有遗漏风险</li>
+<li>最后决定是否接受</li>
+</ol>
+<p>换句话说，AI 可以是 coder，但人必须还是 reviewer。</p>
+<h2 id="第五件事：把重复协作抽成-Skill"><a href="#第五件事：把重复协作抽成-Skill" class="headerlink" title="第五件事：把重复协作抽成 Skill"></a>第五件事：把重复协作抽成 Skill</h2><p>如果说 <code>AGENTS.md</code> 是项目长期记忆，那 Skill 更像是”岗位操作手册”。</p>
+<p>比如你经常让 AI 做这些事：</p>
+<ul>
+<li>根据接口文档生成 API client</li>
+<li>迁移一个组件到新设计系统</li>
+<li>给 PR 做安全 review</li>
+<li>根据线上日志定位问题</li>
+<li>按固定模板写技术博客</li>
+</ul>
+<p>这些任务都有固定流程、固定输入、固定产出格式。如果每次都靠聊天临场发挥，效果一定不稳定。</p>
+<p>更好的方式是抽成 Skill：</p>
+<pre><code class="text">触发条件：用户说&quot;生成接口代码&quot;
+输入材料：接口文档、目标目录、已有 service 示例
+执行步骤：
+  1. 读取接口定义
+  2. 对比现有 service 风格
+  3. 生成类型和请求函数
+  4. 补 mock 或测试
+  5. 跑 lint/typecheck
+输出要求：
+  - 说明生成了哪些文件
+  - 说明哪些接口需要人工确认
+  - 给出验证结果
+</code></pre>
+<p>这和真实团队里的 SOP 一样。新人照着 SOP 做事，稳定性会高很多；AI Agent 也一样。</p>
+<p>所以我的判断是：未来 AI 编程能力的差距，不只在模型本身，更在于团队有没有把自己的工作方式沉淀成：</p>
+<ol>
+<li><code>AGENTS.md</code>：长期规则</li>
+<li>Skills：可复用流程</li>
+<li>MCP：外部系统连接</li>
+<li>CI &#x2F; Review：验证防线</li>
+<li>Goal &#x2F; Loop：持续执行机制</li>
+</ol>
+<p>模型越强，这些东西越不是”限制 AI”，而是让 AI 真正进入工程系统。</p>
+<h2 id="第六件事：长任务要有目标，也要有刹车"><a href="#第六件事：长任务要有目标，也要有刹车" class="headerlink" title="第六件事：长任务要有目标，也要有刹车"></a>第六件事：长任务要有目标，也要有刹车</h2><p>Codex 的 <code>/goal</code> 思路很值得关注：对有明确目标和验证方式的任务，让 Agent 持续工作，而不是每一步都等你发下一条 prompt。</p>
+<p>这其实就是我们之前聊的 Loop Engineering。</p>
+<p>但长任务不是”让 AI 自己随便跑”。一个好的长期目标必须写清楚：</p>
+<pre><code class="markdown">目标：
+把用户中心模块的旧 API client 迁移到新 request 层。
+
+范围：
+- 只处理 src/modules/user 下的代码
+- 不改 UI 样式
+- 不迁移订单模块
+
+验证：
+- npm run lint
+- npm test -- user
+- npm run build
+
+停止条件：
+- 所有 user 模块 API 迁移完成，并通过验证
+- 或者遇到接口协议不明确的问题时暂停并汇报
+
+进度要求：
+- 每完成一个子模块记录一次 checkpoint
+- 最终总结改动、验证结果、剩余风险
+</code></pre>
+<p>这里最关键的是”停止条件”。没有停止条件的 Agent 长任务，很容易变成昂贵的自嗨循环：越改越多，越跑越偏，最后人接手时还要先清理现场。</p>
+<p>长期队友不是无限自治，而是有限自治：</p>
+<blockquote>
+<p>在清晰目标、明确边界、可验证结果、可暂停机制之内，让 AI 自主推进。</p>
+</blockquote>
+<p>这也是我觉得 Codex 指南里最值得推广到所有 AI 编程工具的一点。</p>
+<h2 id="这套方法不只适用于-Codex"><a href="#这套方法不只适用于-Codex" class="headerlink" title="这套方法不只适用于 Codex"></a>这套方法不只适用于 Codex</h2><p>虽然这篇是从 Codex 官方最佳实践切入，但这些原则并不绑定 Codex。Cursor、Claude Code、GitHub Copilot coding agent、Gemini CLI、Aider，本质上都在往同一个方向走：</p>
+<table>
+<thead>
+<tr>
+<th>能力层</th>
+<th>Codex 里的体现</th>
+<th>其他 AI 编程工具里的对应物</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>项目记忆</td>
+<td><code>AGENTS.md</code></td>
+<td>Cursor rules、Claude <code>CLAUDE.md</code>、项目指令文件</td>
+</tr>
+<tr>
+<td>任务计划</td>
+<td>plan mode</td>
+<td>Plan 模式、Architect 模式、先分析后实现</td>
+</tr>
+<tr>
+<td>工具连接</td>
+<td>MCP</td>
+<td>MCP、插件、内置工具、浏览器&#x2F;Issue&#x2F;PR 集成</td>
+</tr>
+<tr>
+<td>流程复用</td>
+<td>Skills</td>
+<td>自定义命令、工作流、模板、Agent Skills</td>
+</tr>
+<tr>
+<td>自动验证</td>
+<td>lint&#x2F;test&#x2F;review</td>
+<td>CI、pre-commit、review agent、test runner</td>
+</tr>
+<tr>
+<td>长期执行</td>
+<td>goal mode</td>
+<td>background agent、cloud agent、loop workflow</td>
+</tr>
+</tbody></table>
+<p>所以不用纠结”我是不是必须用 Codex”。真正值得学的是它背后的协作模型：</p>
+<ol>
+<li>把口头交代变成项目记忆</li>
+<li>把一次性 prompt 变成任务包</li>
+<li>把人工催促变成工作循环</li>
+<li>把相信 AI 变成验证 AI</li>
+<li>把重复纠错变成规则沉淀</li>
+</ol>
+<p>这套东西迁移到任何 Agent 工具里都成立。</p>
+<h2 id="我的实战建议"><a href="#我的实战建议" class="headerlink" title="我的实战建议"></a>我的实战建议</h2><p>如果你现在还停留在”让 AI 帮我补代码”阶段，我建议按这个顺序升级，不要一步到位搞复杂系统。</p>
+<h3 id="第一步：先改-prompt-习惯"><a href="#第一步：先改-prompt-习惯" class="headerlink" title="第一步：先改 prompt 习惯"></a>第一步：先改 prompt 习惯</h3><p>从今天开始，重要任务都可以尝试按四段写：</p>
+<pre><code class="text">Goal：
+Context：
+Constraints：
+Done when：
+</code></pre>
+<p>这一步成本最低，但收益很明显。</p>
+<h3 id="第二步：给项目补一个轻量-AGENTS-md"><a href="#第二步：给项目补一个轻量-AGENTS-md" class="headerlink" title="第二步：给项目补一个轻量 AGENTS.md"></a>第二步：给项目补一个轻量 <code>AGENTS.md</code></h3><p>不要一上来写 200 行。先写 20 行就够：</p>
+<ul>
+<li>项目是什么</li>
+<li>怎么启动</li>
+<li>怎么测试</li>
+<li>哪些目录不能乱动</li>
+<li>哪些规则 AI 经常猜错</li>
+</ul>
+<p>后面每次发现 AI 重复犯错，再一点点补；随着模型能力增强，也要定期回头 review 这些规则，把已经不需要的”手把手约束”删掉，避免这些内容慢慢变成噪声。</p>
+<h3 id="第三步：把复杂任务固定为”先-plan-后执行”"><a href="#第三步：把复杂任务固定为”先-plan-后执行”" class="headerlink" title="第三步：把复杂任务固定为”先 plan 后执行”"></a>第三步：把复杂任务固定为”先 plan 后执行”</h3><p>只要任务跨 3 个以上文件，或者你自己都觉得边界不清，就先让 AI 输出计划。计划看不懂、看不出风险，就别让它动代码。</p>
+<h3 id="第四步：把验证命令写进完成标准"><a href="#第四步：把验证命令写进完成标准" class="headerlink" title="第四步：把验证命令写进完成标准"></a>第四步：把验证命令写进完成标准</h3><p>不要只说”改好”。要说：</p>
+<pre><code class="text">Done when:
+- npm run lint passes
+- npm test -- user passes
+- The final response summarizes changed files and risks
+</code></pre>
+<p>AI 越能自己跑检查，你越应该把检查写清楚。</p>
+<h3 id="第五步：把高频流程抽成-Skill"><a href="#第五步：把高频流程抽成-Skill" class="headerlink" title="第五步：把高频流程抽成 Skill"></a>第五步：把高频流程抽成 Skill</h3><p>当你发现自己连续多次给 AI 下同一类任务，而且每次都要重复解释流程，就该抽 Skill 了。</p>
+<p>不要等流程完美才沉淀。先把当前版本写下来，让它在使用中迭代。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Codex 官方最佳实践的核心信号是：AI 编程工具正在从问答机器变成工程协作参与者。</li>
+<li>好 prompt 不是玄学，而是正常任务交接：目标、上下文、约束、完成标准。</li>
+<li><code>AGENTS.md</code> 的价值是长期项目记忆，应该写项目特有规则，而不是堆通用编码常识。</li>
+<li>复杂任务要先 plan，再实现；计划质量往往决定最终代码质量。</li>
+<li>AI 可以写代码，但人必须负责 review，测试和 CI 是协作闭环的一部分。</li>
+<li>重复流程应该沉淀成 Skill，外部系统通过 MCP 接入，稳定任务再进一步做成 Loop。</li>
+<li>真正的”长期队友”不是无限信任 AI，而是在明确边界和验证机制内，让 AI 持续产生可靠产出。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Agent/">Agent</a><a class="post-meta__tags" href="/tags/AI%E7%BC%96%E7%A8%8B/">AI编程</a><a class="post-meta__tags" href="/tags/Harness-Engineering/">Harness Engineering</a><a class="post-meta__tags" href="/tags/Context-Engineering/">Context Engineering</a><a class="post-meta__tags" href="/tags/Codex/">Codex</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</div></div></a></div><div class="next-post pull-right"><a href="/posts/10-Graph%20Engineering%EF%BC%9A%E5%A4%9A%20Agent%20%E7%BC%96%E6%8E%92%E7%9A%84%E6%96%B0%E4%B8%80%E5%B1%82/" title="Graph Engineering：多 Agent 编排的新一层"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Graph Engineering：多 Agent 编排的新一层</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#Codex-%E5%AE%98%E6%96%B9%E6%8C%87%E5%8D%97%E7%9C%9F%E6%AD%A3%E6%83%B3%E5%BC%BA%E8%B0%83%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">Codex 官方指南真正想强调什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8%E5%88%B0%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B"><span class="toc-number">2.</span> <span class="toc-text">从问答机器到长期队友</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E4%BB%B6%E4%BA%8B%EF%BC%9A%E5%88%AB%E5%86%8D%E5%86%99%E4%B8%80%E6%AC%A1%E6%80%A7-prompt"><span class="toc-number">3.</span> <span class="toc-text">第一件事：别再写一次性 prompt</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E4%BB%B6%E4%BA%8B%EF%BC%9A%E6%8A%8A%E9%A1%B9%E7%9B%AE%E8%A7%84%E5%88%99%E5%86%99%E8%BF%9B-AGENTS-md"><span class="toc-number">4.</span> <span class="toc-text">第二件事：把项目规则写进 AGENTS.md</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E4%BB%B6%E4%BA%8B%EF%BC%9A%E5%85%88-plan%EF%BC%8C%E5%86%8D%E5%8A%A8%E6%89%8B"><span class="toc-number">5.</span> <span class="toc-text">第三件事：先 plan，再动手</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E4%BB%B6%E4%BA%8B%EF%BC%9A%E6%8A%8A%E9%AA%8C%E8%AF%81%E5%81%9A%E6%88%90%E9%97%AD%E7%8E%AF"><span class="toc-number">6.</span> <span class="toc-text">第四件事：把验证做成闭环</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E4%BA%94%E4%BB%B6%E4%BA%8B%EF%BC%9A%E6%8A%8A%E9%87%8D%E5%A4%8D%E5%8D%8F%E4%BD%9C%E6%8A%BD%E6%88%90-Skill"><span class="toc-number">7.</span> <span class="toc-text">第五件事：把重复协作抽成 Skill</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%AC%AC%E5%85%AD%E4%BB%B6%E4%BA%8B%EF%BC%9A%E9%95%BF%E4%BB%BB%E5%8A%A1%E8%A6%81%E6%9C%89%E7%9B%AE%E6%A0%87%EF%BC%8C%E4%B9%9F%E8%A6%81%E6%9C%89%E5%88%B9%E8%BD%A6"><span class="toc-number">8.</span> <span class="toc-text">第六件事：长任务要有目标，也要有刹车</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%99%E5%A5%97%E6%96%B9%E6%B3%95%E4%B8%8D%E5%8F%AA%E9%80%82%E7%94%A8%E4%BA%8E-Codex"><span class="toc-number">9.</span> <span class="toc-text">这套方法不只适用于 Codex</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%9A%84%E5%AE%9E%E6%88%98%E5%BB%BA%E8%AE%AE"><span class="toc-number">10.</span> <span class="toc-text">我的实战建议</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E6%AD%A5%EF%BC%9A%E5%85%88%E6%94%B9-prompt-%E4%B9%A0%E6%83%AF"><span class="toc-number">10.1.</span> <span class="toc-text">第一步：先改 prompt 习惯</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E6%AD%A5%EF%BC%9A%E7%BB%99%E9%A1%B9%E7%9B%AE%E8%A1%A5%E4%B8%80%E4%B8%AA%E8%BD%BB%E9%87%8F-AGENTS-md"><span class="toc-number">10.2.</span> <span class="toc-text">第二步：给项目补一个轻量 AGENTS.md</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E6%AD%A5%EF%BC%9A%E6%8A%8A%E5%A4%8D%E6%9D%82%E4%BB%BB%E5%8A%A1%E5%9B%BA%E5%AE%9A%E4%B8%BA%E2%80%9D%E5%85%88-plan-%E5%90%8E%E6%89%A7%E8%A1%8C%E2%80%9D"><span class="toc-number">10.3.</span> <span class="toc-text">第三步：把复杂任务固定为”先 plan 后执行”</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E5%9B%9B%E6%AD%A5%EF%BC%9A%E6%8A%8A%E9%AA%8C%E8%AF%81%E5%91%BD%E4%BB%A4%E5%86%99%E8%BF%9B%E5%AE%8C%E6%88%90%E6%A0%87%E5%87%86"><span class="toc-number">10.4.</span> <span class="toc-text">第四步：把验证命令写进完成标准</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%94%E6%AD%A5%EF%BC%9A%E6%8A%8A%E9%AB%98%E9%A2%91%E6%B5%81%E7%A8%8B%E6%8A%BD%E6%88%90-Skill"><span class="toc-number">10.5.</span> <span class="toc-text">第五步：把高频流程抽成 Skill</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">11.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

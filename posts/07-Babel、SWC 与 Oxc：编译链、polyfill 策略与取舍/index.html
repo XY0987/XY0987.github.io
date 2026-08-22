@@ -1,0 +1,437 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Babel、SWC 与 Oxc：编译链、polyfill 策略与取舍 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：构建工具负责打包，但「把新语法转成老浏览器能跑的代码」这件事，是另一条独立的链路——编译&#x2F;转译。这条链路里 Babel 是老大哥，SWC 是 Rust 写的快速替代，Oxc 则是 Vite 8 这类新工具链正在押注的下一代基础设施。这一篇把编译链讲清楚：AST 是什么、preset-env 和 browserslist 怎么联动、polyfill 到底怎么注入，最后说 Babel">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Babel、SWC 与 Oxc：编译链、polyfill 策略与取舍">
+<meta property="og:url" content="http://example.com/posts/07-Babel%E3%80%81SWC%20%E4%B8%8E%20Oxc%EF%BC%9A%E7%BC%96%E8%AF%91%E9%93%BE%E3%80%81polyfill%20%E7%AD%96%E7%95%A5%E4%B8%8E%E5%8F%96%E8%88%8D/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：构建工具负责打包，但「把新语法转成老浏览器能跑的代码」这件事，是另一条独立的链路——编译&#x2F;转译。这条链路里 Babel 是老大哥，SWC 是 Rust 写的快速替代，Oxc 则是 Vite 8 这类新工具链正在押注的下一代基础设施。这一篇把编译链讲清楚：AST 是什么、preset-env 和 browserslist 怎么联动、polyfill 到底怎么注入，最后说 Babel">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T15:32:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.419Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Babel">
+<meta property="article:tag" content="SWC">
+<meta property="article:tag" content="Oxc">
+<meta property="article:tag" content="polyfill">
+<meta property="article:tag" content="browserslist">
+<meta property="article:tag" content="编译链">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/07-Babel%E3%80%81SWC%20%E4%B8%8E%20Oxc%EF%BC%9A%E7%BC%96%E8%AF%91%E9%93%BE%E3%80%81polyfill%20%E7%AD%96%E7%95%A5%E4%B8%8E%E5%8F%96%E8%88%8D/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Babel、SWC 与 Oxc：编译链、polyfill 策略与取舍',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Babel、SWC 与 Oxc：编译链、polyfill 策略与取舍</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T15:32:00.000Z" title="发表于 2026 23:32:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.419Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：构建工具负责打包，但「把新语法转成老浏览器能跑的代码」这件事，是另一条独立的链路——编译&#x2F;转译。这条链路里 Babel 是老大哥，SWC 是 Rust 写的快速替代，Oxc 则是 Vite 8 这类新工具链正在押注的下一代基础设施。这一篇把编译链讲清楚：AST 是什么、<code>preset-env</code> 和 <code>browserslist</code> 怎么联动、polyfill 到底怎么注入，最后说 Babel、SWC 和 Oxc 怎么选。</p>
+</blockquote>
+<h2 id="转译的本质：源码-→-AST-→-源码"><a href="#转译的本质：源码-→-AST-→-源码" class="headerlink" title="转译的本质：源码 → AST → 源码"></a>转译的本质：源码 → AST → 源码</h2><p>Babel、SWC、Oxc 这类工具，干的都是同一件事：把一段代码转成另一段代码。中间的核心是 <strong>AST（抽象语法树）</strong>。</p>
+<pre><code class="txt">源码字符串
+   │ parse（解析）
+   ▼
+  AST（抽象语法树，代码的结构化表示）
+   │ transform（遍历 + 修改节点）
+   ▼
+  新 AST
+   │ generate（生成）
+   ▼
+新源码字符串
+</code></pre>
+<p>为什么要转成 AST 再处理，而不是直接字符串替换？因为代码是有结构的。比如你想把箭头函数 <code>() =&gt; &#123;&#125;</code> 转成普通函数，光靠正则替换根本处理不了嵌套、作用域、<code>this</code> 绑定这些语义。AST 把代码变成一棵可遍历的树，每个节点是一个语法结构，转换才能精确。</p>
+<p>举个直观的例子，<code>const a = 1</code> 解析后大致是这样一棵树：</p>
+<pre><code class="txt">VariableDeclaration (kind: const)
+└── VariableDeclarator
+    ├── id: Identifier (name: a)
+    └── init: NumericLiteral (value: 1)
+</code></pre>
+<p>Babel 的转换插件，本质就是「遍历这棵树，遇到某种节点就改写它」。比如把所有 <code>const</code>&#x2F;<code>let</code> 改成 <code>var</code> 来降级。</p>
+<h2 id="Babel-编译链：preset、browserslist、polyfill"><a href="#Babel-编译链：preset、browserslist、polyfill" class="headerlink" title="Babel 编译链：preset、browserslist、polyfill"></a>Babel 编译链：preset、browserslist、polyfill</h2><p>Babel 自己只是个「parse → transform → generate」的引擎，真正干活的是<strong>插件</strong>。一堆插件打包成一套，就是 <strong>preset（预设）</strong>。</p>
+<p>最重要的预设是 <code>@babel/preset-env</code>。它解决一个核心问题：<strong>我不想手动列出要转哪些语法，你帮我根据目标浏览器自动决定</strong>。</p>
+<h3 id="preset-env-和-browserslist-的联动"><a href="#preset-env-和-browserslist-的联动" class="headerlink" title="preset-env 和 browserslist 的联动"></a>preset-env 和 browserslist 的联动</h3><p><code>preset-env</code> 怎么知道要转哪些语法？答案是看 <strong>browserslist</strong> 配置——你声明要支持哪些浏览器，它就只转那些浏览器不支持的语法。</p>
+<pre><code class="json">// package.json
+&#123;
+  &quot;browserslist&quot;: [
+    &quot;&gt; 0.5%&quot;,
+    &quot;last 2 versions&quot;,
+    &quot;not dead&quot;
+  ]
+&#125;
+</code></pre>
+<pre><code class="js">// babel.config.js
+module.exports = &#123;
+  presets: [
+    [&#39;@babel/preset-env&#39;, &#123;
+      // 不写 targets 时，preset-env 会自动读 browserslist
+    &#125;],
+  ],
+&#125;
+</code></pre>
+<p>这套联动的价值在于：<strong>如果你的目标浏览器都支持箭头函数，preset-env 就不会去转它</strong>，产物更小、更现代。反之目标包含老浏览器，它才降级。</p>
+<blockquote>
+<p>我的理解：browserslist 是「需求声明」（我要支持谁），preset-env 是「执行者」（那我就转到这个程度）。它不光给 Babel 用，Autoprefixer、esbuild、Lightning CSS 等很多工具都读同一份 browserslist，所以它是整个工程的「兼容性单一事实源」。</p>
+</blockquote>
+<h3 id="语法转换-≠-API-polyfill"><a href="#语法转换-≠-API-polyfill" class="headerlink" title="语法转换 ≠ API polyfill"></a>语法转换 ≠ API polyfill</h3><p>这是最容易混淆的点，必须分清：</p>
+<ul>
+<li><strong>语法（syntax）</strong>：箭头函数、解构、可选链 <code>?.</code>、class 等。这些是写法，Babel 能直接转成等价的老写法。</li>
+<li><strong>API</strong>：<code>Promise</code>、<code>Array.prototype.includes</code>、<code>Object.assign</code> 等。这些是运行时方法，老浏览器里压根不存在这个函数，光靠语法转换无能为力，必须<strong>注入实现</strong>——这就是 polyfill。</li>
+</ul>
+<pre><code class="js">// 语法降级：箭头函数 → 普通函数，Babel 直接转
+const fn = () =&gt; 1
+// 转成：var fn = function () &#123; return 1 &#125;
+
+// API：Promise 在老浏览器没有，转语法没用，得 polyfill 补一个 Promise 实现
+const p = Promise.resolve(1)
+</code></pre>
+<p>这里要额外提醒一句：<code>core-js</code> 主要补的是 ECMAScript 标准 API，像 <code>fetch</code> 这种 Web API 不在它的覆盖范围里。如果要兼容老浏览器的 <code>fetch</code>，通常要单独引入 <code>whatwg-fetch</code> 这类 polyfill，或者在 Node 侧用 <code>undici</code> 这类运行时方案。</p>
+<h3 id="polyfill-策略：core-js-与-useBuiltIns"><a href="#polyfill-策略：core-js-与-useBuiltIns" class="headerlink" title="polyfill 策略：core-js 与 useBuiltIns"></a>polyfill 策略：core-js 与 useBuiltIns</h3><p>polyfill 的实现来自 <strong>core-js</strong> 这个库。<code>preset-env</code> 通过 <code>useBuiltIns</code> 选项控制怎么注入 core-js：</p>
+<table>
+<thead>
+<tr>
+<th><code>useBuiltIns</code></th>
+<th>行为</th>
+<th>评价</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>false</code>（默认）</td>
+<td>不自动注入，要你手动 import</td>
+<td>容易漏</td>
+</tr>
+<tr>
+<td><code>entry</code></td>
+<td>在入口按 browserslist 注入「目标浏览器缺的全部 polyfill」</td>
+<td>全但可能偏大</td>
+</tr>
+<tr>
+<td><code>usage</code></td>
+<td>只注入「代码里实际用到、且目标浏览器缺」的 polyfill</td>
+<td>推荐，最省</td>
+</tr>
+</tbody></table>
+<p>推荐配置：</p>
+<pre><code class="js">// babel.config.js
+module.exports = &#123;
+  presets: [
+    [&#39;@babel/preset-env&#39;, &#123;
+      useBuiltIns: &#39;usage&#39;, // 按需注入
+      corejs: &#39;3.37&#39;,        // 指定 core-js 版本，必须装 core-js 依赖
+    &#125;],
+  ],
+&#125;
+</code></pre>
+<pre><code class="bash">npm i core-js
+</code></pre>
+<p><code>usage</code> 模式下，你代码里写了 <code>[].includes()</code>，且 browserslist 里有不支持它的浏览器，Babel 才会自动 <code>import &#39;core-js/modules/es.array.includes&#39;</code>。没用到的就不注入，产物最小。</p>
+<blockquote>
+<p>坑：用 <code>useBuiltIns: &#39;usage&#39;</code> 必须指定 <code>corejs</code> 版本并安装 core-js，否则要么报错要么注入的 polyfill 和你装的版本对不上。</p>
+</blockquote>
+<h2 id="SWC：Babel-的-Rust-替代"><a href="#SWC：Babel-的-Rust-替代" class="headerlink" title="SWC：Babel 的 Rust 替代"></a>SWC：Babel 的 Rust 替代</h2><p>SWC（Speedy Web Compiler）做的事和 Babel 一样——parse &#x2F; transform &#x2F; generate，转 TS、JSX、降级语法。区别是它用 Rust 写、大量并行，速度比 Babel 快一个数量级。</p>
+<pre><code class="bash">npm i -D @swc/core @swc/cli
+</code></pre>
+<pre><code class="json">// .swcrc
+&#123;
+  &quot;jsc&quot;: &#123;
+    &quot;parser&quot;: &#123; &quot;syntax&quot;: &quot;typescript&quot;, &quot;tsx&quot;: true &#125;
+  &#125;,
+  &quot;env&quot;: &#123;
+    &quot;targets&quot;: &quot;&gt; 0.5%, last 2 versions, not dead&quot;,
+    &quot;mode&quot;: &quot;usage&quot;,
+    &quot;coreJs&quot;: &quot;3.37&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>可以看到 SWC 也支持 <code>env</code>（对应 preset-env 的思路）、读 browserslist 风格的 targets、按 usage 注入 core-js polyfill。注意不要同时配置 <code>jsc.target</code> 和 <code>env</code>，二者是两条目标环境配置路径；另外 <code>coreJs</code> 最好写具体 minor 版本，比如 <code>&quot;3.37&quot;</code>，不要只写 <code>&quot;3&quot;</code>，否则容易因为版本解析导致较新的 polyfill 没被注入。</p>
+<p>还要说清楚一个取舍：SWC 的 <code>usage</code> 模式虽然概念上类似 Babel，但复杂用法下的 polyfill 识别不如 Babel 稳。如果你的项目要兼容很多老环境，且 polyfill 准确性比速度更重要，Babel 的 <code>preset-env + core-js</code> 仍然更稳。</p>
+<h2 id="Oxc：Vite-8-背后的新编译基础设施"><a href="#Oxc：Vite-8-背后的新编译基础设施" class="headerlink" title="Oxc：Vite 8 背后的新编译基础设施"></a>Oxc：Vite 8 背后的新编译基础设施</h2><p>Oxc（Oxidation Compiler）也是 Rust 写的 JS&#x2F;TS 工具链，但它的定位不只是「又一个 Babel 替代品」。它更像是一组共享底层能力的工具集合：parser、transformer、resolver、minifier、linter、formatter 都围绕同一套基础设施演进。</p>
+<p>放到 Vite 8 里看会更直观：Vite 8 官方迁移文档里明确说，Vite 8 使用 <strong>Rolldown + Oxc</strong> 这套 Rust 工具链替代过去的 Rollup + esbuild 路线，其中 JS transform 由 Oxc 负责，<code>esbuild</code> 配置会被兼容转换到 <code>oxc</code> 配置，但 <code>esbuild</code> 入口已经是迁移期方案。</p>
+<pre><code class="ts">// vite.config.ts
+import &#123; defineConfig &#125; from &#39;vite&#39;
+
+export default defineConfig(&#123;
+  oxc: &#123;
+    jsx: &#123;
+      runtime: &#39;automatic&#39;,
+      importSource: &#39;react&#39;,
+    &#125;,
+  &#125;,
+&#125;)
+</code></pre>
+<p>我的理解是：Babel、SWC、Oxc 不是简单的「谁淘汰谁」。Babel 强在生态和可定制转换；SWC 强在成熟快速的常规转译；Oxc 更强调和 Rolldown、Vite 这类新工具链的深度协同。比如 Oxc 的语义分析能力可以被 Rolldown 用来做更激进的 tree-shaking，这就不只是「把代码转快一点」了，而是整个构建链路一起提速。</p>
+<p>但 Oxc 也不是所有场景的银弹。比如 Vite 8 迁移文档里提到，Oxc transformer 当前还不支持 lowering 原生 decorators；如果项目依赖复杂 Babel 插件、宏、非常规语法转换，短期内仍然要留 Babel，或者通过 <code>@rolldown/plugin-babel</code> 这类方式补上。</p>
+<h2 id="Babel、SWC-和-Oxc-怎么选"><a href="#Babel、SWC-和-Oxc-怎么选" class="headerlink" title="Babel、SWC 和 Oxc 怎么选"></a>Babel、SWC 和 Oxc 怎么选</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Babel</th>
+<th>SWC</th>
+<th>Oxc</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>速度</td>
+<td>慢（纯 JS）</td>
+<td>快（Rust，约 10-20 倍）</td>
+<td>快（Rust，面向整套工具链协同）</td>
+</tr>
+<tr>
+<td>生态&#x2F;插件</td>
+<td>极其丰富，几乎所有转换都有插件</td>
+<td>较少，常见需求够用，冷门转换可能缺</td>
+<td>还在快速发展，重点服务 Vite&#x2F;Rolldown 等新链路</td>
+</tr>
+<tr>
+<td>配置稳定性</td>
+<td>非常成熟</td>
+<td>成熟但偶有边界 case</td>
+<td>新，迁移期要关注兼容差异</td>
+</tr>
+<tr>
+<td>polyfill 策略</td>
+<td><code>preset-env + core-js</code> 最成熟</td>
+<td>支持类似 <code>usage</code>，但复杂场景不如 Babel 稳</td>
+<td>主要负责语法&#x2F;JS transform，不是 polyfill 方案的核心</td>
+</tr>
+<tr>
+<td>典型使用方</td>
+<td>老项目、需要特殊 Babel 插件</td>
+<td>Next.js 默认、追求速度的新项目</td>
+<td>Vite 8、Rolldown 生态、新一代 Rust 工具链</td>
+</tr>
+</tbody></table>
+<p>我的实战建议：</p>
+<ol>
+<li><strong>新项目、追求速度</strong>：优先 SWC（或干脆用内置了快引擎的 Vite&#x2F;Next.js，不用自己配）。</li>
+<li><strong>存量项目、依赖某个 Babel 专属插件</strong>（比如某些装饰器、宏、特定框架的转换）：留在 Babel，别硬迁。</li>
+<li><strong>Vite 8 项目</strong>：默认跟着 Oxc&#x2F;Rolldown 走，旧的 <code>esbuild</code> 配置能兼容一段时间，但新配置应该往 <code>oxc</code> 迁。</li>
+<li><strong>大多数前端应用</strong>：其实你不需要直接配 Babel&#x2F;SWC&#x2F;Oxc——Vite 8 用 Oxc，Next.js 用 SWC，框架已经把转译这层封好了。只有做库、做特殊转换、维护老配置时才需要直接面对它们。</li>
+</ol>
+<p>如果你是在写 npm 库，还要和应用区分开：应用可以按目标浏览器注入全局 polyfill，因为运行环境由你控制；库则要谨慎污染全局环境，通常不要在库里直接注入 <code>core-js</code> 全局 polyfill。更常见的做法是只做语法转译，把 API 兼容交给使用方，或者用 <code>@babel/plugin-transform-runtime</code> &#x2F; <code>core-js-pure</code> 这类不污染全局的方案。</p>
+<blockquote>
+<p>关键认知：Babel&#x2F;SWC&#x2F;Oxc 是「转译层」，它和打包器（Rollup&#x2F;Webpack&#x2F;Rolldown）是配合关系，不是竞争关系。你可能在 Webpack 里用 <code>babel-loader</code> 或 <code>swc-loader</code>，在 Rollup 里用 <code>@rollup/plugin-babel</code>，在 Vite 8 里默认走 Oxc——它们都是被构建链路调用的转译引擎。</p>
+</blockquote>
+<h2 id="一个能看到效果的最小示例"><a href="#一个能看到效果的最小示例" class="headerlink" title="一个能看到效果的最小示例"></a>一个能看到效果的最小示例</h2><pre><code class="bash">mkdir babel-demo &amp;&amp; cd babel-demo
+npm init -y
+npm i -D @babel/core @babel/cli @babel/preset-env
+npm i core-js
+</code></pre>
+<pre><code class="json">// package.json 里加
+&#123; &quot;browserslist&quot;: [&quot;ie 11&quot;] &#125;
+</code></pre>
+<pre><code class="js">// babel.config.js
+module.exports = &#123;
+  // corejs 要带上 minor 版本（与上文一致），否则新 API 的 polyfill 可能对不上
+  presets: [[&#39;@babel/preset-env&#39;, &#123; useBuiltIns: &#39;usage&#39;, corejs: &#39;3.37&#39; &#125;]],
+&#125;
+</code></pre>
+<pre><code class="js">// src/index.js
+const arr = [1, 2, 3]
+console.log(arr.includes(2))
+const fn = () =&gt; &#39;hi&#39;
+</code></pre>
+<pre><code class="bash">npx babel src/index.js
+</code></pre>
+<p>因为 browserslist 写了 <code>ie 11</code>，你会看到输出里：箭头函数被转成了普通函数（语法降级），并且自动 <code>require(&#39;core-js/...&#39;)</code> 注入了 <code>includes</code> 的 polyfill（API 补丁）。把 browserslist 改成 <code>last 1 chrome version</code> 再跑一次，会发现几乎不转——这就是 preset-env + browserslist 联动的直接体感。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>转译的本质是「源码 → AST → 转换 → 源码」，AST 让转换能感知代码结构而非盲目字符串替换。</li>
+<li>Babel 靠插件干活，preset 是插件集合，<code>@babel/preset-env</code> 根据 browserslist 自动决定转译程度。</li>
+<li>browserslist 是整个工程的兼容性单一事实源，被 Babel、Autoprefixer 等多个工具共享。</li>
+<li>语法降级和 API polyfill 是两回事：前者改写法，后者靠 core-js 补缺失的运行时方法。</li>
+<li><code>useBuiltIns: &#39;usage&#39;</code> + 指定 corejs 版本是最省的 polyfill 策略，按实际使用注入。</li>
+<li>SWC 是 Babel 的 Rust 快速替代，概念相通；Oxc 则是 Vite 8&#x2F;Rolldown 这类新工具链背后的 Rust 编译基础设施。</li>
+<li>新项目追速度优先跟框架默认走；依赖专属插件或 polyfill 准确性的老项目留 Babel；Vite 8 项目关注 <code>esbuild</code> 配置向 <code>oxc</code> 的迁移。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Babel/">Babel</a><a class="post-meta__tags" href="/tags/SWC/">SWC</a><a class="post-meta__tags" href="/tags/Oxc/">Oxc</a><a class="post-meta__tags" href="/tags/polyfill/">polyfill</a><a class="post-meta__tags" href="/tags/browserslist/">browserslist</a><a class="post-meta__tags" href="/tags/%E7%BC%96%E8%AF%91%E9%93%BE/">编译链</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/08-Webpack%20%E6%A0%B8%E5%BF%83%E6%A6%82%E5%BF%B5%E4%B8%8E%E5%AE%83%E5%92%8C%20Vite%20%E7%9A%84%E5%85%B3%E9%94%AE%E5%B7%AE%E5%BC%82/" title="Webpack 核心概念与它和 Vite 的关键差异"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Webpack 核心概念与它和 Vite 的关键差异</div></div></a></div><div class="next-post pull-right"><a href="/posts/06-Tree%20Shaking%E3%80%81%E5%89%AF%E4%BD%9C%E7%94%A8%E4%B8%8E%E4%BB%A3%E7%A0%81%E5%88%86%E5%89%B2/" title="Tree Shaking、副作用与代码分割"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Tree Shaking、副作用与代码分割</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BD%AC%E8%AF%91%E7%9A%84%E6%9C%AC%E8%B4%A8%EF%BC%9A%E6%BA%90%E7%A0%81-%E2%86%92-AST-%E2%86%92-%E6%BA%90%E7%A0%81"><span class="toc-number">1.</span> <span class="toc-text">转译的本质：源码 → AST → 源码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Babel-%E7%BC%96%E8%AF%91%E9%93%BE%EF%BC%9Apreset%E3%80%81browserslist%E3%80%81polyfill"><span class="toc-number">2.</span> <span class="toc-text">Babel 编译链：preset、browserslist、polyfill</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#preset-env-%E5%92%8C-browserslist-%E7%9A%84%E8%81%94%E5%8A%A8"><span class="toc-number">2.1.</span> <span class="toc-text">preset-env 和 browserslist 的联动</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AD%E6%B3%95%E8%BD%AC%E6%8D%A2-%E2%89%A0-API-polyfill"><span class="toc-number">2.2.</span> <span class="toc-text">语法转换 ≠ API polyfill</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#polyfill-%E7%AD%96%E7%95%A5%EF%BC%9Acore-js-%E4%B8%8E-useBuiltIns"><span class="toc-number">2.3.</span> <span class="toc-text">polyfill 策略：core-js 与 useBuiltIns</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SWC%EF%BC%9ABabel-%E7%9A%84-Rust-%E6%9B%BF%E4%BB%A3"><span class="toc-number">3.</span> <span class="toc-text">SWC：Babel 的 Rust 替代</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Oxc%EF%BC%9AVite-8-%E8%83%8C%E5%90%8E%E7%9A%84%E6%96%B0%E7%BC%96%E8%AF%91%E5%9F%BA%E7%A1%80%E8%AE%BE%E6%96%BD"><span class="toc-number">4.</span> <span class="toc-text">Oxc：Vite 8 背后的新编译基础设施</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Babel%E3%80%81SWC-%E5%92%8C-Oxc-%E6%80%8E%E4%B9%88%E9%80%89"><span class="toc-number">5.</span> <span class="toc-text">Babel、SWC 和 Oxc 怎么选</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E8%83%BD%E7%9C%8B%E5%88%B0%E6%95%88%E6%9E%9C%E7%9A%84%E6%9C%80%E5%B0%8F%E7%A4%BA%E4%BE%8B"><span class="toc-number">6.</span> <span class="toc-text">一个能看到效果的最小示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

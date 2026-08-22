@@ -1,0 +1,1250 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>CDN 完全指南：从原理到实战的系统讲解 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="CDN 这个词几乎所有前端、后端都听过，但真要说清楚”它到底怎么把一个静态文件从北京机房送到广州用户手里只用 20ms”，能讲透的人并不多。这篇我把 CDN 从最底层的 DNS 调度，到节点缓存、回源、刷新预热，再到实战配置和踩坑经验，整理成一份系统的指南。 一、为什么需要 CDN1.1 没有 CDN 的世界假设你在北京机房部署了一个网站，所有用户的请求都直接打到这台源站服务器： 广州用户  ──">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CDN 完全指南：从原理到实战的系统讲解">
+<meta property="og:url" content="http://example.com/posts/10-CDN%20%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97%EF%BC%9A%E4%BB%8E%E5%8E%9F%E7%90%86%E5%88%B0%E5%AE%9E%E6%88%98%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%AE%B2%E8%A7%A3/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="CDN 这个词几乎所有前端、后端都听过，但真要说清楚”它到底怎么把一个静态文件从北京机房送到广州用户手里只用 20ms”，能讲透的人并不多。这篇我把 CDN 从最底层的 DNS 调度，到节点缓存、回源、刷新预热，再到实战配置和踩坑经验，整理成一份系统的指南。 一、为什么需要 CDN1.1 没有 CDN 的世界假设你在北京机房部署了一个网站，所有用户的请求都直接打到这台源站服务器： 广州用户  ──">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-29T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.339Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="性能优化">
+<meta property="article:tag" content="缓存">
+<meta property="article:tag" content="CDN">
+<meta property="article:tag" content="网络">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/10-CDN%20%E5%AE%8C%E5%85%A8%E6%8C%87%E5%8D%97%EF%BC%9A%E4%BB%8E%E5%8E%9F%E7%90%86%E5%88%B0%E5%AE%9E%E6%88%98%E7%9A%84%E7%B3%BB%E7%BB%9F%E8%AE%B2%E8%A7%A3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'CDN 完全指南：从原理到实战的系统讲解',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">CDN 完全指南：从原理到实战的系统讲解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-29T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.339Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/cs-fundamentals/">基础知识</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">9.1k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>30分钟</span></span></div></div></div><article class="post-content" id="article-container"><p>CDN 这个词几乎所有前端、后端都听过，但真要说清楚”它到底怎么把一个静态文件从北京机房送到广州用户手里只用 20ms”，能讲透的人并不多。这篇我把 CDN 从最底层的 DNS 调度，到节点缓存、回源、刷新预热，再到实战配置和踩坑经验，整理成一份系统的指南。</p>
+<h2 id="一、为什么需要-CDN"><a href="#一、为什么需要-CDN" class="headerlink" title="一、为什么需要 CDN"></a>一、为什么需要 CDN</h2><h3 id="1-1-没有-CDN-的世界"><a href="#1-1-没有-CDN-的世界" class="headerlink" title="1.1 没有 CDN 的世界"></a>1.1 没有 CDN 的世界</h3><p>假设你在北京机房部署了一个网站，所有用户的请求都直接打到这台源站服务器：</p>
+<pre><code>广州用户  ──── 跨越 2000+ 公里 ────→  北京源站
+深圳用户  ──── 跨越 2000+ 公里 ────→  北京源站
+新疆用户  ──── 跨越 3000+ 公里 ────→  北京源站
+海外用户  ──── 跨越数万公里 ─────→  北京源站
+</code></pre>
+<p>带来的问题非常直接：</p>
+<ol>
+<li><strong>物理距离</strong>：电信号在光纤中传播速度约为光速的 2&#x2F;3，北京到广州一个来回大约 30~50ms，这是物理定律决定的下限</li>
+<li><strong>网络拥塞</strong>：跨运营商访问（如电信用户访问联通源站）经常出现丢包和高延迟</li>
+<li><strong>源站压力</strong>：所有流量都打到一台服务器，热点资源会瞬间打爆带宽</li>
+<li><strong>海外访问慢</strong>：跨国链路质量差，丢包率高，常常出现”打开个网站要 5 秒”</li>
+</ol>
+<h3 id="1-2-CDN-解决的核心问题"><a href="#1-2-CDN-解决的核心问题" class="headerlink" title="1.2 CDN 解决的核心问题"></a>1.2 CDN 解决的核心问题</h3><p>CDN（Content Delivery Network，内容分发网络）的核心思路一句话：<strong>把内容缓存到离用户最近的节点</strong>。</p>
+<pre><code>            ┌──────────────┐
+            │   北京源站   │
+            └──────┬───────┘
+                   │ 回源
+        ┌──────────┼──────────┐
+        ▼          ▼          ▼
+   ┌────────┐ ┌────────┐ ┌────────┐
+   │广州节点 │  │上海节点 │ │成都节点 │  ← CDN 边缘节点
+   └────┬───┘ └────┬───┘ └────┬───┘
+        ▼          ▼          ▼
+     广州用户     上海用户    成都用户
+</code></pre>
+<p>我的理解是：CDN 本质上就是一个<strong>分布式的多级缓存系统</strong>，附带智能调度能力。它不”创造”内容，只是把源站的内容放到离用户更近的地方。</p>
+<h2 id="二、CDN-的工作原理"><a href="#二、CDN-的工作原理" class="headerlink" title="二、CDN 的工作原理"></a>二、CDN 的工作原理</h2><h3 id="2-1-一次完整的-CDN-请求流程"><a href="#2-1-一次完整的-CDN-请求流程" class="headerlink" title="2.1 一次完整的 CDN 请求流程"></a>2.1 一次完整的 CDN 请求流程</h3><p>以用户访问 <code>https://static.example.com/app.js</code> 为例，全流程如下：</p>
+<pre><code>1. 用户输入 URL 或页面引用资源
+   ↓
+2. 浏览器发起 DNS 查询：static.example.com 的 IP 是什么？
+   ↓
+3. Local DNS 递归查询，最终问到权威 DNS
+   ↓
+4. 权威 DNS 返回 CNAME：static.example.com → static.example.com.cdn.com
+   ↓
+5. Local DNS 继续查询 CNAME，被引导到 CDN 厂商的 GSLB（全局负载均衡）
+   ↓
+6. GSLB 根据用户 IP、运营商、节点负载等因素，返回最优边缘节点 IP
+   ↓
+7. 浏览器向边缘节点发起 HTTP/HTTPS 请求
+   ↓
+8. 边缘节点检查本地缓存：
+   - 命中 → 直接返回（最快）
+   - 未命中 → 向上层节点或源站回源 → 缓存后返回
+</code></pre>
+<blockquote>
+<p>CNAME 接入是 CDN 最经典也最普遍的接入方式，本质就是把域名解析的”决定权”交给 CDN 厂商。</p>
+</blockquote>
+<h3 id="2-2-关键组件"><a href="#2-2-关键组件" class="headerlink" title="2.2 关键组件"></a>2.2 关键组件</h3><table>
+<thead>
+<tr>
+<th>组件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>源站（Origin）</td>
+<td>内容的真实存储位置，CDN 缓存未命中时回源拉取</td>
+</tr>
+<tr>
+<td>边缘节点（Edge）</td>
+<td>离用户最近的缓存节点，直接对用户提供服务</td>
+</tr>
+<tr>
+<td>中间层节点</td>
+<td>部分 CDN 在边缘和源站之间还有一层”父节点”，用于减少回源</td>
+</tr>
+<tr>
+<td>GSLB</td>
+<td>全局调度系统，决定把用户引到哪个节点</td>
+</tr>
+<tr>
+<td>调度系统</td>
+<td>实时监控节点状态、链路质量，动态调整调度策略</td>
+</tr>
+</tbody></table>
+<h3 id="2-3-CDN-调度的三种主流方式"><a href="#2-3-CDN-调度的三种主流方式" class="headerlink" title="2.3 CDN 调度的三种主流方式"></a>2.3 CDN 调度的三种主流方式</h3><p><strong>1. DNS 调度</strong></p>
+<p>最经典也最常见。GSLB 根据 Local DNS 的 IP 推断用户位置，返回不同的边缘节点 IP。</p>
+<ul>
+<li>优点：实现简单、覆盖广</li>
+<li>缺点：CDN 往往只能根据 Local DNS 的位置来猜用户位置，用户用了公共 DNS 时可能猜错；而且 DNS 结果会被缓存，节点切换不能做到秒级立即生效</li>
+</ul>
+<p><strong>2. HTTP 302 调度</strong></p>
+<p>边缘节点收到请求后，判断不是最优节点，返回 302 重定向到更合适的节点。</p>
+<ul>
+<li>优点：调度精准，能用真实客户端 IP</li>
+<li>缺点：多一次往返，增加首包延迟，不适合频繁的小请求</li>
+</ul>
+<p><strong>3. Anycast 调度</strong></p>
+<p>多个节点对外宣告同一个 IP，靠 BGP 路由把流量自动引到”网络上最近”的节点。</p>
+<ul>
+<li>优点：无需 DNS 调度，切换快、抗 DDoS 强</li>
+<li>缺点：成本高、对中小厂商不友好，国内运营商支持复杂</li>
+</ul>
+<p>实战中，<strong>主流商业 CDN 多采用 DNS 调度 + HTTP 302 微调</strong> 的组合方案。</p>
+<h2 id="三、CDN-缓存机制详解"><a href="#三、CDN-缓存机制详解" class="headerlink" title="三、CDN 缓存机制详解"></a>三、CDN 缓存机制详解</h2><h3 id="3-1-缓存命中的判断流程"><a href="#3-1-缓存命中的判断流程" class="headerlink" title="3.1 缓存命中的判断流程"></a>3.1 缓存命中的判断流程</h3><p>边缘节点收到请求后，缓存判断逻辑大致如下：</p>
+<pre><code>请求到达边缘节点
+       ↓
+计算 Cache Key（通常是 URL + 部分 Header）
+       ↓
+查询本地缓存
+       ↓
+   ┌───────┴───────┐
+   ▼               ▼
+ 命中            未命中
+   ↓               ↓
+检查是否过期    回源拉取
+   ↓               ↓
+未过期 → 直接返回  按规则缓存
+过期 → 回源验证    返回给用户
+</code></pre>
+<h3 id="3-2-缓存键（Cache-Key）"><a href="#3-2-缓存键（Cache-Key）" class="headerlink" title="3.2 缓存键（Cache Key）"></a>3.2 缓存键（Cache Key）</h3><p>这是 CDN 一个非常关键的概念，**决定了”什么样的请求算同一个资源”**。</p>
+<p>默认的 Cache Key 通常是：</p>
+<pre><code>Cache Key = Host + URI + 部分查询参数
+</code></pre>
+<p>比如 <code>/app.js?v=1</code> 和 <code>/app.js?v=2</code> 默认是两个不同的缓存对象。</p>
+<p>实战中容易踩的坑：</p>
+<ul>
+<li><p><strong>坑 1：URL 带随机参数导致缓存命中率为 0</strong></p>
+<ul>
+<li>现象：监控里发现命中率长期在个位数</li>
+<li>原因：前端给每个请求加了 <code>?_t=时间戳</code> 防止本地缓存</li>
+<li>解决：在 CDN 配置里<strong>忽略指定查询参数</strong>，或者只保留有意义的参数</li>
+</ul>
+</li>
+<li><p><strong>坑 2：携带 Cookie 导致每个用户缓存独立</strong></p>
+<ul>
+<li>现象：同一个静态资源命中率极低</li>
+<li>原因：CDN 默认把 Cookie 纳入 Cache Key</li>
+<li>解决：静态资源域名独立部署，剥离 Cookie；或在 CDN 配置中忽略 Cookie</li>
+</ul>
+</li>
+</ul>
+<h3 id="3-3-缓存过期与回源验证"><a href="#3-3-缓存过期与回源验证" class="headerlink" title="3.3 缓存过期与回源验证"></a>3.3 缓存过期与回源验证</h3><p>CDN 的缓存过期时间，由三个因素叠加决定，按优先级从高到低：</p>
+<ol>
+<li><strong>CDN 控制台的缓存规则</strong>：管理员手动配置的过期时间（最高优先级）</li>
+<li><strong>源站响应头</strong>：<code>Cache-Control: max-age=xxx</code> 或 <code>Expires</code></li>
+<li><strong>CDN 的默认策略</strong>：通常是 24 小时</li>
+</ol>
+<p>过期后并不一定立刻回源拉新，常见做法是<strong>回源验证</strong>：</p>
+<pre><code class="http">GET /app.js HTTP/1.1
+If-None-Match: &quot;abc123&quot;
+If-Modified-Since: Wed, 28 May 2026 10:00:00 GMT
+</code></pre>
+<p>源站如果资源没变，返回 <code>304 Not Modified</code>，CDN 节点就刷新缓存有效期，不需要重新传输 body。</p>
+<h3 id="3-4-缓存刷新与预热"><a href="#3-4-缓存刷新与预热" class="headerlink" title="3.4 缓存刷新与预热"></a>3.4 缓存刷新与预热</h3><p>这是 CDN 后台管理里最常用的两个操作：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>作用</th>
+<th>使用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>刷新（Purge）</td>
+<td>强制使指定 URL 的缓存失效</td>
+<td>紧急修复 BUG、内容下线</td>
+</tr>
+<tr>
+<td>预热（Prefetch）</td>
+<td>主动让边缘节点从源站拉取资源</td>
+<td>大促前预先把资源推到全网节点</td>
+</tr>
+</tbody></table>
+<p>实战经验：</p>
+<ul>
+<li>刷新有数量限制和频次限制，不要把它当做日常发布手段（正确的做法是<strong>版本化文件名</strong>，比如 <code>app.a1b2c3.js</code>）</li>
+<li>预热在大流量活动前一定要做，否则活动开始的瞬间会有大量回源请求把源站打爆</li>
+</ul>
+<h2 id="四、CDN-回源策略详解"><a href="#四、CDN-回源策略详解" class="headerlink" title="四、CDN 回源策略详解"></a>四、CDN 回源策略详解</h2><p>回源（Back-to-Origin）是 CDN 边缘节点向源站拉取资源的过程，是 CDN 中除”缓存”之外最关键的一环。配置不当轻则命中率低、源站压力大，重则导致整站不可用。</p>
+<h3 id="4-1-回源类型：IP-回源-vs-域名回源"><a href="#4-1-回源类型：IP-回源-vs-域名回源" class="headerlink" title="4.1 回源类型：IP 回源 vs 域名回源"></a>4.1 回源类型：IP 回源 vs 域名回源</h3><p>CDN 配置源站时，主流厂商通常提供以下几种方式：</p>
+<table>
+<thead>
+<tr>
+<th>回源类型</th>
+<th>配置方式</th>
+<th>优点</th>
+<th>缺点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>IP 回源</td>
+<td>直接填源站公网 IP</td>
+<td>跳过 DNS 解析，回源更快；不受源站 DNS 故障影响</td>
+<td>IP 变更要手动改配置；不支持源站负载均衡</td>
+</tr>
+<tr>
+<td>域名回源</td>
+<td>填源站域名</td>
+<td>灵活，源站可平滑迁移、扩容；天然支持负载均衡</td>
+<td>多一次 DNS 解析；依赖源站 DNS 可用性</td>
+</tr>
+<tr>
+<td>OSS&#x2F;COS 回源</td>
+<td>填对象存储地址</td>
+<td>原生集成、免维护、回源带宽便宜</td>
+<td>仅适用于纯静态资源</td>
+</tr>
+</tbody></table>
+<p>我的实战建议：</p>
+<ul>
+<li><strong>静态资源回对象存储</strong>：如阿里云 OSS、腾讯云 COS，省心又便宜，且 CDN 厂商往往对自家对象存储做了带宽优惠</li>
+<li><strong>动态业务回域名</strong>：方便后端做扩缩容、灰度、切流</li>
+<li><strong>IP 回源</strong>只在特殊场景用：比如源站 DNS 不稳定、对回源延迟极度敏感、内网直连场景</li>
+</ul>
+<h3 id="4-2-回源-Host：最容易踩坑的配置"><a href="#4-2-回源-Host：最容易踩坑的配置" class="headerlink" title="4.2 回源 Host：最容易踩坑的配置"></a>4.2 回源 Host：最容易踩坑的配置</h3><p><strong>回源 Host 决定了 CDN 节点向源站发起请求时，HTTP 报文里 Host 头的值</strong>。这个概念是回源里最容易被忽略也最容易出问题的地方。</p>
+<pre><code>用户请求：     GET /index.html HTTP/1.1
+              Host: cdn.example.com
+                       ↓ CDN 节点回源
+回源请求：     GET /index.html HTTP/1.1
+              Host: ???      ← 这里填什么？
+</code></pre>
+<p>主流 CDN 上通常可以选择：</p>
+<ol>
+<li><strong>加速域名</strong>（默认值）：原样把 <code>cdn.example.com</code> 透传给源站</li>
+<li><strong>源站域名</strong>：用配置里的源站域名 <code>origin.example.com</code></li>
+<li><strong>自定义 Host</strong>：手动指定，比如 <code>www.example.com</code></li>
+</ol>
+<p>为什么这事容易踩坑？因为很多源站是<strong>基于 Host 路由</strong>的——同一个 IP 上跑了多个网站，Nginx&#x2F;网关靠 Host 头分发。</p>
+<p>实战踩坑：</p>
+<ul>
+<li><p><strong>坑 1：回源 Host 错误导致全站 404</strong></p>
+<ul>
+<li>现象：CDN 接入后所有请求都 404</li>
+<li>原因：源站 Nginx 是虚拟主机模式，回源 Host 用了加速域名，但 Nginx 上没有 <code>server_name cdn.example.com</code> 的配置</li>
+<li>解决：把回源 Host 改成源站实际配置的域名，或在 Nginx 增加对应 server_name</li>
+</ul>
+</li>
+<li><p><strong>坑 2：回源 OSS 时报 SignatureDoesNotMatch</strong></p>
+<ul>
+<li>现象：从对象存储回源时返回签名错误</li>
+<li>原因：OSS 签名验证依赖 Host 头，回源 Host 写错了</li>
+<li>解决：回源 Host 必须填 OSS 标准域名（如 <code>bucket.oss-cn-beijing.aliyuncs.com</code>）</li>
+</ul>
+</li>
+</ul>
+<h3 id="4-3-回源协议"><a href="#4-3-回源协议" class="headerlink" title="4.3 回源协议"></a>4.3 回源协议</h3><p>CDN 到源站之间的协议，一般有三种选项：</p>
+<table>
+<thead>
+<tr>
+<th>协议</th>
+<th>描述</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>HTTP</td>
+<td>CDN 到源站走明文 HTTP</td>
+<td>内网源站、性能敏感场景</td>
+</tr>
+<tr>
+<td>HTTPS</td>
+<td>CDN 到源站强制走 HTTPS</td>
+<td>公网源站、安全合规要求</td>
+</tr>
+<tr>
+<td>协议跟随</td>
+<td>用户用什么协议，CDN 就用什么协议回源</td>
+<td>折中方案</td>
+</tr>
+</tbody></table>
+<p>实战中要注意：<strong>协议跟随容易让同一个资源出现两套回源路径</strong>。用户用 HTTP 访问时，CDN 可能用 HTTP 回源；用户用 HTTPS 访问时，CDN 又用 HTTPS 回源。如果源站对 HTTP 和 HTTPS 的处理不完全一致，比如跳转逻辑、Cookie、安全 Header 不一样，就可能出现缓存内容不一致、重复回源、排查困难的问题。生产环境推荐<strong>固定 HTTPS 回源</strong>。</p>
+<p>举个例子：</p>
+<pre><code class="text">用户用 HTTP 访问：
+http://static.example.com/app.js
+        ↓ CDN 协议跟随，用 HTTP 回源
+源站返回：301 跳转到 https://static.example.com/app.js
+
+用户用 HTTPS 访问：
+https://static.example.com/app.js
+        ↓ CDN 协议跟随，用 HTTPS 回源
+源站返回：200，直接返回 app.js
+</code></pre>
+<p>这样同一个 <code>app.js</code>，HTTP 链路拿到的是跳转响应，HTTPS 链路拿到的是文件内容。如果 CDN 缓存规则没配好，就可能把 301 或错误的缓存头缓存下来，后面排查会很绕。</p>
+<h3 id="4-4-多源站策略"><a href="#4-4-多源站策略" class="headerlink" title="4.4 多源站策略"></a>4.4 多源站策略</h3><p>实际生产环境很少只有一个源站，CDN 通常支持配置多源站和回源策略：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>行为</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主备</td>
+<td>主源故障时切到备源</td>
+<td>容灾，最常用</td>
+</tr>
+<tr>
+<td>轮询</td>
+<td>按顺序均匀分配</td>
+<td>多源站等同性能</td>
+</tr>
+<tr>
+<td>权重</td>
+<td>按比例分配（如 7:3）</td>
+<td>灰度、按容量分配</td>
+</tr>
+<tr>
+<td>一致性哈希</td>
+<td>同一 URL 固定到某个源</td>
+<td>配合源站本地缓存</td>
+</tr>
+</tbody></table>
+<p>健康检查机制是多源策略的灵魂——CDN 会定期探测源站可用性（通常是 HTTP 状态码 + 超时），不健康的源站会被自动摘除，恢复后再重新挂回。</p>
+<h3 id="4-5-回源请求头"><a href="#4-5-回源请求头" class="headerlink" title="4.5 回源请求头"></a>4.5 回源请求头</h3><p>CDN 回源时会主动加一些请求头，让源站能识别真实用户信息：</p>
+<pre><code class="http">GET /app.js HTTP/1.1
+Host: origin.example.com
+X-Forwarded-For: 1.2.3.4, 10.0.0.1   # 客户端真实 IP, 中间节点 IP
+X-Real-IP: 1.2.3.4                    # 客户端真实 IP（部分 CDN 提供）
+X-Forwarded-Proto: https              # 用户原始访问协议
+Via: 1.1 cdn-edge.example             # 经过的代理标识
+User-Agent: ...                        # 透传用户的 UA
+</code></pre>
+<p>源站获取真实 IP 的标准做法（Nginx）：</p>
+<pre><code class="nginx"># 信任 CDN 的 IP 段（只有从这些 IP 来的 X-Forwarded-For 才被采信）
+set_real_ip_from 1.2.3.0/24;
+set_real_ip_from 5.6.7.0/24;
+real_ip_header X-Forwarded-For;
+real_ip_recursive on;
+</code></pre>
+<blockquote>
+<p>如果源站不配置 <code>set_real_ip_from</code>，所有日志里的客户端 IP 都会变成 CDN 节点 IP，做风控、限流时会出大问题。</p>
+</blockquote>
+<h3 id="4-6-回源优化机制"><a href="#4-6-回源优化机制" class="headerlink" title="4.6 回源优化机制"></a>4.6 回源优化机制</h3><p><strong>1. 回源合并（Origin Shielding &#x2F; Request Coalescing）</strong></p>
+<p>同一时刻多个用户请求同一个未缓存的资源时，CDN 节点合并成一次回源，避免重复请求源站。</p>
+<pre><code>没有回源合并：
+1000 个用户同时请求 → 1000 次回源 → 源站爆炸
+
+启用回源合并：
+1000 个用户同时请求 → 1 次回源 → 1000 个用户共享结果
+</code></pre>
+<p><strong>怎么开启（商业 CDN）：</strong></p>
+<p>各家叫法不同，但功能本质一致，在控制台缓存或回源相关的配置页能找到：</p>
+<table>
+<thead>
+<tr>
+<th>厂商</th>
+<th>常见名称</th>
+<th>备注</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>阿里云 CDN&#x2F;DCDN</td>
+<td>“回源请求合并”</td>
+<td>部分产品默认开启</td>
+</tr>
+<tr>
+<td>腾讯云 CDN&#x2F;EdgeOne</td>
+<td>“合并回源请求”</td>
+<td>配合中间层节点效果更好</td>
+</tr>
+<tr>
+<td>AWS CloudFront</td>
+<td>“Origin Shield”</td>
+<td>更接近”中间层”概念，是一个独立可选的区域级中转节点</td>
+</tr>
+<tr>
+<td>Cloudflare</td>
+<td>“Argo Tiered Cache”</td>
+<td>分层缓存机制，包含合并能力</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>具体菜单路径各家版本会变，建议直接在控制台搜”合并””Shield””Tiered”这几个关键词。</p>
+</blockquote>
+<p><strong>怎么开启（Nginx 自建场景）：</strong></p>
+<p>如果你是用 Nginx 自建反向代理 &#x2F; 边缘缓存，对应的能力是 <code>proxy_cache_lock</code>：</p>
+<pre><code class="nginx"># 1. 先定义缓存区
+proxy_cache_path /var/cache/nginx/cdn
+                 levels=1:2
+                 keys_zone=cdn_cache:100m
+                 max_size=10g
+                 inactive=24h;
+
+server &#123;
+    listen 80;
+    server_name edge.example.com;
+
+    location / &#123;
+        proxy_cache cdn_cache;
+        proxy_cache_key &quot;$scheme$host$request_uri&quot;;
+        proxy_cache_valid 200 301 302 1h;
+
+        # 关键：回源合并
+        proxy_cache_lock on;              # 同一 key 同一时刻只放一个请求回源
+        proxy_cache_lock_timeout 5s;      # 等锁超过 5s 就放行（防止全部卡死）
+        proxy_cache_lock_age 5s;          # 上一个回源 5s 没回来，允许再发一个
+
+        # 配套优化：等锁期间可以先返回旧缓存
+        proxy_cache_use_stale updating timeout;
+        proxy_cache_background_update on; # 后台静默更新
+
+        proxy_pass http://origin_upstream;
+    &#125;
+&#125;
+</code></pre>
+<p>参数解释：</p>
+<ul>
+<li><code>proxy_cache_lock on</code>：核心开关，等同于商业 CDN 的”回源合并”</li>
+<li><code>proxy_cache_lock_timeout</code>：兜底超时，避免源站长时间不响应导致所有请求都堵死</li>
+<li><code>proxy_cache_use_stale updating</code>：等锁的请求可以先用旧缓存兜底，体验最好</li>
+<li><code>proxy_cache_background_update</code>：源站慢的时候用旧缓存返回用户，后台异步更新</li>
+</ul>
+<p><strong>验证是否生效：</strong></p>
+<p>最简单的办法——压测。</p>
+<pre><code class="bash"># 先清掉缓存确保是冷启动
+curl -X PURGE https://edge.example.com/big.json
+
+# 同时发起 100 个并发请求
+ab -n 100 -c 100 https://edge.example.com/big.json
+
+# 同时在源站看 access.log，统计这一秒收到几次请求
+tail -f /var/log/nginx/origin-access.log | grep big.json | wc -l
+</code></pre>
+<p>没开合并时，源站会看到 100 次请求；开了合并后，理想情况只有 1 次。</p>
+<p><strong>注意事项（踩坑提醒）：</strong></p>
+<ol>
+<li><strong>只对 GET&#x2F;HEAD 有效</strong>：POST、PUT 这类非幂等请求不能合并，CDN 也不会合并</li>
+<li><strong>锁的粒度是 Cache Key</strong>：如果 Cache Key 设计太散（带了一堆查询参数），合并效果会大打折扣</li>
+<li><strong>等锁超时是把双刃剑</strong>：超时太短会”打穿”（多次回源），超时太长会拖慢用户体验，一般 3~10 秒</li>
+<li>**要配合 <code>use_stale</code>**：纯靠合并解决不了”缓存击穿”，旧缓存兜底才是更稳的方案</li>
+<li><strong>源站慢响应会放大问题</strong>：一旦源站某个 URL 响应变慢，等锁的所有用户都会被拖住，所以源站超时控制和熔断不能省</li>
+</ol>
+<p><strong>2. 中间层节点（父节点）</strong></p>
+<p>边缘节点和源站之间增加一层中间层，多个边缘节点共享同一个父节点的缓存：</p>
+<pre><code>用户  →  边缘节点  →  父节点（中间层缓存）  →  源站
+</code></pre>
+<p>效果是把可能上百次的回源收敛成几次。腾讯云、阿里云 CDN 都默认提供这个能力，可在控制台开启。</p>
+<p><strong>3. Range 回源</strong></p>
+<p>大文件（视频、安装包等）支持分片缓存。用户请求 <code>Range: bytes=0-1023</code> 时，CDN 只回源拉这一段，而不是整个文件。</p>
+<p>这个能力对视频点播、大文件下载场景非常关键。否则一个 1GB 的视频用户只看了 10MB，CDN 也得把 1GB 全拉下来，浪费严重。</p>
+<p><strong>4. 回源跟随重定向</strong></p>
+<p>源站返回 301&#x2F;302 时，CDN 是否要自己跟随重定向再回源？</p>
+<ul>
+<li>默认行为通常是<strong>不跟随</strong>，把重定向直接透传给用户</li>
+<li>开启跟随后 CDN 会处理重定向，最终缓存的是重定向后的内容</li>
+</ul>
+<p>我的建议：默认关闭，需要时再针对性开启，避免缓存逻辑变得难以排查。</p>
+<h3 id="4-7-回源限速与熔断"><a href="#4-7-回源限速与熔断" class="headerlink" title="4.7 回源限速与熔断"></a>4.7 回源限速与熔断</h3><p>为保护源站，主流 CDN 提供回源保护机制：</p>
+<ul>
+<li><strong>回源带宽上限</strong>：超过阈值时延迟或丢弃回源请求</li>
+<li><strong>回源 QPS 限制</strong>：限制单位时间内的回源次数</li>
+<li><strong>回源熔断</strong>：源站连续报错时，CDN 临时停止回源，直接返回旧缓存或错误页</li>
+</ul>
+<p>我的踩坑记忆：有一次源站升级出 BUG，CDN 连续回源拿到 500，没开熔断的情况下，CDN 把所有节点的缓存都污染成了 500 错误页，源站修复后还得手动刷新全网缓存才恢复。生产环境<strong>回源熔断必须开</strong>。</p>
+<h2 id="五、CDN-与-HTTP-缓存头"><a href="#五、CDN-与-HTTP-缓存头" class="headerlink" title="五、CDN 与 HTTP 缓存头"></a>五、CDN 与 HTTP 缓存头</h2><h3 id="5-1-三个关键响应头"><a href="#5-1-三个关键响应头" class="headerlink" title="5.1 三个关键响应头"></a>5.1 三个关键响应头</h3><p>CDN 行为受源站响应头强烈影响，最关键的三个：</p>
+<pre><code class="http">Cache-Control: public, max-age=31536000, s-maxage=86400
+ETag: &quot;abc123&quot;
+Last-Modified: Wed, 28 May 2026 10:00:00 GMT
+</code></pre>
+<p><code>Cache-Control</code> 各指令的含义：</p>
+<table>
+<thead>
+<tr>
+<th>指令</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>public</code></td>
+<td>允许 CDN 等共享缓存存储（关键，没有它部分 CDN 不会缓存）</td>
+</tr>
+<tr>
+<td><code>private</code></td>
+<td>只允许浏览器缓存，CDN 不缓存</td>
+</tr>
+<tr>
+<td><code>no-cache</code></td>
+<td>每次都要回源验证（不是不缓存！）</td>
+</tr>
+<tr>
+<td><code>no-store</code></td>
+<td>完全不缓存</td>
+</tr>
+<tr>
+<td><code>max-age=N</code></td>
+<td>缓存 N 秒（浏览器和 CDN 共用）</td>
+</tr>
+<tr>
+<td><code>s-maxage=N</code></td>
+<td>仅对共享缓存（CDN）生效，覆盖 max-age</td>
+</tr>
+</tbody></table>
+<h3 id="5-2-静态资源的推荐配置"><a href="#5-2-静态资源的推荐配置" class="headerlink" title="5.2 静态资源的推荐配置"></a>5.2 静态资源的推荐配置</h3><pre><code class="http"># 带版本号的静态资源（如 app.a1b2c3.js）
+Cache-Control: public, max-age=31536000, immutable
+
+# HTML 入口文件
+Cache-Control: public, max-age=0, must-revalidate
+
+# 用户私有数据接口
+Cache-Control: private, no-cache
+</code></pre>
+<blockquote>
+<p><code>immutable</code> 是个好东西，告诉浏览器”这个资源永远不会变，连 304 验证都不用发”。Chrome、Firefox 都支持，能省一笔 RTT。</p>
+</blockquote>
+<h3 id="5-3-一个常见的混淆"><a href="#5-3-一个常见的混淆" class="headerlink" title="5.3 一个常见的混淆"></a>5.3 一个常见的混淆</h3><p>很多人分不清 <code>no-cache</code> 和 <code>no-store</code>：</p>
+<pre><code class="javascript">// ❌ 想&quot;不缓存&quot;但写错了
+Cache-Control: no-cache  // 实际是&quot;缓存但每次都验证&quot;
+
+// ✅ 真的不想缓存
+Cache-Control: no-store
+</code></pre>
+<h2 id="六、CDN-实战配置"><a href="#六、CDN-实战配置" class="headerlink" title="六、CDN 实战配置"></a>六、CDN 实战配置</h2><h3 id="6-1-一个-Node-js-Express-静态资源服务示例"><a href="#6-1-一个-Node-js-Express-静态资源服务示例" class="headerlink" title="6.1 一个 Node.js Express 静态资源服务示例"></a>6.1 一个 Node.js Express 静态资源服务示例</h3><p>下面是一个最小可运行示例，演示如何为不同类型的资源配置合适的响应头，让 CDN 缓存策略正确生效。</p>
+<p>环境：Node.js 18+，依赖 <code>express@4</code>。</p>
+<pre><code class="javascript">// server.js
+const express = require(&#39;express&#39;);
+const path = require(&#39;path&#39;);
+
+const app = express();
+
+// 1. 带 hash 的静态资源 - 长期缓存
+app.use(&#39;/static&#39;, express.static(path.join(__dirname, &#39;dist/static&#39;), &#123;
+  maxAge: &#39;1y&#39;,
+  immutable: true,
+  setHeaders(res) &#123;
+    // 显式声明 public，CDN 才会缓存
+    res.setHeader(&#39;Cache-Control&#39;, &#39;public, max-age=31536000, immutable&#39;);
+  &#125;
+&#125;));
+
+// 2. HTML 入口 - 不缓存（保证新版本立刻生效）
+app.get(&#39;/&#39;, (req, res) =&gt; &#123;
+  res.setHeader(&#39;Cache-Control&#39;, &#39;public, max-age=0, must-revalidate&#39;);
+  res.sendFile(path.join(__dirname, &#39;dist/index.html&#39;));
+&#125;);
+
+// 3. API 接口 - 用户私有数据
+app.get(&#39;/api/user&#39;, (req, res) =&gt; &#123;
+  res.setHeader(&#39;Cache-Control&#39;, &#39;private, no-cache&#39;);
+  res.json(&#123; id: 1, name: &#39;niroli&#39; &#125;);
+&#125;);
+
+// 4. 半动态接口 - 边缘缓存 60 秒
+app.get(&#39;/api/hot-list&#39;, (req, res) =&gt; &#123;
+  // s-maxage 仅对 CDN 生效，浏览器仍然不缓存
+  res.setHeader(&#39;Cache-Control&#39;, &#39;public, max-age=0, s-maxage=60&#39;);
+  res.json(&#123; list: [&#39;item1&#39;, &#39;item2&#39;] &#125;);
+&#125;);
+
+app.listen(3000, () =&gt; &#123;
+  console.log(&#39;Server running at http://localhost:3000&#39;);
+&#125;);
+</code></pre>
+<p>预期效果：</p>
+<ul>
+<li><code>/static/app.a1b2c3.js</code> 在 CDN 和浏览器都缓存一年</li>
+<li><code>/</code> 永远拉最新（但用 <code>must-revalidate</code> 走 304 验证，避免重复传输）</li>
+<li><code>/api/user</code> 不进 CDN</li>
+<li><code>/api/hot-list</code> 在 CDN 缓存 60 秒，相当于源站每分钟最多被请求一次</li>
+</ul>
+<h3 id="6-2-文件版本化策略"><a href="#6-2-文件版本化策略" class="headerlink" title="6.2 文件版本化策略"></a>6.2 文件版本化策略</h3><p>为什么我反复强调”带 hash 的文件名”？看下面对比：</p>
+<pre><code class="javascript">// ❌ 反面案例：靠 query 参数破缓存
+&lt;script src=&quot;/app.js?v=1.0.1&quot;&gt;&lt;/script&gt;
+// 问题：发版后需要刷 CDN 缓存；CDN 配置不当时版本号被忽略
+
+// ✅ 正面案例：文件名带 hash
+&lt;script src=&quot;/app.a1b2c3d4.js&quot;&gt;&lt;/script&gt;
+// 优势：新文件就是新 URL，CDN 直接命中新缓存，无需刷新
+</code></pre>
+<p>主流构建工具（Webpack、Vite、Rspack）都支持自动生成 hash 文件名：</p>
+<pre><code class="javascript">// vite.config.js
+export default &#123;
+  build: &#123;
+    rollupOptions: &#123;
+      output: &#123;
+        entryFileNames: &#39;assets/[name].[hash].js&#39;,
+        chunkFileNames: &#39;assets/[name].[hash].js&#39;,
+        assetFileNames: &#39;assets/[name].[hash].[ext]&#39;
+      &#125;
+    &#125;
+  &#125;
+&#125;;
+</code></pre>
+<h3 id="6-3-HTTPS-配置"><a href="#6-3-HTTPS-配置" class="headerlink" title="6.3 HTTPS 配置"></a>6.3 HTTPS 配置</h3><p>CDN 上配置 HTTPS，不能只理解成“把证书传到控制台”。它实际分成两段：</p>
+<pre><code class="text">用户浏览器  ← HTTPS →  CDN 边缘节点  ← HTTP/HTTPS →  源站
+</code></pre>
+<p>常见模式：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>描述</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>半链路 HTTPS</td>
+<td>用户↔CDN 用 HTTPS，CDN↔源站走 HTTP</td>
+<td>源站暂时不支持 HTTPS 时的过渡方案</td>
+</tr>
+<tr>
+<td>全链路 HTTPS</td>
+<td>用户↔CDN↔源站全程加密</td>
+<td>推荐的标准配置</td>
+</tr>
+</tbody></table>
+<p>我的建议很明确：<strong>生产环境优先用全链路 HTTPS</strong>。半链路模式看起来“用户访问是 HTTPS”，但 CDN 到源站这一段仍然是明文，运营商劫持、内网窃听、中间人篡改的风险都还在。</p>
+<p>HTTPS 配置里有几个容易被忽略的点：</p>
+<table>
+<thead>
+<tr>
+<th>配置项</th>
+<th>作用</th>
+<th>踩坑点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>边缘证书</td>
+<td>用户访问 CDN 时使用的证书</td>
+<td>证书过期会导致全站 HTTPS 失败，一定要开到期告警</td>
+</tr>
+<tr>
+<td>SNI</td>
+<td>同一个 IP 上托管多个 HTTPS 域名</td>
+<td>老旧客户端不支持 SNI 时可能握手失败</td>
+</tr>
+<tr>
+<td>源站证书校验</td>
+<td>CDN 回源 HTTPS 时校验证书是否合法</td>
+<td>只加密不校验证书，安全性是不完整的</td>
+</tr>
+<tr>
+<td>HSTS</td>
+<td>强制浏览器后续只用 HTTPS 访问</td>
+<td>配错后回滚成本高，建议先短时间灰度</td>
+</tr>
+<tr>
+<td>HTTP&#x2F;2</td>
+<td>多路复用，减少连接开销</td>
+<td>对大量小资源有收益，但要配合合理的资源拆分</td>
+</tr>
+<tr>
+<td>HTTP&#x2F;3 &#x2F; QUIC</td>
+<td>基于 UDP，弱网和移动网络下更有优势</td>
+<td>需要客户端、CDN、网络链路共同支持，不要默认假设全量生效</td>
+</tr>
+<tr>
+<td>OCSP Stapling</td>
+<td>CDN 在握手时附带证书状态</td>
+<td>能减少浏览器额外查询证书状态的延迟</td>
+</tr>
+</tbody></table>
+<p>源站 HTTPS 还有一个细节：<strong>CDN 回源时要不要校验证书域名</strong>。</p>
+<p>比如 CDN 回源地址是 <code>origin.example.com</code>，但源站证书只签了 <code>www.example.com</code>，有些 CDN 如果开启严格校验，会直接回源失败；如果关闭校验，虽然链路加密了，但 CDN 没有确认“对面真的是目标源站”。</p>
+<p>我的实战建议：</p>
+<ol>
+<li>边缘证书开启自动续期和到期告警</li>
+<li>CDN 到源站固定走 HTTPS，不用协议跟随</li>
+<li>源站证书尽量使用和回源 Host 匹配的域名</li>
+<li>HSTS 先用短 <code>max-age</code> 灰度，确认没问题再拉长</li>
+<li>HTTP&#x2F;3 可以开，但要用监控验证收益，不要为了“先进”而开</li>
+</ol>
+<h3 id="6-4-哪些场景不适合-CDN-缓存"><a href="#6-4-哪些场景不适合-CDN-缓存" class="headerlink" title="6.4 哪些场景不适合 CDN 缓存"></a>6.4 哪些场景不适合 CDN 缓存</h3><p>CDN 很强，但不是所有请求都应该缓存。我的判断标准很简单：<strong>只要内容和具体用户强相关，或者要求强一致，就要非常谨慎</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>是否适合缓存</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>带 hash 的 JS&#x2F;CSS&#x2F;图片</td>
+<td>适合</td>
+<td>URL 不变内容就不变，可以长期缓存</td>
+</tr>
+<tr>
+<td>HTML 入口文件</td>
+<td>谨慎</td>
+<td>发布后要尽快更新，通常短缓存或回源验证</td>
+</tr>
+<tr>
+<td>商品详情、新闻详情</td>
+<td>适合短缓存</td>
+<td>内容相对稳定，可以用秒级&#x2F;分钟级缓存</td>
+</tr>
+<tr>
+<td>用户资料、订单、账户余额</td>
+<td>不适合</td>
+<td>用户私有数据，缓存错就是严重事故</td>
+</tr>
+<tr>
+<td>登录态接口</td>
+<td>不适合</td>
+<td>依赖 Cookie、Token、Authorization</td>
+</tr>
+<tr>
+<td>支付、交易、库存扣减</td>
+<td>不适合</td>
+<td>强一致要求高，不能返回旧数据</td>
+</tr>
+<tr>
+<td>后台管理接口</td>
+<td>通常不适合</td>
+<td>权限复杂，误缓存风险大</td>
+</tr>
+<tr>
+<td>搜索结果</td>
+<td>视情况</td>
+<td>热门搜索可以短缓存，个性化搜索不适合</td>
+</tr>
+</tbody></table>
+<p>几个红线配置要特别小心：</p>
+<pre><code class="http">Authorization: Bearer xxx
+Cookie: sessionid=xxx
+Set-Cookie: sessionid=xxx
+Cache-Control: private
+</code></pre>
+<p>看到这些信号时，默认应该认为这个响应<strong>不适合被共享缓存</strong>。如果确实要缓存，也要明确拆分公共内容和用户私有内容，不要把登录态响应直接丢给 CDN。</p>
+<p>还有一个容易忽略的 CORS 场景：</p>
+<pre><code class="http">Access-Control-Allow-Origin: https://a.example.com
+Vary: Origin
+</code></pre>
+<p>如果源站按请求的 <code>Origin</code> 动态返回 <code>Access-Control-Allow-Origin</code>，但 CDN 的 Cache Key 没有区分 <code>Origin</code>，就可能把 A 站的跨域响应缓存给 B 站，导致跨域异常甚至安全问题。这个时候要么让响应固定，要么把 <code>Origin</code> 纳入缓存变化维度。</p>
+<h2 id="七、CDN-进阶话题"><a href="#七、CDN-进阶话题" class="headerlink" title="七、CDN 进阶话题"></a>七、CDN 进阶话题</h2><h3 id="7-1-动态加速"><a href="#7-1-动态加速" class="headerlink" title="7.1 动态加速"></a>7.1 动态加速</h3><p>传统 CDN 只缓存静态资源，但动态请求（API、登录态相关）也能加速。原理是：</p>
+<ol>
+<li>用户就近接入 CDN 边缘节点</li>
+<li>CDN 通过自建的优化骨干网把请求转发到源站</li>
+<li>利用专线、TCP 优化、智能路由等手段降低延迟</li>
+</ol>
+<p>我的看法：动态加速本质上是<strong>用 CDN 的网络替代公网</strong>，对跨国、跨运营商场景效果明显，国内同地域加速效果有限。</p>
+<h3 id="7-2-边缘计算（Edge-Computing）"><a href="#7-2-边缘计算（Edge-Computing）" class="headerlink" title="7.2 边缘计算（Edge Computing）"></a>7.2 边缘计算（Edge Computing）</h3><p>新一代 CDN 普遍支持在边缘节点跑代码，比如 Cloudflare Workers、AWS Lambda@Edge、阿里云 EdgeRoutine。</p>
+<p>典型场景：</p>
+<ul>
+<li>A&#x2F;B 测试分流</li>
+<li>鉴权和限流</li>
+<li>简单的 API 聚合</li>
+<li>个性化内容生成</li>
+</ul>
+<p>代码示例（Cloudflare Workers 风格）：</p>
+<pre><code class="javascript">// 边缘节点上运行的代码
+export default &#123;
+  async fetch(request) &#123;
+    const url = new URL(request.url);
+
+    // 边缘鉴权
+    const token = request.headers.get(&#39;Authorization&#39;);
+    if (!token) &#123;
+      return new Response(&#39;Unauthorized&#39;, &#123; status: 401 &#125;);
+    &#125;
+
+    // 根据用户地理位置返回不同内容
+    const country = request.cf?.country || &#39;CN&#39;;
+    if (country === &#39;CN&#39;) &#123;
+      url.hostname = &#39;cn-origin.example.com&#39;;
+    &#125; else &#123;
+      url.hostname = &#39;global-origin.example.com&#39;;
+    &#125;
+
+    return fetch(url.toString(), request);
+  &#125;
+&#125;;
+</code></pre>
+<h3 id="7-3-安全防护"><a href="#7-3-安全防护" class="headerlink" title="7.3 安全防护"></a>7.3 安全防护</h3><p>主流 CDN 都集成了基础的安全能力：</p>
+<ul>
+<li><strong>防 DDoS</strong>：边缘节点天然分布广，能吸收大流量攻击</li>
+<li><strong>WAF（Web 应用防火墙）</strong>：在边缘拦截 SQL 注入、XSS 等攻击</li>
+<li><strong>CC 防护</strong>：识别并限制异常的高频请求</li>
+<li><strong>盗链防护</strong>：基于 Referer、Token 鉴权，防止资源被外部站点盗用</li>
+</ul>
+<p>防盗链一个简单实战配置：</p>
+<pre><code># 仅允许特定 Referer 访问
+allowed_referers:
+  - &quot;*.example.com&quot;
+  - &quot;example.com&quot;
+
+# 空 Referer 直接拒绝
+deny_empty_referer: true
+</code></pre>
+<h3 id="7-4-多-CDN-与容灾"><a href="#7-4-多-CDN-与容灾" class="headerlink" title="7.4 多 CDN 与容灾"></a>7.4 多 CDN 与容灾</h3><p>单 CDN 架构简单，但它有一个天然问题：<strong>你把全站可用性押在了一家厂商身上</strong>。大部分中小业务没必要一开始就上多 CDN，但如果是大促、游戏更新包、音视频、核心官网，至少要提前设计容灾方案。</p>
+<p>常见多 CDN 架构：</p>
+<pre><code class="text">              ┌──────────────┐
+用户请求  →    │  DNS / GSLB   │
+              └──────┬───────┘
+                     │
+       ┌─────────────┼─────────────┐
+       ▼             ▼             ▼
+   CDN 厂商 A     CDN 厂商 B     CDN 厂商 C
+       │             │             │
+       └─────────────┼─────────────┘
+                     ▼
+                   源站
+</code></pre>
+<p>几种常见策略：</p>
+<table>
+<thead>
+<tr>
+<th>策略</th>
+<th>做法</th>
+<th>适用场景</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>主备 CDN</td>
+<td>平时走 A，故障时切到 B</td>
+<td>成本可控，适合多数业务</td>
+</tr>
+<tr>
+<td>权重分流</td>
+<td>A 70%，B 30%</td>
+<td>平滑验证多家 CDN 质量</td>
+</tr>
+<tr>
+<td>地域分流</td>
+<td>国内走 A，海外走 B</td>
+<td>海外访问质量差异明显的业务</td>
+</tr>
+<tr>
+<td>运营商分流</td>
+<td>电信、联通、移动走不同厂商</td>
+<td>对国内链路质量要求高的业务</td>
+</tr>
+<tr>
+<td>URL 级分流</td>
+<td>图片走 A，视频走 B，下载包走 C</td>
+<td>不同资源类型成本和能力不同</td>
+</tr>
+</tbody></table>
+<p>多 CDN 真正难的不是“把流量分出去”，而是<strong>配置一致性</strong>：</p>
+<ol>
+<li>缓存规则要一致：TTL、忽略参数、状态码缓存策略不能互相打架</li>
+<li>HTTPS 证书要一致：每家 CDN 都要有证书续期和告警</li>
+<li>回源 Host 要一致：否则切过去后可能全站 404</li>
+<li>刷新预热要一致：发布系统要能同时刷新多家 CDN</li>
+<li>日志口径要统一：否则排查时很难对齐命中率和错误率</li>
+</ol>
+<p>我的建议：如果你还没有自动化发布和监控，不要轻易上复杂的多 CDN。先做<strong>主备 CDN + 一键切流预案</strong>，收益最大，复杂度最低。</p>
+<h2 id="八、CDN-监控指标"><a href="#八、CDN-监控指标" class="headerlink" title="八、CDN 监控指标"></a>八、CDN 监控指标</h2><p>CDN 上线后不能只看“能不能访问”，真正要盯的是命中率、回源、延迟和错误率。</p>
+<h3 id="8-1-命中率指标"><a href="#8-1-命中率指标" class="headerlink" title="8.1 命中率指标"></a>8.1 命中率指标</h3><p>最核心的两个指标：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>含义</th>
+<th>容易误解的点</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>请求命中率</td>
+<td>命中 CDN 缓存的请求数 &#x2F; 总请求数</td>
+<td>小文件多时容易看起来很高</td>
+</tr>
+<tr>
+<td>字节命中率</td>
+<td>命中 CDN 缓存的流量 &#x2F; 总流量</td>
+<td>更能反映源站带宽是否被保护</td>
+</tr>
+</tbody></table>
+<p>举个例子：</p>
+<pre><code class="text">10000 个小图标请求都命中 CDN，每个 2KB
+10 个视频请求都回源，每个 1GB
+</code></pre>
+<p>这时请求命中率可能很好看，但字节命中率会很差，因为大头流量都打回源站了。所以排查源站带宽压力时，<strong>字节命中率比请求命中率更关键</strong>。</p>
+<h3 id="8-2-回源指标"><a href="#8-2-回源指标" class="headerlink" title="8.2 回源指标"></a>8.2 回源指标</h3><p>回源相关指标直接决定源站压力：</p>
+<table>
+<thead>
+<tr>
+<th>指标</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>回源请求数</td>
+<td>CDN 向源站发起了多少请求</td>
+</tr>
+<tr>
+<td>回源带宽</td>
+<td>CDN 从源站拉走了多少流量</td>
+</tr>
+<tr>
+<td>回源状态码</td>
+<td>源站返回给 CDN 的 2xx&#x2F;3xx&#x2F;4xx&#x2F;5xx 分布</td>
+</tr>
+<tr>
+<td>回源延迟</td>
+<td>CDN 到源站的响应时间</td>
+</tr>
+<tr>
+<td>回源失败率</td>
+<td>超时、连接失败、TLS 握手失败等异常比例</td>
+</tr>
+</tbody></table>
+<p>如果用户访问报 502&#x2F;504，第一反应不要只看边缘节点，也要看回源是否超时、源站是否拒绝了 CDN IP、源站证书是否异常。</p>
+<h3 id="8-3-用户体验指标"><a href="#8-3-用户体验指标" class="headerlink" title="8.3 用户体验指标"></a>8.3 用户体验指标</h3><p>用户侧建议重点看：</p>
+<ul>
+<li>首包时间（TTFB）</li>
+<li>下载耗时</li>
+<li>P95 &#x2F; P99 延迟</li>
+<li>4xx &#x2F; 5xx 错误率</li>
+<li>各地域、各运营商访问质量</li>
+<li>HTTP&#x2F;2、HTTP&#x2F;3 协议占比</li>
+</ul>
+<p>平均值意义有限，P95&#x2F;P99 更能反映真实体验。比如平均 100ms，但 P99 是 3s，说明少数用户体验已经很差了。</p>
+<h3 id="8-4-运维操作指标"><a href="#8-4-运维操作指标" class="headerlink" title="8.4 运维操作指标"></a>8.4 运维操作指标</h3><p>刷新和预热也要监控：</p>
+<table>
+<thead>
+<tr>
+<th>操作</th>
+<th>要看什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>刷新</td>
+<td>是否成功、多久生效、是否超过额度</td>
+</tr>
+<tr>
+<td>预热</td>
+<td>成功率、失败 URL、预热耗时</td>
+</tr>
+<tr>
+<td>配置变更</td>
+<td>是否全网生效、是否有灰度失败</td>
+</tr>
+<tr>
+<td>证书续期</td>
+<td>是否即将过期、是否部署成功</td>
+</tr>
+</tbody></table>
+<p>我的经验是：CDN 故障很多不是“节点坏了”，而是<strong>发布、刷新、证书、配置变更</strong>这些操作环节出了问题。</p>
+<h2 id="九、CDN-成本模型"><a href="#九、CDN-成本模型" class="headerlink" title="九、CDN 成本模型"></a>九、CDN 成本模型</h2><p>CDN 的技术方案最后一定会落到成本上。一个缓存策略如果命中率很低，本质上就是“花 CDN 的钱，又没省源站的钱”。</p>
+<p>常见计费项：</p>
+<table>
+<thead>
+<tr>
+<th>成本项</th>
+<th>说明</th>
+<th>优化方向</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>下行流量</td>
+<td>CDN 返回给用户的流量</td>
+<td>压缩、图片格式优化、减少无效资源</td>
+</tr>
+<tr>
+<td>峰值带宽</td>
+<td>按带宽峰值计费</td>
+<td>削峰、预热、错峰发布</td>
+</tr>
+<tr>
+<td>请求数</td>
+<td>按 HTTP&#x2F;HTTPS 请求量计费</td>
+<td>合并小资源、合理使用 HTTP&#x2F;2</td>
+</tr>
+<tr>
+<td>HTTPS 请求</td>
+<td>部分厂商对 HTTPS 请求单独计费</td>
+<td>关注小文件高频请求</td>
+</tr>
+<tr>
+<td>回源流量</td>
+<td>CDN 从源站拉取内容的流量</td>
+<td>提升命中率，减少不必要回源</td>
+</tr>
+<tr>
+<td>刷新&#x2F;预热</td>
+<td>超出免费额度后收费或限频</td>
+<td>用文件 hash 替代频繁刷新</td>
+</tr>
+<tr>
+<td>边缘函数</td>
+<td>Workers、EdgeRoutine 等调用费用</td>
+<td>把复杂逻辑留在源站，边缘只做轻逻辑</td>
+</tr>
+<tr>
+<td>日志服务</td>
+<td>实时日志、离线日志投递费用</td>
+<td>只保留必要字段和周期</td>
+</tr>
+</tbody></table>
+<p>几个比较实用的省钱思路：</p>
+<ol>
+<li><strong>静态资源文件名带 hash</strong>，少用刷新</li>
+<li>图片开启 WebP&#x2F;AVIF、自适应裁剪和压缩</li>
+<li>大文件提前预热，避免活动开始时集中回源</li>
+<li>对低价值资源设置更长 TTL，提高命中率</li>
+<li>对无意义查询参数做忽略，避免缓存碎片</li>
+<li>定期看 TOP URL，优先优化最耗流量的资源</li>
+<li>边缘函数只做轻逻辑，不要把复杂业务搬到边缘</li>
+</ol>
+<p>我的判断是：CDN 成本优化不要一上来抠小请求，先看<strong>TOP 流量资源、字节命中率、回源带宽</strong>，这三个通常决定了大头成本。</p>
+<h2 id="十、常见问题与排查"><a href="#十、常见问题与排查" class="headerlink" title="十、常见问题与排查"></a>十、常见问题与排查</h2><h3 id="10-1-命中率上不去怎么办"><a href="#10-1-命中率上不去怎么办" class="headerlink" title="10.1 命中率上不去怎么办"></a>10.1 命中率上不去怎么办</h3><p>排查思路：</p>
+<ol>
+<li><strong>看 Cache Key 配置</strong>：是否包含了不必要的查询参数或 Header</li>
+<li><strong>看响应头</strong>：源站是否返回了 <code>Cache-Control: private</code> 或 <code>no-store</code></li>
+<li><strong>看 URL 模式</strong>：是不是大量带时间戳的请求</li>
+<li><strong>看缓存时间</strong>：是否设置过短（比如 60 秒）导致频繁失效</li>
+</ol>
+<h3 id="10-2-用户访问到旧版本"><a href="#10-2-用户访问到旧版本" class="headerlink" title="10.2 用户访问到旧版本"></a>10.2 用户访问到旧版本</h3><p>通常是发布时 CDN 缓存没刷新。最佳实践：</p>
+<ul>
+<li>静态资源用 hash 文件名，不靠刷新</li>
+<li>HTML 入口必须刷新（或者直接不让 CDN 缓存）</li>
+<li>在控制台设置好刷新规则的灰度</li>
+</ul>
+<h3 id="10-3-回源风暴"><a href="#10-3-回源风暴" class="headerlink" title="10.3 回源风暴"></a>10.3 回源风暴</h3><p><strong>现象</strong>：某个热点资源缓存过期的瞬间，全网节点同时回源，把源站打爆。</p>
+<p><strong>原因</strong>：缓存同时过期（”缓存雪崩”的 CDN 版本）。</p>
+<p><strong>解决</strong>：</p>
+<ul>
+<li>开启 CDN 的”回源合并”功能（同一时刻同一 URL 只回源一次）</li>
+<li>用预热提前把新版本推到边缘</li>
+<li>配置中间层节点，减少直接回源的请求数</li>
+</ul>
+<h3 id="10-4-调试-CDN-是否命中"><a href="#10-4-调试-CDN-是否命中" class="headerlink" title="10.4 调试 CDN 是否命中"></a>10.4 调试 CDN 是否命中</h3><p>最常用的排查手段是看响应头里的 <code>X-Cache</code> 字段（不同厂商字段名略有差异）：</p>
+<pre><code class="http">X-Cache: HIT from Edge.Beijing
+X-Cache: MISS from Edge.Shanghai
+X-Cache: REVALIDATED from Edge.Guangzhou
+</code></pre>
+<pre><code class="bash"># 用 curl 看一眼
+curl -I https://static.example.com/app.a1b2c3.js
+
+# 多请求几次，第一次 MISS，后续应该是 HIT
+</code></pre>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>CDN 本质是分布式多级缓存系统，核心价值是把内容放到离用户最近的地方</li>
+<li>一次 CDN 请求的关键流程：DNS 调度 → 边缘节点缓存判断 → 命中直接返回 &#x2F; 未命中回源</li>
+<li>DNS 调度、HTTP 302 调度、Anycast 是三种主流调度方式，商业 CDN 多用 DNS + 302 组合</li>
+<li>Cache Key 决定了”什么是同一个资源”，是 CDN 命中率的关键，要小心查询参数、Cookie、Origin 带来的缓存污染</li>
+<li>回源类型选择：静态资源回 OSS&#x2F;COS，动态业务回域名，IP 回源仅在特殊场景用</li>
+<li>回源 Host 是最容易踩坑的配置，必须和源站的虚拟主机配置（或对象存储域名）严格匹配</li>
+<li>多源站务必配置健康检查；启用回源合并和中间层节点，是控制源站压力的关键手段</li>
+<li>静态资源用版本化文件名 + 长期缓存，HTML 入口用 <code>must-revalidate</code>，私有数据默认不要进 CDN 缓存</li>
+<li>生产环境优先使用全链路 HTTPS，源站证书校验、HSTS、HTTP&#x2F;2、HTTP&#x2F;3 都要结合监控逐步开启</li>
+<li>多 CDN 的核心难点是配置一致性，建议先从主备 CDN + 一键切流预案做起</li>
+<li>CDN 监控要同时看请求命中率和字节命中率，排查源站压力时后者更关键</li>
+<li>成本优化优先看 TOP 流量资源、字节命中率和回源带宽，不要一上来抠小请求</li>
+<li>大流量活动前必须做缓存预热；生产环境建议配置回源熔断，防止源站故障污染全网缓存</li>
+<li>命中率上不去优先排查 Cache Key、响应头、查询参数和缓存时间</li>
+<li>边缘计算让 CDN 从”内容分发”演进到”边缘代码执行”，但复杂业务逻辑不要轻易搬到边缘</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96/">性能优化</a><a class="post-meta__tags" href="/tags/%E7%BC%93%E5%AD%98/">缓存</a><a class="post-meta__tags" href="/tags/CDN/">CDN</a><a class="post-meta__tags" href="/tags/%E7%BD%91%E7%BB%9C/">网络</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/25-Vue%203%20%E6%BA%90%E7%A0%81%E6%80%BB%E7%BB%93%EF%BC%9A%E4%BB%8E%E5%AE%9E%E7%8E%B0%E7%BB%86%E8%8A%82%E8%B5%B0%E5%90%91%E8%AE%BE%E8%AE%A1%E5%93%B2%E5%AD%A6/" title="Vue 3 源码总结：从实现细节走向设计哲学"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Vue 3 源码总结：从实现细节走向设计哲学</div></div></a></div><div class="next-post pull-right"><a href="/posts/00-%E7%B3%BB%E5%88%97%E6%80%BB%E8%A7%88/" title="React 18 源码核心模块解析系列总览"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">React 18 源码核心模块解析系列总览</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%B8%BA%E4%BB%80%E4%B9%88%E9%9C%80%E8%A6%81-CDN"><span class="toc-number">1.</span> <span class="toc-text">一、为什么需要 CDN</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-1-%E6%B2%A1%E6%9C%89-CDN-%E7%9A%84%E4%B8%96%E7%95%8C"><span class="toc-number">1.1.</span> <span class="toc-text">1.1 没有 CDN 的世界</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-2-CDN-%E8%A7%A3%E5%86%B3%E7%9A%84%E6%A0%B8%E5%BF%83%E9%97%AE%E9%A2%98"><span class="toc-number">1.2.</span> <span class="toc-text">1.2 CDN 解决的核心问题</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81CDN-%E7%9A%84%E5%B7%A5%E4%BD%9C%E5%8E%9F%E7%90%86"><span class="toc-number">2.</span> <span class="toc-text">二、CDN 的工作原理</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-%E4%B8%80%E6%AC%A1%E5%AE%8C%E6%95%B4%E7%9A%84-CDN-%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B"><span class="toc-number">2.1.</span> <span class="toc-text">2.1 一次完整的 CDN 请求流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-%E5%85%B3%E9%94%AE%E7%BB%84%E4%BB%B6"><span class="toc-number">2.2.</span> <span class="toc-text">2.2 关键组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-3-CDN-%E8%B0%83%E5%BA%A6%E7%9A%84%E4%B8%89%E7%A7%8D%E4%B8%BB%E6%B5%81%E6%96%B9%E5%BC%8F"><span class="toc-number">2.3.</span> <span class="toc-text">2.3 CDN 调度的三种主流方式</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81CDN-%E7%BC%93%E5%AD%98%E6%9C%BA%E5%88%B6%E8%AF%A6%E8%A7%A3"><span class="toc-number">3.</span> <span class="toc-text">三、CDN 缓存机制详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-1-%E7%BC%93%E5%AD%98%E5%91%BD%E4%B8%AD%E7%9A%84%E5%88%A4%E6%96%AD%E6%B5%81%E7%A8%8B"><span class="toc-number">3.1.</span> <span class="toc-text">3.1 缓存命中的判断流程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E7%BC%93%E5%AD%98%E9%94%AE%EF%BC%88Cache-Key%EF%BC%89"><span class="toc-number">3.2.</span> <span class="toc-text">3.2 缓存键（Cache Key）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-3-%E7%BC%93%E5%AD%98%E8%BF%87%E6%9C%9F%E4%B8%8E%E5%9B%9E%E6%BA%90%E9%AA%8C%E8%AF%81"><span class="toc-number">3.3.</span> <span class="toc-text">3.3 缓存过期与回源验证</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-4-%E7%BC%93%E5%AD%98%E5%88%B7%E6%96%B0%E4%B8%8E%E9%A2%84%E7%83%AD"><span class="toc-number">3.4.</span> <span class="toc-text">3.4 缓存刷新与预热</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81CDN-%E5%9B%9E%E6%BA%90%E7%AD%96%E7%95%A5%E8%AF%A6%E8%A7%A3"><span class="toc-number">4.</span> <span class="toc-text">四、CDN 回源策略详解</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#4-1-%E5%9B%9E%E6%BA%90%E7%B1%BB%E5%9E%8B%EF%BC%9AIP-%E5%9B%9E%E6%BA%90-vs-%E5%9F%9F%E5%90%8D%E5%9B%9E%E6%BA%90"><span class="toc-number">4.1.</span> <span class="toc-text">4.1 回源类型：IP 回源 vs 域名回源</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-2-%E5%9B%9E%E6%BA%90-Host%EF%BC%9A%E6%9C%80%E5%AE%B9%E6%98%93%E8%B8%A9%E5%9D%91%E7%9A%84%E9%85%8D%E7%BD%AE"><span class="toc-number">4.2.</span> <span class="toc-text">4.2 回源 Host：最容易踩坑的配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-3-%E5%9B%9E%E6%BA%90%E5%8D%8F%E8%AE%AE"><span class="toc-number">4.3.</span> <span class="toc-text">4.3 回源协议</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-4-%E5%A4%9A%E6%BA%90%E7%AB%99%E7%AD%96%E7%95%A5"><span class="toc-number">4.4.</span> <span class="toc-text">4.4 多源站策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-5-%E5%9B%9E%E6%BA%90%E8%AF%B7%E6%B1%82%E5%A4%B4"><span class="toc-number">4.5.</span> <span class="toc-text">4.5 回源请求头</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-6-%E5%9B%9E%E6%BA%90%E4%BC%98%E5%8C%96%E6%9C%BA%E5%88%B6"><span class="toc-number">4.6.</span> <span class="toc-text">4.6 回源优化机制</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-7-%E5%9B%9E%E6%BA%90%E9%99%90%E9%80%9F%E4%B8%8E%E7%86%94%E6%96%AD"><span class="toc-number">4.7.</span> <span class="toc-text">4.7 回源限速与熔断</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81CDN-%E4%B8%8E-HTTP-%E7%BC%93%E5%AD%98%E5%A4%B4"><span class="toc-number">5.</span> <span class="toc-text">五、CDN 与 HTTP 缓存头</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#5-1-%E4%B8%89%E4%B8%AA%E5%85%B3%E9%94%AE%E5%93%8D%E5%BA%94%E5%A4%B4"><span class="toc-number">5.1.</span> <span class="toc-text">5.1 三个关键响应头</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-2-%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E7%9A%84%E6%8E%A8%E8%8D%90%E9%85%8D%E7%BD%AE"><span class="toc-number">5.2.</span> <span class="toc-text">5.2 静态资源的推荐配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-3-%E4%B8%80%E4%B8%AA%E5%B8%B8%E8%A7%81%E7%9A%84%E6%B7%B7%E6%B7%86"><span class="toc-number">5.3.</span> <span class="toc-text">5.3 一个常见的混淆</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81CDN-%E5%AE%9E%E6%88%98%E9%85%8D%E7%BD%AE"><span class="toc-number">6.</span> <span class="toc-text">六、CDN 实战配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#6-1-%E4%B8%80%E4%B8%AA-Node-js-Express-%E9%9D%99%E6%80%81%E8%B5%84%E6%BA%90%E6%9C%8D%E5%8A%A1%E7%A4%BA%E4%BE%8B"><span class="toc-number">6.1.</span> <span class="toc-text">6.1 一个 Node.js Express 静态资源服务示例</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-2-%E6%96%87%E4%BB%B6%E7%89%88%E6%9C%AC%E5%8C%96%E7%AD%96%E7%95%A5"><span class="toc-number">6.2.</span> <span class="toc-text">6.2 文件版本化策略</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-3-HTTPS-%E9%85%8D%E7%BD%AE"><span class="toc-number">6.3.</span> <span class="toc-text">6.3 HTTPS 配置</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-4-%E5%93%AA%E4%BA%9B%E5%9C%BA%E6%99%AF%E4%B8%8D%E9%80%82%E5%90%88-CDN-%E7%BC%93%E5%AD%98"><span class="toc-number">6.4.</span> <span class="toc-text">6.4 哪些场景不适合 CDN 缓存</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81CDN-%E8%BF%9B%E9%98%B6%E8%AF%9D%E9%A2%98"><span class="toc-number">7.</span> <span class="toc-text">七、CDN 进阶话题</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#7-1-%E5%8A%A8%E6%80%81%E5%8A%A0%E9%80%9F"><span class="toc-number">7.1.</span> <span class="toc-text">7.1 动态加速</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-2-%E8%BE%B9%E7%BC%98%E8%AE%A1%E7%AE%97%EF%BC%88Edge-Computing%EF%BC%89"><span class="toc-number">7.2.</span> <span class="toc-text">7.2 边缘计算（Edge Computing）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-3-%E5%AE%89%E5%85%A8%E9%98%B2%E6%8A%A4"><span class="toc-number">7.3.</span> <span class="toc-text">7.3 安全防护</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#7-4-%E5%A4%9A-CDN-%E4%B8%8E%E5%AE%B9%E7%81%BE"><span class="toc-number">7.4.</span> <span class="toc-text">7.4 多 CDN 与容灾</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81CDN-%E7%9B%91%E6%8E%A7%E6%8C%87%E6%A0%87"><span class="toc-number">8.</span> <span class="toc-text">八、CDN 监控指标</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#8-1-%E5%91%BD%E4%B8%AD%E7%8E%87%E6%8C%87%E6%A0%87"><span class="toc-number">8.1.</span> <span class="toc-text">8.1 命中率指标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-2-%E5%9B%9E%E6%BA%90%E6%8C%87%E6%A0%87"><span class="toc-number">8.2.</span> <span class="toc-text">8.2 回源指标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-3-%E7%94%A8%E6%88%B7%E4%BD%93%E9%AA%8C%E6%8C%87%E6%A0%87"><span class="toc-number">8.3.</span> <span class="toc-text">8.3 用户体验指标</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#8-4-%E8%BF%90%E7%BB%B4%E6%93%8D%E4%BD%9C%E6%8C%87%E6%A0%87"><span class="toc-number">8.4.</span> <span class="toc-text">8.4 运维操作指标</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81CDN-%E6%88%90%E6%9C%AC%E6%A8%A1%E5%9E%8B"><span class="toc-number">9.</span> <span class="toc-text">九、CDN 成本模型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E5%B8%B8%E8%A7%81%E9%97%AE%E9%A2%98%E4%B8%8E%E6%8E%92%E6%9F%A5"><span class="toc-number">10.</span> <span class="toc-text">十、常见问题与排查</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#10-1-%E5%91%BD%E4%B8%AD%E7%8E%87%E4%B8%8A%E4%B8%8D%E5%8E%BB%E6%80%8E%E4%B9%88%E5%8A%9E"><span class="toc-number">10.1.</span> <span class="toc-text">10.1 命中率上不去怎么办</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-2-%E7%94%A8%E6%88%B7%E8%AE%BF%E9%97%AE%E5%88%B0%E6%97%A7%E7%89%88%E6%9C%AC"><span class="toc-number">10.2.</span> <span class="toc-text">10.2 用户访问到旧版本</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-3-%E5%9B%9E%E6%BA%90%E9%A3%8E%E6%9A%B4"><span class="toc-number">10.3.</span> <span class="toc-text">10.3 回源风暴</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#10-4-%E8%B0%83%E8%AF%95-CDN-%E6%98%AF%E5%90%A6%E5%91%BD%E4%B8%AD"><span class="toc-number">10.4.</span> <span class="toc-text">10.4 调试 CDN 是否命中</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">11.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

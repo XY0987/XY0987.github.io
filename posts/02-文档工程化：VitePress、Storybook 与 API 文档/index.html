@@ -1,0 +1,644 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>文档工程化：VitePress、Storybook 与 API 文档 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：组件库没有文档等于没发布。但文档不是「写一堆 Markdown」这么简单——它是一套工程：示例要能跑、API 要和代码同步、CHANGELOG 要自动生成。这一篇讲组件库文档的几套工具怎么分工：VitePress 建站、Storybook 做示例驱动开发、TypeDoc 自动生成 API、Changesets 自动化 CHANGELOG。核心是让文档「跟着代码走」，而不是靠人肉维护。  文">
+<meta property="og:type" content="article">
+<meta property="og:title" content="文档工程化：VitePress、Storybook 与 API 文档">
+<meta property="og:url" content="http://example.com/posts/02-%E6%96%87%E6%A1%A3%E5%B7%A5%E7%A8%8B%E5%8C%96%EF%BC%9AVitePress%E3%80%81Storybook%20%E4%B8%8E%20API%20%E6%96%87%E6%A1%A3/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：组件库没有文档等于没发布。但文档不是「写一堆 Markdown」这么简单——它是一套工程：示例要能跑、API 要和代码同步、CHANGELOG 要自动生成。这一篇讲组件库文档的几套工具怎么分工：VitePress 建站、Storybook 做示例驱动开发、TypeDoc 自动生成 API、Changesets 自动化 CHANGELOG。核心是让文档「跟着代码走」，而不是靠人肉维护。  文">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T15:10:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.431Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="组件库">
+<meta property="article:tag" content="VitePress">
+<meta property="article:tag" content="Storybook">
+<meta property="article:tag" content="TypeDoc">
+<meta property="article:tag" content="文档工程化">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/02-%E6%96%87%E6%A1%A3%E5%B7%A5%E7%A8%8B%E5%8C%96%EF%BC%9AVitePress%E3%80%81Storybook%20%E4%B8%8E%20API%20%E6%96%87%E6%A1%A3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '文档工程化：VitePress、Storybook 与 API 文档',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">文档工程化：VitePress、Storybook 与 API 文档</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T15:10:00.000Z" title="发表于 2026 23:10:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.431Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>15分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：组件库没有文档等于没发布。但文档不是「写一堆 Markdown」这么简单——它是一套工程：示例要能跑、API 要和代码同步、CHANGELOG 要自动生成。这一篇讲组件库文档的几套工具怎么分工：VitePress 建站、Storybook 做示例驱动开发、TypeDoc 自动生成 API、Changesets 自动化 CHANGELOG。核心是让文档「跟着代码走」，而不是靠人肉维护。</p>
+</blockquote>
+<h2 id="文档工程的三个层次"><a href="#文档工程的三个层次" class="headerlink" title="文档工程的三个层次"></a>文档工程的三个层次</h2><p>先理清组件库文档到底包含什么，别一上来就纠结用哪个工具。文档其实是三类不同的东西：</p>
+<table>
+<thead>
+<tr>
+<th>层次</th>
+<th>内容</th>
+<th>谁来维护</th>
+<th>工具</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>使用文档</td>
+<td>怎么安装、怎么用、示例</td>
+<td>人写</td>
+<td>VitePress</td>
+</tr>
+<tr>
+<td>组件开发&#x2F;示例</td>
+<td>组件各状态的可交互示例</td>
+<td>跟组件一起写</td>
+<td>Storybook</td>
+</tr>
+<tr>
+<td>API 参考</td>
+<td>props、类型、返回值</td>
+<td>从代码自动生成</td>
+<td>TypeDoc</td>
+</tr>
+</tbody></table>
+<p>关键判断：<strong>能自动生成的（API 参考）就别手写，会手写的（教程、示例）要写好</strong>。手写 API 表格是文档腐烂的头号原因——代码改了 props，文档表格没跟上，用户照着过时文档踩坑。</p>
+<h2 id="VitePress：建组件库文档站"><a href="#VitePress：建组件库文档站" class="headerlink" title="VitePress：建组件库文档站"></a>VitePress：建组件库文档站</h2><p>VitePress 是 Vue 团队的静态站点生成器，基于 Vite，启动快、Markdown 里能原生跑 Vue 组件——这对 Vue 组件库文档是决定性优势：<strong>你可以在文档里直接渲染真实组件，而不是贴截图</strong>。</p>
+<p>搭一个最小文档站：</p>
+<pre><code class="bash">pnpm add -D vitepress
+</code></pre>
+<pre><code class="txt">docs/
+├── .vitepress/
+│   └── config.ts
+├── index.md
+├── guide/
+│   └── getting-started.md
+└── components/
+    └── button.md
+</code></pre>
+<p>配置：</p>
+<pre><code class="ts">// docs/.vitepress/config.ts
+import &#123; defineConfig &#125; from &#39;vitepress&#39;
+
+export default defineConfig(&#123;
+  title: &#39;My UI&#39;,
+  description: &#39;一个组件库&#39;,
+  themeConfig: &#123;
+    nav: [
+      &#123; text: &#39;指南&#39;, link: &#39;/guide/getting-started&#39; &#125;,
+      &#123; text: &#39;组件&#39;, link: &#39;/components/button&#39; &#125;,
+    ],
+    sidebar: &#123;
+      &#39;/components/&#39;: [
+        &#123; text: &#39;基础&#39;, items: [&#123; text: &#39;Button&#39;, link: &#39;/components/button&#39; &#125;] &#125;,
+      ],
+    &#125;,
+  &#125;,
+&#125;)
+</code></pre>
+<h3 id="在-Markdown-里渲染真实组件"><a href="#在-Markdown-里渲染真实组件" class="headerlink" title="在 Markdown 里渲染真实组件"></a>在 Markdown 里渲染真实组件</h3><p>这是 VitePress 做组件库文档的杀手锏。在 <code>.vitepress/theme/index.ts</code> 里全局注册你的组件，然后 Markdown 里直接用：</p>
+<pre><code class="ts">// docs/.vitepress/theme/index.ts
+import DefaultTheme from &#39;vitepress/theme&#39;
+import MyUI from &#39;@my-ui/components&#39;
+import &#39;@my-ui/components/style.css&#39;
+
+export default &#123;
+  extends: DefaultTheme,
+  enhanceApp(&#123; app &#125;) &#123;
+    app.use(MyUI)     // 注册组件库，文档里就能用
+  &#125;,
+&#125;
+</code></pre>
+<pre><code class="md">&lt;!-- button.md --&gt;
+# Button
+
+&lt;MyButton type=&quot;primary&quot;&gt;主要按钮&lt;/MyButton&gt;
+
+```vue
+&lt;template&gt;
+  &lt;MyButton type=&quot;primary&quot;&gt;主要按钮&lt;/MyButton&gt;
+&lt;/template&gt;
+```
+</code></pre>
+<p>上面既渲染了真实按钮，又展示了源码。用户看到的示例就是真组件，不会和实际行为脱节。</p>
+<p>这里要说清楚：<strong>VitePress 不是只能展示 Vue 生态的东西，但它原生最顺手的是 Vue 组件</strong>。因为 VitePress 的 Markdown 最终会被当成 Vue SFC 处理，所以 Vue 组件可以直接写在 Markdown 里。</p>
+<p>React 组件当然也能做文档，只是路线不同：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>更合适的方案</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Vue 组件库</td>
+<td>VitePress 直接渲染组件</td>
+</tr>
+<tr>
+<td>React 组件库</td>
+<td>Docusaurus &#x2F; Nextra &#x2F; Storybook</td>
+</tr>
+<tr>
+<td>多框架组件库</td>
+<td>Storybook 作为统一组件工作台，文档站再嵌入示例</td>
+</tr>
+</tbody></table>
+<p>如果硬要在 VitePress 里跑 React，也不是完全不行，可以写 Vue wrapper 去挂载 React，或者把 React 示例打成 iframe 嵌进去。但我的建议是别把文档工程搞别扭：<strong>React 组件库优先用 React 生态的文档工具，Vue 组件库再优先考虑 VitePress</strong>。</p>
+<p>移动端组件也类似，关键看它是什么类型：</p>
+<table>
+<thead>
+<tr>
+<th>类型</th>
+<th>文档里怎么展示</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>移动端 H5 组件（Vue&#x2F;React）</td>
+<td>在浏览器里用窄 viewport、手机外框、iframe 真实渲染</td>
+</tr>
+<tr>
+<td>响应式 Web 组件</td>
+<td>Storybook viewport addon &#x2F; 文档站里的设备预览容器</td>
+</tr>
+<tr>
+<td>React Native &#x2F; Flutter 这类原生组件</td>
+<td>用对应生态的 Storybook、Expo、模拟器截图或录屏</td>
+</tr>
+</tbody></table>
+<p>也就是说，移动端 H5 组件依然可以「跑真实组件」，只是要把预览区域限制成手机尺寸；真正的原生组件不能直接在普通 Web 文档站里运行，通常靠平台自己的预览工具，再把结果接进文档。</p>
+<p>Vant 这类移动端组件库文档就是典型做法：<strong>PC 文档站负责写说明和 API，右侧手机预览其实是一个 iframe，iframe 里跑的是组件库开发者写好的 mobile demo 页面</strong>。</p>
+<pre><code class="txt">桌面文档站
+  ├── 左侧：组件目录
+  ├── 中间：Markdown 文档、API、代码示例
+  └── 右侧：手机预览容器
+        └── iframe
+              └── mobile demo SPA
+                    ├── /button
+                    ├── /popup
+                    └── /calendar
+</code></pre>
+<p>比如切到 Button 文档时，右侧 iframe 可能加载的是：</p>
+<pre><code class="html">&lt;iframe src=&quot;/mobile.html#/button&quot;&gt;&lt;/iframe&gt;
+</code></pre>
+<p>这个 <code>/mobile.html#/button</code> 不是截图，也不是文档工具自动生成的神奇页面，而是开发者维护的一套路由化 demo 应用。每个组件都有自己的 demo 文件，比如 <code>ButtonDemo.vue</code>、<code>PopupDemo.vue</code>，里面直接引用组件库源码或构建产物。这样用户在 PC 文档站看到的是手机尺寸预览，扫码或打开同一个地址时，又能在真实手机浏览器里体验。</p>
+<p>移动端 H5 组件库不要只在文档正文里摆几个静态示例，最好单独维护一套 mobile demo。文档讲清楚「怎么用」，demo 负责证明「真的能跑」。</p>
+<h3 id="主题定制"><a href="#主题定制" class="headerlink" title="主题定制"></a>主题定制</h3><p>VitePress 的默认主题够用，但组件库通常要品牌化。定制主要靠覆盖 CSS 变量（VitePress 主题本身就是用 CSS 变量搭的，正好呼应设计系统那篇）：</p>
+<pre><code class="css">/* docs/.vitepress/theme/custom.css */
+:root &#123;
+  --vp-c-brand-1: #7c3aed;      /* 品牌主色 */
+  --vp-c-brand-2: #6d28d9;
+&#125;
+</code></pre>
+<p>深度定制可以用 slot 覆盖布局的特定区域，或直接自定义 layout。但我的建议是<strong>别过度定制文档站</strong>——用户是来看组件怎么用的，不是来看你文档站多花哨的。默认主题 + 品牌色 + 清晰的侧边栏，就够了。</p>
+<h2 id="Storybook：示例驱动开发（CSF）"><a href="#Storybook：示例驱动开发（CSF）" class="headerlink" title="Storybook：示例驱动开发（CSF）"></a>Storybook：示例驱动开发（CSF）</h2><p>VitePress 是「给用户看的文档」，Storybook 更多是「给开发者用的工作台」。它让你<strong>脱离业务、单独开发和调试每个组件的每种状态</strong>。</p>
+<p>Storybook 的核心是 <strong>CSF（Component Story Format）</strong>——用标准 ES module 描述组件的各种「故事」（story，即一个特定状态的示例）。</p>
+<pre><code class="ts">// Button.stories.ts
+import type &#123; Meta, StoryObj &#125; from &#39;@storybook/vue3&#39;
+import Button from &#39;../src/button&#39;
+
+const meta: Meta&lt;typeof Button&gt; = &#123;
+  title: &#39;Basic/Button&#39;,
+  component: Button,
+  argTypes: &#123;
+    type: &#123; control: &#39;select&#39;, options: [&#39;primary&#39;, &#39;default&#39;, &#39;danger&#39;] &#125;,
+    disabled: &#123; control: &#39;boolean&#39; &#125;,
+  &#125;,
+&#125;
+export default meta
+
+type Story = StoryObj&lt;typeof Button&gt;
+
+// 每个导出就是一个 story
+export const Primary: Story = &#123;
+  args: &#123; type: &#39;primary&#39; &#125;,
+  render: (args) =&gt; (&#123;
+    components: &#123; Button &#125;,
+    setup: () =&gt; (&#123; args &#125;),
+    template: &#39;&lt;Button v-bind=&quot;args&quot;&gt;按钮&lt;/Button&gt;&#39;,
+  &#125;),
+&#125;
+
+export const Disabled: Story = &#123;
+  args: &#123; type: &#39;primary&#39;, disabled: true &#125;,
+  render: Primary.render,
+&#125;
+</code></pre>
+<p>CSF 的好处：</p>
+<ol>
+<li><strong>story 就是标准模块</strong>，能被测试、被文档、被视觉回归工具复用——你写一次 story，多处受益。</li>
+<li><strong><code>argTypes</code> 自动生成交互控件</strong>，在 Storybook 里能实时拖动 props 看效果，不用改代码。</li>
+<li><strong>组件开发和示例合一</strong>：开发新组件时先写 story，等于顺手把示例和边界状态都覆盖了。这就是「示例驱动开发」——写 story 的过程会逼你想清楚组件的各种状态。</li>
+</ol>
+<p>Storybook 还能接一堆插件：上一篇讲的 a11y addon、交互测试、视觉回归（Chromatic）。它是组件库开发阶段的中枢。</p>
+<h3 id="VitePress-和-Storybook-要都用吗"><a href="#VitePress-和-Storybook-要都用吗" class="headerlink" title="VitePress 和 Storybook 要都用吗"></a>VitePress 和 Storybook 要都用吗</h3><p>不一定。取舍：</p>
+<table>
+<thead>
+<tr>
+<th>只用 VitePress</th>
+<th>VitePress + Storybook</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>文档和示例合一，维护简单</td>
+<td>分工明确：Storybook 开发、VitePress 对外</td>
+</tr>
+<tr>
+<td>适合中小型库</td>
+<td>适合大型库、多人协作、要视觉回归</td>
+</tr>
+</tbody></table>
+<p>我的判断：<strong>中小组件库用 VitePress 就够了</strong>（文档即示例）；<strong>大型库、团队协作、需要视觉回归和组件工作台时，再上 Storybook</strong>。别为了「看起来专业」两个都上却都维护不好。</p>
+<h2 id="TypeDoc：从代码自动生成-API-参考"><a href="#TypeDoc：从代码自动生成-API-参考" class="headerlink" title="TypeDoc：从代码自动生成 API 参考"></a>TypeDoc：从代码自动生成 API 参考</h2><p>这里要分清两个东西：<strong>组件详情页</strong> 和 <strong>API 参考页</strong> 不是一回事。</p>
+<p>正常组件库页面通常长这样：</p>
+<pre><code class="txt">Button 组件页
+├── 什么时候用
+├── 基础用法 demo
+├── 禁用状态 demo
+├── 加载状态 demo
+├── Props 表格
+├── Events 表格
+├── Slots 表格
+└── 类型定义链接
+</code></pre>
+<p>其中「什么时候用」「用法示例」「交互 demo」通常还是人写的，或者从 Storybook story &#x2F; mobile demo 复用过来。因为这些内容需要解释使用场景，不是类型系统能自动推出来的。</p>
+<p>真正适合自动生成的是下面这些结构化信息：</p>
+<table>
+<thead>
+<tr>
+<th>内容</th>
+<th>常见来源</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Props &#x2F; Events &#x2F; Slots 表格</td>
+<td>组件源码、<code>defineProps</code>、类型声明、docgen 工具</td>
+</tr>
+<tr>
+<td>TS 类型、接口、工具函数签名</td>
+<td>TypeDoc + TSDoc</td>
+</tr>
+<tr>
+<td>代码示例</td>
+<td>手写 demo、Storybook story、移动端 demo</td>
+</tr>
+<tr>
+<td>使用说明和最佳实践</td>
+<td>人写</td>
+</tr>
+</tbody></table>
+<p>所以 TypeDoc 解决的是「类型&#x2F;API 参考」这一层，不是自动生成完整组件文档页。它适合生成 <code>ButtonProps</code>、<code>ThemeVars</code>、<code>ConfigProviderProps</code>、工具函数签名这类偏类型参考的内容。</p>
+<p>那生成出来的类型定义怎么和组件详情页放到一起？常见有两种接法。</p>
+<p>第一种是<strong>链接式接入</strong>，最简单也最稳。<code>docs/components/button.md</code> 里正常写用法和 demo，底部加一个「类型定义」链接，跳到 TypeDoc 生成的 API 参考页：</p>
+<pre><code class="md">## 类型定义
+
+- [ButtonProps](/api/interfaces/ButtonProps)
+</code></pre>
+<p>这种做法的优点是维护成本低，缺点是组件页里的 Props 表格不会自动出现，用户要点到 API 页看完整类型。</p>
+<p>第二种是<strong>片段式接入</strong>，更像常见组件库官网的效果。构建前先用 docgen &#x2F; TypeDoc &#x2F; 自定义脚本从源码里抽取 props、events、slots，生成一个组件页可用的 Markdown 片段：</p>
+<pre><code class="txt">src/button/props.ts
+  └── docs:gen-api
+        └── docs/.generated/button.api.md
+</code></pre>
+<p>生成出来的片段可能长这样：</p>
+<pre><code class="md">## API
+
+### Props
+
+| 参数 | 说明 | 类型 | 默认值 |
+|------|------|------|--------|
+| type | 按钮类型 | `&#39;primary&#39; \| &#39;default&#39; \| &#39;danger&#39;` | `&#39;default&#39;` |
+| disabled | 是否禁用 | `boolean` | `false` |
+</code></pre>
+<p>然后在 <code>docs/components/button.md</code> 里预留一个位置：</p>
+<pre><code class="md"># Button 按钮
+
+## 基础用法
+
+&lt;ButtonDemo /&gt;
+
+&lt;!-- API:START --&gt;
+&lt;!-- 这里由脚本写入 docs/.generated/button.api.md 的内容 --&gt;
+&lt;!-- API:END --&gt;
+</code></pre>
+<p>构建脚本做的事情就是：读 <code>button.md</code>，找到 <code>&lt;!-- API:START --&gt;</code> 和 <code>&lt;!-- API:END --&gt;</code>，把生成的 API 片段塞进去，再交给 VitePress 构建。这样最终用户看到的是一个完整的组件详情页：上面是说明和 demo，下面是自动生成的 Props &#x2F; Events &#x2F; Slots 表格。</p>
+<p>我的建议是：中小组件库先用链接式接入，别一上来写复杂生成器；组件数量多了、Props 表格开始频繁过期，再升级成片段式接入。<strong>重点不是所有内容都自动生成，而是容易过期的结构化内容自动生成</strong>。</p>
+<p>如果采用链接式接入，TypeDoc 这条链路可以这样做。先给公共类型写 TSDoc 注释：</p>
+<pre><code class="ts">export interface ButtonProps &#123;
+  /** 按钮类型 */
+  type?: &#39;primary&#39; | &#39;default&#39; | &#39;danger&#39;
+  /** 是否禁用 @default false */
+  disabled?: boolean
+&#125;
+
+/**
+ * 防抖函数
+ * @param fn 要防抖的函数
+ * @param wait 等待毫秒数
+ * @returns 防抖后的函数
+ */
+export function debounce&lt;T extends (...args: any[]) =&gt; void&gt;(fn: T, wait: number) &#123;
+  /* ... */
+&#125;
+</code></pre>
+<p>安装 TypeDoc 和 Markdown 插件：</p>
+<pre><code class="bash">pnpm add -D typedoc typedoc-plugin-markdown typedoc-vitepress-theme
+</code></pre>
+<p>再配置 <code>typedoc.json</code>，让 TypeDoc 只扫描组件库的公共入口，把 API 参考输出成 VitePress 能识别的 Markdown：</p>
+<pre><code class="json">&#123;
+  &quot;entryPoints&quot;: [&quot;src/index.ts&quot;],
+  &quot;out&quot;: &quot;docs/api&quot;,
+  &quot;plugin&quot;: [&quot;typedoc-plugin-markdown&quot;, &quot;typedoc-vitepress-theme&quot;]
+&#125;
+</code></pre>
+<p>然后把生成命令串进文档构建。注意这里的顺序：先生成 <code>docs/api</code>，再启动或构建 VitePress。</p>
+<pre><code class="json">&#123;
+  &quot;scripts&quot;: &#123;
+    &quot;docs:api&quot;: &quot;typedoc&quot;,
+    &quot;docs:dev&quot;: &quot;pnpm docs:api &amp;&amp; vitepress dev docs&quot;,
+    &quot;docs:build&quot;: &quot;pnpm docs:api &amp;&amp; vitepress build docs&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>链接式接入的连通关系是这样的：</p>
+<pre><code class="txt">src/index.ts + TSDoc 注释
+  └── typedoc
+        └── docs/api/*.md
+              └── VitePress 文件路由：/api/
+</code></pre>
+<p>也就是说，TypeDoc 不负责启动文档站，VitePress 也不负责分析 TS 类型。<strong>TypeDoc 只负责把类型信息生成到 <code>docs/api</code>，VitePress 只负责把 <code>docs/api</code> 下面的 Markdown 当成普通页面渲染出来</strong>。组件详情页里的「类型定义」链接，只是指向这些生成好的页面。</p>
+<p>目录大概长这样：</p>
+<pre><code class="txt">docs/
+├── .vitepress/
+│   └── config.ts
+├── guide/
+│   └── getting-started.md
+├── components/
+│   └── button.md
+└── api/
+    ├── index.md
+    ├── interfaces/
+    │   └── ButtonProps.md
+    └── typedoc-sidebar.json
+</code></pre>
+<p>如果想让左侧侧边栏也自动接上，可以把插件生成的 sidebar 文件引进 VitePress 配置：</p>
+<pre><code class="ts">// docs/.vitepress/config.ts
+import &#123; defineConfig &#125; from &#39;vitepress&#39;
+import typedocSidebar from &#39;../api/typedoc-sidebar.json&#39;
+
+export default defineConfig(&#123;
+  themeConfig: &#123;
+    nav: [&#123; text: &#39;API&#39;, link: &#39;/api/&#39; &#125;],
+    sidebar: &#123;
+      &#39;/api/&#39;: typedocSidebar,
+    &#125;,
+  &#125;,
+&#125;)
+</code></pre>
+<p>这就是所谓「嵌进 VitePress 站点」：不是运行时打通，而是<strong>构建前先生成 Markdown，构建时由 VitePress 一起收进站点</strong>。</p>
+<p>如果采用片段式接入，思路就不一样了：不要直接把 TypeDoc 生成的整页 Markdown 塞进组件页，而是让 docgen &#x2F; 自定义脚本生成更适合组件页展示的 Props &#x2F; Events &#x2F; Slots 表格片段。TypeDoc 仍然可以保留，用来承载完整类型参考；组件页只嵌入读者最常看的那部分 API 表格。</p>
+<p>关键价值：<strong>API 参考和组件页里的结构化表格要尽量跟代码同步</strong>。你改了 props 类型或注释，重新生成文档就更新了，不存在「文档和代码对不上」。</p>
+<blockquote>
+<p>实践建议：把 API 参考、Props 表格这类生成步骤接进 CI 或文档构建流程，每次发版自动重新生成。别让它变成「想起来才手动跑一次」的一次性动作。</p>
+</blockquote>
+<h2 id="CHANGELOG-自动化"><a href="#CHANGELOG-自动化" class="headerlink" title="CHANGELOG 自动化"></a>CHANGELOG 自动化</h2><p>文档工程的最后一块是 CHANGELOG——用户升级前会看「这版改了什么」。手写 CHANGELOG 和手写 API 一样迟早废弃。两种主流自动化方案：</p>
+<table>
+<thead>
+<tr>
+<th>方案</th>
+<th>依据什么生成</th>
+<th>适合</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Changesets</td>
+<td>每次 PR 附带的 changeset 文件</td>
+<td>Monorepo、多包、显式声明改动</td>
+</tr>
+<tr>
+<td>standard-version &#x2F; conventional-changelog</td>
+<td>规范化的 commit message</td>
+<td>单包、遵循 Conventional Commits</td>
+</tr>
+</tbody></table>
+<p>组件库大多是 Monorepo 多包，<strong>首选 Changesets</strong>（它的完整发布流程下一篇讲）。这里只看它怎么产出 CHANGELOG：</p>
+<p>开发时写 changeset，声明这次改了哪些包、什么级别、干了什么：</p>
+<pre><code class="md">---
+&quot;@my-ui/components&quot;: minor
+---
+
+Button 新增 loading 状态
+</code></pre>
+<p>发布时 <code>changeset version</code> 会把所有未消费的 changeset **汇总进各包的 <code>CHANGELOG.md</code>**，按版本、按 major&#x2F;minor&#x2F;patch 分组，自动生成。你写的那句「Button 新增 loading 状态」就成了 changelog 条目。</p>
+<p>conventional-changelog 路线则是从 commit message 生成——前提是团队严格遵循 <code>feat:</code> &#x2F; <code>fix:</code> 这类 Conventional Commits 规范（这在「Commitlint、Husky 与 lint-staged 提交约束」那篇讲过）。commit 不规范，生成的 changelog 就是垃圾。</p>
+<p>我的判断：<strong>Monorepo 组件库用 Changesets，一步到位既管版本又管 changelog</strong>；单包项目且 commit 规范执行得好，可以用 standard-version。</p>
+<h2 id="把文档工程串起来"><a href="#把文档工程串起来" class="headerlink" title="把文档工程串起来"></a>把文档工程串起来</h2><p>一套完整的组件库文档工程，各工具的分工是这样的：</p>
+<pre><code class="txt">开发阶段
+  ├── Storybook (CSF)      →  单独开发/调试每个组件的每种状态
+  └── 写 TSDoc 注释         →  为 API 参考打基础
+
+文档站
+  ├── VitePress            →  使用指南 + 组件详情页
+  ├── mobile demo          →  移动端组件的手机预览 iframe
+  ├── docgen/API 片段       →  生成 Props / Events / Slots 表格
+  └── TypeDoc              →  生成独立 API 参考页，供组件页链接
+
+发布时
+  └── Changesets           →  自动汇总生成 CHANGELOG
+</code></pre>
+<p>一个原则贯穿始终：<strong>容易过期的结构化内容（Props 表格、类型参考、CHANGELOG）尽量自动生成，能跑起来的示例绝不贴截图</strong>。文档一旦需要人肉同步，就注定会腐烂。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>组件库文档分三层：使用文档（VitePress 人写）、组件示例（Storybook &#x2F; demo 跟组件写）、结构化 API（docgen &#x2F; TypeDoc 自动生成）。</li>
+<li>VitePress 的杀手锏是能在 Markdown 里原生渲染 Vue 真实组件；React 组件库更适合 Docusaurus、Nextra 或 Storybook，别为了统一工具链硬拧。</li>
+<li>移动端 H5 组件库通常用 iframe 嵌入一套 mobile demo SPA，类似 Vant 的右侧手机预览：文档负责讲清楚，demo 负责跑真实组件。</li>
+<li>Storybook 用 CSF 描述组件各状态，argTypes 自动生成交互控件，实现示例驱动开发，是开发阶段的工作台。</li>
+<li>VitePress 和 Storybook 不必都用：中小库 VitePress 足够，大型库&#x2F;团队协作&#x2F;视觉回归再上 Storybook。</li>
+<li>TypeDoc 更适合生成独立 API 参考页；组件详情页里的 Props &#x2F; Events &#x2F; Slots 表格通常用 docgen 或自定义脚本生成片段后插入。</li>
+<li>CHANGELOG 自动化：Monorepo 用 Changesets（changeset 文件汇总生成），单包可用 conventional-changelog（依赖规范 commit）。</li>
+<li>贯穿原则：容易过期的结构化内容尽量自动生成，能跑的示例绝不贴截图，否则文档必然腐烂。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E7%BB%84%E4%BB%B6%E5%BA%93/">组件库</a><a class="post-meta__tags" href="/tags/VitePress/">VitePress</a><a class="post-meta__tags" href="/tags/Storybook/">Storybook</a><a class="post-meta__tags" href="/tags/TypeDoc/">TypeDoc</a><a class="post-meta__tags" href="/tags/%E6%96%87%E6%A1%A3%E5%B7%A5%E7%A8%8B%E5%8C%96/">文档工程化</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/03-%E7%BB%84%E4%BB%B6%E5%BA%93%E5%8F%AF%E8%AE%BF%E9%97%AE%E6%80%A7%20a11y%20%E5%AE%9E%E8%B7%B5/" title="组件库可访问性 a11y 实践"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">组件库可访问性 a11y 实践</div></div></a></div><div class="next-post pull-right"><a href="/posts/01-npm%20%E5%8C%85%E5%8F%91%E5%B8%83%E5%85%A8%E6%B5%81%E7%A8%8B%EF%BC%9ASemVer%E3%80%81dist-tag%20%E4%B8%8E%E5%8F%91%E7%89%88%E8%87%AA%E5%8A%A8%E5%8C%96/" title="npm 包发布全流程：SemVer、dist-tag 与发版自动化"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">npm 包发布全流程：SemVer、dist-tag 与发版自动化</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%96%87%E6%A1%A3%E5%B7%A5%E7%A8%8B%E7%9A%84%E4%B8%89%E4%B8%AA%E5%B1%82%E6%AC%A1"><span class="toc-number">1.</span> <span class="toc-text">文档工程的三个层次</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#VitePress%EF%BC%9A%E5%BB%BA%E7%BB%84%E4%BB%B6%E5%BA%93%E6%96%87%E6%A1%A3%E7%AB%99"><span class="toc-number">2.</span> <span class="toc-text">VitePress：建组件库文档站</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8-Markdown-%E9%87%8C%E6%B8%B2%E6%9F%93%E7%9C%9F%E5%AE%9E%E7%BB%84%E4%BB%B6"><span class="toc-number">2.1.</span> <span class="toc-text">在 Markdown 里渲染真实组件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%BB%E9%A2%98%E5%AE%9A%E5%88%B6"><span class="toc-number">2.2.</span> <span class="toc-text">主题定制</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Storybook%EF%BC%9A%E7%A4%BA%E4%BE%8B%E9%A9%B1%E5%8A%A8%E5%BC%80%E5%8F%91%EF%BC%88CSF%EF%BC%89"><span class="toc-number">3.</span> <span class="toc-text">Storybook：示例驱动开发（CSF）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#VitePress-%E5%92%8C-Storybook-%E8%A6%81%E9%83%BD%E7%94%A8%E5%90%97"><span class="toc-number">3.1.</span> <span class="toc-text">VitePress 和 Storybook 要都用吗</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TypeDoc%EF%BC%9A%E4%BB%8E%E4%BB%A3%E7%A0%81%E8%87%AA%E5%8A%A8%E7%94%9F%E6%88%90-API-%E5%8F%82%E8%80%83"><span class="toc-number">4.</span> <span class="toc-text">TypeDoc：从代码自动生成 API 参考</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#CHANGELOG-%E8%87%AA%E5%8A%A8%E5%8C%96"><span class="toc-number">5.</span> <span class="toc-text">CHANGELOG 自动化</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8A%8A%E6%96%87%E6%A1%A3%E5%B7%A5%E7%A8%8B%E4%B8%B2%E8%B5%B7%E6%9D%A5"><span class="toc-number">6.</span> <span class="toc-text">把文档工程串起来</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

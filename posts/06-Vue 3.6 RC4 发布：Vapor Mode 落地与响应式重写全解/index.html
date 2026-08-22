@@ -1,0 +1,604 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：Vue 3.6.0-rc.4 于 2026-08-14 发布，这是自 Vue 采用虚拟 DOM 以来最大的一次架构级更新。这一篇我想把 Vapor Mode、alien-signals 响应式重写、以及它们带来的生态影响一次讲透。我的判断是：Vue 3.6 不是一次”性能补丁”，而是一次为 Vue 4.0 做地基的架构分叉。  先看这次升级了什么如果只看版本号，Vue 3.6 像是一个普通">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">
+<meta property="og:url" content="http://example.com/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：Vue 3.6.0-rc.4 于 2026-08-14 发布，这是自 Vue 采用虚拟 DOM 以来最大的一次架构级更新。这一篇我想把 Vapor Mode、alien-signals 响应式重写、以及它们带来的生态影响一次讲透。我的判断是：Vue 3.6 不是一次”性能补丁”，而是一次为 Vue 4.0 做地基的架构分叉。  先看这次升级了什么如果只看版本号，Vue 3.6 像是一个普通">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-08-22T02:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.342Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vue3">
+<meta property="article:tag" content="Vapor Mode">
+<meta property="article:tag" content="alien-signals">
+<meta property="article:tag" content="响应式">
+<meta property="article:tag" content="编译器">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.342Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/vue/">Vue框架及周边库</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">5.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>19分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p>前言：Vue 3.6.0-rc.4 于 2026-08-14 发布，这是自 Vue 采用虚拟 DOM 以来最大的一次架构级更新。这一篇我想把 Vapor Mode、alien-signals 响应式重写、以及它们带来的生态影响一次讲透。我的判断是：Vue 3.6 不是一次”性能补丁”，而是一次为 Vue 4.0 做地基的架构分叉。</p>
+</blockquote>
+<h2 id="先看这次升级了什么"><a href="#先看这次升级了什么" class="headerlink" title="先看这次升级了什么"></a>先看这次升级了什么</h2><p>如果只看版本号，Vue 3.6 像是一个普通小版本；但 RC4 里真正值得关注的不是 API 多了几个，而是 Vue 底层两块被换了。</p>
+<p>简单说，这次升级主要有三件事：</p>
+<ol>
+<li><strong>Vapor Mode 进入可评估阶段</strong>：这是一条不走 VDOM（虚拟DOM） 的新编译路径，模板会被编译成更直接的 DOM 创建和更新逻辑</li>
+<li><strong><code>@vue/reactivity</code> 换成 alien-signals 内核</strong>：响应式依赖收集和触发机制重写，普通 Vue 3.5 项目升级后也能受益</li>
+<li><strong>Vapor 的使用边界变清楚</strong>：它主要面向 <code>&lt;script setup&gt;</code> 和 Composition API，Options API 不在这条路径里</li>
+</ol>
+<p>所以这篇文章真正要讲的，不是”Vue 3.6 又发布了一个 RC”，而是：</p>
+<blockquote>
+<p>通过一次编译，把 Vue 的运行时从”VDOM + diff”这条老路上省下来；同时把响应式内核换成 alien-signals，让所有 3.5 的老代码免费吃到性能红利。</p>
+</blockquote>
+<p>我的判断是：Vapor 决定了 Vue 未来几年的渲染上限，alien-signals 决定了 Vue 3.6 这次升级对现有项目是否有立刻可见的价值。</p>
+<p>Vue 官方在第三方 benchmark 里已经跑到和 Solid、Svelte 5 同一梯队，这是 VDOM 时代做不到的。</p>
+<h2 id="一、行业时间线：VDOM-是怎么被”绕过去”的"><a href="#一、行业时间线：VDOM-是怎么被”绕过去”的" class="headerlink" title="一、行业时间线：VDOM 是怎么被”绕过去”的"></a>一、行业时间线：VDOM 是怎么被”绕过去”的</h2><p>这次更新的意义只有放在整条前端渲染演进史里才看得清楚：</p>
+<table>
+<thead>
+<tr>
+<th>时间</th>
+<th>事件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2013</td>
+<td>React 提出 Virtual DOM，用”生成 → diff → patch”取代手写 DOM</td>
+</tr>
+<tr>
+<td>2016</td>
+<td>Vue 2 采用 VDOM + 响应式 getter&#x2F;setter</td>
+</tr>
+<tr>
+<td>2020</td>
+<td>Vue 3 正式发布，Proxy + PatchFlags + Block Tree，靠编译期信息给 VDOM”打补丁”</td>
+</tr>
+<tr>
+<td>2021</td>
+<td>SolidJS 出圈，证明”编译到命令式 DOM 操作”这条路可以做到极致性能</td>
+</tr>
+<tr>
+<td>2023</td>
+<td>Svelte 5 Runes、Solid 2、Preact Signals 全面拥抱 fine-grained reactivity</td>
+</tr>
+<tr>
+<td>2024-05</td>
+<td>Vue 团队公开 Vapor Mode RFC，明确要做”编译期直出 DOM 操作”</td>
+</tr>
+<tr>
+<td>2024-10</td>
+<td>alien-signals 0.4.4 被合入 vuejs&#x2F;core（PR #12349），完成响应式底层重写</td>
+</tr>
+<tr>
+<td>2025-12</td>
+<td>Vue 3.6.0-beta.1 发布，Vapor Mode 功能完备但标记为 unstable</td>
+</tr>
+<tr>
+<td>2026-07</td>
+<td>Vue 3.6.0-rc.1 进入 RC 阶段</td>
+</tr>
+<tr>
+<td>2026-08</td>
+<td>Vue 3.6.0-rc.4 发布，Vapor Mode 事实上进入”可评估上生产”状态</td>
+</tr>
+</tbody></table>
+<p>Vue 走的是所有主流框架里最”晚”也最”稳”的一条：<strong>先做完 VDOM 的极限优化（PatchFlags）→ 再另起一条编译路径（Vapor）→ 两条路径互操作</strong>。这不是保守，是把破坏性升级的代价降到最小。</p>
+<h2 id="二、Vapor-Mode-到底改了什么"><a href="#二、Vapor-Mode-到底改了什么" class="headerlink" title="二、Vapor Mode 到底改了什么"></a>二、Vapor Mode 到底改了什么</h2><h3 id="传统模式-vs-Vapor-Mode"><a href="#传统模式-vs-Vapor-Mode" class="headerlink" title="传统模式 vs Vapor Mode"></a>传统模式 vs Vapor Mode</h3><p>先看一张表把两条路径的差异摆清楚：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>传统 VDOM Mode</th>
+<th>Vapor Mode</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>编译产物</td>
+<td>返回 VNode 树的 render 函数</td>
+<td>直接创建&#x2F;更新 DOM 的命令式函数</td>
+</tr>
+<tr>
+<td>运行时</td>
+<td><code>runtime-core</code> + <code>runtime-dom</code>（VDOM + diff）</td>
+<td><code>runtime-vapor</code>（无 VDOM）</td>
+</tr>
+<tr>
+<td>更新粒度</td>
+<td>组件级 dirty，patch 时按 flag 走</td>
+<td>绑定级细粒度，每个响应式源直连具体 DOM 操作</td>
+</tr>
+<tr>
+<td>打包体积</td>
+<td>完整 VDOM 运行时</td>
+<td>纯 Vapor 应用可去掉 VDOM 运行时</td>
+</tr>
+<tr>
+<td>支持的 API</td>
+<td>全部 Vue 3 API</td>
+<td>子集：<code>&lt;script setup&gt;</code> 组合式 API</td>
+</tr>
+<tr>
+<td>心智模型</td>
+<td>数据变 → 生成新树 → diff → patch</td>
+<td>数据变 → 直接执行”要改的那一行 DOM 代码”</td>
+</tr>
+</tbody></table>
+<p>一句话记：**VDOM 模式是”把整棵树画一遍再对比找差异”，Vapor 模式是”编译时就知道谁依赖谁，运行时只改变化的那一处”**。</p>
+<h3 id="Vapor-编译产物长什么样"><a href="#Vapor-编译产物长什么样" class="headerlink" title="Vapor 编译产物长什么样"></a>Vapor 编译产物长什么样</h3><p>给一个最小示例，直接感受两种模式的差别。同一个 <code>.vue</code>：</p>
+<pre><code class="vue">&lt;script setup&gt;
+import &#123; ref &#125; from &#39;vue&#39;
+const count = ref(0)
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;button @click=&quot;count++&quot;&gt;Count: &#123;&#123; count &#125;&#125;&lt;/button&gt;
+&lt;/template&gt;
+</code></pre>
+<p>在 VDOM Mode 下（简化），编译结果大致是这样：</p>
+<pre><code class="javascript">export function render(_ctx) &#123;
+  return (openBlock(), createElementBlock(&#39;button&#39;, &#123;
+    onClick: () =&gt; _ctx.count++
+  &#125;, &#39;Count: &#39; + toDisplayString(_ctx.count), 1 /* TEXT */))
+&#125;
+</code></pre>
+<p>运行时每次 <code>count</code> 变了，会重新执行 <code>render</code> 生成新的 VNode，然后走 patch 流程，只是靠 <code>PatchFlag = 1</code>（TEXT）省了大部分对比。</p>
+<p>在 Vapor Mode 下（<code>&lt;script setup vapor&gt;</code>），编译产物更像这样：</p>
+<pre><code class="javascript">import &#123; template, renderEffect, setText, delegate &#125; from &#39;vue/vapor&#39;
+
+const t0 = template(&#39;&lt;button&gt;Count: &lt;/button&gt;&#39;)
+
+export function render(_ctx) &#123;
+  const n0 = t0()
+  delegate(n0, &#39;click&#39;, () =&gt; _ctx.count.value++)
+
+  renderEffect(() =&gt; &#123;
+    setText(n0, &#39;Count: &#39; + _ctx.count.value)
+  &#125;)
+
+  return n0
+&#125;
+</code></pre>
+<p>差别有三处，都很关键：</p>
+<ol>
+<li><strong><code>template()</code> 静态克隆</strong>：整个静态 HTML 结构只 parse 一次，之后 clone 出来复用，不再有 VNode 对象的创建</li>
+<li><strong><code>renderEffect</code> 绑定到具体 DOM 节点</strong>：每个动态绑定是一个独立的响应式副作用，只关心自己那个节点</li>
+<li><strong>完全没有 patch&#x2F;diff 步骤</strong>：<code>count</code> 变了直接触发对应的 <code>setText(n0, ...)</code></li>
+</ol>
+<p>我的理解是：Vue 3 靠 PatchFlags 已经把”运行时对比”的开销压得很低，但只要走 VDOM 就绕不开”每次更新至少要生成一遍 VNode”这条最低成本。Vapor 是把这条最低成本也去掉了。</p>
+<h3 id="v-for-里-diff-并没有消失"><a href="#v-for-里-diff-并没有消失" class="headerlink" title="v-for 里 diff 并没有消失"></a>v-for 里 diff 并没有消失</h3><p>有一个容易被误传的点：Vapor Mode ≠ 完全没有 diff。</p>
+<p>在 <code>runtime-vapor/src/apiCreateFor.ts</code> 里，对 <code>v-for</code> 的列表更新，Vue 保留了几乎与 3.5 <code>patchKeyedChildren</code> 一致的算法：双端对比 → 最长递增子序列。原因很直接——列表插入、删除、移动这类操作，编译期无法预知具体索引位置，运行时还是需要一个成熟的 diff 算法。</p>
+<p>所以更精确的说法是：<strong>Vapor 消除了 90% 常见场景的 diff（简单绑定、条件渲染、静态节点），但 <code>v-for</code> 依然保留完整的 keyed diff</strong>。</p>
+<h2 id="三、alien-signals：藏在-3-6-里的第二次革命"><a href="#三、alien-signals：藏在-3-6-里的第二次革命" class="headerlink" title="三、alien-signals：藏在 3.6 里的第二次革命"></a>三、alien-signals：藏在 3.6 里的第二次革命</h2><p>Vapor 是显性大更新，alien-signals 是隐性大更新——<strong>它默认对所有 3.6 用户生效，不需要开任何开关</strong>。</p>
+<h3 id="3-5-的响应式为什么还有优化空间"><a href="#3-5-的响应式为什么还有优化空间" class="headerlink" title="3.5 的响应式为什么还有优化空间"></a>3.5 的响应式为什么还有优化空间</h3><p>先不看数据结构，换成业务代码的视角更好理解：Vue 3.5 已经能很快地记录”谁依赖了谁”，但它判断 <code>computed</code> 要不要重算时，还是偏”读的时候再检查”。</p>
+<p>也就是说，数据变了以后，Vue 不会立刻把所有相关 <code>computed</code> 都算一遍，而是先标记一下。等你真正读取某个 <code>computed</code> 时，它再回头检查自己依赖的值有没有变。</p>
+<p>这个模型在单个 <code>computed</code> 上没问题，问题出在下面这种场景：</p>
+<blockquote>
+<p>一个 signal 变了 → 一堆依赖它的 computed 都要被读取。</p>
+</blockquote>
+<p>这时每读一个 <code>computed</code>，都要做一次”dirty 检查”。如果依赖链很深，检查过程还会递归往上走；如果一个值被很多 <code>computed</code> 依赖，检查次数就会被放大。</p>
+<p>底层实现上，Vue 3.5 已经从 Set&#x2F;Map 优化到了双向链表（doubly-linked list），单次订阅&#x2F;取消订阅的成本不是主要瓶颈。真正的瓶颈是这个<strong>纯 pull 模型</strong>：计算越深、fan-out 越广，就越慢。这是 alien-signals 作者在 PR #12349 里明确指出的问题：可复现的 30 倍以上性能差距。</p>
+<h3 id="如果不采用-alien-signals，会发生什么"><a href="#如果不采用-alien-signals，会发生什么" class="headerlink" title="如果不采用 alien-signals，会发生什么"></a>如果不采用 alien-signals，会发生什么</h3><p>假设页面里有一个基础状态 <code>count</code>，它被很多层 <code>computed</code> 包起来：</p>
+<pre><code>count
+  → computedA
+    → computedB
+      → computedC
+</code></pre>
+<p>在 3.5 这类纯 pull 模型里，<code>count</code> 改变时，系统主要做的是”先标记一下，等读取时再确认”。真正麻烦发生在读取 <code>computedC</code> 的时候：</p>
+<ol>
+<li>读 <code>computedC</code>，发现它可能脏了</li>
+<li>往上检查 <code>computedB</code></li>
+<li><code>computedB</code> 再往上检查 <code>computedA</code></li>
+<li><code>computedA</code> 再检查 <code>count</code></li>
+<li>确认变更后，再一层层返回并决定要不要重算</li>
+</ol>
+<p>如果只有一条链，这个成本还能接受。可真实页面经常是一个源数据被多个视图状态、格式化字段、筛选条件同时依赖，读一次查一遍，读很多次就重复查很多遍。</p>
+<p>所以，不采用 alien-signals 的问题不是”会不会重新计算”，而是：<strong>很多 <code>computed</code> 在读取时各自回头查依赖，导致同一段依赖图被重复走</strong>。</p>
+<h3 id="push-pull-混合算法是怎么解决的"><a href="#push-pull-混合算法是怎么解决的" class="headerlink" title="push-pull 混合算法是怎么解决的"></a>push-pull 混合算法是怎么解决的</h3><p>alien-signals 的核心思路是<strong>把”标脏”和”重算”拆开</strong>：</p>
+<pre><code>Push 阶段（写入时）：
+  signal 变化
+    → 沿链表向下遍历所有依赖节点
+    → 只翻转一个位标记（Pending / Dirty flag）
+    → 不做任何计算
+    ↓
+Pull 阶段（读取时）：
+  读 computed
+    → 检查 flag
+    → 干净：直接返回缓存值
+    → 脏：调 checkDirty 沿上游走一趟，确认真的变了才重算
+</code></pre>
+<p>这段可以用 Excel 公式来类比：</p>
+<pre><code>count 单元格变了
+  → 依赖它的公式单元格先被贴上&quot;可能过期&quot;标签
+  → 用户真正点开某个公式单元格
+  → 再确认它要不要重新计算
+</code></pre>
+<p>更准确地说，<code>count</code> 改了不马上把所有 <code>computed</code> 算一遍，这不是新旧模型的差别，3.5 本来也偏 lazy。真正的差别在于：<strong>写入时是否把影响范围更早地传播出去</strong>。</p>
+<ol>
+<li>旧模型主要等读取 <code>computedC</code> 时，再回头沿依赖链确认上游有没有变</li>
+<li>alien-signals 会在 <code>count</code> 改变时，先把受影响的下游节点标成”可能过期”</li>
+<li>等真正读取 <code>computedC</code> 时，它可以结合这些标记和缓存做更少检查，而不是每次都从头回查一遍</li>
+</ol>
+<p>总结一下就是：**以前主要是”读的时候回头查脏不脏”；现在是”写的时候先把可能受影响的节点标出来，读的时候再按需计算”**。</p>
+<p>对我们业务代码的影响：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>3.5 表现</th>
+<th>3.6 表现（alien-signals）</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>一个 ref 驱动 1 个 computed</td>
+<td>差不多</td>
+<td>差不多</td>
+</tr>
+<tr>
+<td>一个 ref 驱动 100 个 computed，只读其中 1 个</td>
+<td>100 个都要重算或做 dirty check</td>
+<td>只有被读的那 1 个真正走 checkDirty</td>
+</tr>
+<tr>
+<td>深依赖链（A → B → C → D → E）中间某个变</td>
+<td>每次读都可能沿链递归</td>
+<td>flag 迭代，缓存值直接复用</td>
+</tr>
+<tr>
+<td>Diamond 依赖（多路径可达同一节点）</td>
+<td>可能被算多次</td>
+<td>Pending → Dirty 两阶段标记，保证只算一次，无 glitch</td>
+</tr>
+</tbody></table>
+<p><strong>最实际的一条</strong>：如果你项目里有大量 <code>computed</code> 或 <code>watch</code> 嵌套（很多状态管理场景就是这样），升到 3.6 大概率能感受到 CPU 占用下降，且<strong>不需要改一行代码</strong>。</p>
+<h2 id="四、Vapor-Mode-怎么用（可跑示例）"><a href="#四、Vapor-Mode-怎么用（可跑示例）" class="headerlink" title="四、Vapor Mode 怎么用（可跑示例）"></a>四、Vapor Mode 怎么用（可跑示例）</h2><p>先说环境：Vue 3.6.0-rc.4 + Vite 6+，<code>package.json</code> 里锁到 <code>vue@^3.6.0-rc.4</code>。</p>
+<h3 id="局部启用：单组件切-Vapor"><a href="#局部启用：单组件切-Vapor" class="headerlink" title="局部启用：单组件切 Vapor"></a>局部启用：单组件切 Vapor</h3><p>在任意 SFC 顶部标注 <code>vapor</code> 即可，其他一切照旧：</p>
+<pre><code class="vue">&lt;script setup vapor&gt;
+import &#123; ref, computed &#125; from &#39;vue&#39;
+
+const list = ref(Array.from(&#123; length: 1000 &#125;, (_, i) =&gt; (&#123; id: i, name: `Item $&#123;i&#125;` &#125;)))
+const keyword = ref(&#39;&#39;)
+
+const filtered = computed(() =&gt;
+  list.value.filter(item =&gt; item.name.includes(keyword.value))
+)
+&lt;/script&gt;
+
+&lt;template&gt;
+  &lt;input v-model=&quot;keyword&quot; placeholder=&quot;filter...&quot; /&gt;
+  &lt;ul&gt;
+    &lt;li v-for=&quot;item in filtered&quot; :key=&quot;item.id&quot;&gt;&#123;&#123; item.name &#125;&#125;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/template&gt;
+</code></pre>
+<p><code>&lt;script setup vapor&gt;</code> 是 <code>&lt;script setup&gt;</code> + <code>vapor</code> 属性的简写。也可以只写在 template 上：</p>
+<pre><code class="vue">&lt;template vapor&gt;
+  &lt;!-- 整个 SFC 走 Vapor 编译 --&gt;
+&lt;/template&gt;
+</code></pre>
+<h3 id="纯-Vapor-应用：干掉-VDOM-运行时"><a href="#纯-Vapor-应用：干掉-VDOM-运行时" class="headerlink" title="纯 Vapor 应用：干掉 VDOM 运行时"></a>纯 Vapor 应用：干掉 VDOM 运行时</h3><p>如果整个 app 都是 Vapor 组件（内部依赖也需要），可以用 <code>createVaporApp</code>，构建产物不会打包 VDOM 运行时：</p>
+<pre><code class="javascript">import &#123; createVaporApp &#125; from &#39;vue&#39;
+import App from &#39;./App.vue&#39;
+
+createVaporApp(App).mount(&#39;#app&#39;)
+</code></pre>
+<h3 id="混合模式：老应用局部试点"><a href="#混合模式：老应用局部试点" class="headerlink" title="混合模式：老应用局部试点"></a>混合模式：老应用局部试点</h3><p>绝大多数团队会走这条路径。现有 <code>createApp</code> 应用要嵌 Vapor 组件，必须装 <code>vaporInteropPlugin</code>：</p>
+<pre><code class="javascript">import &#123; createApp, vaporInteropPlugin &#125; from &#39;vue&#39;
+import App from &#39;./App.vue&#39;
+
+createApp(App).use(vaporInteropPlugin).mount(&#39;#app&#39;)
+</code></pre>
+<p>装了这个 plugin 后，Vapor 组件和 VDOM 组件可以互相嵌套，props &#x2F; events &#x2F; slots 都能穿透。但官方明确说了：**”仍有一些边界 case 有粗糙的地方，特别是用 VDOM 组件库时”**。</p>
+<blockquote>
+<p><strong>把 Vapor 当作”性能区域”来规划，不是当”整体开关”打开</strong>。比如把首屏关键渲染、长列表、图表这类性能敏感页面切成 Vapor，其他页面保留 VDOM，避免混合嵌套产生的边界成本。</p>
+</blockquote>
+<h3 id="自定义指令写法变了"><a href="#自定义指令写法变了" class="headerlink" title="自定义指令写法变了"></a>自定义指令写法变了</h3><p>Vapor 下自定义指令的接口完全变了。旧写法是一个生命周期对象，Vue 在 <code>mounted</code>、<code>updated</code>、<code>unmounted</code> 这些阶段把 <code>binding.value</code> 传进来：</p>
+<pre><code class="typescript">const vFocus = &#123;
+  mounted(el, binding) &#123;
+    if (binding.value) &#123;
+      el.focus()
+    &#125;
+  &#125;,
+  updated(el, binding) &#123;
+    if (binding.value &amp;&amp; !binding.oldValue) &#123;
+      el.focus()
+    &#125;
+  &#125;,
+&#125;
+</code></pre>
+<p>Vapor 里不再走这套指令生命周期，而是把指令写成一个函数：</p>
+<pre><code class="typescript">import &#123; watchEffect &#125; from &#39;vue&#39;
+
+const vFocus = (el, source) =&gt; &#123;
+  watchEffect(() =&gt; &#123;
+    if (source()) &#123;
+      el.focus()
+    &#125;
+  &#125;)
+  return () =&gt; console.log(&#39;cleanup on unmount&#39;)
+&#125;
+</code></pre>
+<p>新旧差异主要有三点：</p>
+<ul>
+<li>旧写法拿到的是 <code>binding.value</code>；新写法第二个参数 <code>source</code> 是一个<strong>响应式 getter</strong>，要调用 <code>source()</code> 才拿到当前值</li>
+<li>旧写法靠 <code>mounted</code> &#x2F; <code>updated</code> 分阶段处理；新写法在指令内部用 <code>watchEffect</code> 建立响应式副作用，组件卸载时自动释放</li>
+<li>可选地返回一个 cleanup 函数</li>
+</ul>
+<p>这类变更不建议靠记忆硬背。官方 release note 和 CHANGELOG 后面都有完整说明，真正迁移时优先跑官方 codemod，再人工检查少数复杂指令。</p>
+<h2 id="五、Vapor-目前还不能做什么"><a href="#五、Vapor-目前还不能做什么" class="headerlink" title="五、Vapor 目前还不能做什么"></a>五、Vapor 目前还不能做什么</h2><p>RC 阶段功能完备，但<strong>故意不支持</strong>的东西你得清楚。我按坑的严重程度排一下：</p>
+<p><strong>坑 1：Options API 完全不支持</strong></p>
+<pre><code class="vue">&lt;!-- ❌ 反面案例：Vapor 里不能用 --&gt;
+&lt;script&gt;
+export default &#123;
+  data() &#123; return &#123; count: 0 &#125; &#125;,
+  methods: &#123; inc() &#123; this.count++ &#125; &#125;
+&#125;
+&lt;/script&gt;
+
+&lt;!-- ✅ 正面案例：改成组合式 API --&gt;
+&lt;script setup vapor&gt;
+import &#123; ref &#125; from &#39;vue&#39;
+const count = ref(0)
+function inc() &#123; count.value++ &#125;
+&lt;/script&gt;
+</code></pre>
+<p>如果项目大量使用 Options API，切 Vapor 意味着一次不小的组件重构。</p>
+<p><strong>坑 2：<code>getCurrentInstance()</code> 返回 null</strong></p>
+<p>很多老库在内部用 <code>getCurrentInstance()</code> 拿组件实例做魔改，在 Vapor 组件里全部失效。这也是为什么”UI 组件库全面支持 Vapor”还需要时间。</p>
+<p><strong>坑 3：模板 ref 拿不到 <code>$el</code> <code>$props</code> <code>$attrs</code> <code>$slots</code> <code>$refs</code></strong></p>
+<p>Vapor 组件的模板 ref 不会暴露公共实例代理属性，只暴露显式 expose 的东西。依赖这些属性的调试&#x2F;自动化代码要改。</p>
+<p><strong>坑 4：<code>v-memo</code> 不支持</strong></p>
+<p><code>v-memo</code> 是 VDOM 模式下的 diff 层缓存指令，Vapor 已经细粒度到具体绑定，用不上这个了。</p>
+<p><strong>坑 5：<code>@vue:mounted</code> &#x2F; <code>@vue:updated</code> 等 per-element 生命周期不支持</strong></p>
+<p><strong>坑 6：事件委托在 rc.2 之后变成可选</strong></p>
+<p>Vapor 之前默认把所有事件委托到 <code>document</code>，rc.2 起改成了默认直接绑到元素上，需要显式加 <code>.delegate</code> 修饰符才走委托：</p>
+<pre><code class="vue">&lt;button @click.delegate=&quot;onClick&quot; /&gt;
+</code></pre>
+<p>这个改动是为了对齐 VDOM 模式，避免祖先 <code>stopPropagation()</code> 造成的行为差异。同时 <code>compilerOptions.eventDelegation</code> 选项被移除了。</p>
+<p><strong>坑 7：<code>slots.default()</code> 不再是”安全预览”</strong></p>
+<p>在 Vapor 里，调用 <code>slots.default()</code> 会真的执行渲染逻辑（创建 DOM、注册 effect）。所以别再用它做”先看看有没有插槽内容再决定要不要渲 fallback”的技巧：</p>
+<pre><code class="vue">&lt;!-- ❌ 反面案例：Vapor 里会导致渲染副作用 --&gt;
+&lt;script setup vapor&gt;
+import &#123; useSlots &#125; from &#39;vue&#39;
+const slots = useSlots()
+const content = slots.default?.()
+const showFallback = !content
+&lt;/script&gt;
+
+&lt;!-- ✅ 正面案例：让 template 做 fallback --&gt;
+&lt;template&gt;
+  &lt;slot&gt;Fallback content&lt;/slot&gt;
+&lt;/template&gt;
+</code></pre>
+<h2 id="六、对生态的影响"><a href="#六、对生态的影响" class="headerlink" title="六、对生态的影响"></a>六、对生态的影响</h2><p>这一节完全是我的判断，不是官方结论，仅供参考。</p>
+<p><strong>对 UI 组件库</strong>：Element Plus、Ant Design Vue、Naive UI 这些库短期内不会全量转 Vapor。原因是它们内部大量依赖 <code>getCurrentInstance</code> 和 <code>$attrs</code>&#x2F;<code>$slots</code> 等属性。走 <code>vaporInteropPlugin</code> 通用能用，但性能收益会打折。真正的 Vapor 原生组件库我预计要等 1-2 年才能成熟，或者会出现专门的 “vapor-first” 新库。</p>
+<p><strong>对状态管理</strong>：Pinia 底层是纯响应式 API，会自动吃到 alien-signals 的红利，不需要迁移。这也是为什么我说响应式重写是”隐形收益”。</p>
+<p><strong>对跨端框架</strong>：短期影响不会像 H5 项目那么直接。原因很简单，uni-app、Taro 这类跨端框架本来就有自己的编译链路和平台运行时，尤其小程序端并不是浏览器 DOM 环境。Vapor 的价值在于把 Vue 模板编译成更直接的 DOM 更新逻辑，但跨端框架要吃到这部分收益，必须自己接入 Vapor 编译产物和对应运行时，不是把 Vue 升到 3.6 就自动完成。</p>
+<p>更现实的收益来自 alien-signals：只要跨端框架内部或业务代码用的是 Vue 这套响应式，理论上就能吃到响应式内核重写带来的性能红利。我的判断是：<strong>跨端框架会先吃响应式红利，后面才可能评估 Vapor 编译链路</strong>。</p>
+<p><strong>对 SSR &#x2F; Nuxt</strong>：Vapor 对 SSR 的影响也不能只看”能不能编译”。SSR 真正麻烦的是 hydration：服务端吐出的 HTML，要在客户端被 Vapor runtime 精准接管，事件、ref、条件分支、插槽都不能错位。</p>
+<p>这也是为什么 rc.1 到 rc.4 的修复里，<code>runtime-vapor: hydrate xxx</code> 占了很大比例。Nuxt 4 大概率会在稳定版之后逐步开放 Vapor 支持，但短期不会成为默认。对 SSR 项目来说，Vapor 更像是一个需要框架层兜底的能力，不建议业务项目自己先冲。</p>
+<p><strong>对 Vue 3 → Vue 4 的路径</strong>：结合官方多次公开表态和这次的架构分叉，我的判断是：Vue 4 会把 Vapor 定为默认模式，VDOM 变成”兼容模式”或独立包。类似 React 从 Legacy Renderer 到 Fiber 的分叉。<strong>从 3.5 到 3.6 现在开始把项目切到组合式 API + <code>&lt;script setup&gt;</code>，就是在为 Vue 4 铺路</strong>。</p>
+<p><strong>对写业务代码的我们</strong>：短期什么都不用做，升到 3.6 直接吃响应式红利；中期在性能敏感的页面（长列表、图表、复杂表单）试点 Vapor；长期把 Options API 逐步替换掉。</p>
+<h2 id="七、我的建议"><a href="#七、我的建议" class="headerlink" title="七、我的建议"></a>七、我的建议</h2><ol>
+<li><strong>立刻可以做</strong>：把项目 <code>vue</code> 版本锁到 <code>^3.6.0-rc.4</code>，跑一遍完整回归测试，验证 alien-signals 有没有引发行为差异（应该没有，官方对齐了 API）</li>
+<li><strong>谨慎推进</strong>：挑一个孤立的性能敏感页面切 Vapor，跑 benchmark 对比。别整站切</li>
+<li><strong>不要激进</strong>：别在正在开发的核心业务模块用 Vapor RC。Vue 官方原文是 “beta means ready for production evaluation, not make it the default tomorrow”</li>
+<li><strong>组件库依赖</strong>：如果你的 UI 库已经明确表态支持 Vapor（如已发布 Vapor 兼容版本），可以放心试点；没表态的，只用 <code>vaporInteropPlugin</code> 兜底，别在 Vapor 组件内部深度嵌套</li>
+<li><strong>技术储备</strong>：花时间把 Options API 组件逐步迁到 <code>&lt;script setup&gt;</code>，这是无论 Vapor 是否落地都要做的事</li>
+</ol>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Vue 3.6 RC4 的核心是两件事：Vapor Mode 编译完备 + <code>@vue/reactivity</code> 基于 alien-signals 全量重写</li>
+<li>Vapor Mode 是可选的第二条编译路径，把模板直接编译成命令式 DOM 操作，绕开了 VDOM 的生成和 diff</li>
+<li>Vapor 并非完全没有 diff，<code>v-for</code> 列表更新仍保留 3.5 那套 keyed diff 算法</li>
+<li>alien-signals 是隐形红利，升级即生效，在深依赖 &#x2F; 多 computed 场景可有 30 倍以上性能提升</li>
+<li>Vapor 只支持组合式 API + <code>&lt;script setup&gt;</code>，Options API、<code>v-memo</code>、部分模板 ref 属性不再可用</li>
+<li>生态短期还在追赶，UI 组件库、跨端框架、SSR 框架都需要各自适配，不能把 Vapor 当成升级即开的默认能力</li>
+<li>我的判断：Vapor 是为 Vue 4 铺的地基，现在把项目切到组合式 API 就是最好的准备</li>
+</ol>
+<hr>
+<p><strong>主要参考资料</strong></p>
+<ul>
+<li>Vue 3.6.0-rc.1 Release Note（含 Vapor Mode 完整章节）：<a target="_blank" rel="noopener" href="https://github.com/vuejs/core/releases/tag/v3.6.0-rc.1">github.com&#x2F;vuejs&#x2F;core&#x2F;releases&#x2F;tag&#x2F;v3.6.0-rc.1</a></li>
+<li>Vue 3.6.0-rc.4 Release：<a target="_blank" rel="noopener" href="https://github.com/vuejs/core/releases/tag/v3.6.0-rc.4">github.com&#x2F;vuejs&#x2F;core&#x2F;releases&#x2F;tag&#x2F;v3.6.0-rc.4</a></li>
+<li>Vue 3.6 minor 分支 CHANGELOG（完整变更说明）：<a target="_blank" rel="noopener" href="https://github.com/vuejs/core/blob/minor/CHANGELOG.md">github.com&#x2F;vuejs&#x2F;core&#x2F;blob&#x2F;minor&#x2F;CHANGELOG.md</a></li>
+<li>alien-signals 项目及原理：<a target="_blank" rel="noopener" href="https://github.com/stackblitz/alien-signals">github.com&#x2F;stackblitz&#x2F;alien-signals</a></li>
+<li>alien-signals 移植进 Vue core 的 PR：<a target="_blank" rel="noopener" href="https://github.com/vuejs/core/pull/12349">github.com&#x2F;vuejs&#x2F;core&#x2F;pull&#x2F;12349</a></li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vue3/">Vue3</a><a class="post-meta__tags" href="/tags/Vapor-Mode/">Vapor Mode</a><a class="post-meta__tags" href="/tags/alien-signals/">alien-signals</a><a class="post-meta__tags" href="/tags/%E5%93%8D%E5%BA%94%E5%BC%8F/">响应式</a><a class="post-meta__tags" href="/tags/%E7%BC%96%E8%AF%91%E5%99%A8/">编译器</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Source Map 报错定位实战：从生成、解析到自建定位服务</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E7%9C%8B%E8%BF%99%E6%AC%A1%E5%8D%87%E7%BA%A7%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">先看这次升级了什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E8%A1%8C%E4%B8%9A%E6%97%B6%E9%97%B4%E7%BA%BF%EF%BC%9AVDOM-%E6%98%AF%E6%80%8E%E4%B9%88%E8%A2%AB%E2%80%9D%E7%BB%95%E8%BF%87%E5%8E%BB%E2%80%9D%E7%9A%84"><span class="toc-number">2.</span> <span class="toc-text">一、行业时间线：VDOM 是怎么被”绕过去”的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81Vapor-Mode-%E5%88%B0%E5%BA%95%E6%94%B9%E4%BA%86%E4%BB%80%E4%B9%88"><span class="toc-number">3.</span> <span class="toc-text">二、Vapor Mode 到底改了什么</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%A0%E7%BB%9F%E6%A8%A1%E5%BC%8F-vs-Vapor-Mode"><span class="toc-number">3.1.</span> <span class="toc-text">传统模式 vs Vapor Mode</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Vapor-%E7%BC%96%E8%AF%91%E4%BA%A7%E7%89%A9%E9%95%BF%E4%BB%80%E4%B9%88%E6%A0%B7"><span class="toc-number">3.2.</span> <span class="toc-text">Vapor 编译产物长什么样</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#v-for-%E9%87%8C-diff-%E5%B9%B6%E6%B2%A1%E6%9C%89%E6%B6%88%E5%A4%B1"><span class="toc-number">3.3.</span> <span class="toc-text">v-for 里 diff 并没有消失</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81alien-signals%EF%BC%9A%E8%97%8F%E5%9C%A8-3-6-%E9%87%8C%E7%9A%84%E7%AC%AC%E4%BA%8C%E6%AC%A1%E9%9D%A9%E5%91%BD"><span class="toc-number">4.</span> <span class="toc-text">三、alien-signals：藏在 3.6 里的第二次革命</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#3-5-%E7%9A%84%E5%93%8D%E5%BA%94%E5%BC%8F%E4%B8%BA%E4%BB%80%E4%B9%88%E8%BF%98%E6%9C%89%E4%BC%98%E5%8C%96%E7%A9%BA%E9%97%B4"><span class="toc-number">4.1.</span> <span class="toc-text">3.5 的响应式为什么还有优化空间</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A6%82%E6%9E%9C%E4%B8%8D%E9%87%87%E7%94%A8-alien-signals%EF%BC%8C%E4%BC%9A%E5%8F%91%E7%94%9F%E4%BB%80%E4%B9%88"><span class="toc-number">4.2.</span> <span class="toc-text">如果不采用 alien-signals，会发生什么</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#push-pull-%E6%B7%B7%E5%90%88%E7%AE%97%E6%B3%95%E6%98%AF%E6%80%8E%E4%B9%88%E8%A7%A3%E5%86%B3%E7%9A%84"><span class="toc-number">4.3.</span> <span class="toc-text">push-pull 混合算法是怎么解决的</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81Vapor-Mode-%E6%80%8E%E4%B9%88%E7%94%A8%EF%BC%88%E5%8F%AF%E8%B7%91%E7%A4%BA%E4%BE%8B%EF%BC%89"><span class="toc-number">5.</span> <span class="toc-text">四、Vapor Mode 怎么用（可跑示例）</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B1%80%E9%83%A8%E5%90%AF%E7%94%A8%EF%BC%9A%E5%8D%95%E7%BB%84%E4%BB%B6%E5%88%87-Vapor"><span class="toc-number">5.1.</span> <span class="toc-text">局部启用：单组件切 Vapor</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BA%AF-Vapor-%E5%BA%94%E7%94%A8%EF%BC%9A%E5%B9%B2%E6%8E%89-VDOM-%E8%BF%90%E8%A1%8C%E6%97%B6"><span class="toc-number">5.2.</span> <span class="toc-text">纯 Vapor 应用：干掉 VDOM 运行时</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%B7%B7%E5%90%88%E6%A8%A1%E5%BC%8F%EF%BC%9A%E8%80%81%E5%BA%94%E7%94%A8%E5%B1%80%E9%83%A8%E8%AF%95%E7%82%B9"><span class="toc-number">5.3.</span> <span class="toc-text">混合模式：老应用局部试点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E6%8C%87%E4%BB%A4%E5%86%99%E6%B3%95%E5%8F%98%E4%BA%86"><span class="toc-number">5.4.</span> <span class="toc-text">自定义指令写法变了</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81Vapor-%E7%9B%AE%E5%89%8D%E8%BF%98%E4%B8%8D%E8%83%BD%E5%81%9A%E4%BB%80%E4%B9%88"><span class="toc-number">6.</span> <span class="toc-text">五、Vapor 目前还不能做什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81%E5%AF%B9%E7%94%9F%E6%80%81%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">7.</span> <span class="toc-text">六、对生态的影响</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E6%88%91%E7%9A%84%E5%BB%BA%E8%AE%AE"><span class="toc-number">8.</span> <span class="toc-text">七、我的建议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">9.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

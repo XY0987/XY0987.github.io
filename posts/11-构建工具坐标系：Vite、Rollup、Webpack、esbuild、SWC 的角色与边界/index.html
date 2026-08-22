@@ -1,0 +1,440 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>构建工具坐标系：Vite、Rollup、Webpack、esbuild、SWC 的角色与边界 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：刚开始看前端构建时，我最大的困惑是：Vite、Rollup、Webpack、esbuild、SWC 这些名字老是一起出现，它们到底是竞争关系还是配合关系？这一篇不讲某个工具的细节，先帮你把整个坐标系建起来——谁负责打包、谁负责转译、谁套在谁外面。坐标系搞清楚了，后面每篇深入才不会乱。  先分清两件不同的事：打包和转译很多人把构建工具混在一起聊，是因为没区分两个不同层次的工作：  转译（tr">
+<meta property="og:type" content="article">
+<meta property="og:title" content="构建工具坐标系：Vite、Rollup、Webpack、esbuild、SWC 的角色与边界">
+<meta property="og:url" content="http://example.com/posts/11-%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7%E5%9D%90%E6%A0%87%E7%B3%BB%EF%BC%9AVite%E3%80%81Rollup%E3%80%81Webpack%E3%80%81esbuild%E3%80%81SWC%20%E7%9A%84%E8%A7%92%E8%89%B2%E4%B8%8E%E8%BE%B9%E7%95%8C/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：刚开始看前端构建时，我最大的困惑是：Vite、Rollup、Webpack、esbuild、SWC 这些名字老是一起出现，它们到底是竞争关系还是配合关系？这一篇不讲某个工具的细节，先帮你把整个坐标系建起来——谁负责打包、谁负责转译、谁套在谁外面。坐标系搞清楚了，后面每篇深入才不会乱。  先分清两件不同的事：打包和转译很多人把构建工具混在一起聊，是因为没区分两个不同层次的工作：  转译（tr">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T15:36:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.419Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vite">
+<meta property="article:tag" content="Webpack">
+<meta property="article:tag" content="Rollup">
+<meta property="article:tag" content="构建工具">
+<meta property="article:tag" content="esbuild">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/11-%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7%E5%9D%90%E6%A0%87%E7%B3%BB%EF%BC%9AVite%E3%80%81Rollup%E3%80%81Webpack%E3%80%81esbuild%E3%80%81SWC%20%E7%9A%84%E8%A7%92%E8%89%B2%E4%B8%8E%E8%BE%B9%E7%95%8C/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '构建工具坐标系：Vite、Rollup、Webpack、esbuild、SWC 的角色与边界',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">构建工具坐标系：Vite、Rollup、Webpack、esbuild、SWC 的角色与边界</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T15:36:00.000Z" title="发表于 2026 23:36:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.419Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：刚开始看前端构建时，我最大的困惑是：Vite、Rollup、Webpack、esbuild、SWC 这些名字老是一起出现，它们到底是竞争关系还是配合关系？这一篇不讲某个工具的细节，先帮你把整个坐标系建起来——谁负责打包、谁负责转译、谁套在谁外面。坐标系搞清楚了，后面每篇深入才不会乱。</p>
+</blockquote>
+<h2 id="先分清两件不同的事：打包和转译"><a href="#先分清两件不同的事：打包和转译" class="headerlink" title="先分清两件不同的事：打包和转译"></a>先分清两件不同的事：打包和转译</h2><p>很多人把构建工具混在一起聊，是因为没区分两个不同层次的工作：</p>
+<ul>
+<li><strong>转译（transform）</strong>：把一个文件从一种语法转成另一种语法。比如把 TypeScript 转成 JavaScript，把 JSX 转成 <code>React.createElement</code>，把 ES2022 语法降级成 ES2015。这是<strong>单文件级别</strong>的工作。</li>
+<li><strong>打包（bundle）</strong>：把成百上千个模块，按依赖关系合并、做 Tree Shaking、做代码分割、生成最终产物。这是<strong>模块图级别</strong>的工作。</li>
+</ul>
+<p>这两件事经常由不同工具负责，理解这一点是整个坐标系的基础。</p>
+<table>
+<thead>
+<tr>
+<th>工作</th>
+<th>关注点</th>
+<th>典型工具</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>转译</td>
+<td>单文件语法转换、降级</td>
+<td>Babel、SWC、esbuild、tsc、Oxc</td>
+</tr>
+<tr>
+<td>打包</td>
+<td>模块图、依赖合并、分割</td>
+<td>Rollup、Webpack、esbuild、Rolldown</td>
+</tr>
+</tbody></table>
+<p>注意 esbuild 在两栏都出现了——它既能转译也能打包，这也是它容易让人迷糊的原因。后面会专门说它的定位。</p>
+<h2 id="五个工具各自是什么角色"><a href="#五个工具各自是什么角色" class="headerlink" title="五个工具各自是什么角色"></a>五个工具各自是什么角色</h2><p>先用一句话给每个工具定性，再展开。</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>一句话定位</th>
+<th>语言</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Webpack</td>
+<td>老牌全能打包器，生态最厚</td>
+<td>JavaScript</td>
+</tr>
+<tr>
+<td>Rollup</td>
+<td>专注 ESM 的打包器，库构建首选</td>
+<td>JavaScript</td>
+</tr>
+<tr>
+<td>esbuild</td>
+<td>极快的转译 + 打包器，常做”快但糙”的活</td>
+<td>Go</td>
+</tr>
+<tr>
+<td>SWC</td>
+<td>极快的转译器，Babel 的 Rust 替代</td>
+<td>Rust</td>
+</tr>
+<tr>
+<td>Vite</td>
+<td>开发体验框架，自己不直接干打包的脏活</td>
+<td>JS + 底层 Rust</td>
+</tr>
+</tbody></table>
+<p>这里最关键的认知是：<strong>Vite 和前面四个不是一个层次的东西</strong>。</p>
+<h3 id="Webpack：什么都能干，但配置重"><a href="#Webpack：什么都能干，但配置重" class="headerlink" title="Webpack：什么都能干，但配置重"></a>Webpack：什么都能干，但配置重</h3><p>Webpack 是统治了前端将近十年的打包器。它的核心能力是「万物皆模块」：通过 loader，CSS、图片、字体、甚至 Markdown 都能被当成模块塞进依赖图里。再通过 plugin 在构建生命周期的各个节点插入逻辑。</p>
+<p>它的强项是生态极厚、几乎什么场景都有现成方案。短板是配置心智负担重、构建慢（纯 JS 实现）。</p>
+<h3 id="Rollup：为-ESM-而生，库作者的最爱"><a href="#Rollup：为-ESM-而生，库作者的最爱" class="headerlink" title="Rollup：为 ESM 而生，库作者的最爱"></a>Rollup：为 ESM 而生，库作者的最爱</h3><p>Rollup 出现得比 Webpack 晚，从一开始就围绕 ESM 设计。它的产物干净、Tree Shaking 做得好，特别适合打包<strong>库</strong>（library），而不是大型应用。</p>
+<p>很多你天天用的库——Vue、React 的部分包、各种工具库——发布产物都是 Rollup 打的。它的插件机制也很优雅，后面会单独讲。</p>
+<h3 id="esbuild：用-Go-写的「快」"><a href="#esbuild：用-Go-写的「快」" class="headerlink" title="esbuild：用 Go 写的「快」"></a>esbuild：用 Go 写的「快」</h3><p>esbuild 是用 Go 写的，并且大量利用并行。它做转译和打包都极快，比纯 JS 工具快一两个数量级。</p>
+<p>但「快」是有代价的：esbuild 的代码分割、产物精细控制不如 Rollup&#x2F;Webpack 成熟，对一些复杂场景支持有限。所以它常被用在「需要快、但不需要极致产物控制」的环节，比如开发期转译、依赖预构建。</p>
+<h3 id="SWC：Babel-的-Rust-替代"><a href="#SWC：Babel-的-Rust-替代" class="headerlink" title="SWC：Babel 的 Rust 替代"></a>SWC：Babel 的 Rust 替代</h3><p>SWC（Speedy Web Compiler）是用 Rust 写的转译器，定位非常明确：<strong>替代 Babel 做语法转换</strong>。它能转 TS、JSX、做语法降级，速度比 Babel 快很多。</p>
+<p>Next.js 默认就用 SWC 替代了 Babel。注意 SWC 主要是个转译器（也有打包能力但用得少），它和 Babel 是直接竞争关系，和 Rollup&#x2F;Webpack 是配合关系。</p>
+<h3 id="Vite：站在巨人肩膀上的开发体验"><a href="#Vite：站在巨人肩膀上的开发体验" class="headerlink" title="Vite：站在巨人肩膀上的开发体验"></a>Vite：站在巨人肩膀上的开发体验</h3><p>Vite 本身不重复造打包轮子，而是<strong>编排</strong>底层引擎来提供极佳的开发体验：</p>
+<ul>
+<li>开发期：利用浏览器原生 ESM + 按需转译，启动几乎不需要打包，所以秒开。</li>
+<li>构建期：调用成熟的打包器产出优化过的产物。</li>
+</ul>
+<p>所以 Vite 更像一个「框架」或「指挥官」，它把转译和打包的脏活交给底层引擎。这也引出了 Vite 架构的一个重要演进。</p>
+<h2 id="Vite-底层引擎的演进：从双引擎到-Rolldown"><a href="#Vite-底层引擎的演进：从双引擎到-Rolldown" class="headerlink" title="Vite 底层引擎的演进：从双引擎到 Rolldown"></a>Vite 底层引擎的演进：从双引擎到 Rolldown</h2><p>这是很多老文章会讲错的地方，必须说清楚当前现状。</p>
+<p><strong>Vite 2 到 Vite 6 时代（双引擎）</strong>：</p>
+<pre><code class="txt">开发期 ── Vite Dev Server + 浏览器 ESM
+        └── esbuild 负责依赖预构建、TS/JSX 等快速转换
+
+构建期 ── Rollup 负责生产模块图、Tree Shaking、代码分割
+        └── esbuild 仍可能负责 TS/JSX 转换、语法降级、压缩
+</code></pre>
+<p>这套设计很聪明：开发期不急着完整打包，靠浏览器原生 ESM 和按需转换换启动速度；构建期交给 Rollup 做完整的生产产物优化。</p>
+<p>所以不能简单说「开发期用 esbuild，构建期用 Rollup」。更准确地说：<strong>开发期的主链路是 Vite Dev Server，构建期的主链路是 Rollup，但两边都可能用到 esbuild 做单文件级别的快速处理</strong>。真正容易导致「dev 正常、build 出问题」的，是开发服务链路和生产构建链路不完全一样，比如模块图处理、插件执行时机、代码分割、Tree Shaking、压缩优化这些环节都有差异。</p>
+<p><strong>Vite 8 时代（2026 年 3 月，统一到 Rolldown）</strong>：</p>
+<p>Vite 团队（VoidZero）用 Rust 重写了一个兼容 Rollup 的打包器叫 <strong>Rolldown</strong>，从 Vite 8 开始成为默认底层，同时用 <strong>Oxc</strong> 做 JS 转译、<strong>Lightning CSS</strong> 做 CSS 处理。</p>
+<p>这里顺手把这两个名字说清楚：</p>
+<table>
+<thead>
+<tr>
+<th>工具</th>
+<th>主要处理什么</th>
+<th>定位</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Oxc</td>
+<td>JavaScript &#x2F; TypeScript 的解析、转译、压缩等</td>
+<td>更像新一代 JS 工具链底座，可以理解为 VoidZero 生态里对标 Babel、SWC、Terser 一部分能力的 Rust 实现</td>
+</tr>
+<tr>
+<td>Lightning CSS</td>
+<td>CSS 的解析、转译、前缀补全、压缩等</td>
+<td>更像 CSS 侧的高性能处理器，可以替代一部分 PostCSS、Autoprefixer、cssnano 的工作</td>
+</tr>
+</tbody></table>
+<p>简单说，<strong>Rolldown 负责模块图和产物组织，Oxc 负责 JS&#x2F;TS，Lightning CSS 负责 CSS</strong>。它们放在一起，目标就是把 Vite 底层从「多个工具拼起来」逐步收敛成一套更统一、更快的 Rust 工具链。</p>
+<pre><code class="txt">开发期 ─┐
+        ├── Rolldown（Rust）──&gt; 统一引擎
+构建期 ─┘
+</code></pre>
+<blockquote>
+<p>统一到一套 Rust 引擎后，「dev 和 build 行为不一致」这个老问题被大幅缓解，构建速度也快了一个量级。</p>
+</blockquote>
+<p>我的理解是：Vite 的对外接口（配置、插件 API）尽量保持稳定，换的是「发动机」。你写的 Vite 配置和 Rollup 风格插件大多还能用，但涉及 <code>rollupOptions</code>、<code>esbuild</code>、分块策略这类贴近底层引擎的配置，升级时仍要按迁移指南检查。这也是为什么学 Rollup 插件机制依然不过时——插件模型延续了，但底层实现会演进。</p>
+<blockquote>
+<p>关于具体版本节点，建议以 <a target="_blank" rel="noopener" href="https://vite.dev/">Vite 官方文档</a> 和发布说明为准，构建工具版本迭代很快。</p>
+</blockquote>
+<h2 id="esbuild-SWC-在各大工具里到底扮演什么角色"><a href="#esbuild-SWC-在各大工具里到底扮演什么角色" class="headerlink" title="esbuild &#x2F; SWC 在各大工具里到底扮演什么角色"></a>esbuild &#x2F; SWC 在各大工具里到底扮演什么角色</h2><p>把这些「被嵌入」的关系理清，坐标系就完整了。</p>
+<p>先补一个很容易混的点：<strong>开发期 &#x2F; 构建期是运行阶段，转译 &#x2F; 打包是工具职责，调用关系是实现细节</strong>。这三件事不要混成一句话。</p>
+<ul>
+<li>转译：处理单个文件，比如 TypeScript 转 JavaScript、新语法降级、JSX 转 JS。</li>
+<li>打包：处理模块图，比如从入口文件出发分析依赖、Tree Shaking、代码分割、合并输出产物。</li>
+<li>调用：某个上层工具、打包器或插件，在内部复用 esbuild、SWC、Oxc 这类引擎来完成一部分工作。</li>
+</ul>
+<p>所以更准确的说法不是「开发期用转译，构建期用打包」，而是：开发期和构建期都会涉及单文件处理；构建期还要更完整地处理模块图和最终产物。构建期当然可能调用 esbuild，只是这不改变 Rollup 在 Vite 旧架构里负责生产模块图的角色。</p>
+<table>
+<thead>
+<tr>
+<th>上层工具</th>
+<th>主链路</th>
+<th>内部常复用的快速引擎</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Vite（≤7）开发期</td>
+<td>Vite Dev Server + 浏览器 ESM，不做完整打包</td>
+<td>esbuild 做依赖预构建、TS&#x2F;JSX 转换等</td>
+</tr>
+<tr>
+<td>Vite（≤7）构建期</td>
+<td>Rollup 处理生产模块图和产物组织</td>
+<td>esbuild 仍可能做 TS&#x2F;JSX 转换、语法降级、压缩</td>
+</tr>
+<tr>
+<td>Vite（8+）</td>
+<td>Rolldown 统一开发和构建主链路</td>
+<td>Oxc 处理 JS&#x2F;TS，Lightning CSS 处理 CSS</td>
+</tr>
+<tr>
+<td>Next.js</td>
+<td>Webpack &#x2F; Turbopack 处理应用构建链路</td>
+<td>SWC 做 JS&#x2F;TS 转换、压缩等</td>
+</tr>
+<tr>
+<td>Rspack 系</td>
+<td>Rspack 处理模块图和产物组织</td>
+<td>SWC &#x2F; Oxc 参与转换、压缩等</td>
+</tr>
+<tr>
+<td>tsup</td>
+<td>esbuild 直接包办大部分流程</td>
+<td>esbuild</td>
+</tr>
+</tbody></table>
+<p>可以看到，esbuild、SWC、Oxc 很多时候不是被你直接调用的，而是<strong>藏在上层工具内部</strong>当「快引擎」。你用 Vite 时其实间接用了它们。</p>
+<p>这也解释了一个常见困惑：「我没装 esbuild，为什么 <code>node_modules</code> 里有它？」——因为 Vite 把它当依赖装进来了。</p>
+<h2 id="一张图看清整个坐标系"><a href="#一张图看清整个坐标系" class="headerlink" title="一张图看清整个坐标系"></a>一张图看清整个坐标系</h2><pre><code class="txt">                 你直接面对的层
+        ┌──────────────────────────────┐
+        │  Vite / Next.js / Rsbuild     │  ← 开发体验 + 编排
+        └───────────────┬──────────────┘
+                        │ 编排
+        ┌───────────────┴──────────────┐
+        │        构建流水线              │
+        │  单文件处理：Babel / SWC       │
+        │            esbuild / Oxc      │
+        │  模块图处理：Rollup / Webpack  │
+        │            Rolldown / Rspack  │
+        └──────────────────────────────┘
+</code></pre>
+<p>记住这个关系：你面对的是上层工具（Vite 这种），它负责组织整条构建流水线。流水线里既有单文件处理，也有模块图处理；二者可以由同一个工具包办，也可以由多个引擎配合完成。说「Rollup 构建过程中调用了 esbuild」在实现层面可能成立，但在理解坐标系时，更应该说：Rollup 负责模块图，esbuild 负责部分单文件处理，它们都被 Vite 的构建链路编排起来。</p>
+<h2 id="那我到底该学哪个、用哪个"><a href="#那我到底该学哪个、用哪个" class="headerlink" title="那我到底该学哪个、用哪个"></a>那我到底该学哪个、用哪个</h2><table>
+<thead>
+<tr>
+<th>你的场景</th>
+<th>我的建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>新建前端应用</td>
+<td>直接 Vite，别犹豫</td>
+</tr>
+<tr>
+<td>打包一个要发布的库</td>
+<td>Rollup（或 tsup&#x2F;unbuild 这类封装）</td>
+</tr>
+<tr>
+<td>维护存量大型项目</td>
+<td>大概率还是 Webpack，别为了新而迁移</td>
+</tr>
+<tr>
+<td>Webpack 项目想提速</td>
+<td>评估 Rspack（webpack 兼容）</td>
+</tr>
+<tr>
+<td>需要超快的转译</td>
+<td>esbuild 或 SWC，看上层工具支持哪个</td>
+</tr>
+</tbody></table>
+<p>至于 Webpack 要不要学：<strong>核心概念要懂，但不必精通配置</strong>。因为存量项目还很多，面试也常问，而且理解 Webpack 的 bundle 模型有助于反过来理解 Vite 的 no-bundle 为什么快。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>先分清两件事：转译是单文件语法转换，打包是模块图处理，二者常由不同工具在同一条构建流水线里配合完成。</li>
+<li>Webpack 全能但重，Rollup 专注 ESM 适合库，esbuild&#x2F;SWC 是「快引擎」，Vite 是上层编排者。</li>
+<li>esbuild 和 SWC 很多时候藏在上层工具内部，你用 Vite&#x2F;Next.js 时是间接在用它们。</li>
+<li>Vite 旧架构里开发服务和生产构建是两条不同主链路，构建期也可能调用 esbuild；Vite 8 之后的方向是用 Rolldown 收敛开发和构建主链路。</li>
+<li>实战上：新应用用 Vite，发库用 Rollup 系，存量项目稳住 Webpack，Webpack 提速看 Rspack。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vite/">Vite</a><a class="post-meta__tags" href="/tags/Webpack/">Webpack</a><a class="post-meta__tags" href="/tags/Rollup/">Rollup</a><a class="post-meta__tags" href="/tags/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/">构建工具</a><a class="post-meta__tags" href="/tags/esbuild/">esbuild</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/01-CI%20%E6%B5%81%E6%B0%B4%E7%BA%BF%E4%B8%8E%E8%B4%A8%E9%87%8F%E5%BC%BA%E7%BA%A6%E6%9D%9F%E9%97%B8%E5%8F%A3/" title="CI 流水线与质量强约束闸口"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">CI 流水线与质量强约束闸口</div></div></a></div><div class="next-post pull-right"><a href="/posts/10-Vite%20%E5%BC%80%E5%8F%91%E6%9C%BA%E5%88%B6%EF%BC%9ADev%20Server%E3%80%81%E4%BE%9D%E8%B5%96%E9%A2%84%E6%9E%84%E5%BB%BA%E4%B8%8E%20HMR/" title="Vite 开发机制：Dev Server、依赖预构建与 HMR"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Vite 开发机制：Dev Server、依赖预构建与 HMR</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%88%E5%88%86%E6%B8%85%E4%B8%A4%E4%BB%B6%E4%B8%8D%E5%90%8C%E7%9A%84%E4%BA%8B%EF%BC%9A%E6%89%93%E5%8C%85%E5%92%8C%E8%BD%AC%E8%AF%91"><span class="toc-number">1.</span> <span class="toc-text">先分清两件不同的事：打包和转译</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E4%B8%AA%E5%B7%A5%E5%85%B7%E5%90%84%E8%87%AA%E6%98%AF%E4%BB%80%E4%B9%88%E8%A7%92%E8%89%B2"><span class="toc-number">2.</span> <span class="toc-text">五个工具各自是什么角色</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Webpack%EF%BC%9A%E4%BB%80%E4%B9%88%E9%83%BD%E8%83%BD%E5%B9%B2%EF%BC%8C%E4%BD%86%E9%85%8D%E7%BD%AE%E9%87%8D"><span class="toc-number">2.1.</span> <span class="toc-text">Webpack：什么都能干，但配置重</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Rollup%EF%BC%9A%E4%B8%BA-ESM-%E8%80%8C%E7%94%9F%EF%BC%8C%E5%BA%93%E4%BD%9C%E8%80%85%E7%9A%84%E6%9C%80%E7%88%B1"><span class="toc-number">2.2.</span> <span class="toc-text">Rollup：为 ESM 而生，库作者的最爱</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#esbuild%EF%BC%9A%E7%94%A8-Go-%E5%86%99%E7%9A%84%E3%80%8C%E5%BF%AB%E3%80%8D"><span class="toc-number">2.3.</span> <span class="toc-text">esbuild：用 Go 写的「快」</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#SWC%EF%BC%9ABabel-%E7%9A%84-Rust-%E6%9B%BF%E4%BB%A3"><span class="toc-number">2.4.</span> <span class="toc-text">SWC：Babel 的 Rust 替代</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Vite%EF%BC%9A%E7%AB%99%E5%9C%A8%E5%B7%A8%E4%BA%BA%E8%82%A9%E8%86%80%E4%B8%8A%E7%9A%84%E5%BC%80%E5%8F%91%E4%BD%93%E9%AA%8C"><span class="toc-number">2.5.</span> <span class="toc-text">Vite：站在巨人肩膀上的开发体验</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Vite-%E5%BA%95%E5%B1%82%E5%BC%95%E6%93%8E%E7%9A%84%E6%BC%94%E8%BF%9B%EF%BC%9A%E4%BB%8E%E5%8F%8C%E5%BC%95%E6%93%8E%E5%88%B0-Rolldown"><span class="toc-number">3.</span> <span class="toc-text">Vite 底层引擎的演进：从双引擎到 Rolldown</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#esbuild-SWC-%E5%9C%A8%E5%90%84%E5%A4%A7%E5%B7%A5%E5%85%B7%E9%87%8C%E5%88%B0%E5%BA%95%E6%89%AE%E6%BC%94%E4%BB%80%E4%B9%88%E8%A7%92%E8%89%B2"><span class="toc-number">4.</span> <span class="toc-text">esbuild &#x2F; SWC 在各大工具里到底扮演什么角色</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%BC%A0%E5%9B%BE%E7%9C%8B%E6%B8%85%E6%95%B4%E4%B8%AA%E5%9D%90%E6%A0%87%E7%B3%BB"><span class="toc-number">5.</span> <span class="toc-text">一张图看清整个坐标系</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%82%A3%E6%88%91%E5%88%B0%E5%BA%95%E8%AF%A5%E5%AD%A6%E5%93%AA%E4%B8%AA%E3%80%81%E7%94%A8%E5%93%AA%E4%B8%AA"><span class="toc-number">6.</span> <span class="toc-text">那我到底该学哪个、用哪个</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

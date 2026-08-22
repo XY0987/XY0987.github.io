@@ -1,0 +1,568 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>设计系统基础：Design Token 与主题体系 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：上一篇讲组件库样式时反复提到「主题相关的值走 CSS 变量」，那些值就是 Design Token。这一篇专门讲 token 这套东西：它怎么组织、怎么导出成多端能用的格式、以及基于它怎么实现暗色模式和品牌主题切换。Design Token 是组件库从「一堆组件」升级成「设计系统」的分水岭——没有 token，主题、多端、暗色都是硬编码堆出来的，改起来要命。  什么是 Design Tok">
+<meta property="og:type" content="article">
+<meta property="og:title" content="设计系统基础：Design Token 与主题体系">
+<meta property="og:url" content="http://example.com/posts/05-%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%EF%BC%9ADesign%20Token%20%E4%B8%8E%E4%B8%BB%E9%A2%98%E4%BD%93%E7%B3%BB/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：上一篇讲组件库样式时反复提到「主题相关的值走 CSS 变量」，那些值就是 Design Token。这一篇专门讲 token 这套东西：它怎么组织、怎么导出成多端能用的格式、以及基于它怎么实现暗色模式和品牌主题切换。Design Token 是组件库从「一堆组件」升级成「设计系统」的分水岭——没有 token，主题、多端、暗色都是硬编码堆出来的，改起来要命。  什么是 Design Tok">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T15:13:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.433Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="设计系统">
+<meta property="article:tag" content="Design Token">
+<meta property="article:tag" content="主题切换">
+<meta property="article:tag" content="暗色模式">
+<meta property="article:tag" content="Style Dictionary">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/05-%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F%E5%9F%BA%E7%A1%80%EF%BC%9ADesign%20Token%20%E4%B8%8E%E4%B8%BB%E9%A2%98%E4%BD%93%E7%B3%BB/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '设计系统基础：Design Token 与主题体系',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">设计系统基础：Design Token 与主题体系</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T15:13:00.000Z" title="发表于 2026 23:13:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.433Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>16分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：上一篇讲组件库样式时反复提到「主题相关的值走 CSS 变量」，那些值就是 Design Token。这一篇专门讲 token 这套东西：它怎么组织、怎么导出成多端能用的格式、以及基于它怎么实现暗色模式和品牌主题切换。Design Token 是组件库从「一堆组件」升级成「设计系统」的分水岭——没有 token，主题、多端、暗色都是硬编码堆出来的，改起来要命。</p>
+</blockquote>
+<h2 id="什么是-Design-Token"><a href="#什么是-Design-Token" class="headerlink" title="什么是 Design Token"></a>什么是 Design Token</h2><p>Design Token 就是把设计决策抽象成<strong>有名字的变量</strong>。</p>
+<p>设计师说「主色是 #1677ff」，如果直接把 <code>#1677ff</code> 写死在几十个组件里，改主色就得全局搜替换，还容易漏。Token 的做法是给它起个名字：</p>
+<pre><code class="txt">color.primary = #1677ff
+</code></pre>
+<p>然后所有组件引用 <code>color.primary</code>，而不是 <code>#1677ff</code>。改主色只改一处。</p>
+<p>这听起来就是「变量」，但 Design Token 的价值不止于此——它是<strong>设计和代码之间的契约</strong>，也是<strong>一份能被翻译成任何平台格式的中立数据</strong>。同一份 token，可以导出成 Web 的 CSS 变量、小程序的 WXSS、React Native 的 JS 对象、iOS 的 Swift、Android 的 XML。这是它区别于「随手定义几个 SCSS 变量」的关键。</p>
+<h2 id="Token-的三层组织"><a href="#Token-的三层组织" class="headerlink" title="Token 的三层组织"></a>Token 的三层组织</h2><p>只有一层 token 是新手常犯的错。成熟的 token 体系是<strong>分层</strong>的，通常三层：</p>
+<pre><code class="txt">① 基础层 (Global / Primitive)   —— 纯粹的值，不带语义
+   color.blue.500 = #1677ff
+   color.gray.900 = #1a1a1a
+   space.4 = 16px
+
+② 语义层 (Semantic / Alias)     —— 带语义，引用基础层
+   color.primary        → color.blue.500
+   color.text.primary   → color.gray.900
+   color.bg.container   → color.white
+
+③ 组件层 (Component)             —— 组件专属，引用语义层
+   button.color.bg      → color.primary
+   button.padding.x     → space.4
+</code></pre>
+<p>为什么要分层？看一个场景就懂了：</p>
+<ul>
+<li>暗色模式：只改<strong>语义层</strong>（<code>color.text.primary</code> 在暗色下指向浅色），基础层的调色板不动，组件层自动跟随。</li>
+<li>换品牌主题：只改<strong>语义层</strong>（<code>color.primary</code> 指向另一个色阶），组件层不用动。</li>
+<li>调某个组件：只改<strong>组件层</strong>（<code>button.padding.x</code>），不影响其它组件。</li>
+</ul>
+<p>分层的本质是<strong>让「值」和「用途」解耦</strong>。基础层是「有哪些颜色」，语义层是「这些颜色在什么场景用」，组件层是「这个组件用哪个场景的颜色」。改动被限制在最小范围。</p>
+<p>没分层的 token 表：几百个 token 平铺，暗色模式要改一半，改完还担心漏，心智负担很重。分层之后，暗色只需重定义十几个语义 token。</p>
+<h2 id="用-Style-Dictionary-导出多端格式"><a href="#用-Style-Dictionary-导出多端格式" class="headerlink" title="用 Style Dictionary 导出多端格式"></a>用 Style Dictionary 导出多端格式</h2><p>Token 分层设计好了，怎么变成各端能用的东西？如果只做 Web，手写 CSS 变量也行。但一旦要多端（Web &#x2F; 小程序 &#x2F; RN），就需要「一份 token 源，导出多种格式」的工具。社区标准是 <strong>Style Dictionary</strong>（Amazon 出的）。</p>
+<p>思路是：token 用平台无关的 JSON 定义，Style Dictionary 根据配置把它「翻译」成各平台格式。</p>
+<p>它的原理可以拆成四步：</p>
+<pre><code class="txt">token 源文件
+   ↓  读取 JSON / JSONC / JS 等 token 数据
+解析引用
+   ↓  把 &#123;color.blue.500&#125; 这类 alias 关系串起来
+按平台 transform
+   ↓  例如命名转成 kebab-case，尺寸单位转成 px / dp / sp
+按 format 输出文件
+      例如 CSS 变量、SCSS 变量、JS 对象、Android XML、iOS Swift
+</code></pre>
+<p>这里最容易误解的是 <code>transform</code>。Style Dictionary 的 transform 是<strong>token 级别的值转换和命名转换</strong>，不是 CSS 编译。比如它可以把 <code>color.primary</code> 转成 <code>--color-primary</code>，把颜色值格式化成十六进制，把尺寸单位按平台转成 <code>dp</code> &#x2F; <code>sp</code>。但它不会像 PostCSS、Lightning CSS、Babel 那样做 CSS 语法降级，也不会自动加浏览器前缀。</p>
+<p>换句话说，它关心的是「设计 token 怎么变成各端能读的变量文件」，不关心「业务 CSS 怎么兼容不同浏览器」。</p>
+<p>先写 token 源（JSON）：</p>
+<pre><code class="json">// tokens/color.json
+&#123;
+  &quot;color&quot;: &#123;
+    &quot;blue&quot;: &#123; &quot;500&quot;: &#123; &quot;value&quot;: &quot;#1677ff&quot; &#125; &#125;,
+    &quot;primary&quot;: &#123; &quot;value&quot;: &quot;&#123;color.blue.500&#125;&quot; &#125;
+  &#125;
+&#125;
+</code></pre>
+<p>注意 <code>&#123;color.blue.500&#125;</code> 是<strong>引用</strong>——语义层引用基础层，Style Dictionary 会自动解析。</p>
+<p>配置导出目标：</p>
+<pre><code class="js">// style-dictionary.config.js
+export default &#123;
+  source: [&#39;tokens/**/*.json&#39;],
+  platforms: &#123;
+    // Web：CSS 变量
+    css: &#123;
+      transformGroup: &#39;css&#39;,
+      buildPath: &#39;dist/css/&#39;,
+      files: [&#123; destination: &#39;vars.css&#39;, format: &#39;css/variables&#39; &#125;],
+    &#125;,
+    // JS：给 RN / JS 逻辑用
+    js: &#123;
+      transformGroup: &#39;js&#39;,
+      buildPath: &#39;dist/js/&#39;,
+      files: [&#123; destination: &#39;tokens.js&#39;, format: &#39;javascript/es6&#39; &#125;],
+    &#125;,
+    // 小程序：可用 CSS 变量或自定义 format 生成 WXSS
+    miniprogram: &#123;
+      transformGroup: &#39;css&#39;,
+      buildPath: &#39;dist/mp/&#39;,
+      files: [&#123; destination: &#39;vars.wxss&#39;, format: &#39;css/variables&#39; &#125;],
+    &#125;,
+  &#125;,
+&#125;
+</code></pre>
+<p>跑 <code>style-dictionary build</code>，一份 JSON 就产出了三端的 token 文件：</p>
+<pre><code class="css">/* dist/css/vars.css */
+:root &#123;
+  --color-blue-500: #1677ff;
+  --color-primary: #1677ff;
+&#125;
+</code></pre>
+<pre><code class="js">// dist/js/tokens.js
+export const ColorBlue500 = &#39;#1677ff&#39;
+export const ColorPrimary = &#39;#1677ff&#39;
+</code></pre>
+<p>所以答案是：<strong>Style Dictionary 能打包出 CSS 文件，但它打包的是 token 产物，不是完整意义上的 CSS 工程产物</strong>。<code>css/variables</code> 这个 format 会生成一份合法的 CSS 变量文件，你可以把它发布到 npm 包里，再通过稳定入口给应用引入：</p>
+<pre><code class="ts">import &#39;@my-ui/theme/css&#39;
+</code></pre>
+<p>但它的边界也要说清楚：</p>
+<table>
+<thead>
+<tr>
+<th>能做</th>
+<th>不做</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>读取 token 源文件</td>
+<td>编译业务 CSS &#x2F; Less &#x2F; Sass</td>
+</tr>
+<tr>
+<td>解析 token 引用</td>
+<td>给 CSS 自动加前缀</td>
+</tr>
+<tr>
+<td>按平台转换 token 名称和值</td>
+<td>做浏览器语法降级</td>
+</tr>
+<tr>
+<td>生成 CSS 变量、JS、XML、Swift 等文件</td>
+<td>做 CSS tree-shaking、压缩、抽取、代码分割</td>
+</tr>
+</tbody></table>
+<p>把 Style Dictionary 放在 <code>@my-ui/theme</code> 的构建阶段，负责产出 <code>dist/css/vars.css</code>、<code>dist/js/tokens.js</code> 这类主题原料；应用或组件库自己的样式，仍然交给 Vite &#x2F; Rspack &#x2F; Webpack + PostCSS &#x2F; Lightning CSS 去处理。尤其是组件 CSS 里的嵌套语法、现代选择器兼容、前缀、压缩、抽取顺序，这些都不应该指望 Style Dictionary 解决。</p>
+<p>如果你的 <code>vars.css</code> 已经只是简单的 <code>:root &#123; --xxx: value; &#125;</code>，它本身可以直接作为静态 CSS 发布；但只要进入真实项目，通常还是会被打包工具一起处理、合并和压缩。Style Dictionary 负责「生成变量」，CSS 工程链路负责「消费变量」。</p>
+<p>落到组件库里，它只影响<strong>变量这一层</strong>。组件样式还是正常写 CSS &#x2F; Sass &#x2F; CSS Modules &#x2F; Vanilla Extract，只是把颜色、字号、间距、圆角、阴影这类需要主题化的值，改成引用 CSS 变量：</p>
+<pre><code class="css">.myui-button &#123;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--myui-button-padding-y) var(--myui-button-padding-x);
+  border-radius: var(--myui-radius-md);
+  color: var(--myui-color-text-on-primary);
+  background: var(--myui-color-primary);
+&#125;
+</code></pre>
+<p><code>display</code>、<code>position</code>、<code>flex</code>、动画、选择器、响应式这些结构性样式，还是组件 CSS 自己负责。Style Dictionary 不会替你写组件样式，也不会把组件 CSS “token 化”。它只是提供一批稳定的变量，让组件 CSS 有东西可引用。</p>
+<h3 id="组件库开发和使用是两个阶段"><a href="#组件库开发和使用是两个阶段" class="headerlink" title="组件库开发和使用是两个阶段"></a>组件库开发和使用是两个阶段</h3><p>这里要分清楚两个阶段：<strong>组件库开发阶段</strong>和<strong>业务项目使用阶段</strong>。很多困惑都来自把这两个阶段混在一起：一会儿看源码，一会儿看 <code>dist</code>，一会儿又问业务项目还要不要打包。</p>
+<p>先看组件库开发阶段。在 Monorepo 里，开发者面对的是源码：</p>
+<pre><code class="txt">packages/theme/
+  tokens/*.json
+  style-dictionary.config.js
+
+packages/components/
+  src/button/index.tsx
+  src/button/style.css
+</code></pre>
+<p>开发时通常有一个 <code>playground</code> 或 <code>docs</code> 作为内部消费者，但这里有两种模式，别混：</p>
+<table>
+<thead>
+<tr>
+<th>模式</th>
+<th>怎么做</th>
+<th>适合什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>源码直连</td>
+<td>docs &#x2F; playground 通过 alias 指到 <code>packages/components/src</code></td>
+<td>调组件逻辑、样式、交互，反馈最快</td>
+</tr>
+<tr>
+<td>构建产物联调</td>
+<td>各包 watch 生成 <code>dist</code>，docs &#x2F; playground 像外部用户一样 import 包入口</td>
+<td>验证 <code>exports</code>、样式产物、类型产物、按需引入</td>
+</tr>
+</tbody></table>
+<p>社区里两种都会用。日常开发更偏<strong>源码直连</strong>，因为改一个组件马上热更新，不需要每次都等库完整构建；但发版前一定要跑<strong>构建产物联调</strong>，否则你不知道 npm 用户拿到的 <code>exports</code>、<code>dist</code>、<code>sideEffects</code>、CSS 文件是不是完整的。</p>
+<p>根目录任务一般会这样组织：</p>
+<pre><code class="json">&#123;
+  &quot;scripts&quot;: &#123;
+    &quot;dev&quot;: &quot;turbo run dev --parallel&quot;,
+    &quot;build&quot;: &quot;turbo run build&quot;,
+    &quot;preview:package&quot;: &quot;turbo run build &amp;&amp; pnpm --filter docs dev&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>对应到包内部，<code>theme</code> 比较特殊：它的源码是 token JSON，业务侧真正要用的是生成后的 CSS 变量或 JS token，所以开发时通常要开 watch：</p>
+<pre><code class="json">&#123;
+  &quot;name&quot;: &quot;@my-ui/theme&quot;,
+  &quot;scripts&quot;: &#123;
+    &quot;dev&quot;: &quot;style-dictionary build --watch&quot;,
+    &quot;build&quot;: &quot;style-dictionary build&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>这不是因为开发者“只能引用 <code>dist/css</code>”，而是因为 <code>tokens/*.json</code> 本身不是浏览器能直接消费的样式。你可以让 docs 写稳定入口：</p>
+<pre><code class="ts">import &#39;@my-ui/theme/css&#39;
+</code></pre>
+<p>然后由 <code>exports</code> 映射到 <code>dist/css/vars.css</code>。开发时 <code>style-dictionary build --watch</code> 负责持续刷新这份生成物。</p>
+<p><code>components</code> 则不一定要在日常开发时先构建再调试。很多组件库会让 docs &#x2F; playground 直接 alias 到源码：</p>
+<pre><code class="ts">// docs/vite.config.ts
+import &#123; fileURLToPath, URL &#125; from &#39;node:url&#39;
+import &#123; defineConfig &#125; from &#39;vite&#39;
+
+export default defineConfig(&#123;
+  resolve: &#123;
+    alias: &#123;
+      &#39;@my-ui/components&#39;: fileURLToPath(new URL(&#39;../packages/components/src&#39;, import.meta.url)),
+    &#125;,
+  &#125;,
+&#125;)
+</code></pre>
+<p>这样开发组件时走的是源码热更新；等要验证发布形态时，再切到构建产物：</p>
+<p>把这件事压缩成一句话就是：<strong>theme 变量通常始终消费生成物，components 开发时消费源码、发布后消费构建产物</strong>。</p>
+<table>
+<thead>
+<tr>
+<th>包</th>
+<th>组件库开发阶段</th>
+<th>业务项目使用阶段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>@my-ui/theme</code></td>
+<td><code>style-dictionary build --watch</code> 生成 <code>dist/css/vars.css</code>，通过 <code>@my-ui/theme/css</code> 引入</td>
+<td>安装 npm 包后仍通过 <code>@my-ui/theme/css</code> 引入，实际指向包内 <code>dist/css/vars.css</code></td>
+</tr>
+<tr>
+<td><code>@my-ui/components</code></td>
+<td>docs &#x2F; playground alias 到 <code>packages/components/src</code>，走源码热更新</td>
+<td>安装 npm 包后通过 <code>@my-ui/components</code> 引入，实际消费 <code>dist/index.mjs</code>、组件 CSS 和类型产物</td>
+</tr>
+</tbody></table>
+<pre><code class="json">&#123;
+  &quot;name&quot;: &quot;@my-ui/components&quot;,
+  &quot;scripts&quot;: &#123;
+    &quot;build&quot;: &quot;vite build &amp;&amp; tsc --emitDeclarationOnly&quot;,
+    &quot;build:watch&quot;: &quot;vite build --watch&quot;
+  &#125;,
+  &quot;dependencies&quot;: &#123;
+    &quot;@my-ui/theme&quot;: &quot;workspace:*&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>这一步的目标不是生成最终页面，而是把源码加工成<strong>可发布、可被消费的库产物</strong>。注意这里的关系：<code>@my-ui/theme</code> 产出变量，<code>@my-ui/components</code> 的 CSS 消费这些变量。</p>
+<pre><code class="txt">@my-ui/theme
+  tokens/*.json
+      ↓ Style Dictionary
+  dist/css/vars.css
+  dist/js/tokens.js
+
+@my-ui/components
+  src/**/*.tsx / src/**/*.css
+      ↓ 正常编写组件 CSS，并在主题相关值上使用 var(--myui-xxx)
+      ↓ tsup / Vite lib / Rollup
+  dist/index.mjs
+  dist/index.d.ts
+  dist/button/style.css
+</code></pre>
+<p>所以，更准确的说法是：<strong>开发时不一定每次都先构建整个组件库，但组件库发布前必须构建</strong>。<code>theme</code> 在开发时也常常需要 watch 生成 CSS 变量，因为 token JSON 不是最终 CSS；<code>components</code> 日常可以源码直连，发版前再构建验证。社区里的成熟组件库基本都是这个思路：变量层消费生成物，组件层开发看源码和 HMR，发布质量看构建产物。</p>
+<p>再看业务项目使用阶段。用户安装的是发布后的 npm 包，不是你的源码目录：</p>
+<pre><code class="bash">pnpm add @my-ui/components @my-ui/theme
+</code></pre>
+<p>业务代码里应该通过包暴露出来的稳定入口使用：</p>
+<pre><code class="ts">import &#123; Button &#125; from &#39;@my-ui/components&#39;
+import &#39;@my-ui/theme/css&#39;
+</code></pre>
+<p>背后靠 <code>package.json</code> 的 <code>exports</code> 把这些入口映射到 <code>dist</code>：</p>
+<pre><code class="json">&#123;
+  &quot;name&quot;: &quot;@my-ui/theme&quot;,
+  &quot;exports&quot;: &#123;
+    &quot;./css&quot;: &quot;./dist/css/vars.css&quot;,
+    &quot;./tokens&quot;: &#123;
+      &quot;types&quot;: &quot;./dist/js/tokens.d.ts&quot;,
+      &quot;import&quot;: &quot;./dist/js/tokens.js&quot;
+    &#125;
+  &#125;,
+  &quot;sideEffects&quot;: [&quot;**/*.css&quot;]
+&#125;
+</code></pre>
+<p>也就是说，<code>dist</code> 是<strong>包作者的发布产物目录</strong>，不是希望用户记住的 API。用户可以间接用到 <code>dist</code>，但最好不要直接写 <code>@my-ui/theme/dist/css/vars.css</code>，否则以后你调整目录结构就是破坏性变更。</p>
+<p>那业务项目还要不要构建？要。组件库构建只解决「库源码变成可发布产物」；业务项目构建负责把应用代码、组件库 ESM、CSS 变量文件、组件样式一起打进最终产物，并根据业务项目自己的浏览器目标做降级、前缀、压缩和代码分割。</p>
+<pre><code class="txt">阶段一：组件库构建
+packages/*/src 或 tokens → packages/*/dist → 发布到 npm
+
+阶段二：业务应用构建
+app 源码 + node_modules 里的组件库 dist → 最终浏览器资源
+</code></pre>
+<p><strong>组件库必须构建后再发布，业务应用也必须再构建一次</strong>。前者是把库变成稳定商品，后者是把商品装进具体项目。不要让业务项目依赖组件库源码，也不要让用户依赖未声明的 <code>dist</code> 深层路径；稳定 API 应该由 <code>exports</code> 定义。</p>
+<p>多端复用的价值就在这：<strong>设计改一次 token 源，Web、小程序、RN 全部同步更新</strong>，不会出现「Web 主色改了，小程序忘了改」的漂移。这也呼应了组件库工程结构篇里 <code>@my-ui/theme</code> 独立成包的设计——token 是所有端共享的原料。</p>
+<blockquote>
+<p>提醒：Web 端能用 CSS 变量，但 React Native <strong>不支持 CSS 变量</strong>（RN 没有 CSS 运行时），所以 RN 要用导出的 JS 对象，在样式里引用 <code>ColorPrimary</code>。小程序的 WXSS 支持 CSS 变量，可以走 CSS 变量方案。多端不是「同一套机制」，而是「同一份 token 源翻译成各端各自的机制」。</p>
+</blockquote>
+<h2 id="主题切换：暗色模式怎么落地"><a href="#主题切换：暗色模式怎么落地" class="headerlink" title="主题切换：暗色模式怎么落地"></a>主题切换：暗色模式怎么落地</h2><p>有了分层 token 和 CSS 变量，暗色模式就不再是「写两套样式」，而是「换一组语义层变量值」。</p>
+<p>核心机制：把语义 token 的值挂在一个可切换的作用域上（<code>html</code> 的 <code>data-theme</code> 属性或 class）。</p>
+<pre><code class="css">/* 亮色（默认） */
+:root &#123;
+  --color-text-primary: #1a1a1a;
+  --color-bg-container: #ffffff;
+&#125;
+
+/* 暗色：只重定义语义层，基础调色板不变 */
+:root[data-theme=&#39;dark&#39;] &#123;
+  --color-text-primary: #e5e5e5;
+  --color-bg-container: #1a1a1a;
+&#125;
+</code></pre>
+<p>组件代码完全不感知主题，它只认变量：</p>
+<pre><code class="css">.myui-card &#123;
+  color: var(--color-text-primary);
+  background: var(--color-bg-container);
+&#125;
+</code></pre>
+<p>切换只需改一个属性：</p>
+<pre><code class="ts">function setTheme(theme: &#39;light&#39; | &#39;dark&#39;) &#123;
+  document.documentElement.dataset.theme = theme
+  localStorage.setItem(&#39;theme&#39;, theme)   // 记住用户选择
+&#125;
+</code></pre>
+<p>这套设计的漂亮之处：<strong>组件对主题零感知，加多少主题都不用动组件代码</strong>。想加「护眼绿」「高对比」主题，就是多几组语义变量而已。</p>
+<h3 id="跟随系统-避免闪烁"><a href="#跟随系统-避免闪烁" class="headerlink" title="跟随系统 + 避免闪烁"></a>跟随系统 + 避免闪烁</h3><p>跟随系统偏好用媒体查询检测：</p>
+<pre><code class="ts">const prefersDark = window.matchMedia(&#39;(prefers-color-scheme: dark)&#39;)
+prefersDark.addEventListener(&#39;change&#39;, (e) =&gt; &#123;
+  setTheme(e.matches ? &#39;dark&#39; : &#39;light&#39;)
+&#125;)
+</code></pre>
+<p>这里有个真实的坑：<strong>暗色模式的「首屏闪白」</strong>。如果切主题的 JS 在页面渲染后才执行，用户会先看到亮色、再闪成暗色。解法是把读取并应用主题的脚本<strong>内联在 <code>&lt;head&gt;</code> 最前面、同步执行</strong>，在首次渲染前就把 <code>data-theme</code> 定下来：</p>
+<pre><code class="html">&lt;head&gt;
+  &lt;script&gt;
+    // 阻塞式、极小的一段，必须在 body 渲染前跑
+    const t = localStorage.getItem(&#39;theme&#39;)
+      || (matchMedia(&#39;(prefers-color-scheme: dark)&#39;).matches ? &#39;dark&#39; : &#39;light&#39;)
+    document.documentElement.dataset.theme = t
+  &lt;/script&gt;
+  &lt;!-- 其它资源 --&gt;
+&lt;/head&gt;
+</code></pre>
+<p>这段脚本要小、要同步、要在最前面。这是几乎所有支持暗色的站点（包括各大文档站）都会做的处理。</p>
+<h2 id="品牌主题：多品牌换肤"><a href="#品牌主题：多品牌换肤" class="headerlink" title="品牌主题：多品牌换肤"></a>品牌主题：多品牌换肤</h2><p>暗色是「同一品牌的两种明暗」，品牌主题是「不同品牌的不同色系」。机制完全一样——换一组语义 token。</p>
+<pre><code class="css">:root[data-brand=&#39;purple&#39;] &#123;
+  --color-primary: #7c3aed;
+  --color-primary-hover: #6d28d9;
+&#125;
+:root[data-brand=&#39;green&#39;] &#123;
+  --color-primary: #16a34a;
+  --color-primary-hover: #15803d;
+&#125;
+</code></pre>
+<p><code>data-theme</code>（明暗）和 <code>data-brand</code>（品牌）可以正交组合，用户可以选「暗色 + 紫色品牌」。这就是「换肤」功能的工程底座。</p>
+<p><strong>只要产品有多品牌、多主题或暗色需求，就应该从一开始上分层 token + CSS 变量</strong>。等硬编码颜色铺满全项目再回头改，成本是数量级的差异。这也是为什么设计系统要「先立 token，再写组件」。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Design Token 是有名字的设计决策，也是设计与代码的契约、能翻译成多端格式的中立数据。</li>
+<li>Token 要分三层：基础层（纯值）、语义层（带用途）、组件层（组件专属），让「值」和「用途」解耦，改动最小化。</li>
+<li>用 Style Dictionary 把一份 JSON token 源导出成 Web CSS 变量、JS 对象、小程序 WXSS 等多端格式，避免多端漂移。</li>
+<li>Style Dictionary 能生成 CSS 变量文件，但它不是 CSS 编译器；前缀、降级、压缩、抽取仍然交给打包工具和 CSS 处理链路。</li>
+<li>变量层通常始终消费生成物：开发时 watch 生成 <code>dist/css/vars.css</code>，使用时通过 <code>@my-ui/theme/css</code> 间接引用这份产物。</li>
+<li>组件层开发时可以源码直连和 HMR，发布后用户消费的是构建后的 ESM、CSS 和类型产物。</li>
+<li>RN 不支持 CSS 变量要用 JS 对象；多端是「同一份 token 翻译成各端机制」，不是同一套机制。</li>
+<li>暗色模式靠重定义语义层 CSS 变量 + <code>data-theme</code> 切换，组件对主题零感知。</li>
+<li>暗色首屏闪白的解法是在 <code>&lt;head&gt;</code> 最前内联同步脚本，在首次渲染前定好主题。</li>
+<li>品牌主题和暗色机制相同，<code>data-theme</code> 与 <code>data-brand</code> 可正交组合；有多主题需求就从一开始上分层 token。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E8%AE%BE%E8%AE%A1%E7%B3%BB%E7%BB%9F/">设计系统</a><a class="post-meta__tags" href="/tags/Design-Token/">Design Token</a><a class="post-meta__tags" href="/tags/%E4%B8%BB%E9%A2%98%E5%88%87%E6%8D%A2/">主题切换</a><a class="post-meta__tags" href="/tags/%E6%9A%97%E8%89%B2%E6%A8%A1%E5%BC%8F/">暗色模式</a><a class="post-meta__tags" href="/tags/Style-Dictionary/">Style Dictionary</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/06-%E7%BB%84%E4%BB%B6%E5%BA%93%E6%A0%B7%E5%BC%8F%E5%B7%A5%E7%A8%8B%EF%BC%9A%E4%BA%A7%E7%89%A9%E7%AD%96%E7%95%A5%E4%B8%8E%E6%A0%B7%E5%BC%8F%E9%9A%94%E7%A6%BB/" title="组件库样式工程：产物策略与样式隔离"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">组件库样式工程：产物策略与样式隔离</div></div></a></div><div class="next-post pull-right"><a href="/posts/04-%E7%BB%84%E4%BB%B6%E5%BA%93%E7%9A%84%E5%9B%BD%E9%99%85%E5%8C%96%E4%B8%8E%E7%A7%BB%E5%8A%A8%E7%AB%AF%E9%80%82%E9%85%8D/" title="组件库的国际化与移动端适配"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">组件库的国际化与移动端适配</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF-Design-Token"><span class="toc-number">1.</span> <span class="toc-text">什么是 Design Token</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Token-%E7%9A%84%E4%B8%89%E5%B1%82%E7%BB%84%E7%BB%87"><span class="toc-number">2.</span> <span class="toc-text">Token 的三层组织</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%A8-Style-Dictionary-%E5%AF%BC%E5%87%BA%E5%A4%9A%E7%AB%AF%E6%A0%BC%E5%BC%8F"><span class="toc-number">3.</span> <span class="toc-text">用 Style Dictionary 导出多端格式</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%84%E4%BB%B6%E5%BA%93%E5%BC%80%E5%8F%91%E5%92%8C%E4%BD%BF%E7%94%A8%E6%98%AF%E4%B8%A4%E4%B8%AA%E9%98%B6%E6%AE%B5"><span class="toc-number">3.1.</span> <span class="toc-text">组件库开发和使用是两个阶段</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BB%E9%A2%98%E5%88%87%E6%8D%A2%EF%BC%9A%E6%9A%97%E8%89%B2%E6%A8%A1%E5%BC%8F%E6%80%8E%E4%B9%88%E8%90%BD%E5%9C%B0"><span class="toc-number">4.</span> <span class="toc-text">主题切换：暗色模式怎么落地</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%B7%9F%E9%9A%8F%E7%B3%BB%E7%BB%9F-%E9%81%BF%E5%85%8D%E9%97%AA%E7%83%81"><span class="toc-number">4.1.</span> <span class="toc-text">跟随系统 + 避免闪烁</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%93%81%E7%89%8C%E4%B8%BB%E9%A2%98%EF%BC%9A%E5%A4%9A%E5%93%81%E7%89%8C%E6%8D%A2%E8%82%A4"><span class="toc-number">5.</span> <span class="toc-text">品牌主题：多品牌换肤</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

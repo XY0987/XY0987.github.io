@@ -1,0 +1,874 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：前面我写过 CLAUDE.md、权限系统、Hooks、Skills、MCP，但这些能力真正落地时，最后都会回到一个问题：配置到底放哪里？个人配置、项目配置、团队配置、企业配置怎么分层？ 这篇就专门把 Claude Code 的 Settings 配置体系讲清楚。  为什么要单独讲 Settings很多人第一次用 Claude Code，会把所有规则都往 CLAUDE.md 里塞。 比如：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层">
+<meta property="og:url" content="http://example.com/posts/04-Claude%20Code%20Settings%20%E5%85%A8%E8%A7%A3%E6%9E%90%EF%BC%9A%E4%B8%AA%E4%BA%BA%E3%80%81%E9%A1%B9%E7%9B%AE%E3%80%81%E5%9B%A2%E9%98%9F%E3%80%81%E4%BC%81%E4%B8%9A%E9%85%8D%E7%BD%AE%E6%80%8E%E4%B9%88%E5%88%86%E5%B1%82/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：前面我写过 CLAUDE.md、权限系统、Hooks、Skills、MCP，但这些能力真正落地时，最后都会回到一个问题：配置到底放哪里？个人配置、项目配置、团队配置、企业配置怎么分层？ 这篇就专门把 Claude Code 的 Settings 配置体系讲清楚。  为什么要单独讲 Settings很多人第一次用 Claude Code，会把所有规则都往 CLAUDE.md 里塞。 比如：">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-06-05T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.394Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Claude Code">
+<meta property="article:tag" content="Settings">
+<meta property="article:tag" content="配置系统">
+<meta property="article:tag" content="企业治理">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/04-Claude%20Code%20Settings%20%E5%85%A8%E8%A7%A3%E6%9E%90%EF%BC%9A%E4%B8%AA%E4%BA%BA%E3%80%81%E9%A1%B9%E7%9B%AE%E3%80%81%E5%9B%A2%E9%98%9F%E3%80%81%E4%BC%81%E4%B8%9A%E9%85%8D%E7%BD%AE%E6%80%8E%E4%B9%88%E5%88%86%E5%B1%82/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Claude Code Settings 全解析：个人、项目、团队、企业配置怎么分层</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-06-05T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.394Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">3.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>14分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：前面我写过 <code>CLAUDE.md</code>、权限系统、Hooks、Skills、MCP，但这些能力真正落地时，最后都会回到一个问题：<strong>配置到底放哪里？个人配置、项目配置、团队配置、企业配置怎么分层？</strong> 这篇就专门把 Claude Code 的 Settings 配置体系讲清楚。</p>
+</blockquote>
+<h2 id="为什么要单独讲-Settings"><a href="#为什么要单独讲-Settings" class="headerlink" title="为什么要单独讲 Settings"></a>为什么要单独讲 Settings</h2><p>很多人第一次用 Claude Code，会把所有规则都往 <code>CLAUDE.md</code> 里塞。</p>
+<p>比如：</p>
+<pre><code class="markdown">- 不要读取 .env
+- 不要执行 git push
+- 默认用中文回答
+- 保存前运行 npm test
+- 使用某个 MCP server
+</code></pre>
+<p>这其实混在一起了。</p>
+<p><code>CLAUDE.md</code> 是写给模型看的“工作说明书”，而 Settings 是 Claude Code 客户端真正执行的“运行配置”。</p>
+<p>两者区别很关键：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th><code>CLAUDE.md</code></th>
+<th>Settings</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本质</td>
+<td>提示词上下文</td>
+<td>客户端配置</td>
+</tr>
+<tr>
+<td>作用对象</td>
+<td>影响 Claude 怎么想</td>
+<td>控制 Claude Code 怎么运行</td>
+</tr>
+<tr>
+<td>是否强制</td>
+<td>不强制，模型可能忘</td>
+<td>更强制，客户端执行</td>
+</tr>
+<tr>
+<td>适合内容</td>
+<td>项目规范、开发习惯、上下文</td>
+<td>权限、环境变量、Hooks、MCP、插件、企业策略</td>
+</tr>
+<tr>
+<td>风险控制</td>
+<td>提醒为主</td>
+<td>管控为主</td>
+</tr>
+</tbody></table>
+<p>我的判断是：**<code>CLAUDE.md</code> 管“认知”，Settings 管“行为边界”。**</p>
+<p>如果你要告诉 Claude：“这个项目用 pnpm”，写进 <code>CLAUDE.md</code> 很合适。</p>
+<p>如果你要禁止 Claude 读取 <code>.env</code>，就应该写进 Settings 的 <code>permissions.deny</code>。</p>
+<h2 id="Claude-Code-的四层配置作用域"><a href="#Claude-Code-的四层配置作用域" class="headerlink" title="Claude Code 的四层配置作用域"></a>Claude Code 的四层配置作用域</h2><p>Claude Code 官方文档把配置分成几个 scope。理解这个 scope，是理解 Settings 的第一步。</p>
+<table>
+<thead>
+<tr>
+<th>Scope</th>
+<th>典型位置</th>
+<th>影响范围</th>
+<th>是否适合提交 Git</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Managed</td>
+<td>企业托管配置 &#x2F; MDM &#x2F; 系统目录</td>
+<td>机器上所有用户</td>
+<td>由企业 IT 管理</td>
+</tr>
+<tr>
+<td>User</td>
+<td><code>~/.claude/settings.json</code></td>
+<td>当前用户所有项目</td>
+<td>不提交</td>
+</tr>
+<tr>
+<td>Project</td>
+<td><code>.claude/settings.json</code></td>
+<td>当前仓库所有协作者</td>
+<td>可以提交</td>
+</tr>
+<tr>
+<td>Local</td>
+<td><code>.claude/settings.local.json</code></td>
+<td>当前仓库当前用户</td>
+<td>不提交</td>
+</tr>
+</tbody></table>
+<p>可以这样理解：</p>
+<pre><code class="text">企业策略 Managed
+  │ 最高优先级，用户不能覆盖
+  ▼
+命令行参数
+  │ 当前会话临时覆盖
+  ▼
+本地项目 Local
+  │ 当前项目里自己的私有偏好
+  ▼
+项目共享 Project
+  │ 团队共享配置
+  ▼
+用户全局 User
+     最低优先级，个人默认配置
+</code></pre>
+<p>它解决的是一个很现实的问题：同一套 Claude Code，既要支持个人自由定制，也要支持团队协作，还要支持企业安全管控。</p>
+<h2 id="User-Settings：个人全局配置"><a href="#User-Settings：个人全局配置" class="headerlink" title="User Settings：个人全局配置"></a>User Settings：个人全局配置</h2><p>个人配置放在：</p>
+<pre><code class="text">~/.claude/settings.json
+</code></pre>
+<p>适合放这些东西：</p>
+<ul>
+<li>个人默认语言；</li>
+<li>默认权限模式；</li>
+<li>常用环境变量；</li>
+<li>个人常用 MCP；</li>
+<li>个人常用插件；</li>
+<li>UI 偏好；</li>
+<li>是否开启某些功能。</li>
+</ul>
+<p>一个典型例子：</p>
+<pre><code class="json">&#123;
+  &quot;language&quot;: &quot;chinese&quot;,
+  &quot;permissions&quot;: &#123;
+    &quot;defaultMode&quot;: &quot;acceptEdits&quot;,
+    &quot;deny&quot;: [
+      &quot;Read(//**/.env)&quot;,
+      &quot;Bash(git push *)&quot;
+    ]
+  &#125;,
+  &quot;env&quot;: &#123;
+    &quot;CLAUDE_CODE_ENABLE_AWAY_SUMMARY&quot;: &quot;1&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>这里有两个点值得注意。</p>
+<p>第一，<code>~/.claude/settings.json</code> 是个人所有项目都生效的，所以不要写太具体的项目路径。</p>
+<p>第二，全局 <code>deny</code> 规则会影响所有项目。比如你全局禁止 <code>git push</code>，那每个项目里 Claude 都不能直接 push，这通常是好事。</p>
+<h2 id="Project-Settings：团队共享配置"><a href="#Project-Settings：团队共享配置" class="headerlink" title="Project Settings：团队共享配置"></a>Project Settings：团队共享配置</h2><p>项目配置放在：</p>
+<pre><code class="text">.claude/settings.json
+</code></pre>
+<p>它适合提交到仓库，让团队成员共享。</p>
+<p>适合放：</p>
+<ul>
+<li>项目级权限规则；</li>
+<li>项目级 Hooks；</li>
+<li>项目级插件；</li>
+<li>团队认可的 MCP 配置入口；</li>
+<li>项目需要的环境变量默认值；</li>
+<li>团队统一的工作流开关。</li>
+</ul>
+<p>例如：</p>
+<pre><code class="json">&#123;
+  &quot;permissions&quot;: &#123;
+    &quot;allow&quot;: [
+      &quot;Bash(npm run lint)&quot;,
+      &quot;Bash(npm run test *)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Read(./.env)&quot;,
+      &quot;Read(./secrets/**)&quot;,
+      &quot;Bash(git push *)&quot;
+    ]
+  &#125;,
+  &quot;hooks&quot;: &#123;
+    &quot;PostToolUse&quot;: [
+      &#123;
+        &quot;matcher&quot;: &quot;Edit|Write&quot;,
+        &quot;hooks&quot;: [
+          &#123;
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;npm run lint -- --fix&quot;,
+            &quot;timeout&quot;: 120
+          &#125;
+        ]
+      &#125;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>这个配置表达的意思是：</p>
+<ol>
+<li>Claude 可以直接跑 <code>npm run lint</code>；</li>
+<li>Claude 可以跑带参数的测试命令；</li>
+<li>Claude 不允许读 <code>.env</code> 和 <code>secrets</code>；</li>
+<li>Claude 不允许直接 <code>git push</code>；</li>
+<li>每次编辑文件后自动跑 lint fix。</li>
+</ol>
+<p>这类配置适合团队共享，因为它体现的是项目工程约定。</p>
+<h2 id="Local-Settings：项目里的个人私有配置"><a href="#Local-Settings：项目里的个人私有配置" class="headerlink" title="Local Settings：项目里的个人私有配置"></a>Local Settings：项目里的个人私有配置</h2><p>本地配置放在：</p>
+<pre><code class="text">.claude/settings.local.json
+</code></pre>
+<p>它通常会被 git ignore，不应该提交。</p>
+<p>适合放：</p>
+<ul>
+<li>本机路径；</li>
+<li>个人测试环境；</li>
+<li>临时实验配置；</li>
+<li>当前项目里自己的权限偏好；</li>
+<li>不适合团队共享的本地工具。</li>
+</ul>
+<p>比如：</p>
+<pre><code class="json">&#123;
+  &quot;env&quot;: &#123;
+    &quot;LOCAL_API_BASE&quot;: &quot;http://localhost:3000&quot;
+  &#125;,
+  &quot;permissions&quot;: &#123;
+    &quot;allow&quot;: [
+      &quot;Bash(open http://localhost:3000)&quot;,
+      &quot;Bash(npm run dev)&quot;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>这里的 <code>LOCAL_API_BASE</code>、<code>open</code> 命令都很依赖个人机器，放进团队配置就不合适。</p>
+<p>我的建议是：<strong>凡是“换一台机器可能就不能用”的配置，都放 Local。</strong></p>
+<h2 id="Managed-Settings：企业级管控"><a href="#Managed-Settings：企业级管控" class="headerlink" title="Managed Settings：企业级管控"></a>Managed Settings：企业级管控</h2><p>企业级配置是 Claude Code Settings 里最容易被个人开发者忽略，但在团队落地时最重要的一层。</p>
+<p>它可以来自：</p>
+<ul>
+<li>Anthropic 服务端下发的 server-managed settings；</li>
+<li>macOS MDM &#x2F; plist；</li>
+<li>Windows Registry &#x2F; Group Policy &#x2F; Intune；</li>
+<li>系统目录下的 <code>managed-settings.json</code>；</li>
+<li>Linux &#x2F; WSL 的 <code>/etc/claude-code/managed-settings.json</code>；</li>
+<li>macOS 的 <code>/Library/Application Support/ClaudeCode/managed-settings.json</code>；</li>
+<li>Windows 的 <code>C:\Program Files\ClaudeCode\managed-settings.json</code>。</li>
+</ul>
+<p>Managed 的关键特点是：<strong>优先级最高，用户和项目不能覆盖。</strong></p>
+<p>例如企业可以统一禁止绕过权限模式：</p>
+<pre><code class="json">&#123;
+  &quot;permissions&quot;: &#123;
+    &quot;disableBypassPermissionsMode&quot;: &quot;disable&quot;,
+    &quot;deny&quot;: [
+      &quot;Read(//**/.env)&quot;,
+      &quot;Read(//**/id_rsa)&quot;,
+      &quot;Bash(git push --force *)&quot;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>也可以禁止动态工作流：</p>
+<pre><code class="json">&#123;
+  &quot;disableWorkflows&quot;: true
+&#125;
+</code></pre>
+<p>或者要求只允许企业批准的 MCP server：</p>
+<pre><code class="json">&#123;
+  &quot;allowManagedMcpServersOnly&quot;: true,
+  &quot;allowedMcpServers&quot;: [
+    &#123; &quot;serverName&quot;: &quot;github&quot; &#125;,
+    &#123; &quot;serverName&quot;: &quot;jira&quot; &#125;
+  ]
+&#125;
+</code></pre>
+<p>这不是给个人玩家准备的，而是给“公司要让几百个工程师用 AI Coding 工具”准备的。</p>
+<h2 id="配置优先级怎么理解"><a href="#配置优先级怎么理解" class="headerlink" title="配置优先级怎么理解"></a>配置优先级怎么理解</h2><p>官方文档里的优先级大致是：</p>
+<pre><code class="text">Managed settings
+  &gt; 命令行参数
+  &gt; Local project settings
+  &gt; Shared project settings
+  &gt; User settings
+</code></pre>
+<p>比如你有三个配置：</p>
+<pre><code class="json">// ~/.claude/settings.json
+&#123;
+  &quot;language&quot;: &quot;english&quot;
+&#125;
+</code></pre>
+<pre><code class="json">// .claude/settings.json
+&#123;
+  &quot;language&quot;: &quot;chinese&quot;
+&#125;
+</code></pre>
+<pre><code class="json">// .claude/settings.local.json
+&#123;
+  &quot;language&quot;: &quot;japanese&quot;
+&#125;
+</code></pre>
+<p>最终当前项目里生效的是 local 里的 <code>japanese</code>。</p>
+<p>但如果企业 Managed 写了：</p>
+<pre><code class="json">&#123;
+  &quot;language&quot;: &quot;chinese&quot;
+&#125;
+</code></pre>
+<p>那 Managed 优先，用户不能覆盖。</p>
+<p>这里要注意一个细节：不是所有配置都是“高优先级覆盖低优先级”。</p>
+<p>很多数组配置会合并，比如：</p>
+<ul>
+<li><code>permissions.allow</code>；</li>
+<li><code>permissions.deny</code>；</li>
+<li>sandbox 的路径配置；</li>
+<li>某些 allowlist &#x2F; denylist。</li>
+</ul>
+<p>更准确地说：</p>
+<table>
+<thead>
+<tr>
+<th>配置类型</th>
+<th>行为</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>标量值</td>
+<td>高优先级覆盖低优先级</td>
+</tr>
+<tr>
+<td>对象</td>
+<td>深度合并或按字段覆盖</td>
+</tr>
+<tr>
+<td>数组</td>
+<td>通常拼接、去重</td>
+</tr>
+<tr>
+<td>权限规则</td>
+<td><code>deny -&gt; ask -&gt; allow</code>，deny 优先</td>
+</tr>
+</tbody></table>
+<p>所以看到 Settings 不生效时，不要只想“是不是被覆盖了”，也要考虑“是不是被合并了”。</p>
+<h2 id="Settings-里最常用的几类配置"><a href="#Settings-里最常用的几类配置" class="headerlink" title="Settings 里最常用的几类配置"></a>Settings 里最常用的几类配置</h2><p>Claude Code 的 Settings 项非常多，不需要一开始全背。</p>
+<p>我建议先掌握这几类。</p>
+<h3 id="1-permissions：权限边界"><a href="#1-permissions：权限边界" class="headerlink" title="1. permissions：权限边界"></a>1. <code>permissions</code>：权限边界</h3><p>这是最重要的一类。</p>
+<pre><code class="json">&#123;
+  &quot;permissions&quot;: &#123;
+    &quot;defaultMode&quot;: &quot;default&quot;,
+    &quot;allow&quot;: [
+      &quot;Bash(npm run test *)&quot;
+    ],
+    &quot;ask&quot;: [
+      &quot;Bash(git commit *)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Read(./.env)&quot;,
+      &quot;Bash(git push *)&quot;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>核心规则：</p>
+<pre><code class="text">deny &gt; ask &gt; allow
+</code></pre>
+<p>也就是说，只要某个操作被 deny 命中，就不能靠 allow 放回来。</p>
+<p>我的建议是：</p>
+<ul>
+<li>对危险操作用 <code>deny</code>；</li>
+<li>对常用安全操作用 <code>allow</code>；</li>
+<li>对“可能需要但要看情况”的操作用 <code>ask</code>。</li>
+</ul>
+<h3 id="2-env：环境变量"><a href="#2-env：环境变量" class="headerlink" title="2. env：环境变量"></a>2. <code>env</code>：环境变量</h3><p><code>env</code> 会注入到 Claude Code 会话和它启动的子进程中。</p>
+<pre><code class="json">&#123;
+  &quot;env&quot;: &#123;
+    &quot;NODE_ENV&quot;: &quot;development&quot;,
+    &quot;CLAUDE_CODE_ENABLE_TELEMETRY&quot;: &quot;1&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>适合放项目级默认环境变量，但不建议放密钥。</p>
+<p>密钥更应该走系统 keychain、专门的 credential helper，或者 MCP server 自己的认证机制。</p>
+<h3 id="3-hooks：生命周期自动化"><a href="#3-hooks：生命周期自动化" class="headerlink" title="3. hooks：生命周期自动化"></a>3. <code>hooks</code>：生命周期自动化</h3><p>Hooks 可以让 Claude Code 在某些事件发生时自动执行逻辑。</p>
+<p>比如编辑文件后跑格式化：</p>
+<pre><code class="json">&#123;
+  &quot;hooks&quot;: &#123;
+    &quot;PostToolUse&quot;: [
+      &#123;
+        &quot;matcher&quot;: &quot;Edit|Write&quot;,
+        &quot;hooks&quot;: [
+          &#123;
+            &quot;type&quot;: &quot;command&quot;,
+            &quot;command&quot;: &quot;npm run format&quot;,
+            &quot;timeout&quot;: 120
+          &#125;
+        ]
+      &#125;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<p>但 Hooks 有副作用，放团队配置前要谨慎。</p>
+<p>我的建议是：</p>
+<ul>
+<li>检查类 Hook 可以团队共享；</li>
+<li>自动修改类 Hook 先放 local 验证；</li>
+<li>会访问网络或密钥的 Hook 不要随便进仓库。</li>
+</ul>
+<h3 id="4-disableWorkflows：关闭动态工作流"><a href="#4-disableWorkflows：关闭动态工作流" class="headerlink" title="4. disableWorkflows：关闭动态工作流"></a>4. <code>disableWorkflows</code>：关闭动态工作流</h3><p>动态工作流很强，但也可能带来 token 和资源消耗。</p>
+<p>如果团队暂时不想启用：</p>
+<pre><code class="json">&#123;
+  &quot;disableWorkflows&quot;: true
+&#125;
+</code></pre>
+<p>或者用环境变量：</p>
+<pre><code class="text">CLAUDE_CODE_DISABLE_WORKFLOWS=1
+</code></pre>
+<p>这个配置很适合企业或团队早期试点阶段使用。</p>
+<h3 id="5-skillOverrides：控制-Skill-可见性"><a href="#5-skillOverrides：控制-Skill-可见性" class="headerlink" title="5. skillOverrides：控制 Skill 可见性"></a>5. <code>skillOverrides</code>：控制 Skill 可见性</h3><p>当项目里 Skill 很多时，Skill 列表本身也会占上下文。</p>
+<p>可以用 <code>skillOverrides</code> 控制：</p>
+<pre><code class="json">&#123;
+  &quot;skillOverrides&quot;: &#123;
+    &quot;legacy-deploy&quot;: &quot;off&quot;,
+    &quot;old-review&quot;: &quot;name-only&quot;,
+    &quot;dangerous-prod-deploy&quot;: &quot;user-invocable-only&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>常见值包括：</p>
+<table>
+<thead>
+<tr>
+<th>值</th>
+<th>含义</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>on</code></td>
+<td>正常可见可调用</td>
+</tr>
+<tr>
+<td><code>name-only</code></td>
+<td>只保留名字，减少描述占用</td>
+</tr>
+<tr>
+<td><code>user-invocable-only</code></td>
+<td>只能用户手动调用</td>
+</tr>
+<tr>
+<td><code>off</code></td>
+<td>关闭</td>
+</tr>
+</tbody></table>
+<p>这对大型团队很有价值，因为 Skill 多了之后，治理比创建更重要。</p>
+<h3 id="6-worktree：并行开发隔离"><a href="#6-worktree：并行开发隔离" class="headerlink" title="6. worktree：并行开发隔离"></a>6. <code>worktree</code>：并行开发隔离</h3><p>Claude Code 的后台 Agent、动态工作流、子 Agent 隔离都可能用到 worktree。</p>
+<p>常见配置：</p>
+<pre><code class="json">&#123;
+  &quot;worktree&quot;: &#123;
+    &quot;baseRef&quot;: &quot;head&quot;,
+    &quot;symlinkDirectories&quot;: [&quot;node_modules&quot;],
+    &quot;sparsePaths&quot;: [&quot;packages/app&quot;, &quot;shared&quot;],
+    &quot;bgIsolation&quot;: &quot;worktree&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>含义：</p>
+<ul>
+<li><code>baseRef</code>：新 worktree 从哪里分支；</li>
+<li><code>symlinkDirectories</code>：哪些大目录用软链，避免重复复制；</li>
+<li><code>sparsePaths</code>：大仓库里只 checkout 部分目录；</li>
+<li><code>bgIsolation</code>：后台任务是否用 worktree 隔离。</li>
+</ul>
+<p>这块后面可以单独写一篇，因为它关系到 AI 并行改代码的工程安全。</p>
+<h2 id="Settings、CLAUDE-md、Rules、Skills-怎么分工"><a href="#Settings、CLAUDE-md、Rules、Skills-怎么分工" class="headerlink" title="Settings、CLAUDE.md、Rules、Skills 怎么分工"></a>Settings、CLAUDE.md、Rules、Skills 怎么分工</h2><p>这几个概念很容易混。</p>
+<p>我的建议是按下面这张表分工：</p>
+<table>
+<thead>
+<tr>
+<th>需求</th>
+<th>放哪里</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>项目怎么启动、怎么测试</td>
+<td><code>CLAUDE.md</code> 或 <code>.claude/rules/</code></td>
+</tr>
+<tr>
+<td>代码风格、目录约定</td>
+<td><code>CLAUDE.md</code> 或 <code>.claude/rules/</code></td>
+</tr>
+<tr>
+<td>禁止读 <code>.env</code></td>
+<td>Settings <code>permissions.deny</code></td>
+</tr>
+<tr>
+<td>禁止执行危险命令</td>
+<td>Settings <code>permissions.deny</code> 或 Hook</td>
+</tr>
+<tr>
+<td>编辑后自动 lint</td>
+<td>Settings <code>hooks</code></td>
+</tr>
+<tr>
+<td>某类任务的操作手册</td>
+<td>Skills</td>
+</tr>
+<tr>
+<td>外部工具和数据源</td>
+<td>MCP 配置</td>
+</tr>
+<tr>
+<td>企业统一安全策略</td>
+<td>Managed Settings</td>
+</tr>
+<tr>
+<td>个人偏好</td>
+<td>User Settings</td>
+</tr>
+<tr>
+<td>本机私有路径</td>
+<td>Local Settings</td>
+</tr>
+</tbody></table>
+<p>一句话总结：</p>
+<blockquote>
+<p><strong>规则写给 Claude 看，配置写给 Claude Code 执行。</strong></p>
+</blockquote>
+<h2 id="一个推荐的项目配置结构"><a href="#一个推荐的项目配置结构" class="headerlink" title="一个推荐的项目配置结构"></a>一个推荐的项目配置结构</h2><p>如果我是从零给一个团队项目接入 Claude Code，我会这么组织：</p>
+<pre><code class="text">project/
+├── CLAUDE.md
+├── .claude/
+│   ├── settings.json
+│   ├── rules/
+│   │   ├── code-style.md
+│   │   ├── testing.md
+│   │   └── security.md
+│   ├── skills/
+│   │   ├── review-pr/
+│   │   │   └── SKILL.md
+│   │   └── run-app/
+│   │       └── SKILL.md
+│   └── workflows/
+│       └── triage-issues.js
+├── .mcp.json
+└── .gitignore
+</code></pre>
+<p>其中：</p>
+<ul>
+<li><code>CLAUDE.md</code> 放最核心的项目说明；</li>
+<li><code>.claude/rules/</code> 拆分具体规则；</li>
+<li><code>.claude/settings.json</code> 放团队共享的权限、Hook、插件设置；</li>
+<li><code>.claude/settings.local.json</code> 不提交，给个人覆盖；</li>
+<li><code>.mcp.json</code> 放项目共享 MCP server；</li>
+<li><code>.claude/skills/</code> 放团队复用工作流；</li>
+<li><code>.claude/workflows/</code> 放可复用动态工作流。</li>
+</ul>
+<p>这样结构清晰，也方便团队 Review。</p>
+<h2 id="一个比较完整的团队配置示例"><a href="#一个比较完整的团队配置示例" class="headerlink" title="一个比较完整的团队配置示例"></a>一个比较完整的团队配置示例</h2><p>下面这个示例适合前端项目做起步配置：</p>
+<pre><code class="json">&#123;
+  &quot;$schema&quot;: &quot;https://json.schemastore.org/claude-code-settings.json&quot;,
+  &quot;permissions&quot;: &#123;
+    &quot;defaultMode&quot;: &quot;default&quot;,
+    &quot;allow&quot;: [
+      &quot;Bash(npm run lint)&quot;,
+      &quot;Bash(npm run test *)&quot;,
+      &quot;Bash(npm run typecheck)&quot;,
+      &quot;Read(./package.json)&quot;
+    ],
+    &quot;ask&quot;: [
+      &quot;Bash(git commit *)&quot;
+    ],
+    &quot;deny&quot;: [
+      &quot;Read(./.env)&quot;,
+      &quot;Read(./.env.*)&quot;,
+      &quot;Read(./secrets/**)&quot;,
+      &quot;Bash(git push *)&quot;,
+      &quot;Bash(rm -rf *)&quot;
+    ]
+  &#125;,
+  &quot;env&quot;: &#123;
+    &quot;NODE_ENV&quot;: &quot;development&quot;
+  &#125;,
+  &quot;worktree&quot;: &#123;
+    &quot;bgIsolation&quot;: &quot;worktree&quot;,
+    &quot;symlinkDirectories&quot;: [&quot;node_modules&quot;]
+  &#125;,
+  &quot;skillOverrides&quot;: &#123;
+    &quot;deploy-production&quot;: &quot;user-invocable-only&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>这里我的取舍是：</p>
+<ol>
+<li>测试、lint、typecheck 直接允许；</li>
+<li>commit 需要确认；</li>
+<li>push 和危险删除禁止；</li>
+<li><code>.env</code> 和 <code>secrets</code> 禁止读取；</li>
+<li>后台任务默认 worktree 隔离；</li>
+<li>生产部署 Skill 只能用户手动调用。</li>
+</ol>
+<p>这就是一个比较稳的团队起点。</p>
+<h2 id="常见误区"><a href="#常见误区" class="headerlink" title="常见误区"></a>常见误区</h2><h3 id="误区一：把安全要求写进-CLAUDE-md"><a href="#误区一：把安全要求写进-CLAUDE-md" class="headerlink" title="误区一：把安全要求写进 CLAUDE.md"></a>误区一：把安全要求写进 <code>CLAUDE.md</code></h3><p>比如：</p>
+<pre><code class="markdown">不要读取 .env 文件
+</code></pre>
+<p>这只是提醒，不是强制。</p>
+<p>更可靠的写法是：</p>
+<pre><code class="json">&#123;
+  &quot;permissions&quot;: &#123;
+    &quot;deny&quot;: [&quot;Read(./.env)&quot;, &quot;Read(./.env.*)&quot;]
+  &#125;
+&#125;
+</code></pre>
+<p>如果是企业环境，还应该放到 Managed Settings。</p>
+<h3 id="误区二：把本地配置提交到团队仓库"><a href="#误区二：把本地配置提交到团队仓库" class="headerlink" title="误区二：把本地配置提交到团队仓库"></a>误区二：把本地配置提交到团队仓库</h3><p>比如：</p>
+<pre><code class="json">&#123;
+  &quot;env&quot;: &#123;
+    &quot;DATABASE_URL&quot;: &quot;postgres://localhost:5432/mydb&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>如果这是你个人机器的数据库，就不应该进 <code>.claude/settings.json</code>。</p>
+<p>应该放：</p>
+<pre><code class="text">.claude/settings.local.json
+</code></pre>
+<h3 id="误区三：全局-allow-太宽"><a href="#误区三：全局-allow-太宽" class="headerlink" title="误区三：全局 allow 太宽"></a>误区三：全局 allow 太宽</h3><p>比如：</p>
+<pre><code class="json">&#123;
+  &quot;permissions&quot;: &#123;
+    &quot;allow&quot;: [&quot;Bash&quot;]
+  &#125;
+&#125;
+</code></pre>
+<p>这等于给所有 Bash 命令开绿灯，不建议。</p>
+<p>更好的方式是按命令白名单：</p>
+<pre><code class="json">&#123;
+  &quot;permissions&quot;: &#123;
+    &quot;allow&quot;: [
+      &quot;Bash(npm run *)&quot;,
+      &quot;Bash(git diff *)&quot;,
+      &quot;Bash(git status *)&quot;
+    ]
+  &#125;
+&#125;
+</code></pre>
+<h3 id="误区四：忽略项目级配置的供应链风险"><a href="#误区四：忽略项目级配置的供应链风险" class="headerlink" title="误区四：忽略项目级配置的供应链风险"></a>误区四：忽略项目级配置的供应链风险</h3><p><code>.claude/settings.json</code> 是仓库里的文件。</p>
+<p>如果你 clone 一个陌生仓库，它可能带着自己的 Claude Code 配置。</p>
+<p>因此对项目级配置要有 trust 意识，尤其是：</p>
+<ul>
+<li>hooks；</li>
+<li>MCP server；</li>
+<li>plugin；</li>
+<li>dynamic command；</li>
+<li>skill 里的 shell execution。</li>
+</ul>
+<p>我的建议是：<strong>陌生仓库先用 plan mode 或默认权限，不要一上来 bypass。</strong></p>
+<h2 id="我的配置建议"><a href="#我的配置建议" class="headerlink" title="我的配置建议"></a>我的配置建议</h2><p>如果你是个人开发者：</p>
+<ol>
+<li>在 <code>~/.claude/settings.json</code> 里放通用偏好；</li>
+<li>全局 deny <code>.env</code>、私钥、危险 git 操作；</li>
+<li>每个项目用 <code>CLAUDE.md</code> 写清启动、测试、风格；</li>
+<li>本地私有东西放 <code>.claude/settings.local.json</code>。</li>
+</ol>
+<p>如果你是团队负责人：</p>
+<ol>
+<li>把 <code>.claude/settings.json</code> 纳入代码评审；</li>
+<li>权限规则尽量最小化；</li>
+<li>高风险 Hooks 不要直接共享；</li>
+<li>团队共享 Skill 要有 owner；</li>
+<li>MCP server 尽量区分 project 和 user scope。</li>
+</ol>
+<p>如果你是企业管理员：</p>
+<ol>
+<li>用 Managed Settings 定义不可突破的安全边界；</li>
+<li>禁用 <code>bypassPermissions</code> 或限制使用环境；</li>
+<li>管控 MCP server 和 plugin marketplace；</li>
+<li>对 Hooks、Skills、Agents、MCP 做供应链治理；</li>
+<li>配合用量统计和审计能力看整体使用情况。</li>
+</ol>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li><code>CLAUDE.md</code> 是提示词上下文，Settings 是 Claude Code 的运行配置，两者职责不同。</li>
+<li>Claude Code Settings 分为 Managed、User、Project、Local 四层，Managed 优先级最高。</li>
+<li>个人偏好放 User，团队共享规则放 Project，本机私有配置放 Local，企业强制策略放 Managed。</li>
+<li>安全边界不要只写进 <code>CLAUDE.md</code>，应使用 <code>permissions.deny</code>、Hooks、Sandbox 或 Managed Settings。</li>
+<li>Settings 的核心价值不是“多几个配置项”，而是让 AI Coding 从个人工具变成可治理的工程系统。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Claude-Code/">Claude Code</a><a class="post-meta__tags" href="/tags/Settings/">Settings</a><a class="post-meta__tags" href="/tags/%E9%85%8D%E7%BD%AE%E7%B3%BB%E7%BB%9F/">配置系统</a><a class="post-meta__tags" href="/tags/%E4%BC%81%E4%B8%9A%E6%B2%BB%E7%90%86/">企业治理</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/03-Claude%20Code%20Dynamic%20Workflows%20%E5%8A%A8%E6%80%81%E5%B7%A5%E4%BD%9C%E6%B5%81%E8%A7%A3%E6%9E%90%EF%BC%9A%E8%AE%A9%20Agent%20%E5%AD%A6%E4%BC%9A%E7%BB%99%E8%87%AA%E5%B7%B1%E6%90%AD%E6%89%A7%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="Claude Code Dynamic Workflows 动态工作流解析：让 Agent 学会给自己搭执行框架"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Claude Code Dynamic Workflows 动态工作流解析：让 Agent 学会给自己搭执行框架</div></div></a></div><div class="next-post pull-right"><a href="/posts/05-Claude%20Code%20Agent%20View%20%E4%B8%8E%20Background%20Agents%20%E8%A7%A3%E6%9E%90%EF%BC%9A%E5%90%8E%E5%8F%B0%E5%A4%9A%E4%BB%BB%E5%8A%A1%E6%80%8E%E4%B9%88%E8%B7%91/" title="Claude Code Agent View 与 Background Agents 解析：后台多任务怎么跑"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Claude Code Agent View 与 Background Agents 解析：后台多任务怎么跑</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E5%8D%95%E7%8B%AC%E8%AE%B2-Settings"><span class="toc-number">1.</span> <span class="toc-text">为什么要单独讲 Settings</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Claude-Code-%E7%9A%84%E5%9B%9B%E5%B1%82%E9%85%8D%E7%BD%AE%E4%BD%9C%E7%94%A8%E5%9F%9F"><span class="toc-number">2.</span> <span class="toc-text">Claude Code 的四层配置作用域</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#User-Settings%EF%BC%9A%E4%B8%AA%E4%BA%BA%E5%85%A8%E5%B1%80%E9%85%8D%E7%BD%AE"><span class="toc-number">3.</span> <span class="toc-text">User Settings：个人全局配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Project-Settings%EF%BC%9A%E5%9B%A2%E9%98%9F%E5%85%B1%E4%BA%AB%E9%85%8D%E7%BD%AE"><span class="toc-number">4.</span> <span class="toc-text">Project Settings：团队共享配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Local-Settings%EF%BC%9A%E9%A1%B9%E7%9B%AE%E9%87%8C%E7%9A%84%E4%B8%AA%E4%BA%BA%E7%A7%81%E6%9C%89%E9%85%8D%E7%BD%AE"><span class="toc-number">5.</span> <span class="toc-text">Local Settings：项目里的个人私有配置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Managed-Settings%EF%BC%9A%E4%BC%81%E4%B8%9A%E7%BA%A7%E7%AE%A1%E6%8E%A7"><span class="toc-number">6.</span> <span class="toc-text">Managed Settings：企业级管控</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%85%8D%E7%BD%AE%E4%BC%98%E5%85%88%E7%BA%A7%E6%80%8E%E4%B9%88%E7%90%86%E8%A7%A3"><span class="toc-number">7.</span> <span class="toc-text">配置优先级怎么理解</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Settings-%E9%87%8C%E6%9C%80%E5%B8%B8%E7%94%A8%E7%9A%84%E5%87%A0%E7%B1%BB%E9%85%8D%E7%BD%AE"><span class="toc-number">8.</span> <span class="toc-text">Settings 里最常用的几类配置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#1-permissions%EF%BC%9A%E6%9D%83%E9%99%90%E8%BE%B9%E7%95%8C"><span class="toc-number">8.1.</span> <span class="toc-text">1. permissions：权限边界</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-env%EF%BC%9A%E7%8E%AF%E5%A2%83%E5%8F%98%E9%87%8F"><span class="toc-number">8.2.</span> <span class="toc-text">2. env：环境变量</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-hooks%EF%BC%9A%E7%94%9F%E5%91%BD%E5%91%A8%E6%9C%9F%E8%87%AA%E5%8A%A8%E5%8C%96"><span class="toc-number">8.3.</span> <span class="toc-text">3. hooks：生命周期自动化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#4-disableWorkflows%EF%BC%9A%E5%85%B3%E9%97%AD%E5%8A%A8%E6%80%81%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="toc-number">8.4.</span> <span class="toc-text">4. disableWorkflows：关闭动态工作流</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#5-skillOverrides%EF%BC%9A%E6%8E%A7%E5%88%B6-Skill-%E5%8F%AF%E8%A7%81%E6%80%A7"><span class="toc-number">8.5.</span> <span class="toc-text">5. skillOverrides：控制 Skill 可见性</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#6-worktree%EF%BC%9A%E5%B9%B6%E8%A1%8C%E5%BC%80%E5%8F%91%E9%9A%94%E7%A6%BB"><span class="toc-number">8.6.</span> <span class="toc-text">6. worktree：并行开发隔离</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Settings%E3%80%81CLAUDE-md%E3%80%81Rules%E3%80%81Skills-%E6%80%8E%E4%B9%88%E5%88%86%E5%B7%A5"><span class="toc-number">9.</span> <span class="toc-text">Settings、CLAUDE.md、Rules、Skills 怎么分工</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E6%8E%A8%E8%8D%90%E7%9A%84%E9%A1%B9%E7%9B%AE%E9%85%8D%E7%BD%AE%E7%BB%93%E6%9E%84"><span class="toc-number">10.</span> <span class="toc-text">一个推荐的项目配置结构</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E6%AF%94%E8%BE%83%E5%AE%8C%E6%95%B4%E7%9A%84%E5%9B%A2%E9%98%9F%E9%85%8D%E7%BD%AE%E7%A4%BA%E4%BE%8B"><span class="toc-number">11.</span> <span class="toc-text">一个比较完整的团队配置示例</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B8%B8%E8%A7%81%E8%AF%AF%E5%8C%BA"><span class="toc-number">12.</span> <span class="toc-text">常见误区</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AF%E5%8C%BA%E4%B8%80%EF%BC%9A%E6%8A%8A%E5%AE%89%E5%85%A8%E8%A6%81%E6%B1%82%E5%86%99%E8%BF%9B-CLAUDE-md"><span class="toc-number">12.1.</span> <span class="toc-text">误区一：把安全要求写进 CLAUDE.md</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AF%E5%8C%BA%E4%BA%8C%EF%BC%9A%E6%8A%8A%E6%9C%AC%E5%9C%B0%E9%85%8D%E7%BD%AE%E6%8F%90%E4%BA%A4%E5%88%B0%E5%9B%A2%E9%98%9F%E4%BB%93%E5%BA%93"><span class="toc-number">12.2.</span> <span class="toc-text">误区二：把本地配置提交到团队仓库</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AF%E5%8C%BA%E4%B8%89%EF%BC%9A%E5%85%A8%E5%B1%80-allow-%E5%A4%AA%E5%AE%BD"><span class="toc-number">12.3.</span> <span class="toc-text">误区三：全局 allow 太宽</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AF%AF%E5%8C%BA%E5%9B%9B%EF%BC%9A%E5%BF%BD%E7%95%A5%E9%A1%B9%E7%9B%AE%E7%BA%A7%E9%85%8D%E7%BD%AE%E7%9A%84%E4%BE%9B%E5%BA%94%E9%93%BE%E9%A3%8E%E9%99%A9"><span class="toc-number">12.4.</span> <span class="toc-text">误区四：忽略项目级配置的供应链风险</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%88%91%E7%9A%84%E9%85%8D%E7%BD%AE%E5%BB%BA%E8%AE%AE"><span class="toc-number">13.</span> <span class="toc-text">我的配置建议</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">14.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

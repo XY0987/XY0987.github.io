@@ -1,0 +1,708 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Hermes Agent 与 OpenClaw 工程化对比：架构、多 Agent 与落地选型 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：这周（2026-05-07）Hermes 刚发了 v0.13.0「Tenacity Release」，把曾经被撤回过一次的多 Profile Kanban 重新实现并转正——这意味着 Hermes 的多 Agent 叙事，从之前更偏「单 Agent 内角色切换 &#x2F; Profile 切换」，推进到了「共享看板 + Worker 生命周期管理 + 故障恢复」这套工程化协作模型。刚好可">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hermes Agent 与 OpenClaw 工程化对比：架构、多 Agent 与落地选型">
+<meta property="og:url" content="http://example.com/posts/09-Hermes%20Agent%20%E4%B8%8E%20OpenClaw%20%E5%B7%A5%E7%A8%8B%E5%8C%96%E5%AF%B9%E6%AF%94%EF%BC%9A%E6%9E%B6%E6%9E%84%E3%80%81%E5%A4%9A%20Agent%20%E4%B8%8E%E8%90%BD%E5%9C%B0%E9%80%89%E5%9E%8B/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：这周（2026-05-07）Hermes 刚发了 v0.13.0「Tenacity Release」，把曾经被撤回过一次的多 Profile Kanban 重新实现并转正——这意味着 Hermes 的多 Agent 叙事，从之前更偏「单 Agent 内角色切换 &#x2F; Profile 切换」，推进到了「共享看板 + Worker 生命周期管理 + 故障恢复」这套工程化协作模型。刚好可">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-05-09T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-08-22T05:00:18.389Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="架构设计">
+<meta property="article:tag" content="多Agent">
+<meta property="article:tag" content="OpenClaw">
+<meta property="article:tag" content="AI Agent">
+<meta property="article:tag" content="Hermes Agent">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/09-Hermes%20Agent%20%E4%B8%8E%20OpenClaw%20%E5%B7%A5%E7%A8%8B%E5%8C%96%E5%AF%B9%E6%AF%94%EF%BC%9A%E6%9E%B6%E6%9E%84%E3%80%81%E5%A4%9A%20Agent%20%E4%B8%8E%E8%90%BD%E5%9C%B0%E9%80%89%E5%9E%8B/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Hermes Agent 与 OpenClaw 工程化对比：架构、多 Agent 与落地选型',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 13:00:18'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Hermes Agent 与 OpenClaw 工程化对比：架构、多 Agent 与落地选型</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-05-09T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-08-22T05:00:18.389Z" title="更新于 2026 13:00:18">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>17分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：这周（2026-05-07）Hermes 刚发了 v0.13.0「Tenacity Release」，<strong>把曾经被撤回过一次的多 Profile Kanban 重新实现并转正</strong>——这意味着 Hermes 的多 Agent 叙事，从之前更偏「单 Agent 内角色切换 &#x2F; Profile 切换」，推进到了「共享看板 + Worker 生命周期管理 + 故障恢复」这套工程化协作模型。刚好可以和 OpenClaw 的 Multi-Agent Routing &#x2F; Sub-agents 放在一起对照。这篇换个工程视角，把两者<strong>架构、多 Agent 演进、部署路径</strong>完整对一下。</p>
+</blockquote>
+<h2 id="行业时间线"><a href="#行业时间线" class="headerlink" title="行业时间线"></a>行业时间线</h2><table>
+<thead>
+<tr>
+<th>时间</th>
+<th>事件</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>2025-11</td>
+<td>OpenClaw 早期项目（Clawdbot &#x2F; Moltbot 阶段）出现，主打本地优先 + 多平台 Gateway</td>
+</tr>
+<tr>
+<td>2026-02-25</td>
+<td>Nous Research 开源 Hermes Agent，主打 Learning Loop + Skills 自我沉淀</td>
+</tr>
+<tr>
+<td>2026-03 前后</td>
+<td>OpenClaw 多 Agent 路由和 Sub-agents 文档 &#x2F; 社区实践逐步完善</td>
+</tr>
+<tr>
+<td>2026-04 前后</td>
+<td>Hermes 早期 Kanban 实现合入后被整体撤回（reverted）</td>
+</tr>
+<tr>
+<td>2026-05-07</td>
+<td>Hermes v0.13.0 「Tenacity Release」发布，<strong>多 Profile Kanban 重构转正</strong>（post-revert reimplementation）</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>这条时间线两个要点：</p>
+<ol>
+<li><strong>OpenClaw 更早把多 Agent 路由做进 Gateway 体系</strong>；Hermes v0.13.0 的重点则是把多 Profile Worker + durable Kanban 这套任务韧性模型补齐。</li>
+<li><strong>Hermes 的 Kanban 不是新生儿</strong>——更早版本曾经合入过一版但被撤回，v0.13.0 是 #17805「post-revert reimplementation」，重写时直接做成”durable + multi-profile by design”。这也解释了为什么这一版同时配套 Checkpoints v2 重写状态持久化。</li>
+</ol>
+</blockquote>
+<h2 id="两个项目的工程定位"><a href="#两个项目的工程定位" class="headerlink" title="两个项目的工程定位"></a>两个项目的工程定位</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Hermes Agent</th>
+<th>OpenClaw</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>开发方</td>
+<td>Nous Research</td>
+<td>Peter Steinberger（个人 + 社区）</td>
+</tr>
+<tr>
+<td>协议</td>
+<td>MIT</td>
+<td>MIT</td>
+</tr>
+<tr>
+<td>主语言</td>
+<td>Python</td>
+<td>Node.js &#x2F; TypeScript</td>
+</tr>
+<tr>
+<td>核心抽象</td>
+<td>单体 Agent + Learning Loop</td>
+<td>Gateway + Skills + Prompt &#x2F; 配置文件</td>
+</tr>
+<tr>
+<td>架构定位</td>
+<td>自进化智能体运行时</td>
+<td>跨平台 Agent 执行网关</td>
+</tr>
+<tr>
+<td>部署形态</td>
+<td>本地 &#x2F; VPS &#x2F; Docker &#x2F; Serverless 都可</td>
+<td>本地常驻（推荐 Mac&#x2F;NAS）</td>
+</tr>
+<tr>
+<td>多 Agent 形态</td>
+<td>v0.13 起重点补齐：多 Profile Worker + Kanban</td>
+<td>Multi-Agent Routing + Sub-agents + 可选 A2A</td>
+</tr>
+</tbody></table>
+<p><strong>Hermes 把重心放在 Agent 怎么变聪明，OpenClaw 把重心放在 Agent 怎么连到各种地方协同干活</strong>。</p>
+<h2 id="Hermes-的架构骨架"><a href="#Hermes-的架构骨架" class="headerlink" title="Hermes 的架构骨架"></a>Hermes 的架构骨架</h2><pre><code>Hermes 核心架构：
+
+┌──────────────────────────────────────────────┐
+│           消息网关（Telegram/Discord/...）     │
+└──────────────────┬───────────────────────────┘
+                   ▼
+┌──────────────────────────────────────────────┐
+│           Agent 执行循环                       │
+│   LLM Planner ↔ Tool Executor ↔ Skills       │
+└──────────────────┬───────────────────────────┘
+                   ▼
+┌──────────────────────────────────────────────┐
+│           学习闭环（Learning Loop）            │
+│  MEMORY/USER ↔ session_search ↔ skill_manage │
+└──────────────────────────────────────────────┘
+</code></pre>
+<p>差异化的核心是 <strong>Learning Loop</strong>。更准确地说，它不是官方文档里叫作「Compact &#x2F; Session &#x2F; Episodic」的三层记忆，而是几套机制叠在一起：</p>
+<table>
+<thead>
+<tr>
+<th>机制</th>
+<th>作用</th>
+<th>存储 &#x2F; 实现</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>MEMORY.md</code></td>
+<td>项目约定、环境事实、长期经验</td>
+<td><code>~/.hermes/memories/MEMORY.md</code>，会作为冻结快照注入 System Prompt</td>
+</tr>
+<tr>
+<td><code>USER.md</code></td>
+<td>用户偏好、沟通风格、身份信息</td>
+<td><code>~/.hermes/memories/USER.md</code></td>
+</tr>
+<tr>
+<td><code>session_search</code></td>
+<td>查历史会话，不要求提前写进记忆</td>
+<td>SQLite <code>state.db</code> + FTS5 全文搜索 + LLM 摘要</td>
+</tr>
+<tr>
+<td>External Memory Providers</td>
+<td>更深的语义记忆 &#x2F; 用户建模</td>
+<td>Honcho、Mem0、Supermemory 等可选 Provider</td>
+</tr>
+</tbody></table>
+<p><code>skill_manage</code> 是 Hermes 最具标志性的设计——Agent 在执行过程中可以自己 <code>create / patch / edit / delete / write_file / remove_file</code> Skill。比如一次成功跑完的 RSS 推送流程，Agent 可以固化成 <code>daily-rss-digest</code> Skill，下次直接复用；踩过的坑也可以沉淀进 Skill 文档或辅助文件里。</p>
+<h2 id="OpenClaw-的架构骨架"><a href="#OpenClaw-的架构骨架" class="headerlink" title="OpenClaw 的架构骨架"></a>OpenClaw 的架构骨架</h2><pre><code>OpenClaw 核心架构：
+
+┌─────────────────────────────────────────────┐
+│   消息接入层：WhatsApp/Telegram/iMessage/...  │
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│           统一消息总线（归一化）               │
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│           OpenClaw Core                     │
+│   LLM 适配  │  Skills 执行器  │  Prompt/配置  │
+└──────────────────┬──────────────────────────┘
+                   ▼
+┌─────────────────────────────────────────────┐
+│   本地执行：Shell/FS/Browser/MCP             │
+└─────────────────────────────────────────────┘
+</code></pre>
+<p>OpenClaw 的核心抽象可以拆成三件事：</p>
+<p><strong>Gateway 是控制平面</strong>——统一管理 sessions、channels、tools、events，把 WhatsApp、Telegram、iMessage、Discord 等入口接到本地 Agent。</p>
+<p>**Skill 是一个”包”**——文件夹形态，核心是 <code>SKILL.md</code>，可选带 <code>scripts/</code>、<code>references/</code>、配置文件和辅助资源。通常由用户编写、从 ClawHub 安装，或由社区维护。</p>
+<p><strong>Prompt &#x2F; 配置文件决定怎么做</strong>——常见文件是：</p>
+<table>
+<thead>
+<tr>
+<th>文件</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>SOUL.md</code></td>
+<td>Agent 人格、语气、风格和边界</td>
+</tr>
+<tr>
+<td><code>AGENTS.md</code></td>
+<td>操作规则、流程约束、协作方式</td>
+</tr>
+<tr>
+<td><code>TOOLS.md</code></td>
+<td>工具说明和工具上下文</td>
+</tr>
+<tr>
+<td><code>USER.md</code></td>
+<td>用户画像和偏好（视配置 &#x2F; 版本而定）</td>
+</tr>
+</tbody></table>
+<p>这些资产大多是文件化的 → <strong>Git 可追踪、Code Review 友好</strong>。</p>
+<h2 id="多-Agent-协作：本文重点对比"><a href="#多-Agent-协作：本文重点对比" class="headerlink" title="多 Agent 协作：本文重点对比"></a>多 Agent 协作：本文重点对比</h2><p>这是两者最近差异化最明显的维度。</p>
+<h3 id="OpenClaw：Routing-Sub-agents-可选-A2A"><a href="#OpenClaw：Routing-Sub-agents-可选-A2A" class="headerlink" title="OpenClaw：Routing + Sub-agents + 可选 A2A"></a>OpenClaw：Routing + Sub-agents + 可选 A2A</h3><p>OpenClaw 的官方多 Agent 能力：<strong>Gateway 负责确定性路由，Sub-agents 负责后台并行任务，Agent-to-Agent messaging 负责可选的跨 Agent 通信</strong>。</p>
+<p><strong>1. Multi-Agent Routing（多 Agent 路由）</strong></p>
+<p>多个独立 Agent 可以跑在同一个 Gateway 下，但每个 Agent 有自己的 <code>workspace</code>、<code>agentDir</code>、会话历史、模型、Skill 白名单和工具权限。配置通常写在 <code>~/.openclaw/openclaw.json</code>，核心字段是 <code>agents.list</code> 和 <code>bindings</code>：</p>
+<pre><code class="js">&#123;
+  agents: &#123;
+    defaults: &#123;
+      workspace: &quot;~/.openclaw/workspace&quot;,
+      skills: [&quot;calendar&quot;, &quot;notes&quot;]
+    &#125;,
+    list: [
+      &#123;
+        id: &quot;news-bot&quot;,
+        name: &quot;News Bot&quot;,
+        workspace: &quot;~/.openclaw/workspace-news&quot;,
+        model: &quot;&lt;model-id&gt;&quot;,
+        skills: [&quot;rss-reader&quot;, &quot;summarize&quot;],
+        groupChat: &#123; mentionPatterns: [&quot;@news-bot&quot;] &#125;
+      &#125;,
+      &#123;
+        id: &quot;dev-bot&quot;,
+        name: &quot;Dev Bot&quot;,
+        workspace: &quot;~/.openclaw/workspace-dev&quot;,
+        model: &quot;&lt;model-id&gt;&quot;,
+        skills: [&quot;github&quot;, &quot;code-review&quot;]
+      &#125;
+    ]
+  &#125;,
+  bindings: [
+    &#123; agentId: &quot;news-bot&quot;, match: &#123; channel: &quot;telegram&quot;, accountId: &quot;alerts&quot; &#125; &#125;,
+    &#123; agentId: &quot;dev-bot&quot;, match: &#123; channel: &quot;discord&quot;, guildId: &quot;&lt;guild-id&gt;&quot; &#125; &#125;
+  ]
+&#125;
+</code></pre>
+<p>消息进来后，Gateway 根据 channel、account、peer、guild、role 等条件做确定性路由。<strong>Agent 之间默认是隔离的</strong>，真正需要共享记忆或通信时要显式配置。</p>
+<p><strong>2. Sub-Agents（子 Agent 派生）</strong></p>
+<p>一个 Agent 在执行过程中可以派生后台子 Agent 跑独立任务。Sub-agent 会运行在独立 session 里，典型 key 类似 <code>agent:&lt;agentId&gt;:subagent:&lt;uuid&gt;</code>，跑完后通过 announce 把结果回传给请求方。典型场景：主 Agent 收到”调研一下今年的 AI Agent 框架”，派生一个 <code>researcher</code> 子 Agent 专门跑搜索 + 总结，结果回传后主 Agent 整合输出。</p>
+<p><strong>3. Agent-to-Agent messaging（可选跨 Agent 通信）</strong></p>
+<p>OpenClaw 也有受控的 Agent-to-Agent messaging，但默认关闭，需要显式启用并配置 allowlist。它更像一个安全边界明确的通信工具，不等于官方内置了完整的 Swarm 编排引擎。</p>
+<p>所以这三者的关系更像：</p>
+<pre><code>Routing：不同入口 / 账号 / peer 路由到不同 Agent
+   │
+   ▼
+Sub-Agent：单个 Agent 把慢任务派给后台子任务
+   │
+   ▼
+A2A：必要时显式允许 Agent 之间通信
+</code></pre>
+<p>如果你在社区文章里看到「OpenClaw Swarm」，我的理解是：多数情况下是基于 Routing、Sub-agents、A2A 自己拼出来的编排实践，或者第三方扩展，不建议把它当成 OpenClaw 官方核心抽象。</p>
+<h3 id="Hermes：从角色切换到多-Profile-Kanban"><a href="#Hermes：从角色切换到多-Profile-Kanban" class="headerlink" title="Hermes：从角色切换到多 Profile Kanban"></a>Hermes：从角色切换到多 Profile Kanban</h3><p>很多人对 Hermes 的旧印象是<strong>单体 Agent + 角色 &#x2F; Profile 切换</strong>——同一个 Agent 根据当前 Profile、System Prompt 和 Skill 组合，切到「编码助手」「私人秘书」「研究员」这类不同角色。这个理解更贴近 v0.13.0 之前的多 Agent 叙事：它更像一个演员换不同剧本，不是多个 Worker 围绕同一个任务板并发协作。</p>
+<pre><code>v0.13 之前的 Hermes 多角色：
+  
+   同一个 Agent 执行循环
+   ┌────────────────────────────────────┐
+   │  Profile A：编码助手                │
+   │  SOUL / Skills / Memory 切到 dev    │
+   └────────────────────────────────────┘
+                    │ 切换 Profile
+                    ▼
+   ┌────────────────────────────────────┐
+   │  Profile B：私人秘书                │
+   │  SOUL / Skills / Memory 切到 daily  │
+   └────────────────────────────────────┘
+
+   ※ 重点是角色 / Profile 切换，
+      不是共享看板上的多 Worker 抢任务
+</code></pre>
+<p>v0.13.0「Tenacity Release」改变的是任务协作和任务韧性——更早版本曾经合入过一版 Kanban 但被整体撤回（reverted），#17805 是 post-revert reimplementation，社区戏称”曾被撤回的多 Agent 看板重构转正”。</p>
+<p>重做时直接定位为 <strong>durable multi-profile collaboration board</strong>，从底层就是多进程 &#x2F; 多 Profile 设计：</p>
+<pre><code>Hermes v0.13.0 多 Profile Kanban：
+
+         ┌────────────────────────────┐
+         │   Durable Kanban Board      │
+         │  ┌──┐ ┌──┐ ┌──┐ ┌──┐       │
+         │  │待 │ │执 │ │审 │ │完 │     │
+         │  │办 │ │行 │ │核 │ │成 │     │
+         │  └──┘ └──┘ └──┘ └──┘       │
+         └─────┬─────────┬────────────┘
+               │ Lane    │ Lane
+        ┌──────▼──────┐ ┌▼──────────────┐
+        │ Profile A    │ │ Profile B     │
+        │ Worker (独立 │ │ Worker (独立  │
+        │ 进程)        │ │ 进程)         │
+        │ heartbeat ✓  │ │ heartbeat ✓   │
+        │ ownership ✓  │ │ ownership ✓   │
+        └──────┬───────┘ └──────┬────────┘
+               │                │
+               └────────┬───────┘
+                        ▼
+        spawn / timeout / crash 三态计数
+                        ▼
+        zombie 检测 → reclaim → retry-cap
+</code></pre>
+<p>判断它是真多进程而不是”单进程角色切换”的几个关键证据（来自 v0.13.0 Release Notes）：</p>
+<ul>
+<li>出现 <strong>heartbeat &#x2F; reclaim &#x2F; zombie detection</strong>——这些是典型的多进程协调原语；Release 里甚至专门修了 <code>darwin zombie workers</code>（macOS 僵尸进程）</li>
+<li><strong>spawn &#x2F; timeout &#x2F; crash</strong> 三种失败计数被统一——单进程切换不会有 spawn 概念</li>
+<li><strong>Worker task-ownership</strong> 校验（破坏性工具调用必须由任务持有者发起）——多 Worker 并发才需要的隔离</li>
+<li>配套上线 <strong>Checkpoints v2</strong> 重写状态持久化，让多 Worker 状态可靠落盘</li>
+</ul>
+<p>关键运行时机制：</p>
+<ul>
+<li><strong>任务卡牌自动接单</strong>：空闲 Worker 主动从待办 Lane 拉任务</li>
+<li><strong>心跳与僵尸检测</strong>：Worker 长时间无心跳 → 任务 reclaim 回看板</li>
+<li><strong>自动交接</strong>：进程崩溃后任务自动转给同 Lane 其他 Worker</li>
+<li><strong>Per-task retry budget</strong>：每张卡片独立的重试上限，避免某一任务把池子拖垮</li>
+<li><strong>Hallucination Gate</strong>：拦截 Worker 虚构卡片 ID 等幻觉行为</li>
+<li><strong>&#x2F;goal 持久目标锁定</strong>：单 Agent 内的跨轮目标锁（Ralph loop）——这是 Tenacity 的另一个支柱，与 Kanban 互补</li>
+</ul>
+<blockquote>
+<p>Hermes 这一版把”单 Agent 内的韧性”（&#x2F;goal）和”多 Agent 间的韧性”（Kanban）一起补齐，所以版本名叫 <strong>Tenacity（韧性）</strong>。</p>
+</blockquote>
+<h3 id="多-Agent-维度对比"><a href="#多-Agent-维度对比" class="headerlink" title="多 Agent 维度对比"></a>多 Agent 维度对比</h3><table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>Hermes（v0.13.0）</th>
+<th>OpenClaw</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>演进路径</td>
+<td>角色 &#x2F; Profile 切换 → v0.13 补齐多 Profile Kanban</td>
+<td>Gateway 多 Agent 路由持续完善</td>
+</tr>
+<tr>
+<td>上线时间</td>
+<td>2026-05-07（Kanban 重构转正，曾被撤回过一次）</td>
+<td>2026-03 前后多 Agent 文档和实践逐步完善</td>
+</tr>
+<tr>
+<td>进程模型</td>
+<td>多 Profile Worker（Release Notes 强调 worker lifecycle）</td>
+<td>多 Agent 实例（隔离 workspace &#x2F; session &#x2F; agentDir）</td>
+</tr>
+<tr>
+<td>核心抽象</td>
+<td>Kanban 任务卡牌 + Worker 池</td>
+<td>Routing + Sub-agents + 可选 A2A</td>
+</tr>
+<tr>
+<td>Agent 关系</td>
+<td>Worker 围绕共享看板处理任务</td>
+<td>异质 Agent 按入口、角色、工作区隔离</td>
+</tr>
+<tr>
+<td>触发方式</td>
+<td>任务卡牌自动接单</td>
+<td>路由分发 &#x2F; 主 Agent 派生 &#x2F; 显式 A2A</td>
+</tr>
+<tr>
+<td>容错能力</td>
+<td>heartbeat + zombie detection + reclaim + retry budget</td>
+<td>Sub-agent 有独立 session &#x2F; announce &#x2F; 超时等机制，但不是 Kanban 式任务回收</td>
+</tr>
+<tr>
+<td>数据隔离</td>
+<td>看板共享 + Worker task-ownership</td>
+<td>每个 Agent 独立 workspace &#x2F; session，硬隔离依赖 sandbox</td>
+</tr>
+<tr>
+<td>适合场景</td>
+<td>长任务韧性执行（不半途而废）</td>
+<td>多入口、多身份、多工作区分流</td>
+</tr>
+<tr>
+<td>成熟度</td>
+<td>Kanban 重构首版，待社区充分验证</td>
+<td>Routing &#x2F; Sub-agent 文档更完整，复杂编排仍要自己设计</td>
+</tr>
+</tbody></table>
+<h3 id="一句话区分两者"><a href="#一句话区分两者" class="headerlink" title="一句话区分两者"></a>一句话区分两者</h3><p>**OpenClaw 的多 Agent 像”分部门接线”**——不同入口、账号、群组、角色被路由到不同 Agent，每个 Agent 有自己的工位和权限。</p>
+<p>**Hermes 的多 Agent 像”任务流水线 + 工人池”**——你贴一堆任务卡，谁有空谁来干，干到一半倒下了下一个 Worker 接着干。</p>
+<p>两者各有所长：OpenClaw 强在<strong>多入口路由和角色隔离</strong>，Hermes 强在<strong>长任务韧性</strong>（这也是 v0.13.0 名字叫 Tenacity 的原因）。</p>
+<h2 id="同一个需求：两种实现路径"><a href="#同一个需求：两种实现路径" class="headerlink" title="同一个需求：两种实现路径"></a>同一个需求：两种实现路径</h2><p>把”每天 9 点把 RSS 里最值得看的 3 篇推到 Telegram”这个简单需求拿来对比。</p>
+<h3 id="Hermes：自然语言下达"><a href="#Hermes：自然语言下达" class="headerlink" title="Hermes：自然语言下达"></a>Hermes：自然语言下达</h3><pre><code>用户：每天早上 9 点，把我订阅的 RSS 里最值得看的 3 篇推给我，源在 ~/rss.opml。
+</code></pre>
+<p>第一次执行时它从零摸索，执行完你给反馈：”这三篇都是水文，我想看深度技术文。”</p>
+<p>Hermes 内部大致会做两件事：</p>
+<ol>
+<li>把「偏好深度技术文、过滤营销内容」这类长期偏好写进 <code>USER.md</code> &#x2F; <code>MEMORY.md</code>，或者交给外部 Memory Provider 维护。</li>
+<li>如果这个流程足够复杂且可复用，就通过 <code>skill_manage</code> 创建或更新一个 <code>daily-rss-digest</code> Skill，把读取 OPML、抓取文章、过滤、推送这些步骤沉淀下来。</li>
+</ol>
+<p>这里我不写伪 API，因为 <code>skill_manage</code> 的真实参数和调度能力要以当前版本官方文档为准。核心区别是：<strong>Hermes 更鼓励你先用自然语言跑通，再把经验沉淀成 Skill 和 Memory</strong>。</p>
+<p>第二天 9 点，如果调度和消息网关配置好了，它就可以命中记忆里的偏好，挑出来的文章也会比第一天更贴近你的口味。</p>
+<h3 id="OpenClaw：装-Skill-改配置文件"><a href="#OpenClaw：装-Skill-改配置文件" class="headerlink" title="OpenClaw：装 Skill + 改配置文件"></a>OpenClaw：装 Skill + 改配置文件</h3><pre><code class="bash"># 装 Skill（官方 ClawHub 文档使用复数 skills）
+openclaw skills install rss-reader
+openclaw skills install telegram-push
+</code></pre>
+<p>然后把约束写到对应的文件里：</p>
+<pre><code class="markdown">&lt;!-- AGENTS.md 或具体 Skill 的 SKILL.md --&gt;
+
+## RSS 推送规则
+
+- 每天 09:00 执行 rss-reader + telegram-push 组合
+- RSS 源：~/rss.opml
+- 推送偏好：深度技术文，过滤营销内容（最多 3 篇）
+</code></pre>
+<p>如果筛选不准，优先改 <code>skills/rss-reader/SKILL.md</code> 的筛选规则；如果是执行流程或权限边界问题，再改 <code>AGENTS.md</code> 或 <code>openclaw.json</code>。</p>
+<h3 id="关键差异"><a href="#关键差异" class="headerlink" title="关键差异"></a>关键差异</h3><table>
+<thead>
+<tr>
+<th>对比点</th>
+<th>Hermes</th>
+<th>OpenClaw</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>用户输入</td>
+<td>自然语言描述</td>
+<td>装 Skill + 改配置文件</td>
+</tr>
+<tr>
+<td>学习成本</td>
+<td>低（会说话就行）</td>
+<td>中（要懂 Skill &#x2F; Gateway &#x2F; 配置文件）</td>
+</tr>
+<tr>
+<td>首次成功率</td>
+<td>中（需几轮反馈）</td>
+<td>高（Skill 和配置写好后更稳定）</td>
+</tr>
+<tr>
+<td>长期收益</td>
+<td>高（Memory + Skill 会沉淀经验）</td>
+<td>稳定（更偏显式规则，不会主动自我优化）</td>
+</tr>
+<tr>
+<td>维护方式</td>
+<td>给反馈让它更新记忆或 Skill</td>
+<td>手动改 <code>SKILL.md</code> &#x2F; <code>AGENTS.md</code> &#x2F; <code>openclaw.json</code></td>
+</tr>
+<tr>
+<td>可审计性</td>
+<td>中（Memory &#x2F; Skill 混合，部分行为不如文件直观）</td>
+<td>高（规则、Skill、Agent 配置文件化，Git 可追踪）</td>
+</tr>
+</tbody></table>
+<h2 id="部署对比"><a href="#部署对比" class="headerlink" title="部署对比"></a>部署对比</h2><h3 id="Hermes：远端和本地都能跑，长任务更适合常驻"><a href="#Hermes：远端和本地都能跑，长任务更适合常驻" class="headerlink" title="Hermes：远端和本地都能跑，长任务更适合常驻"></a>Hermes：远端和本地都能跑，长任务更适合常驻</h3><p>官方强调 Hermes 可以跑在 $5 VPS、Docker、SSH 远程主机、Modal、Daytona 等环境里。我的建议是：如果你只是 CLI 试用，本地就够；如果要接 Telegram &#x2F; Discord 这类消息入口，并让它长期执行任务，放到 VPS 或常驻机器上更省心。</p>
+<pre><code class="yaml"># docker-compose.yml（示意，实际镜像和目录以官方文档为准）
+version: &#39;3.8&#39;
+services:
+  hermes:
+    image: nousresearch/hermes-agent:latest
+    restart: always
+    volumes:
+      - ./data:/app/data       # 记忆 / 状态持久化
+      - ./skills:/app/skills   # 本地 Skill 目录
+    env_file: .env
+    # 多 Worker / 长任务场景建议准备更充裕内存，但 16GB 不是官方硬门槛
+</code></pre>
+<p><strong>坑 1：记忆和状态目录没持久化</strong><br>现象：容器重启后记忆、会话或 Skill 丢了。<br>原因：<code>MEMORY.md</code>、<code>USER.md</code>、state DB、skills 等目录没有挂到持久化 Volume，或权限不对容器写不进去。<br>解决：用命名 Volume，或者确保挂载目录、UID&#x2F;GID 和权限匹配。</p>
+<p><strong>坑 2：自动生成的 Skill 需要审计</strong><br>现象：Agent 沉淀出来的 Skill 能跑，但流程里夹杂了临时路径、过期命令或一次性假设。<br>原因：<code>skill_manage</code> 解决的是经验沉淀，不等于自动产出生产级插件。<br>解决：重要 Skill 进 Git，像代码一样 Review；能用 <code>patch</code> 小改就不要整篇重写。</p>
+<h3 id="OpenClaw：推荐本地常驻"><a href="#OpenClaw：推荐本地常驻" class="headerlink" title="OpenClaw：推荐本地常驻"></a>OpenClaw：推荐本地常驻</h3><p>典型场景是 Mac Mini &#x2F; NAS 常开：</p>
+<pre><code class="bash"># macOS 用 launchd 开机自启
+cat &gt; ~/Library/LaunchAgents/com.openclaw.plist &lt;&lt;&#39;EOF&#39;
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;plist version=&quot;1.0&quot;&gt;
+&lt;dict&gt;
+    &lt;key&gt;Label&lt;/key&gt;&lt;string&gt;com.openclaw&lt;/string&gt;
+    &lt;key&gt;ProgramArguments&lt;/key&gt;
+    &lt;array&gt;
+        &lt;string&gt;/usr/local/bin/npx&lt;/string&gt;
+        &lt;string&gt;openclaw&lt;/string&gt;
+        &lt;string&gt;start&lt;/string&gt;
+    &lt;/array&gt;
+    &lt;key&gt;RunAtLoad&lt;/key&gt;&lt;true/&gt;
+    &lt;key&gt;KeepAlive&lt;/key&gt;&lt;true/&gt;
+&lt;/dict&gt;
+&lt;/plist&gt;
+EOF
+
+launchctl load ~/Library/LaunchAgents/com.openclaw.plist
+</code></pre>
+<p><strong>坑 1：iMessage 网关只能在 macOS 跑</strong><br>原因：iMessage 协议是 macOS 独占。<br>解决：要接 iMessage 的实例必须跑在 Mac 上，其他网关（Telegram&#x2F;Discord）可以跨平台。</p>
+<p><strong>坑 2：Skill 执行权限边界</strong><br>现象：某个 Agent 或 Sub-agent 调 shell &#x2F; 文件写入 &#x2F; 浏览器等工具时被拦。<br>原因：OpenClaw 的权限边界更多在 <code>openclaw.json</code> 里的 <code>agents.list[].tools.allow/deny</code>、sandbox 策略和全局工具策略里控制，不是简单写一行规则就放开。<br>解决：按 Agent 粒度配置工具 allow&#x2F;deny；高风险入口启用 sandbox，不要把所有工具一股脑给所有 Agent。</p>
+<h2 id="选型决策"><a href="#选型决策" class="headerlink" title="选型决策"></a>选型决策</h2><pre><code>              ┌──────────────────┐
+              │  你最在意什么？   │
+              └────────┬─────────┘
+       ┌───────────────┼─────────────────┐
+       ▼               ▼                 ▼
+  自进化省心       多平台连接          多 Agent 协作
+   选 Hermes      选 OpenClaw         看协作形态
+                                          │
+                              ┌───────────┴───────────┐
+                              ▼                       ▼
+                         多入口路由              长任务韧性
+                          OpenClaw                Hermes
+                      (Routing/Sub-agents)    (Kanban 自动接单/重试)
+</code></pre>
+<p><strong>1. 多 Agent 选型直接对应场景</strong><br>要把不同渠道、账号、群组、角色路由到不同 Agent → OpenClaw（Routing + Sub-agents + 可选 A2A）。要”一堆任务排队让 Agent 池消化、挂了能自动续上” → Hermes（多 Profile Worker + Kanban）。</p>
+<p><strong>2. 不要为新版本买单（重要）</strong><br>Hermes 的 Kanban 是 v0.13.0 刚”重构转正”——更早版本曾经合入又被整体撤回，这本身就说明这条路走得不轻松。如果你的多 Agent 场景在 OpenClaw 上跑得稳，没必要为了”新”切到 Hermes，先等几个补丁版本（比如 v0.13.x 把 spawn race、retry budget、ownership 边界打磨一轮）再说。</p>
+<p><strong>3. 资源预算</strong><br>Hermes 官方强调可以跑在低成本 VPS &#x2F; Docker &#x2F; Serverless 上；但多 Worker、长任务和大量工具调用会放大资源消耗。OpenClaw 更偏本地常驻，Mac Mini &#x2F; NAS 这类机器比较适合。这里不要把 <code>16GB</code> 当硬门槛，更应该按同时跑多少 Worker、接多少渠道、执行多少工具来估算。</p>
+<p><strong>4. 可审计性看 Git 友好度</strong><br>团队&#x2F;企业用 → OpenClaw（Skill、Agent 配置、<code>SOUL.md</code>、<code>AGENTS.md</code> 等文件化资产更容易 PR Review）。个人折腾 → Hermes 的 Memory + Skill 自沉淀会更省心，但关键 Skill 也建议纳入 Git 审计。</p>
+<h2 id="一个容易踩的认知坑"><a href="#一个容易踩的认知坑" class="headerlink" title="一个容易踩的认知坑"></a>一个容易踩的认知坑</h2><p>不要觉得”两者都有 Skills、都有多 Agent，所以差不多”——抽象层级根本不一样：</p>
+<ul>
+<li><strong>Skill</strong>：OpenClaw 的是文件化能力资产（静态目录 + <code>SKILL.md</code>），Hermes 的是 Agent 可以通过 <code>skill_manage</code> 动态创建和 patch 的过程性记忆</li>
+<li><strong>多 Agent</strong>：OpenClaw 更像 Gateway 层的多入口、多账号、多工作区路由；Hermes v0.13.0 的重点是 durable Kanban 和 Worker 生命周期管理。如果你看到的资料是 5 月 7 日之前的，里面讲的 Hermes “多 Agent”大概率不是这套 Kanban Worker 模型</li>
+</ul>
+<p>选型时一定要落到具体场景和具体版本，别看到名字相似就划等号。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>Hermes 是单体 Agent + Learning Loop 架构，核心是 <code>skill_manage</code>、<code>MEMORY.md</code> &#x2F; <code>USER.md</code>、<code>session_search</code> 和外部 Memory Provider</li>
+<li>OpenClaw 是 Gateway + Skills + Prompt &#x2F; 配置文件架构，核心是跨平台连接、文件化配置和确定性路由</li>
+<li>Hermes v0.13.0 的重点不是普通 Profile 隔离，而是 durable multi-profile Kanban 重构转正</li>
+<li>OpenClaw 官方核心多 Agent 能力更准确地说是 Routing + Sub-agents + 可选 A2A，不建议把 Swarm 当官方核心抽象</li>
+<li>Hermes Kanban 的容错（heartbeat &#x2F; zombie &#x2F; reclaim &#x2F; retry budget）说明它在补长任务韧性，而不是单纯做角色分工</li>
+<li>同一个需求，Hermes 靠自然语言 + 反馈迭代沉淀 Memory &#x2F; Skill，OpenClaw 靠装 Skill + 改配置文件保证可控性</li>
+<li>Hermes 远端和本地都能跑，OpenClaw 更适合本地常驻；资源预算要按 Worker、渠道和工具调用量估算</li>
+<li>团队&#x2F;企业可审计需求 → OpenClaw；个人省心自进化 + 长任务韧性 → Hermes（但建议等 v0.13.x 几个补丁版本再重度依赖 Kanban）</li>
+<li>Skill 和多 Agent 名字相同但抽象层级不同，<strong>选型要落到具体版本和具体场景</strong>，别看到名字相似就划等号</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/%E6%9E%B6%E6%9E%84%E8%AE%BE%E8%AE%A1/">架构设计</a><a class="post-meta__tags" href="/tags/%E5%A4%9AAgent/">多Agent</a><a class="post-meta__tags" href="/tags/OpenClaw/">OpenClaw</a><a class="post-meta__tags" href="/tags/AI-Agent/">AI Agent</a><a class="post-meta__tags" href="/tags/Hermes-Agent/">Hermes Agent</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/08-Nginx%20%E4%BB%8E%E5%85%A5%E9%97%A8%E5%88%B0%E7%B2%BE%E9%80%9A%EF%BC%9A%E4%B8%80%E7%AF%87%E8%AE%B2%E9%80%8F%E9%9D%99%E6%80%81%E6%9C%8D%E5%8A%A1%E3%80%81%E5%8F%8D%E5%90%91%E4%BB%A3%E7%90%86%E3%80%81%E8%B4%9F%E8%BD%BD%E5%9D%87%E8%A1%A1%E5%92%8C%20HTTPS/" title="Nginx 从入门到精通：一篇讲透静态服务、反向代理、负载均衡和 HTTPS"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Nginx 从入门到精通：一篇讲透静态服务、反向代理、负载均衡和 HTTPS</div></div></a></div><div class="next-post pull-right"><a href="/posts/17-%E5%89%8D%E7%AB%AF%E5%AE%89%E5%85%A8%EF%BC%9AXSS%E3%80%81CSRF%E3%80%81%E7%82%B9%E5%87%BB%E5%8A%AB%E6%8C%81%E4%B8%8E%E5%B8%B8%E8%A7%81%E9%98%B2%E5%BE%A1%E5%AE%9E%E6%88%98/" title="前端安全：XSS、CSRF、点击劫持与常见防御实战"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">前端安全：XSS、CSRF、点击劫持与常见防御实战</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A1%8C%E4%B8%9A%E6%97%B6%E9%97%B4%E7%BA%BF"><span class="toc-number">1.</span> <span class="toc-text">行业时间线</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%A4%E4%B8%AA%E9%A1%B9%E7%9B%AE%E7%9A%84%E5%B7%A5%E7%A8%8B%E5%AE%9A%E4%BD%8D"><span class="toc-number">2.</span> <span class="toc-text">两个项目的工程定位</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Hermes-%E7%9A%84%E6%9E%B6%E6%9E%84%E9%AA%A8%E6%9E%B6"><span class="toc-number">3.</span> <span class="toc-text">Hermes 的架构骨架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#OpenClaw-%E7%9A%84%E6%9E%B6%E6%9E%84%E9%AA%A8%E6%9E%B6"><span class="toc-number">4.</span> <span class="toc-text">OpenClaw 的架构骨架</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A-Agent-%E5%8D%8F%E4%BD%9C%EF%BC%9A%E6%9C%AC%E6%96%87%E9%87%8D%E7%82%B9%E5%AF%B9%E6%AF%94"><span class="toc-number">5.</span> <span class="toc-text">多 Agent 协作：本文重点对比</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenClaw%EF%BC%9ARouting-Sub-agents-%E5%8F%AF%E9%80%89-A2A"><span class="toc-number">5.1.</span> <span class="toc-text">OpenClaw：Routing + Sub-agents + 可选 A2A</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Hermes%EF%BC%9A%E4%BB%8E%E8%A7%92%E8%89%B2%E5%88%87%E6%8D%A2%E5%88%B0%E5%A4%9A-Profile-Kanban"><span class="toc-number">5.2.</span> <span class="toc-text">Hermes：从角色切换到多 Profile Kanban</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%9A-Agent-%E7%BB%B4%E5%BA%A6%E5%AF%B9%E6%AF%94"><span class="toc-number">5.3.</span> <span class="toc-text">多 Agent 维度对比</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E5%8C%BA%E5%88%86%E4%B8%A4%E8%80%85"><span class="toc-number">5.4.</span> <span class="toc-text">一句话区分两者</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%90%8C%E4%B8%80%E4%B8%AA%E9%9C%80%E6%B1%82%EF%BC%9A%E4%B8%A4%E7%A7%8D%E5%AE%9E%E7%8E%B0%E8%B7%AF%E5%BE%84"><span class="toc-number">6.</span> <span class="toc-text">同一个需求：两种实现路径</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hermes%EF%BC%9A%E8%87%AA%E7%84%B6%E8%AF%AD%E8%A8%80%E4%B8%8B%E8%BE%BE"><span class="toc-number">6.1.</span> <span class="toc-text">Hermes：自然语言下达</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenClaw%EF%BC%9A%E8%A3%85-Skill-%E6%94%B9%E9%85%8D%E7%BD%AE%E6%96%87%E4%BB%B6"><span class="toc-number">6.2.</span> <span class="toc-text">OpenClaw：装 Skill + 改配置文件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%B3%E9%94%AE%E5%B7%AE%E5%BC%82"><span class="toc-number">6.3.</span> <span class="toc-text">关键差异</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%83%A8%E7%BD%B2%E5%AF%B9%E6%AF%94"><span class="toc-number">7.</span> <span class="toc-text">部署对比</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Hermes%EF%BC%9A%E8%BF%9C%E7%AB%AF%E5%92%8C%E6%9C%AC%E5%9C%B0%E9%83%BD%E8%83%BD%E8%B7%91%EF%BC%8C%E9%95%BF%E4%BB%BB%E5%8A%A1%E6%9B%B4%E9%80%82%E5%90%88%E5%B8%B8%E9%A9%BB"><span class="toc-number">7.1.</span> <span class="toc-text">Hermes：远端和本地都能跑，长任务更适合常驻</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#OpenClaw%EF%BC%9A%E6%8E%A8%E8%8D%90%E6%9C%AC%E5%9C%B0%E5%B8%B8%E9%A9%BB"><span class="toc-number">7.2.</span> <span class="toc-text">OpenClaw：推荐本地常驻</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%89%E5%9E%8B%E5%86%B3%E7%AD%96"><span class="toc-number">8.</span> <span class="toc-text">选型决策</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%AE%B9%E6%98%93%E8%B8%A9%E7%9A%84%E8%AE%A4%E7%9F%A5%E5%9D%91"><span class="toc-number">9.</span> <span class="toc-text">一个容易踩的认知坑</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">10.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/11-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
