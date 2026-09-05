@@ -1,0 +1,541 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>CLI 参数解析：commander、yargs 与 cac 对比 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：上一篇我们用 process.argv.slice(2) 拿到了原始参数，也提到裸解析参数很痛苦。这一篇就把参数解析这件事讲透：为什么不要手写、commander&#x2F;yargs&#x2F;cac 三个主流库各自什么风格、命令和选项怎么设计、最后怎么选。  为什么不要手写参数解析上一篇我们已经知道，CLI 参数本质上都来自 process.argv.slice(2)。比如： mycl">
+<meta property="og:type" content="article">
+<meta property="og:title" content="CLI 参数解析：commander、yargs 与 cac 对比">
+<meta property="og:url" content="http://example.com/posts/02-CLI%20%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90%EF%BC%9Acommander%E3%80%81yargs%20%E4%B8%8E%20cac%20%E5%AF%B9%E6%AF%94/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：上一篇我们用 process.argv.slice(2) 拿到了原始参数，也提到裸解析参数很痛苦。这一篇就把参数解析这件事讲透：为什么不要手写、commander&#x2F;yargs&#x2F;cac 三个主流库各自什么风格、命令和选项怎么设计、最后怎么选。  为什么不要手写参数解析上一篇我们已经知道，CLI 参数本质上都来自 process.argv.slice(2)。比如： mycl">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T15:24:00.000Z">
+<meta property="article:modified_time" content="2026-09-05T07:10:20.870Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="CLI">
+<meta property="article:tag" content="commander">
+<meta property="article:tag" content="yargs">
+<meta property="article:tag" content="cac">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/02-CLI%20%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90%EF%BC%9Acommander%E3%80%81yargs%20%E4%B8%8E%20cac%20%E5%AF%B9%E6%AF%94/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'CLI 参数解析：commander、yargs 与 cac 对比',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:10:20'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">CLI 参数解析：commander、yargs 与 cac 对比</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T15:24:00.000Z" title="发表于 2026 23:24:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-05T07:10:20.870Z" title="更新于 2026 15:10:20">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>10分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：上一篇我们用 <code>process.argv.slice(2)</code> 拿到了原始参数，也提到裸解析参数很痛苦。这一篇就把参数解析这件事讲透：为什么不要手写、<code>commander</code>&#x2F;<code>yargs</code>&#x2F;<code>cac</code> 三个主流库各自什么风格、命令和选项怎么设计、最后怎么选。</p>
+</blockquote>
+<h2 id="为什么不要手写参数解析"><a href="#为什么不要手写参数解析" class="headerlink" title="为什么不要手写参数解析"></a>为什么不要手写参数解析</h2><p>上一篇我们已经知道，CLI 参数本质上都来自 <code>process.argv.slice(2)</code>。比如：</p>
+<pre><code class="bash">mycli create my-app --template vue -f --port 3000
+mycli build --watch
+mycli --help
+mycli --version
+</code></pre>
+<p>拿到的原始数组大概是这样：</p>
+<pre><code class="js">const args = [&#39;create&#39;, &#39;my-app&#39;, &#39;--template&#39;, &#39;vue&#39;, &#39;-f&#39;, &#39;--port&#39;, &#39;3000&#39;]
+</code></pre>
+<p>如果只是做一个内部脚本，完全可以先手写一个最小版解析器：</p>
+<pre><code class="js">function parseArgs(args) &#123;
+  const result = &#123;
+    command: args[0],
+    positionals: [],
+    options: &#123;&#125;
+  &#125;
+
+  for (let i = 1; i &lt; args.length; i++) &#123;
+    const arg = args[i]
+
+    if (arg.startsWith(&#39;--&#39;)) &#123;
+      const [key, value] = arg.slice(2).split(&#39;=&#39;)
+
+      if (value !== undefined) &#123;
+        result.options[key] = value
+      &#125; else if (args[i + 1] &amp;&amp; !args[i + 1].startsWith(&#39;-&#39;)) &#123;
+        result.options[key] = args[i + 1]
+        i++
+      &#125; else &#123;
+        result.options[key] = true
+      &#125;
+    &#125; else if (arg.startsWith(&#39;-&#39;)) &#123;
+      result.options[arg.slice(1)] = true
+    &#125; else &#123;
+      result.positionals.push(arg)
+    &#125;
+  &#125;
+
+  return result
+&#125;
+
+console.log(parseArgs(process.argv.slice(2)))
+</code></pre>
+<p>运行一下：</p>
+<pre><code class="bash">node cli.js create my-app --template vue -f --port 3000
+</code></pre>
+<p>输出大概是：</p>
+<pre><code class="js">&#123;
+  command: &#39;create&#39;,
+  positionals: [&#39;my-app&#39;],
+  options: &#123;
+    template: &#39;vue&#39;,
+    f: true,
+    port: &#39;3000&#39;
+  &#125;
+&#125;
+</code></pre>
+<p>这个版本已经能处理 <code>--template vue</code>、<code>--port=3000</code>、<code>-f</code> 这些常见写法。到这里你会发现，参数解析的底层原理并不神秘：<strong>无非就是遍历字符串数组，把命令、位置参数和选项拆出来</strong>。</p>
+<p>但问题也很快来了。一个稍微正经的 CLI，要正确处理这些细节：</p>
+<ol>
+<li>区分<strong>命令</strong>（<code>create</code>、<code>build</code>）和<strong>选项</strong>（<code>--template</code>）；</li>
+<li>选项的两种写法 <code>--port 3000</code> 和 <code>--port=3000</code>；</li>
+<li>短选项 <code>-f</code> 以及合并写法 <code>-rf</code>；</li>
+<li>布尔选项（<code>--watch</code> 不带值）和带值选项的区别；</li>
+<li>必填参数校验、默认值；</li>
+<li>自动生成 <code>--help</code> 和 <code>--version</code>。</li>
+</ol>
+<p>这些全是重复且容易出错的逻辑。手写解析适合用来理解原理，或者应付非常简单的内部脚本；一旦要做给别人用的 CLI，我的建议就很直接：<strong>参数解析交给成熟的第三方库</strong>。下面三个是当前最主流的选择。</p>
+<h2 id="commander：最广泛使用的方案"><a href="#commander：最广泛使用的方案" class="headerlink" title="commander：最广泛使用的方案"></a>commander：最广泛使用的方案</h2><p><code>commander</code> 是 Node 生态里最老牌、用得最广的参数解析库，Vue CLI、很多大型工具都用它。风格是<strong>链式 + 声明式</strong>。</p>
+<pre><code class="bash">npm i commander
+</code></pre>
+<pre><code class="js">// bin/index.js
+#!/usr/bin/env node
+import &#123; Command &#125; from &#39;commander&#39;
+
+const program = new Command()
+
+program
+  .name(&#39;mycli&#39;)
+  .description(&#39;一个示例脚手架&#39;)
+  .version(&#39;1.0.0&#39;)
+
+program
+  .command(&#39;create &lt;project-name&gt;&#39;)      // &lt;&gt; 表示必填参数
+  .description(&#39;创建一个新项目&#39;)
+  .option(&#39;-t, --template &lt;name&gt;&#39;, &#39;模板名称&#39;, &#39;vue&#39;) // 第三个参数是默认值
+  .option(&#39;-f, --force&#39;, &#39;目标目录存在时强制覆盖&#39;)
+  .action((projectName, options) =&gt; &#123;
+    console.log(&#39;项目名:&#39;, projectName)
+    console.log(&#39;模板:&#39;, options.template)
+    console.log(&#39;强制覆盖:&#39;, !!options.force)
+  &#125;)
+
+program.parse()
+</code></pre>
+<p>跑一下：</p>
+<pre><code class="bash">node bin/index.js create my-app --template react -f
+# 项目名: my-app
+# 模板: react
+# 强制覆盖: true
+</code></pre>
+<p><code>commander</code> 的特点：</p>
+<ul>
+<li>API 稳定、文档全、遇到问题搜得到答案；</li>
+<li><code>&lt;arg&gt;</code> 是必填参数，<code>[arg]</code> 是可选参数，<code>option</code> 里 <code>&lt;value&gt;</code> 表示该选项需要带值；</li>
+<li>自动生成 <code>--help</code> 和 <code>--version</code>，不用手写。</li>
+</ul>
+<p>它的缺点是相对「重」一点，但对绝大多数工具来说完全够用，也最不容易踩坑。</p>
+<h2 id="cac：轻量、零依赖"><a href="#cac：轻量、零依赖" class="headerlink" title="cac：轻量、零依赖"></a>cac：轻量、零依赖</h2><p><code>cac</code> 的定位是<strong>轻量、零依赖、单文件</strong>，Vite、unocss 等 UnJS&#x2F;Vite 生态项目用得多。它的 API 和 commander 很像，但更简洁。</p>
+<pre><code class="bash">npm i cac
+</code></pre>
+<pre><code class="js">#!/usr/bin/env node
+import cac from &#39;cac&#39;
+
+const cli = cac(&#39;mycli&#39;)
+
+cli
+  .command(&#39;create &lt;project-name&gt;&#39;, &#39;创建一个新项目&#39;)
+  .option(&#39;-t, --template &lt;name&gt;&#39;, &#39;模板名称&#39;, &#123; default: &#39;vue&#39; &#125;)
+  .option(&#39;-f, --force&#39;, &#39;目标目录存在时强制覆盖&#39;)
+  .action((projectName, options) =&gt; &#123;
+    console.log(&#39;项目名:&#39;, projectName)
+    console.log(&#39;模板:&#39;, options.template)
+    console.log(&#39;强制覆盖:&#39;, !!options.force)
+  &#125;)
+
+cli.help()        // 启用 -h / --help
+cli.version(&#39;1.0.0&#39;) // 启用 -v / --version
+cli.parse()
+</code></pre>
+<p>跑法和上面一样。<code>cac</code> 官方说核心就 4 个 API：<code>cli.option</code>、<code>cli.version</code>、<code>cli.help</code>、<code>cli.parse</code>，确实非常好上手。</p>
+<p>几个细节：</p>
+<ul>
+<li>选项默认值写在第三个参数的 <code>&#123; default: &#39;vue&#39; &#125;</code> 里，这点和 commander 不同；</li>
+<li><code>cli.help()</code> 和 <code>cli.version()</code> 要显式调用才会启用对应能力；</li>
+<li>零依赖，对追求体积、不想引入大依赖树的工具很友好。</li>
+</ul>
+<h2 id="yargs：功能最全、最重"><a href="#yargs：功能最全、最重" class="headerlink" title="yargs：功能最全、最重"></a>yargs：功能最全、最重</h2><p><code>yargs</code> 是功能最全的一个，校验、命令组织、中间件、自动补全都有，适合复杂 CLI。代价是 API 更繁、体积更大。</p>
+<pre><code class="bash">npm i yargs
+</code></pre>
+<pre><code class="js">#!/usr/bin/env node
+import yargs from &#39;yargs&#39;
+import &#123; hideBin &#125; from &#39;yargs/helpers&#39;
+
+yargs(hideBin(process.argv))
+  .scriptName(&#39;mycli&#39;)
+  .command(
+    &#39;create &lt;projectName&gt;&#39;,
+    &#39;创建一个新项目&#39;,
+    (y) =&gt;
+      y
+        .positional(&#39;projectName&#39;, &#123; describe: &#39;项目名&#39;, type: &#39;string&#39; &#125;)
+        .option(&#39;template&#39;, &#123;
+          alias: &#39;t&#39;,
+          describe: &#39;模板名称&#39;,
+          default: &#39;vue&#39;,
+          type: &#39;string&#39;,
+        &#125;)
+        .option(&#39;force&#39;, &#123; alias: &#39;f&#39;, type: &#39;boolean&#39; &#125;),
+    (argv) =&gt; &#123;
+      console.log(&#39;项目名:&#39;, argv.projectName)
+      console.log(&#39;模板:&#39;, argv.template)
+      console.log(&#39;强制覆盖:&#39;, !!argv.force)
+    &#125;,
+  )
+  .help()
+  .parse()
+</code></pre>
+<p>注意 <code>hideBin(process.argv)</code> 这个细节：它帮你去掉前两个（node 路径、脚本路径），等价于 <code>process.argv.slice(2)</code>，是 yargs 的标准写法。</p>
+<p><code>yargs</code> 的命令定义把「参数声明」和「处理函数」分开写，结构清晰但啰嗦。它的强项是内置的参数校验和类型系统，如果你的 CLI 选项特别多、校验逻辑复杂，yargs 能省不少事。</p>
+<h2 id="三者对比与选型"><a href="#三者对比与选型" class="headerlink" title="三者对比与选型"></a>三者对比与选型</h2><table>
+<thead>
+<tr>
+<th>维度</th>
+<th>commander</th>
+<th>cac</th>
+<th>yargs</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>风格</td>
+<td>链式声明</td>
+<td>链式声明，更简洁</td>
+<td>配置式，最详细</td>
+</tr>
+<tr>
+<td>依赖</td>
+<td>少</td>
+<td>零依赖</td>
+<td>较多</td>
+</tr>
+<tr>
+<td>体积</td>
+<td>中</td>
+<td>小</td>
+<td>大</td>
+</tr>
+<tr>
+<td>学习成本</td>
+<td>低</td>
+<td>最低</td>
+<td>中高</td>
+</tr>
+<tr>
+<td>内置校验</td>
+<td>基础</td>
+<td>基础</td>
+<td>强</td>
+</tr>
+<tr>
+<td>生态典型</td>
+<td>Vue CLI 等</td>
+<td>Vite&#x2F;UnJS 系</td>
+<td>复杂 CLI 工具</td>
+</tr>
+</tbody></table>
+<p>我的判断：</p>
+<ol>
+<li><strong>大多数工具、想稳</strong>：选 <code>commander</code>。文档最全、社区最大、出问题最好查。</li>
+<li><strong>追求轻量、Vite 风格项目</strong>：选 <code>cac</code>。零依赖、API 极简，体积敏感时首选。</li>
+<li><strong>选项极多、需要强校验</strong>：选 <code>yargs</code>。它的校验和类型系统在复杂场景能省事。</li>
+</ol>
+<p>对刚开始做 CLI 的人，我建议直接上 <code>commander</code> 或 <code>cac</code>，不要纠结。三者都能完成同样的事，切换成本也不高。</p>
+<h2 id="多个命令与多级子命令"><a href="#多个命令与多级子命令" class="headerlink" title="多个命令与多级子命令"></a>多个命令与多级子命令</h2><p>实际脚手架往往有多个顶层命令（<code>create</code>、<code>add</code>、<code>info</code>）。严格说，它们都是挂在 <code>mycli</code> 这个根命令下面的命令，不是 <code>mycli project create</code> 这种多级子命令。这里用 <code>cac</code> 写一个稍完整的骨架，体会一下结构：</p>
+<pre><code class="js">#!/usr/bin/env node
+import cac from &#39;cac&#39;
+
+const cli = cac(&#39;mycli&#39;)
+
+cli
+  .command(&#39;create &lt;name&gt;&#39;, &#39;创建项目&#39;)
+  .option(&#39;-t, --template &lt;t&gt;&#39;, &#39;模板&#39;, &#123; default: &#39;vue&#39; &#125;)
+  .action((name, options) =&gt; &#123;
+    console.log(`创建项目 $&#123;name&#125;，使用模板 $&#123;options.template&#125;`)
+  &#125;)
+
+cli
+  .command(&#39;add &lt;plugin&gt;&#39;, &#39;为项目添加插件&#39;)
+  .action((plugin) =&gt; &#123;
+    console.log(`添加插件 $&#123;plugin&#125;`)
+  &#125;)
+
+cli
+  .command(&#39;info&#39;, &#39;打印环境信息&#39;)
+  .action(() =&gt; &#123;
+    console.log(&#39;Node 版本:&#39;, process.version)
+    console.log(&#39;平台:&#39;, process.platform)
+  &#125;)
+
+// 没有匹配到任何命令时，输出帮助
+cli.command(&#39;&#39;).action(() =&gt; cli.outputHelp())
+
+cli.help()
+cli.version(&#39;1.0.0&#39;)
+cli.parse()
+</code></pre>
+<pre><code class="bash">node bin/index.js create my-app -t react
+node bin/index.js add router
+node bin/index.js info
+node bin/index.js --help
+</code></pre>
+<p>真正的多级子命令，通常是把一组相关能力收在同一个命令空间下面，比如：</p>
+<pre><code class="bash">mycli project create my-app
+mycli project list
+mycli plugin add router
+</code></pre>
+<p>这种结构的重点不只是命令变长了，而是 help 也要分层：<code>mycli --help</code> 只展示 <code>project</code>、<code>plugin</code> 这种顶层命令组；输入 <code>mycli project --help</code> 时，才展示 <code>create</code>、<code>list</code> 这些子命令以及它们自己的参数。</p>
+<p>用 <code>commander</code> 写这种层级会更直观，因为它的 <code>Command</code> 可以继续挂子命令：</p>
+<pre><code class="js">#!/usr/bin/env node
+import &#123; Command &#125; from &#39;commander&#39;
+
+const program = new Command()
+
+program
+  .name(&#39;mycli&#39;)
+  .description(&#39;一个示例脚手架&#39;)
+  .version(&#39;1.0.0&#39;)
+
+const project = program
+  .command(&#39;project&#39;)
+  .description(&#39;项目相关命令&#39;)
+
+project
+  .command(&#39;create &lt;name&gt;&#39;)
+  .description(&#39;创建项目&#39;)
+  .option(&#39;-t, --template &lt;t&gt;&#39;, &#39;模板&#39;, &#39;vue&#39;)
+  .action((name, options) =&gt; &#123;
+    console.log(`创建项目 $&#123;name&#125;，使用模板 $&#123;options.template&#125;`)
+  &#125;)
+
+project
+  .command(&#39;list&#39;)
+  .description(&#39;查看项目列表&#39;)
+  .action(() =&gt; &#123;
+    console.log(&#39;项目列表&#39;)
+  &#125;)
+
+program.parse()
+</code></pre>
+<p>对应的 help 入口是分层的：</p>
+<pre><code class="bash">node bin/index.js --help
+# 这里能看到 project 这个顶层命令组
+
+node bin/index.js project --help
+# 这里才会看到 create、list 这些子命令
+
+node bin/index.js project create my-app -t react
+</code></pre>
+<p><code>cac</code> 文档里说的 subcommands，更接近 <code>mycli create</code>、<code>mycli build</code> 这种单层的 git-like 命令。它没有像 <code>commander</code> 这样显式的命令树 API。如果想在 <code>cac</code> 里做 <code>project create</code> 这种多级结构，一般要把 <code>project</code> 当成一个命令，再在它的 <code>action</code> 里自己解析后续参数，或者拆成多个 CLI 实例手动分发。能做，但分层 help 就需要自己补，不如 <code>commander</code> 直接。</p>
+<p>我的理解是：顶层命令适合数量少、语义很清晰的工具，比如 <code>create</code>、<code>build</code>、<code>info</code>；多级子命令适合能力越来越多之后做分组，比如 <code>project create</code>、<code>project list</code>、<code>plugin add</code>。否则所有命令都堆在第一层，CLI 会越来越像一个没有目录的文件夹。</p>
+<blockquote>
+<p>坑点：命令的位置参数顺序和必填&#x2F;可选标记要和 <code>action</code> 回调的形参对应。<code>create &lt;name&gt;</code> 的 <code>name</code> 会作为 <code>action</code> 的第一个参数传入，最后一个参数永远是解析出来的 <code>options</code> 对象。如果发现 <code>options</code> 拿到的是字符串而不是对象，多半是形参错位了。</p>
+</blockquote>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>不要手写参数解析，命令&#x2F;选项&#x2F;help&#x2F;校验这些重复逻辑交给库。</li>
+<li><code>commander</code> 最主流、最稳，文档社区最全，是通用首选。</li>
+<li><code>cac</code> 零依赖、API 极简（只有 4 个核心方法），适合轻量和 Vite 风格项目。</li>
+<li><code>yargs</code> 功能最全、校验最强，适合选项多、校验复杂的大型 CLI，代价是更重。</li>
+<li>三者都支持常规命令、选项、默认值、自动 help；如果需要真正的多级命令树和分层 help，<code>commander</code> 或 <code>yargs</code> 更合适。</li>
+<li><code>action</code> 回调里，位置参数按声明顺序传入，最后一个参数固定是 options 对象。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/CLI/">CLI</a><a class="post-meta__tags" href="/tags/commander/">commander</a><a class="post-meta__tags" href="/tags/yargs/">yargs</a><a class="post-meta__tags" href="/tags/cac/">cac</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/01-%E4%BB%8E%E8%84%9A%E6%9C%AC%E5%88%B0%20CLI%EF%BC%9ANode%20%E5%91%BD%E4%BB%A4%E8%A1%8C%E5%B7%A5%E5%85%B7%E5%BC%80%E5%8F%91%E5%9F%BA%E7%A1%80/" title="从脚本到 CLI：Node 命令行工具开发基础"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">从脚本到 CLI：Node 命令行工具开发基础</div></div></a></div><div class="next-post pull-right"><a href="/posts/03-%E4%BA%A4%E4%BA%92%E5%BC%8F%E5%91%BD%E4%BB%A4%E8%A1%8C%E4%B8%8E%E6%97%A5%E5%BF%97%E4%BD%93%E9%AA%8C%EF%BC%9Aprompts%E3%80%81clack%20%E4%B8%8E%20ora/" title="交互式命令行与日志体验：prompts、clack 与 ora"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">交互式命令行与日志体验：prompts、clack 与 ora</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%A6%81%E6%89%8B%E5%86%99%E5%8F%82%E6%95%B0%E8%A7%A3%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">为什么不要手写参数解析</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#commander%EF%BC%9A%E6%9C%80%E5%B9%BF%E6%B3%9B%E4%BD%BF%E7%94%A8%E7%9A%84%E6%96%B9%E6%A1%88"><span class="toc-number">2.</span> <span class="toc-text">commander：最广泛使用的方案</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#cac%EF%BC%9A%E8%BD%BB%E9%87%8F%E3%80%81%E9%9B%B6%E4%BE%9D%E8%B5%96"><span class="toc-number">3.</span> <span class="toc-text">cac：轻量、零依赖</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#yargs%EF%BC%9A%E5%8A%9F%E8%83%BD%E6%9C%80%E5%85%A8%E3%80%81%E6%9C%80%E9%87%8D"><span class="toc-number">4.</span> <span class="toc-text">yargs：功能最全、最重</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E8%80%85%E5%AF%B9%E6%AF%94%E4%B8%8E%E9%80%89%E5%9E%8B"><span class="toc-number">5.</span> <span class="toc-text">三者对比与选型</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%9A%E4%B8%AA%E5%91%BD%E4%BB%A4%E4%B8%8E%E5%A4%9A%E7%BA%A7%E5%AD%90%E5%91%BD%E4%BB%A4"><span class="toc-number">6.</span> <span class="toc-text">多个命令与多级子命令</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">7.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

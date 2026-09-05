@@ -1,0 +1,531 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>ESLint 原理与 Flat Config 配置实践 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：阶段一解决的是项目能不能稳定跑起来，阶段二要解决的是代码能不能稳定写下去。我的理解是，代码规范不是让大家背规则，而是把容易出错的地方交给工具提前拦住。  ESLint 到底在检查什么很多人第一次接触 ESLint，会把它理解成“检查分号、缩进、单双引号的工具”。这其实是早期印象。 现在我更愿意这样理解：  ESLint 是一个把源码解析成 AST，再用规则检查代码结构的静态分析工具。  它">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ESLint 原理与 Flat Config 配置实践">
+<meta property="og:url" content="http://example.com/posts/01-ESLint%20%E5%8E%9F%E7%90%86%E4%B8%8E%20Flat%20Config%20%E9%85%8D%E7%BD%AE%E5%AE%9E%E8%B7%B5/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：阶段一解决的是项目能不能稳定跑起来，阶段二要解决的是代码能不能稳定写下去。我的理解是，代码规范不是让大家背规则，而是把容易出错的地方交给工具提前拦住。  ESLint 到底在检查什么很多人第一次接触 ESLint，会把它理解成“检查分号、缩进、单双引号的工具”。这其实是早期印象。 现在我更愿意这样理解：  ESLint 是一个把源码解析成 AST，再用规则检查代码结构的静态分析工具。  它">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T15:47:00.000Z">
+<meta property="article:modified_time" content="2026-09-05T07:10:20.870Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="前端工程化">
+<meta property="article:tag" content="ESLint">
+<meta property="article:tag" content="Flat Config">
+<meta property="article:tag" content="代码规范">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/01-ESLint%20%E5%8E%9F%E7%90%86%E4%B8%8E%20Flat%20Config%20%E9%85%8D%E7%BD%AE%E5%AE%9E%E8%B7%B5/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'ESLint 原理与 Flat Config 配置实践',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:10:20'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">ESLint 原理与 Flat Config 配置实践</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T15:47:00.000Z" title="发表于 2026 23:47:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-05T07:10:20.870Z" title="更新于 2026 15:10:20">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">1.8k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：阶段一解决的是项目能不能稳定跑起来，阶段二要解决的是代码能不能稳定写下去。我的理解是，代码规范不是让大家背规则，而是把容易出错的地方交给工具提前拦住。</p>
+</blockquote>
+<h2 id="ESLint-到底在检查什么"><a href="#ESLint-到底在检查什么" class="headerlink" title="ESLint 到底在检查什么"></a>ESLint 到底在检查什么</h2><p>很多人第一次接触 ESLint，会把它理解成“检查分号、缩进、单双引号的工具”。这其实是早期印象。</p>
+<p>现在我更愿意这样理解：</p>
+<blockquote>
+<p>ESLint 是一个把源码解析成 AST，再用规则检查代码结构的静态分析工具。</p>
+</blockquote>
+<p>它不是简单地按字符串查找，而是会先把代码解析成抽象语法树。</p>
+<pre><code class="ts">const count = 1
+console.log(count)
+</code></pre>
+<p>在 ESLint 眼里，它看到的不是两行文本，而是类似这样的结构：</p>
+<pre><code class="txt">Program
+├── VariableDeclaration
+│   └── VariableDeclarator
+│       ├── Identifier(count)
+│       └── Literal(1)
+└── ExpressionStatement
+    └── CallExpression
+        ├── MemberExpression(console.log)
+        └── Identifier(count)
+</code></pre>
+<p>所以 ESLint 能做的事情远不止格式检查：</p>
+<table>
+<thead>
+<tr>
+<th>检查类型</th>
+<th>例子</th>
+<th>价值</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>语法风险</td>
+<td>未使用变量、重复声明</td>
+<td>提前发现低级错误</td>
+</tr>
+<tr>
+<td>代码质量</td>
+<td>复杂条件、无意义赋值</td>
+<td>降低维护成本</td>
+</tr>
+<tr>
+<td>框架约束</td>
+<td>React Hooks 调用规则</td>
+<td>避免运行时 bug</td>
+</tr>
+<tr>
+<td>TypeScript 规则</td>
+<td>禁止滥用 <code>any</code></td>
+<td>提升类型可信度</td>
+</tr>
+<tr>
+<td>团队约定</td>
+<td>禁止跨层级 import</td>
+<td>固化架构边界</td>
+</tr>
+</tbody></table>
+<p>这也是我认为 ESLint 必须接入团队项目的原因：<strong>它能把“代码应该怎么写”变成可执行的规则</strong>。</p>
+<h2 id="ESLint-的工作流程"><a href="#ESLint-的工作流程" class="headerlink" title="ESLint 的工作流程"></a>ESLint 的工作流程</h2><p>一次 <code>eslint src</code> 大致会经历下面几个步骤：</p>
+<pre><code class="txt">读取配置
+  │
+  ▼
+匹配需要检查的文件
+  │
+  ▼
+用 parser 把源码解析成 AST
+  │
+  ▼
+按规则遍历 AST
+  │
+  ▼
+输出问题或执行自动修复
+</code></pre>
+<p>这里有几个关键词要分清楚。</p>
+<table>
+<thead>
+<tr>
+<th>概念</th>
+<th>作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>parser</td>
+<td>决定 ESLint 如何理解源码，比如 TypeScript 需要 <code>typescript-eslint</code></td>
+</tr>
+<tr>
+<td>plugin</td>
+<td>提供一批规则，比如 <code>eslint-plugin-react-hooks</code></td>
+</tr>
+<tr>
+<td>rule</td>
+<td>具体检查项，比如 <code>no-unused-vars</code></td>
+</tr>
+<tr>
+<td>config</td>
+<td>组合 parser、plugin、rule、ignore 的配置文件</td>
+</tr>
+</tbody></table>
+<p>一个常见误区是：以为安装了插件就会自动生效。</p>
+<p>实际上不是。插件只是“规则仓库”，配置里启用了对应规则，它才会参与检查。</p>
+<h2 id="Flat-Config-和-eslintrc-的核心差异"><a href="#Flat-Config-和-eslintrc-的核心差异" class="headerlink" title="Flat Config 和 .eslintrc 的核心差异"></a>Flat Config 和 <code>.eslintrc</code> 的核心差异</h2><p>ESLint v9 已经把 <code>eslint.config.js</code> 作为默认配置格式，传统 <code>.eslintrc</code> 已经进入 legacy 状态。</p>
+<p>二者最大的差异不是文件名，而是配置模型变了。</p>
+<table>
+<thead>
+<tr>
+<th>对比点</th>
+<th><code>.eslintrc</code></th>
+<th>Flat Config</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>配置文件</td>
+<td><code>.eslintrc.*</code></td>
+<td><code>eslint.config.js</code></td>
+</tr>
+<tr>
+<td>配置模型</td>
+<td>层层级联、自动查找</td>
+<td>一个数组，从上到下匹配</td>
+</tr>
+<tr>
+<td>插件使用</td>
+<td>字符串引用</td>
+<td>直接 import 对象</td>
+</tr>
+<tr>
+<td>ignore</td>
+<td><code>.eslintignore</code> 或配置字段</td>
+<td>通常放在配置数组中</td>
+</tr>
+<tr>
+<td>JavaScript 能力</td>
+<td>有限</td>
+<td>天然使用 ESM&#x2F;CJS 能力</td>
+</tr>
+</tbody></table>
+<p>以前 <code>.eslintrc</code> 更像“声明一个配置文件，然后让 ESLint 自己去合并”。</p>
+<p>Flat Config 更像“我明确给 ESLint 一组配置对象，你按顺序执行”。</p>
+<pre><code class="txt">eslint.config.js
+├── 全局忽略规则
+├── JS 推荐规则
+├── TS 文件规则
+├── React 文件规则
+└── 测试文件特殊规则
+</code></pre>
+<p>这种模型对大型项目更友好，因为配置来源更明确，不容易出现“这个规则到底从哪里来的”这种问题。</p>
+<h2 id="一个最小可用的-Flat-Config"><a href="#一个最小可用的-Flat-Config" class="headerlink" title="一个最小可用的 Flat Config"></a>一个最小可用的 Flat Config</h2><p>下面是一个 TypeScript 项目里比较常见的最小配置。</p>
+<p>环境说明：</p>
+<ul>
+<li>Node.js 18.18 及以上；</li>
+<li>ESLint 9；</li>
+<li>TypeScript 项目；</li>
+<li>使用 <code>pnpm</code>。</li>
+</ul>
+<p>安装依赖：</p>
+<pre><code class="bash">pnpm add -D eslint @eslint/js typescript typescript-eslint
+</code></pre>
+<p>创建 <code>eslint.config.js</code>：</p>
+<pre><code class="js">import js from &#39;@eslint/js&#39;
+import tseslint from &#39;typescript-eslint&#39;
+
+export default [
+  &#123;
+    ignores: [&#39;dist/**&#39;, &#39;coverage/**&#39;, &#39;node_modules/**&#39;],
+  &#125;,
+  js.configs.recommended,
+  ...tseslint.configs.recommended,
+  &#123;
+    files: [&#39;**/*.&#123;ts,tsx&#125;&#39;],
+    rules: &#123;
+      &#39;@typescript-eslint/no-unused-vars&#39;: [
+        &#39;error&#39;,
+        &#123;
+          argsIgnorePattern: &#39;^_&#39;,
+          varsIgnorePattern: &#39;^_&#39;,
+        &#125;,
+      ],
+    &#125;,
+  &#125;,
+]
+</code></pre>
+<p>再在 <code>package.json</code> 里加脚本：</p>
+<pre><code class="json">&#123;
+  &quot;scripts&quot;: &#123;
+    &quot;lint&quot;: &quot;eslint .&quot;,
+    &quot;lint:fix&quot;: &quot;eslint . --fix&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>执行：</p>
+<pre><code class="bash">pnpm lint
+</code></pre>
+<p>如果代码里有未使用变量，就会看到类似输出：</p>
+<pre><code class="txt">error  &#39;name&#39; is assigned a value but never used  @typescript-eslint/no-unused-vars
+</code></pre>
+<h2 id="TypeScript-项目为什么不要只用默认规则"><a href="#TypeScript-项目为什么不要只用默认规则" class="headerlink" title="TypeScript 项目为什么不要只用默认规则"></a>TypeScript 项目为什么不要只用默认规则</h2><p>TypeScript 项目里有一个很常见的坑：同时开启 ESLint 自带的 <code>no-unused-vars</code> 和 TypeScript 版的 <code>@typescript-eslint/no-unused-vars</code>。</p>
+<p>这样会出现重复报错，甚至对类型声明判断不准确。</p>
+<p>我的建议是：<strong>只要进入 TypeScript 文件，就优先使用 TypeScript ESLint 提供的同名规则</strong>。</p>
+<pre><code class="js">&#123;
+  files: [&#39;**/*.&#123;ts,tsx&#125;&#39;],
+  rules: &#123;
+    &#39;no-unused-vars&#39;: &#39;off&#39;,
+    &#39;@typescript-eslint/no-unused-vars&#39;: &#39;error&#39;,
+  &#125;,
+&#125;
+</code></pre>
+<p>原因很简单：TypeScript 的语法比 JavaScript 多，普通 ESLint 规则不一定理解类型空间。</p>
+<p>比如：</p>
+<pre><code class="ts">type User = &#123;
+  id: string
+&#125;
+
+const user: User = &#123;
+  id: &#39;1&#39;,
+&#125;
+</code></pre>
+<p>这里的 <code>User</code> 是类型使用，不是运行时代码使用。规则如果不理解 TypeScript，就容易误判。</p>
+<h2 id="是否要开启类型感知规则"><a href="#是否要开启类型感知规则" class="headerlink" title="是否要开启类型感知规则"></a>是否要开启类型感知规则</h2><p><code>typescript-eslint</code> 里有些规则需要读取 <code>tsconfig.json</code>，这类规则通常叫 type-aware linting。</p>
+<p>它能检查更深的问题，比如：</p>
+<pre><code class="ts">async function getUser() &#123;
+  return &#123; id: &#39;1&#39; &#125;
+&#125;
+
+// 没有 await，也没有处理 Promise
+getUser()
+</code></pre>
+<p>这类问题普通语法规则不一定能准确判断，因为它需要知道 <code>getUser()</code> 的返回类型。</p>
+<p>但类型感知规则也有代价：它会启动 TypeScript Program，速度明显慢于普通 lint。</p>
+<p>我的建议是分层：</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>建议</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>本地保存时</td>
+<td>用普通 ESLint 规则，保证反馈快</td>
+</tr>
+<tr>
+<td>pre-commit</td>
+<td>只检查暂存文件，避免卡顿</td>
+</tr>
+<tr>
+<td>CI</td>
+<td>跑完整 ESLint + 类型检查</td>
+</tr>
+<tr>
+<td>大型 monorepo</td>
+<td>按 package 分区检查</td>
+</tr>
+</tbody></table>
+<p>不要一开始就把所有最重的规则塞进本地提交钩子里，否则团队最后会想办法绕过工具。</p>
+<h2 id="规则配置要有边界"><a href="#规则配置要有边界" class="headerlink" title="规则配置要有边界"></a>规则配置要有边界</h2><p>ESLint 规则不是越多越好。</p>
+<p>我通常会把规则分成三类：</p>
+<table>
+<thead>
+<tr>
+<th>规则类型</th>
+<th>是否强制</th>
+<th>例子</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>明确 bug 风险</td>
+<td>必须强制</td>
+<td>React Hooks 规则、未处理 Promise</td>
+</tr>
+<tr>
+<td>团队一致性</td>
+<td>适度强制</td>
+<td>import 顺序、命名约定</td>
+</tr>
+<tr>
+<td>个人偏好</td>
+<td>尽量交给格式化工具</td>
+<td>分号、缩进、换行</td>
+</tr>
+</tbody></table>
+<p>尤其要避免把 ESLint 配成“个人审美工具”。代码质量工具一旦掺入太多审美争论，就会失去团队信任。</p>
+<h2 id="一个更贴近团队项目的脚本设计"><a href="#一个更贴近团队项目的脚本设计" class="headerlink" title="一个更贴近团队项目的脚本设计"></a>一个更贴近团队项目的脚本设计</h2><p>我更推荐把检查命令拆开：</p>
+<pre><code class="json">&#123;
+  &quot;scripts&quot;: &#123;
+    &quot;lint&quot;: &quot;eslint .&quot;,
+    &quot;lint:fix&quot;: &quot;eslint . --fix&quot;,
+    &quot;typecheck&quot;: &quot;tsc --noEmit&quot;,
+    &quot;check&quot;: &quot;pnpm lint &amp;&amp; pnpm typecheck&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>这样做有两个好处：</p>
+<ol>
+<li>本地可以单独跑 <code>lint:fix</code>；</li>
+<li>CI 可以统一跑 <code>check</code>。</li>
+</ol>
+<p>如果项目变大，还可以继续拆：</p>
+<pre><code class="json">&#123;
+  &quot;scripts&quot;: &#123;
+    &quot;lint:src&quot;: &quot;eslint src&quot;,
+    &quot;lint:test&quot;: &quot;eslint tests&quot;,
+    &quot;typecheck&quot;: &quot;tsc -p tsconfig.json --noEmit&quot;
+  &#125;
+&#125;
+</code></pre>
+<p>工具链设计的目标不是命令越少越好，而是每个命令的职责清楚。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>ESLint 的核心是基于 AST 的静态分析，不只是格式检查。</li>
+<li>ESLint v9 默认使用 Flat Config，新项目建议直接使用 <code>eslint.config.js</code>。</li>
+<li>TypeScript 项目要优先使用 <code>typescript-eslint</code> 的规则，避免普通 JS 规则误判。</li>
+<li>类型感知规则更强但更慢，适合放到 CI 或完整检查里。</li>
+<li>团队规则要优先约束 bug 风险和协作边界，不要把个人审美塞满配置。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/">前端工程化</a><a class="post-meta__tags" href="/tags/ESLint/">ESLint</a><a class="post-meta__tags" href="/tags/Flat-Config/">Flat Config</a><a class="post-meta__tags" href="/tags/%E4%BB%A3%E7%A0%81%E8%A7%84%E8%8C%83/">代码规范</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/02-%E6%8E%A5%E5%8F%A3%E5%A5%91%E7%BA%A6%E3%80%81Mock%20%E4%B8%8E%E8%AF%B7%E6%B1%82%E5%B1%82%E5%B7%A5%E7%A8%8B%E5%8C%96%E5%9F%BA%E7%A1%80/" title="接口契约、Mock 与请求层工程化基础"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">接口契约、Mock 与请求层工程化基础</div></div></a></div><div class="next-post pull-right"><a href="/posts/02-Prettier%20%E4%B8%8E%20Stylelint%20%E7%9A%84%E8%BE%B9%E7%95%8C%E5%92%8C%E6%8E%A5%E5%85%A5/" title="Prettier 与 Stylelint 的边界和接入"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Prettier 与 Stylelint 的边界和接入</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#ESLint-%E5%88%B0%E5%BA%95%E5%9C%A8%E6%A3%80%E6%9F%A5%E4%BB%80%E4%B9%88"><span class="toc-number">1.</span> <span class="toc-text">ESLint 到底在检查什么</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ESLint-%E7%9A%84%E5%B7%A5%E4%BD%9C%E6%B5%81%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">ESLint 的工作流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#Flat-Config-%E5%92%8C-eslintrc-%E7%9A%84%E6%A0%B8%E5%BF%83%E5%B7%AE%E5%BC%82"><span class="toc-number">3.</span> <span class="toc-text">Flat Config 和 .eslintrc 的核心差异</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E6%9C%80%E5%B0%8F%E5%8F%AF%E7%94%A8%E7%9A%84-Flat-Config"><span class="toc-number">4.</span> <span class="toc-text">一个最小可用的 Flat Config</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TypeScript-%E9%A1%B9%E7%9B%AE%E4%B8%BA%E4%BB%80%E4%B9%88%E4%B8%8D%E8%A6%81%E5%8F%AA%E7%94%A8%E9%BB%98%E8%AE%A4%E8%A7%84%E5%88%99"><span class="toc-number">5.</span> <span class="toc-text">TypeScript 项目为什么不要只用默认规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%98%AF%E5%90%A6%E8%A6%81%E5%BC%80%E5%90%AF%E7%B1%BB%E5%9E%8B%E6%84%9F%E7%9F%A5%E8%A7%84%E5%88%99"><span class="toc-number">6.</span> <span class="toc-text">是否要开启类型感知规则</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%A7%84%E5%88%99%E9%85%8D%E7%BD%AE%E8%A6%81%E6%9C%89%E8%BE%B9%E7%95%8C"><span class="toc-number">7.</span> <span class="toc-text">规则配置要有边界</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E6%9B%B4%E8%B4%B4%E8%BF%91%E5%9B%A2%E9%98%9F%E9%A1%B9%E7%9B%AE%E7%9A%84%E8%84%9A%E6%9C%AC%E8%AE%BE%E8%AE%A1"><span class="toc-number">8.</span> <span class="toc-text">一个更贴近团队项目的脚本设计</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">9.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>

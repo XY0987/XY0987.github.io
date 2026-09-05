@@ -1,0 +1,341 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 251;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>工程决策可追溯：RFC 流程与 ADR | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：前面所有篇都在讲「怎么做」——测试、CI、部署、监控、安全。这一篇讲一个更软但同样重要的问题：工程决策怎么被记录、被追溯。团队做技术选型、定架构方向时，如果决策过程和理由不留痕，半年后就会有人问「当初为什么选它、为什么不用那个」，而没人答得上来，甚至重复踩同一个坑。RFC 和 ADR 就是解决这个问题的两个轻量实践，让工程决策可讨论、可追溯。  为什么要记录决策先说清痛点。任何有点规模的团">
+<meta property="og:type" content="article">
+<meta property="og:title" content="工程决策可追溯：RFC 流程与 ADR">
+<meta property="og:url" content="http://example.com/posts/02-%E5%B7%A5%E7%A8%8B%E5%86%B3%E7%AD%96%E5%8F%AF%E8%BF%BD%E6%BA%AF%EF%BC%9ARFC%20%E6%B5%81%E7%A8%8B%E4%B8%8E%20ADR/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：前面所有篇都在讲「怎么做」——测试、CI、部署、监控、安全。这一篇讲一个更软但同样重要的问题：工程决策怎么被记录、被追溯。团队做技术选型、定架构方向时，如果决策过程和理由不留痕，半年后就会有人问「当初为什么选它、为什么不用那个」，而没人答得上来，甚至重复踩同一个坑。RFC 和 ADR 就是解决这个问题的两个轻量实践，让工程决策可讨论、可追溯。  为什么要记录决策先说清痛点。任何有点规模的团">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-07-11T14:45:00.000Z">
+<meta property="article:modified_time" content="2026-09-05T07:10:20.885Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="前端工程化">
+<meta property="article:tag" content="RFC">
+<meta property="article:tag" content="ADR">
+<meta property="article:tag" content="架构决策">
+<meta property="article:tag" content="团队协作">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/02-%E5%B7%A5%E7%A8%8B%E5%86%B3%E7%AD%96%E5%8F%AF%E8%BF%BD%E6%BA%AF%EF%BC%9ARFC%20%E6%B5%81%E7%A8%8B%E4%B8%8E%20ADR/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '工程决策可追溯：RFC 流程与 ADR',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 15:10:20'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">工程决策可追溯：RFC 流程与 ADR</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-07-11T14:45:00.000Z" title="发表于 2026 22:45:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-05T07:10:20.885Z" title="更新于 2026 15:10:20">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.2k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>6分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：前面所有篇都在讲「怎么做」——测试、CI、部署、监控、安全。这一篇讲一个更软但同样重要的问题：<strong>工程决策怎么被记录、被追溯</strong>。团队做技术选型、定架构方向时，如果决策过程和理由不留痕，半年后就会有人问「当初为什么选它、为什么不用那个」，而没人答得上来，甚至重复踩同一个坑。RFC 和 ADR 就是解决这个问题的两个轻量实践，让工程决策可讨论、可追溯。</p>
+</blockquote>
+<h2 id="为什么要记录决策"><a href="#为什么要记录决策" class="headerlink" title="为什么要记录决策"></a>为什么要记录决策</h2><p>先说清痛点。任何有点规模的团队都会经历这些场景：</p>
+<pre><code class="txt">「我们为什么用 pnpm 不用 npm？」        → 没人记得当初的权衡
+「这个奇怪的构建配置能删吗？」          → 不敢删，不知道当初为什么加
+「上次不是讨论过要不要上微前端吗？结论呢？」→ 讨论散在群里，翻不到
+「新人问为什么这么设计」               → 每次都要一个老人口头重讲一遍
+</code></pre>
+<p>共同的问题是：<strong>决策的「结论」和「理由」丢失了</strong>。代码只记录了「最终怎么做的」，没记录「为什么这么做、当时考虑过哪些方案、否决了什么」。而恰恰是「为什么」，才是判断「现在还该不该这么做」的依据。</p>
+<blockquote>
+<p>一句话概括：代码告诉你「是什么」，RFC&#x2F;ADR 告诉你「为什么」。</p>
+</blockquote>
+<h2 id="ADR：架构决策记录"><a href="#ADR：架构决策记录" class="headerlink" title="ADR：架构决策记录"></a>ADR：架构决策记录</h2><p><strong>ADR（Architecture Decision Record，架构决策记录）</strong>是最轻量的决策记录实践。它就是<strong>一份份小的 markdown 文档，每份记录一个重要决策</strong>，放在代码仓库里（通常 <code>docs/adr/</code> 目录），跟代码一起版本管理。</p>
+<p>一份 ADR 的结构非常简单，通常就这几段：</p>
+<pre><code class="markdown"># ADR-0007: 采用 pnpm 作为包管理器
+
+## 状态
+已采纳（2026-03-15）
+
+## 背景
+项目是 Monorepo，有 12 个包。npm/yarn 的 node_modules 体积大、
+安装慢，且幽灵依赖问题在多包场景下频繁出现。
+
+## 决策
+采用 pnpm 作为统一包管理器，用 workspace 管理 Monorepo。
+
+## 理由
+- 硬链接 + 内容寻址，磁盘占用和安装速度明显优于 npm/yarn
+- 严格的依赖隔离，杜绝幽灵依赖
+- 对 Monorepo workspace 支持成熟
+
+## 后果
+- 团队需统一用 pnpm，CI 和文档都要相应调整
+- 少数只兼容 npm 的工具需额外处理
+- 通过 Corepack 锁定 pnpm 版本保证一致性
+</code></pre>
+<p>ADR 的几个要点：</p>
+<ol>
+<li><strong>一个决策一份文档，编号递增</strong>（ADR-0001、ADR-0002…），不可删除。</li>
+<li><strong>状态字段</strong>：提议中（Proposed）、已采纳（Accepted）、已废弃（Deprecated）、被取代（Superseded by ADR-xxx）。决策变了不是删掉旧 ADR，而是标记为「被取代」并新写一份——<strong>保留决策的演变历史</strong>。</li>
+<li><strong>重点在「背景」和「理由」</strong>：记录当时的约束和权衡。这是未来判断「这个决策还成不成立」的关键——如果当初的约束不存在了，决策就该重新评估。</li>
+<li><strong>放进代码仓库</strong>：跟代码一起 review、一起演进，而不是丢在某个文档平台无人维护。</li>
+</ol>
+<p>ADR 的精髓是<strong>极低成本</strong>——写一份就十几分钟，markdown 而已。它不追求完美，追求的是「重要决策有个能查到的落点」。<strong>我的建议：从今天起，团队里每个「以后可能有人问为什么」的技术决策，就顺手写一份 ADR。</strong> 成本极小，回报在半年后显现。</p>
+<h2 id="RFC：面向未落地决策的讨论流程"><a href="#RFC：面向未落地决策的讨论流程" class="headerlink" title="RFC：面向未落地决策的讨论流程"></a>RFC：面向未落地决策的讨论流程</h2><p>如果说 ADR 是「记录已经做的决策」，<strong>RFC（Request for Comments，请求评议）</strong>更偏向<strong>「一个还没定的重大提案，走一遍公开讨论、收集反馈、达成共识的流程」</strong>。</p>
+<p>RFC 用于<strong>影响面大、需要多人达成一致</strong>的决策，比如：要不要引入微前端、要不要换状态管理方案、设计一个新的公共 API、重大的架构调整。这类决策不该由一个人拍板，也不该在群里聊两句就定，而值得走一个正式点的流程。</p>
+<p>RFC 的典型流程：</p>
+<pre><code class="txt">1. 提案人写一份 RFC 文档（问题、方案、备选方案、影响、风险）
+2. 提交为 PR / 专门的 RFC 仓库 issue，公开可见
+3. 团队相关方评审、在文档上评论、讨论权衡
+4. 达成共识 → RFC 被接受 → 落地实施
+   有分歧 → 继续迭代方案，或记录「暂不采纳」及原因
+5. RFC 归档，成为这个决策的永久记录
+</code></pre>
+<p>一份 RFC 通常包含比 ADR 更充分的论证：</p>
+<ul>
+<li><strong>动机</strong>：要解决什么问题，为什么现在要解决。</li>
+<li><strong>详细方案</strong>：具体怎么做。</li>
+<li><strong>备选方案</strong>：还考虑过哪些，为什么不选它们（这部分极其重要）。</li>
+<li><strong>影响与风险</strong>：对现有系统、团队、迁移成本的影响。</li>
+<li><strong>未解决的问题</strong>：暂时没想清楚的点，开放讨论。</li>
+</ul>
+<p>React、Vue、TC39（JS 标准）、Rust 等都用 RFC 流程管理重大变更——你能在它们的 RFC 仓库里看到每个重大特性「为什么这么设计、讨论过什么、否决过什么」。这就是 RFC 的价值：<strong>把重大决策的思考过程沉淀成公开、可追溯的资产。</strong></p>
+<h2 id="RFC-和-ADR-的关系与配合"><a href="#RFC-和-ADR-的关系与配合" class="headerlink" title="RFC 和 ADR 的关系与配合"></a>RFC 和 ADR 的关系与配合</h2><p>两者不是二选一，而是<strong>配合使用</strong>，覆盖决策的不同阶段：</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>RFC</th>
+<th>ADR</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>阶段</td>
+<td>决策<strong>之前</strong>（提案、讨论）</td>
+<td>决策<strong>之后</strong>（记录结论）</td>
+</tr>
+<tr>
+<td>目的</td>
+<td>达成共识</td>
+<td>留档追溯</td>
+</tr>
+<tr>
+<td>篇幅</td>
+<td>较长（充分论证）</td>
+<td>简短（结论 + 理由）</td>
+</tr>
+<tr>
+<td>触发</td>
+<td>重大、有争议的决策</td>
+<td>任何值得记录的决策</td>
+</tr>
+<tr>
+<td>过程</td>
+<td>公开评审、多轮讨论</td>
+<td>写下来即可</td>
+</tr>
+</tbody></table>
+<p>典型配合：<strong>重大决策走 RFC 讨论达成共识，落地后用一份 ADR 记录最终结论</strong>。小决策不必走 RFC，直接一份 ADR 就够。</p>
+<p>一个实用的判断标准——<strong>这个决策要不要走 RFC</strong>：</p>
+<pre><code class="txt">影响面大 + 有多个可选方案 + 需要多人认同 + 改错代价高  → 走 RFC
+局部的、方案明确的、影响小的                          → 直接 ADR 或不记录
+</code></pre>
+<p>别把所有事都上 RFC（流程会拖垮效率），也别所有事都不记录（决策全靠口口相传）。<strong>分寸感是关键</strong>。</p>
+<h2 id="落地建议：从小处开始"><a href="#落地建议：从小处开始" class="headerlink" title="落地建议：从小处开始"></a>落地建议：从小处开始</h2><p>RFC&#x2F;ADR 最大的敌人不是「不会写」，而是<strong>「建立了但没人维护」</strong>——写了两份就荒废了。几条让它活下去的建议：</p>
+<ol>
+<li><strong>从 ADR 开始，别一上来搞重流程</strong>。先养成「重要决策写一份 ADR」的习惯，成本低、见效快。RFC 流程等团队有需要（出现了该讨论却没讨论清楚的重大决策）再引入。</li>
+<li><strong>放进代码仓库，跟 PR 走</strong>。ADR&#x2F;RFC 作为 markdown 进仓库，改动走 PR review。别用一个没人看的 wiki。</li>
+<li><strong>模板化、降低门槛</strong>。给个固定模板，填空即可。门槛越低越有人写。</li>
+<li><strong>在 PR&#x2F;文档里引用</strong>。做某个改动时，PR 描述里链到对应的 ADR&#x2F;RFC，让决策和代码关联起来。</li>
+<li><strong>接受它不完美</strong>。ADR 写得糙没关系，「有记录」远胜于「没记录」。追求完美只会让人不敢写。</li>
+</ol>
+<p>我的核心观点：<strong>工程化不只是工具和流水线，也包括「决策的可追溯性」</strong>。前面十几篇讲的所有技术选型——用 Vitest 还是 Jest、GitHub Flow 还是 Trunk-Based、上不上 SSR——每一个背后都有权衡。把这些权衡记下来，团队才能在未来「知道为什么」，而不是对着一堆「不知道能不能动」的历史决策战战兢兢。这是工程成熟度的一个隐性标志。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>代码只记录「是什么」，RFC&#x2F;ADR 记录「为什么」——决策的理由和权衡不留痕，团队就会重复踩坑、不敢改历史设计。</li>
+<li>ADR 是轻量的架构决策记录，一个决策一份 markdown（背景&#x2F;决策&#x2F;理由&#x2F;后果），编号递增、放进代码仓库、用状态字段管理演变。</li>
+<li>ADR 精髓是极低成本，重点在「背景」和「理由」，让未来能判断决策是否还成立。</li>
+<li>RFC 是面向未落地重大决策的公开讨论流程（动机&#x2F;方案&#x2F;备选&#x2F;影响&#x2F;风险），用于影响面大、需多人共识的决策。</li>
+<li>RFC 的「备选方案及否决理由」最有价值，把重大决策的思考过程沉淀成可追溯资产。</li>
+<li>两者配合：重大决策走 RFC 达成共识、落地后用 ADR 记录；小决策直接 ADR；用「影响面&#x2F;方案数&#x2F;改错代价」判断要不要走 RFC。</li>
+<li>从 ADR 起步、放进仓库跟 PR 走、模板化降门槛、接受不完美——「有记录」远胜「没记录」。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%89%8D%E7%AB%AF%E5%B7%A5%E7%A8%8B%E5%8C%96/">前端工程化</a><a class="post-meta__tags" href="/tags/RFC/">RFC</a><a class="post-meta__tags" href="/tags/ADR/">ADR</a><a class="post-meta__tags" href="/tags/%E6%9E%B6%E6%9E%84%E5%86%B3%E7%AD%96/">架构决策</a><a class="post-meta__tags" href="/tags/%E5%9B%A2%E9%98%9F%E5%8D%8F%E4%BD%9C/">团队协作</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="prev-post pull-left"><a href="/posts/01-%E5%88%86%E6%94%AF%E7%AD%96%E7%95%A5%E4%B8%8E%E7%89%88%E6%9C%AC%E5%8F%91%E5%B8%83%E9%80%9A%E9%81%93/" title="分支策略与版本发布通道"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">分支策略与版本发布通道</div></div></a></div><div class="next-post pull-right"><a href="/posts/01-%E5%BE%AE%E5%89%8D%E7%AB%AF%E9%80%89%E5%9E%8B%EF%BC%9AModule%20Federation%E3%80%81qiankun%20%E4%B8%8E%20wujie/" title="微前端选型：Module Federation、qiankun 与 wujie"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">微前端选型：Module Federation、qiankun 与 wujie</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">251</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">550</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E8%A6%81%E8%AE%B0%E5%BD%95%E5%86%B3%E7%AD%96"><span class="toc-number">1.</span> <span class="toc-text">为什么要记录决策</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#ADR%EF%BC%9A%E6%9E%B6%E6%9E%84%E5%86%B3%E7%AD%96%E8%AE%B0%E5%BD%95"><span class="toc-number">2.</span> <span class="toc-text">ADR：架构决策记录</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RFC%EF%BC%9A%E9%9D%A2%E5%90%91%E6%9C%AA%E8%90%BD%E5%9C%B0%E5%86%B3%E7%AD%96%E7%9A%84%E8%AE%A8%E8%AE%BA%E6%B5%81%E7%A8%8B"><span class="toc-number">3.</span> <span class="toc-text">RFC：面向未落地决策的讨论流程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#RFC-%E5%92%8C-ADR-%E7%9A%84%E5%85%B3%E7%B3%BB%E4%B8%8E%E9%85%8D%E5%90%88"><span class="toc-number">4.</span> <span class="toc-text">RFC 和 ADR 的关系与配合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%90%BD%E5%9C%B0%E5%BB%BA%E8%AE%AE%EF%BC%9A%E4%BB%8E%E5%B0%8F%E5%A4%84%E5%BC%80%E5%A7%8B"><span class="toc-number">5.</span> <span class="toc-text">落地建议：从小处开始</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-DeepSeek%20Harness%20%E5%BC%80%E6%BA%90%EF%BC%9A%E4%B8%80%E5%88%87%E7%9A%86%E6%8F%92%E4%BB%B6%E7%9A%84%20Agent%20%E8%BF%90%E8%A1%8C%E6%A1%86%E6%9E%B6/" title="DeepSeek Harness 开源：一切皆插件的 Agent 运行框架">DeepSeek Harness 开源：一切皆插件的 Agent 运行框架</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/01-AI%20%E7%BC%96%E7%A8%8B%E6%9C%80%E4%BD%B3%E5%AE%9E%E8%B7%B5%EF%BC%9A%E6%8A%8A%20Agent%20%E5%BD%93%E9%95%BF%E6%9C%9F%E9%98%9F%E5%8F%8B%EF%BC%8C%E8%80%8C%E4%B8%8D%E6%98%AF%E9%97%AE%E7%AD%94%E6%9C%BA%E5%99%A8/" title="AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器">AI 编程最佳实践：把 Agent 当长期队友，而不是问答机器</a><time datetime="2026-08-02T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
