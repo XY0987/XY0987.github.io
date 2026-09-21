@@ -1,0 +1,394 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 253;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：这篇不是技术教程，而是一篇”安利”。前段时间我写了一个 Vite 系列小册《Vite：从使用到精通》，沿「使用 → 源码 → 哲学」三阶段递进。这篇把它写了什么、为什么现在写、适合谁读讲清楚，感兴趣的可以直接去看：https:&#x2F;&#x2F;github.com&#x2F;XY0987&#x2F;vite_brochure_public。文中涉及的版本节点变化很快，具体请以各项目官方文档为准。  为什么在 AI 时代还要">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列">
+<meta property="og:url" content="http://example.com/posts/04-%E3%80%8AVite%EF%BC%9A%E4%BB%8E%E4%BD%BF%E7%94%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B%EF%BC%9A%E6%88%91%E5%86%99%E7%9A%84%E4%B8%80%E4%B8%AA%E4%B8%89%E9%98%B6%E6%AE%B5%E9%80%92%E8%BF%9B%E7%9A%84%20Vite%20%E7%B3%BB%E5%88%97/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：这篇不是技术教程，而是一篇”安利”。前段时间我写了一个 Vite 系列小册《Vite：从使用到精通》，沿「使用 → 源码 → 哲学」三阶段递进。这篇把它写了什么、为什么现在写、适合谁读讲清楚，感兴趣的可以直接去看：https:&#x2F;&#x2F;github.com&#x2F;XY0987&#x2F;vite_brochure_public。文中涉及的版本节点变化很快，具体请以各项目官方文档为准。  为什么在 AI 时代还要">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-09-20T07:30:00.000Z">
+<meta property="article:modified_time" content="2026-09-21T13:02:28.868Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="Vite">
+<meta property="article:tag" content="Rolldown">
+<meta property="article:tag" content="构建工具">
+<meta property="article:tag" content="源码分析">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/04-%E3%80%8AVite%EF%BC%9A%E4%BB%8E%E4%BD%BF%E7%94%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B%EF%BC%9A%E6%88%91%E5%86%99%E7%9A%84%E4%B8%80%E4%B8%AA%E4%B8%89%E9%98%B6%E6%AE%B5%E9%80%92%E8%BF%9B%E7%9A%84%20Vite%20%E7%B3%BB%E5%88%97/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 21:02:28'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">551</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-09-20T07:30:00.000Z" title="发表于 2026 15:30:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-09-21T13:02:28.868Z" title="更新于 2026 21:02:28">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/engineering/">工程化</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">2.4k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>7分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：这篇不是技术教程，而是一篇”安利”。前段时间我写了一个 Vite 系列小册《Vite：从使用到精通》，沿「使用 → 源码 → 哲学」三阶段递进。这篇把它写了什么、为什么现在写、适合谁读讲清楚，感兴趣的可以直接去看：<a target="_blank" rel="noopener" href="https://github.com/XY0987/vite_brochure_public">https://github.com/XY0987/vite_brochure_public</a>。文中涉及的版本节点变化很快，具体请以各项目官方文档为准。</p>
+</blockquote>
+<h2 id="为什么在-AI-时代还要写一本-Vite-小册"><a href="#为什么在-AI-时代还要写一本-Vite-小册" class="headerlink" title="为什么在 AI 时代还要写一本 Vite 小册"></a>为什么在 AI 时代还要写一本 Vite 小册</h2><p>先说我最纠结的一点：现在 AI 能随手给你一份能跑的 <code>vite.config</code>，那还写这东西干嘛？</p>
+<p>我的答案是：AI 能给配置，但有三件事它替代不了。</p>
+<ul>
+<li>理解配置背后的<strong>取舍</strong>——为什么这么配、代价是什么</li>
+<li>出问题时的<strong>定位能力</strong>——报错日志背后到底发生了什么</li>
+<li>版本迁移时的<strong>工程判断</strong>——这个升级值不值得做、风险在哪</li>
+</ul>
+<p>这三件事恰好是前端工程化的基本功，也正是 AI 的能力边界。所以这本小册干脆不做”配置速查”（那正是 AI 最擅长、也最没必要由人来写的部分），而是聚焦 AI 替代不了的地方：源码级的实现理解 + 版本演进背后的工程决策 + 可迁移的设计思想。</p>
+<p>我的判断是：<strong>AI 时代，这类内容不是过时，反而更有必要。</strong></p>
+<p>还有一个更直接的动因——时机。Vite 8 + Rolldown 是 Vite 这几年最大的一次架构变更：dev 和 build 从过去的”双引擎”走向 Rust 单打包器。而市面上多数 Vite 小册还停在 4&#x2F;5，没覆盖 Environment API、Rolldown、Oxc 这条主线。这块空白正好值得补。</p>
+<p>先用一张表把版本主线摆出来（事实基线为 2026 年中，以官方为准）：</p>
+<table>
+<thead>
+<tr>
+<th>版本</th>
+<th>时间</th>
+<th>核心变化</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Vite 5</td>
+<td>2023 底</td>
+<td>esbuild(dev) + Rollup(build) 双引擎，企业现役主力</td>
+</tr>
+<tr>
+<td>Vite 6</td>
+<td>2024.11</td>
+<td>Environment API；多环境模型；大规模内部重构但向后兼容</td>
+</tr>
+<tr>
+<td>Vite 7</td>
+<td>2025.06</td>
+<td>清理废弃特性、<code>rolldown-vite</code> drop-in、Node 20.19+&#x2F;22.12+</td>
+</tr>
+<tr>
+<td>Vite 8</td>
+<td>2026.03</td>
+<td>Rolldown 成为默认唯一 Rust 打包器，dev&#x2F;build 统一，Oxc 接管转译&#x2F;压缩</td>
+</tr>
+</tbody></table>
+<p>这里有两条独立的演进主线容易被混为一谈，我在小册里是分开讲的：一条是<strong>架构抽象</strong>（Environment API，Vite 6 引入），另一条是<strong>打包器替换</strong>（Rolldown，Vite 7 引入、Vite 8 默认）。看懂这两条线，版本升级这件事就不慌了。</p>
+<h2 id="内容结构：三阶段递进"><a href="#内容结构：三阶段递进" class="headerlink" title="内容结构：三阶段递进"></a>内容结构：三阶段递进</h2><p>整本书的骨架就一句话——沿「使用 → 源码 → 哲学」往上走。每个阶段用一句话锚定边界，避免内容重叠：</p>
+<table>
+<thead>
+<tr>
+<th>阶段</th>
+<th>回答的问题</th>
+<th>读完你能做到</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>使用</td>
+<td>怎么用、用哪个版本、配哪个工具</td>
+<td>在真实项目里独当一面</td>
+</tr>
+<tr>
+<td>源码</td>
+<td>它内部怎么实现的</td>
+<td>亲手 clone、打断点、跟真实流程</td>
+</tr>
+<tr>
+<td>哲学</td>
+<td>它为什么这么设计</td>
+<td>把经验抽象成可迁移的判断框架</td>
+</tr>
+</tbody></table>
+<p>三个阶段难度逐级抬升，但彼此独立：可以从头入门，也可以直接跳到你需要的那一阶段。</p>
+<h3 id="第一阶段-·-使用（目标是用到精通，不是拉齐基线）"><a href="#第一阶段-·-使用（目标是用到精通，不是拉齐基线）" class="headerlink" title="第一阶段 · 使用（目标是用到精通，不是拉齐基线）"></a>第一阶段 · 使用（目标是用到精通，不是拉齐基线）</h3><p>这一阶段的验收标准很朴素：**读完真的会用，而不是”读完仍不会用”**。所以它不止讲”怎么配”，还包含大量真实工程排障。覆盖的模块包括：</p>
+<ul>
+<li>核心使用：项目搭建、<code>vite.config</code> 完整配置、dev server &#x2F; 构建 &#x2F; 预览、依赖预构建、SSR &#x2F; 库模式 &#x2F; 多页应用、TypeScript 处理</li>
+<li>框架集成与测试：Vue &#x2F; React &#x2F; Svelte 接入机制、<code>@vitejs/plugin-react</code> 用 Oxc 接管 React Refresh、Vitest 原生测试</li>
+<li>插件与生态：从最小插件到完整生命周期钩子、Rollup 钩子模型与 Vite 的关系</li>
+<li>多环境与工程化：Environment API 落地、monorepo &#x2F; workspace 组织、SSR 工程坑位、CI 集成与构建缓存</li>
+<li>版本差异与升级迁移：各版本迁移要点（如 <code>rollupOptions</code> → <code>rolldownOptions</code>、<code>manualChunks</code> → <code>codeSplitting</code>）、从 webpack &#x2F; CRA &#x2F; Vue CLI 迁移到 Vite 8 的实战</li>
+<li>打包工具横向对比：esbuild &#x2F; Rollup &#x2F; Rolldown &#x2F; webpack &#x2F; Oxc 各自定位与选型指南</li>
+<li>AI 辅助 Vite 开发：怎么让 AI 生成可维护的配置、怎么借助 AI 排查报错、以及 AI 容易误导的场景</li>
+</ul>
+<p>每个使用知识点都配了最小可运行 demo，专门为了兑现”读完真的会用”这句话。</p>
+<h3 id="第二阶段-·-源码（我的做法是”调源码”，不是”读源码”）"><a href="#第二阶段-·-源码（我的做法是”调源码”，不是”读源码”）" class="headerlink" title="第二阶段 · 源码（我的做法是”调源码”，不是”读源码”）"></a>第二阶段 · 源码（我的做法是”调源码”，不是”读源码”）</h3><p>这是我个人最看重、也最花时间的一部分。我一直觉得，看源码截图学不到东西——真正有用的是<strong>亲手把它跑起来、打上断点、跟一遍真实流程</strong>。</p>
+<p>所以源码篇的每条主线都是同一个节奏：① 亲手调试（clone、断点、跟真实流程）→ ② 梳理实现（抽象成机制图）→ ③ 小结（这段实现解决了什么、代价是什么）。</p>
+<p>调试基线用最新的 Vite 8 源码。这里有个关键事实要澄清：<strong>Vite 自身的核心机制（dev server、HMR、插件容器、依赖预构建、模块图）至今仍是 TypeScript 实现</strong>，可以直接在最新源码上断点跟踪；Rolldown &#x2F; Oxc 这些 Rust 工具链，我用架构与边界的视角讲清，并给出 Rust 侧的调试 &#x2F; 日志切入点，不强求逐行啃 Rust。</p>
+<p>覆盖的主线包括：配置加载与归一化、插件注册与排序、依赖预构建、按需编译与 dev server 请求处理（串起 <code>resolveId → load → transform</code>）、核心转换链路、插件容器（PluginContainer）、HMR 完整链路、模块图与依赖追踪、Environment API 的实现、以及 Vite 8 如何驱动 Rolldown 产出生产包。</p>
+<p>还有一个专题专门讲底层引擎的历史与代价，其中 Rollup 与 Rolldown 的对比我做成了一张表：</p>
+<table>
+<thead>
+<tr>
+<th>维度</th>
+<th>Rollup</th>
+<th>Rolldown</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>实现语言</td>
+<td>JavaScript</td>
+<td>Rust</td>
+</tr>
+<tr>
+<td>定位</td>
+<td>生产构建打包器</td>
+<td>统一 dev + build 的单一打包器</td>
+</tr>
+<tr>
+<td>速度</td>
+<td>基准</td>
+<td>构建快约 10–30x</td>
+</tr>
+<tr>
+<td>插件生态</td>
+<td>原生</td>
+<td>兼容 Rollup 插件 API（依赖内部实现的可能失效）</td>
+</tr>
+<tr>
+<td>在 Vite 中</td>
+<td>Vite 2–7 的 build 引擎</td>
+<td>Vite 8 默认唯一引擎</td>
+</tr>
+</tbody></table>
+<h3 id="第三阶段-·-哲学（把经验抽象成可迁移的判断框架）"><a href="#第三阶段-·-哲学（把经验抽象成可迁移的判断框架）" class="headerlink" title="第三阶段 · 哲学（把经验抽象成可迁移的判断框架）"></a>第三阶段 · 哲学（把经验抽象成可迁移的判断框架）</h3><p>最后一阶段是”务虚”的，但我给自己立了条硬规矩：<strong>每个设计思想都必须绑定前两阶段的具体案例，绝不脱离 Vite 空谈工程思想。</strong></p>
+<p>比如：</p>
+<ul>
+<li>复杂度的管理——dev 不打包 vs build 打包，本质是在”开发体验”和”生产产物”之间做持续权衡</li>
+<li>抽象的代价与收益——插件容器复用 Rollup 生态，既带来兼容性，也带来约束</li>
+<li>架构决策的时机——双引擎 → 单引擎，为什么是现在而不是更早或更晚</li>
+<li>渐进式演进——Environment API 如何在大规模重构中保持向后兼容</li>
+<li>AI 时代的工程判断——AI 能生成配置、能解释源码，但最终还是要靠最小复现、源码断点、版本事实和产物验证来建立确定性</li>
+</ul>
+<p>目标是：忘掉具体实现之后，你还能带走一套评估其他框架 &#x2F; 工具的方法论。</p>
+<h2 id="凭什么是这一本"><a href="#凭什么是这一本" class="headerlink" title="凭什么是这一本"></a>凭什么是这一本</h2><p>掘金上 Vite 小册不止一本，我自己也参考过。这本的区隔点主要是四条：</p>
+<ol>
+<li><strong>时效性最新</strong>——内容覆盖到 Vite 8 + Rolldown 这条最新主线，而非停留在 Vite 4&#x2F;5</li>
+<li><strong>调试驱动</strong>——源码部分配套可调试的 Vite 源码分支与断点配置，读者亲手跟真实流程，而不是被动看代码贴图</li>
+<li><strong>三阶段闭环</strong>——多数小册只做一头（要么纯使用、要么纯源码），这本打通了”使用 → 源码 → 哲学”完整链路</li>
+<li><strong>决策视角</strong>——用 Environment API &#x2F; Rolldown 这两条主线梳理版本演进，直接服务企业升级与选型判断</li>
+</ol>
+<h2 id="适合谁读"><a href="#适合谁读" class="headerlink" title="适合谁读"></a>适合谁读</h2><p>三阶段是阶梯式设计，覆盖从入门到资深的连续光谱：</p>
+<table>
+<thead>
+<tr>
+<th>读者</th>
+<th>诉求</th>
+<th>主要阶段</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>入门 &#x2F; 在用</td>
+<td>把 Vite 在项目中用到精通</td>
+<td>第一阶段</td>
+</tr>
+<tr>
+<td>进阶</td>
+<td>从”会配置”到”懂原理、能调源码”</td>
+<td>第二阶段</td>
+</tr>
+<tr>
+<td>资深 &#x2F; 决策</td>
+<td>沉淀可迁移设计思想、做选型决策</td>
+<td>第三阶段</td>
+</tr>
+</tbody></table>
+<p>前置要求不高：熟悉 JavaScript&#x2F;TypeScript、ES Module、基本的 Node.js 与前端构建概念就行（第一阶段会照顾基础）。</p>
+<h2 id="在哪看"><a href="#在哪看" class="headerlink" title="在哪看"></a>在哪看</h2><p>主仓库（大纲、章节文稿）在这里：<a target="_blank" rel="noopener" href="https://github.com/XY0987/vite_brochure_public">https://github.com/XY0987/vite_brochure_public</a></p>
+<p>另外还有两个配套仓库，方便读者一边看一边动手：</p>
+<ul>
+<li>使用篇配套代码：每个知识点的最小可运行 demo，按章节目录组织</li>
+<li>源码篇调试仓库：fork 的可调试 Vite 8 源码分支 + VS Code 断点 &#x2F; launch 配置，可一键复现书中的调试路径</li>
+</ul>
+<p>感兴趣的话，从第一阶段的 README 开始翻就行，也欢迎提 issue 交流。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>这是一个沿「使用 → 源码 → 哲学」三阶段递进的 Vite 系列，目标是把读者从”会用”带到”精通原理”，再到”理解设计思想”。</li>
+<li>之所以在 AI 时代写它，是因为聚焦的正是 AI 替代不了的取舍理解、问题定位和迁移判断。</li>
+<li>内容覆盖到 Vite 8 + Rolldown 这条最新主线，补上了多数小册停在 4&#x2F;5 的空白。</li>
+<li>源码部分坚持”调源码”而非”读源码”，每条主线都能亲手断点复现。</li>
+<li>三阶段独立可入，入门到资深都能各取所需，仓库地址：<a target="_blank" rel="noopener" href="https://github.com/XY0987/vite_brochure_public">https://github.com/XY0987/vite_brochure_public</a>。</li>
+</ol>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/Vite/">Vite</a><a class="post-meta__tags" href="/tags/Rolldown/">Rolldown</a><a class="post-meta__tags" href="/tags/%E6%9E%84%E5%BB%BA%E5%B7%A5%E5%85%B7/">构建工具</a><a class="post-meta__tags" href="/tags/%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">源码分析</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/04-Skills%20%E5%B7%A5%E7%A8%8B%E5%8C%96%EF%BC%9A%E6%80%8E%E4%B9%88%E5%81%9A%E4%B8%80%E4%B8%AA%E5%A5%BD%20Skill%20%E4%B8%8E%E5%AE%83%E7%9A%84%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/" title="Skills 工程化：怎么做一个好 Skill 与它的可观测性"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">Skills 工程化：怎么做一个好 Skill 与它的可观测性</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">253</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">551</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%BA%E4%BB%80%E4%B9%88%E5%9C%A8-AI-%E6%97%B6%E4%BB%A3%E8%BF%98%E8%A6%81%E5%86%99%E4%B8%80%E6%9C%AC-Vite-%E5%B0%8F%E5%86%8C"><span class="toc-number">1.</span> <span class="toc-text">为什么在 AI 时代还要写一本 Vite 小册</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%86%85%E5%AE%B9%E7%BB%93%E6%9E%84%EF%BC%9A%E4%B8%89%E9%98%B6%E6%AE%B5%E9%80%92%E8%BF%9B"><span class="toc-number">2.</span> <span class="toc-text">内容结构：三阶段递进</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%80%E9%98%B6%E6%AE%B5-%C2%B7-%E4%BD%BF%E7%94%A8%EF%BC%88%E7%9B%AE%E6%A0%87%E6%98%AF%E7%94%A8%E5%88%B0%E7%B2%BE%E9%80%9A%EF%BC%8C%E4%B8%8D%E6%98%AF%E6%8B%89%E9%BD%90%E5%9F%BA%E7%BA%BF%EF%BC%89"><span class="toc-number">2.1.</span> <span class="toc-text">第一阶段 · 使用（目标是用到精通，不是拉齐基线）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%BA%8C%E9%98%B6%E6%AE%B5-%C2%B7-%E6%BA%90%E7%A0%81%EF%BC%88%E6%88%91%E7%9A%84%E5%81%9A%E6%B3%95%E6%98%AF%E2%80%9D%E8%B0%83%E6%BA%90%E7%A0%81%E2%80%9D%EF%BC%8C%E4%B8%8D%E6%98%AF%E2%80%9D%E8%AF%BB%E6%BA%90%E7%A0%81%E2%80%9D%EF%BC%89"><span class="toc-number">2.2.</span> <span class="toc-text">第二阶段 · 源码（我的做法是”调源码”，不是”读源码”）</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%AC%AC%E4%B8%89%E9%98%B6%E6%AE%B5-%C2%B7-%E5%93%B2%E5%AD%A6%EF%BC%88%E6%8A%8A%E7%BB%8F%E9%AA%8C%E6%8A%BD%E8%B1%A1%E6%88%90%E5%8F%AF%E8%BF%81%E7%A7%BB%E7%9A%84%E5%88%A4%E6%96%AD%E6%A1%86%E6%9E%B6%EF%BC%89"><span class="toc-number">2.3.</span> <span class="toc-text">第三阶段 · 哲学（把经验抽象成可迁移的判断框架）</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%AD%E4%BB%80%E4%B9%88%E6%98%AF%E8%BF%99%E4%B8%80%E6%9C%AC"><span class="toc-number">3.</span> <span class="toc-text">凭什么是这一本</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%80%82%E5%90%88%E8%B0%81%E8%AF%BB"><span class="toc-number">4.</span> <span class="toc-text">适合谁读</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9C%A8%E5%93%AA%E7%9C%8B"><span class="toc-number">5.</span> <span class="toc-text">在哪看</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">6.</span> <span class="toc-text">小结</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E3%80%8AVite%EF%BC%9A%E4%BB%8E%E4%BD%BF%E7%94%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B%EF%BC%9A%E6%88%91%E5%86%99%E7%9A%84%E4%B8%80%E4%B8%AA%E4%B8%89%E9%98%B6%E6%AE%B5%E9%80%92%E8%BF%9B%E7%9A%84%20Vite%20%E7%B3%BB%E5%88%97/" title="《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列">《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列</a><time datetime="2026-09-20T07:30:00.000Z" title="发表于 2026 15:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-Skills%20%E5%B7%A5%E7%A8%8B%E5%8C%96%EF%BC%9A%E6%80%8E%E4%B9%88%E5%81%9A%E4%B8%80%E4%B8%AA%E5%A5%BD%20Skill%20%E4%B8%8E%E5%AE%83%E7%9A%84%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/" title="Skills 工程化：怎么做一个好 Skill 与它的可观测性">Skills 工程化：怎么做一个好 Skill 与它的可观测性</a><time datetime="2026-09-19T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E7%A0%94%E5%8F%91%E6%8F%90%E6%95%88%E7%9A%84%E6%80%9D%E8%80%83%EF%BC%9A%E4%BB%8E%E8%BD%AF%E4%BB%B6%E5%B7%A5%E7%A8%8B%E6%9C%AC%E8%B4%A8%E5%88%B0%20AI%20%E6%97%B6%E4%BB%A3%E7%9A%84%E4%B8%A4%E6%9D%A1%E8%B7%AF/" title="研发提效的思考：从软件工程本质到 AI 时代的两条路">研发提效的思考：从软件工程本质到 AI 时代的两条路</a><time datetime="2026-08-14T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
