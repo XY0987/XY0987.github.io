@@ -1,0 +1,710 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><!-- hexo injector head_begin start --><script>window.CUSTOM_POST_COUNT = 254;</script><!-- hexo injector head_begin end --><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Agent Application Protocol（∀/A）发布：连接任意应用与任意 Agent 的开放协议 | 夜星的技术博客</title><meta name="author" content="夜星"><meta name="copyright" content="夜星"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="前言：MCP 解决的是“Agent 怎么接工具和上下文”，但很多团队还有另一个更现实的问题：业务应用怎样接入一个可替换、可远程部署的 Agent？刚发布的 Agent Application Protocol（AAP，符号写作 ∀&#x2F;A）想标准化的，正是这一层。  一句话看懂 AAPAAP 是应用和 Agent 之间的标准接口：应用管界面与业务工具，Agent 管推理、上下文和通用能力。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Agent Application Protocol（∀&#x2F;A）发布：连接任意应用与任意 Agent 的开放协议">
+<meta property="og:url" content="http://example.com/posts/05-Agent%20Application%20Protocol%EF%BC%88%E2%88%80-A%EF%BC%89%E5%8F%91%E5%B8%83%EF%BC%9A%E8%BF%9E%E6%8E%A5%E4%BB%BB%E6%84%8F%E5%BA%94%E7%94%A8%E4%B8%8E%E4%BB%BB%E6%84%8F%20Agent%20%E7%9A%84%E5%BC%80%E6%94%BE%E5%8D%8F%E8%AE%AE/index.html">
+<meta property="og:site_name" content="夜星的技术博客">
+<meta property="og:description" content="前言：MCP 解决的是“Agent 怎么接工具和上下文”，但很多团队还有另一个更现实的问题：业务应用怎样接入一个可替换、可远程部署的 Agent？刚发布的 Agent Application Protocol（AAP，符号写作 ∀&#x2F;A）想标准化的，正是这一层。  一句话看懂 AAPAAP 是应用和 Agent 之间的标准接口：应用管界面与业务工具，Agent 管推理、上下文和通用能力。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="http://example.com/img/avator.jpg">
+<meta property="article:published_time" content="2026-10-24T16:00:00.000Z">
+<meta property="article:modified_time" content="2026-10-25T09:23:26.106Z">
+<meta property="article:author" content="夜星">
+<meta property="article:tag" content="AI">
+<meta property="article:tag" content="Agent">
+<meta property="article:tag" content="MCP">
+<meta property="article:tag" content="AAP">
+<meta property="article:tag" content="开放协议">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/img/avator.jpg"><link rel="shortcut icon" href="/img/icon_favicon.jpeg"><link rel="canonical" href="http://example.com/posts/05-Agent%20Application%20Protocol%EF%BC%88%E2%88%80-A%EF%BC%89%E5%8F%91%E5%B8%83%EF%BC%9A%E8%BF%9E%E6%8E%A5%E4%BB%BB%E6%84%8F%E5%BA%94%E7%94%A8%E4%B8%8E%E4%BB%BB%E6%84%8F%20Agent%20%E7%9A%84%E5%BC%80%E6%94%BE%E5%8D%8F%E8%AE%AE/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.xml","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"找不到您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: undefined,
+  noticeOutdate: undefined,
+  highlight: undefined,
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'null',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Agent Application Protocol（∀/A）发布：连接任意应用与任意 Agent 的开放协议',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2026 17:23:26'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><link rel="stylesheet" href="/css/custom.css"><meta name="generator" content="Hexo 6.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/tags/"><div class="headline">标签</div><div class="length-num">553</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><hr class="custom-hr"/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a href="/" title="夜星的技术博客"><span class="site-name">夜星的技术博客</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/posts/"><i class="fa-fw fas fa-list"></i><span> 全部文章</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-th"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fas fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Agent Application Protocol（∀/A）发布：连接任意应用与任意 Agent 的开放协议</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-10-24T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-10-25T09:23:26.106Z" title="更新于 2026 17:23:26">2026</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/ai/">AI相关</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">字数总计:</span><span class="word-count">4.7k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>17分钟</span></span></div></div></div><article class="post-content" id="article-container"><blockquote>
+<p><strong>前言</strong>：MCP 解决的是“Agent 怎么接工具和上下文”，但很多团队还有另一个更现实的问题：业务应用怎样接入一个可替换、可远程部署的 Agent？刚发布的 Agent Application Protocol（AAP，符号写作 ∀&#x2F;A）想标准化的，正是这一层。</p>
+</blockquote>
+<h2 id="一句话看懂-AAP"><a href="#一句话看懂-AAP" class="headerlink" title="一句话看懂 AAP"></a>一句话看懂 AAP</h2><p><strong>AAP 是应用和 Agent 之间的标准接口：应用管界面与业务工具，Agent 管推理、上下文和通用能力。</strong></p>
+<p>它的名字 <code>∀/A</code> 很直白：Any Application &#x2F; Any Agent。只要两端实现同一份协议，理论上一个游戏引擎、CAD 软件、企业后台或微服务，都可以连接同一个远程 Agent；而应用也不必绑定某个 Agent 框架或模型供应商。</p>
+<p>把它和常见概念放在一起会更清楚：</p>
+<table>
+<thead>
+<tr>
+<th>协议&#x2F;能力</th>
+<th>主要连接谁</th>
+<th>解决的问题</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Function Calling</td>
+<td>模型 API 与调用方</td>
+<td>模型如何描述一次函数调用</td>
+</tr>
+<tr>
+<td>MCP</td>
+<td>Agent 与外部工具&#x2F;资源</td>
+<td>Agent 如何发现、调用外部能力</td>
+</tr>
+<tr>
+<td>ACP</td>
+<td>IDE 与编码 Agent</td>
+<td>IDE 如何驱动本地优先的编码 Agent</td>
+</tr>
+<tr>
+<td><strong>AAP</strong></td>
+<td><strong>应用与 Agent</strong></td>
+<td><strong>任意应用如何接入远程、可替换的 Agent 服务</strong></td>
+</tr>
+</tbody></table>
+<p>所以别把 AAP 当成“又一个 MCP 替代品”。先看一个具体场景：假设你在做一个 3D 建模软件，用户在软件里说：“把当前选中的角色放大 20%，再给它生成一个赛博朋克风格的配色方案。”</p>
+<pre><code class="text">┌────────────── 3D 建模软件（Application）──────────────┐
+│ 用户输入：把选中角色放大 20%，给我一套赛博朋克配色      │
+│                                                          │
+│ 应用独有能力：get_selected_model、scale_model、apply_color│
+└────────────────────────┬───────────────────────────────┘
+                         │
+                         │  AAP：把“消息 + 工具定义”发给 Agent
+                         │  POST /sessions/:id/turns（HTTP + SSE）
+                         ▼
+┌──────────────── 远程设计 Agent（Agent）─────────────────┐
+│ 理解任务、维护对话、决定调用哪些工具、生成配色建议       │
+│                                                          │
+│ 需要放大模型 → 发 tool_call(scale_model) 给 3D 软件      │
+└────────────────────────┬───────────────────────────────┘
+                         │
+                         │  MCP（可选）：给 Agent 接通用外部能力
+                         ▼
+              联网搜索 / 图片分析 / 代码执行 / 记忆服务
+</code></pre>
+<p>这里 <strong>AAP 就是中间那根线</strong>：它约定 3D 软件怎样发现远程 Agent、怎样创建会话、怎样发送用户消息，以及 Agent 想调用 <code>scale_model</code> 时如何把请求交还给软件执行。它不规定 3D 软件内部怎么改模型，也不规定 Agent 内部用哪家模型、哪个框架。</p>
+<p>我的理解是：MCP 更像 Agent 的“USB 接口”；AAP 则更像把整台 Agent 机器接进业务应用的“网络协议”。如果你的应用只是在内部调一次 LLM API，AAP 反而会显得重。但当 Agent 要被多个应用复用、独立扩缩容、按量计费时，分层就开始有价值。</p>
+<h2 id="它拆开的，到底是哪一层耦合"><a href="#它拆开的，到底是哪一层耦合" class="headerlink" title="它拆开的，到底是哪一层耦合"></a>它拆开的，到底是哪一层耦合</h2><p>今天不少 Agent 产品的结构是：前端、领域逻辑、Prompt、Agent Loop、模型调用、工具执行都塞进一个应用。起步很快，但后续通常会遇到两个问题：</p>
+<ul>
+<li>每个业务团队都要重复实现对话历史、上下文压缩、工具循环、模型重试和安全策略。</li>
+<li>想把底层 Agent 从框架 A 换成框架 B，或者把本地 Agent 换成远程 SaaS，往往要改应用层代码。</li>
+</ul>
+<p>AAP 的边界划分非常明确：</p>
+<table>
+<thead>
+<tr>
+<th>归属</th>
+<th>负责什么</th>
+<th>为什么应该归它</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Application（客户端）</td>
+<td>UI&#x2F;UX、用户输入、领域数据、领域工具</td>
+<td>它最了解“当前场景”“当前订单”“哪些操作允许执行”</td>
+</tr>
+<tr>
+<td>Agent（服务端）</td>
+<td>Agent Loop、会话历史、LLM 交互、Guardrail、通用工具</td>
+<td>它最了解如何推理、何时调用工具、怎样管理上下文窗口</td>
+</tr>
+</tbody></table>
+<p>这不是简单的前后端分层。AAP 把 Agent 当作一个独立的、远程优先的服务：应用不需要知道它内部用 Vercel AI SDK、LangChain 还是其他框架；Agent 也不必了解应用的 UI 和私有业务实现。</p>
+<p>这层隔离还有一个常被忽略的好处：双方不必互相暴露实现细节。应用可以只暴露必要的工具 schema，Agent 可以保留自己的系统提示词、记忆实现和模型路由策略。</p>
+<h2 id="AAP-的核心：Agent-负责思考，应用负责动手"><a href="#AAP-的核心：Agent-负责思考，应用负责动手" class="headerlink" title="AAP 的核心：Agent 负责思考，应用负责动手"></a>AAP 的核心：Agent 负责思考，应用负责动手</h2><p>这句话是理解 AAP 最简单的方式：<strong>Agent 可以远程运行并提出“怎么做”，但真正操作业务数据和业务软件的，始终是应用这一侧。</strong></p>
+<h3 id="应用侧工具：把“能做什么”告诉-Agent"><a href="#应用侧工具：把“能做什么”告诉-Agent" class="headerlink" title="应用侧工具：把“能做什么”告诉 Agent"></a>应用侧工具：把“能做什么”告诉 Agent</h3><p>还是用 3D 建模软件举例。用户说：“把当前选中的角色放大 20%。”</p>
+<p>远程 Agent 并没有运行在 3D 软件进程里，它既看不到当前选中了什么，也没有权限直接改模型。于是软件先把自己能安全提供的动作告诉 Agent，例如：</p>
+<pre><code class="javascript">&#123;
+  name: &quot;scale_selected_model&quot;,
+  description: &quot;将当前选中的 3D 模型按指定比例缩放&quot;,
+  parameters: &#123;
+    type: &quot;object&quot;,
+    properties: &#123;
+      percent: &#123; type: &quot;number&quot;, description: &quot;缩放百分比，例如 120 表示放大 20%&quot; &#125;
+    &#125;,
+    required: [&quot;percent&quot;]
+  &#125;
+&#125;
+</code></pre>
+<p>这里的“工具”可以先把它理解成：<strong>软件给 Agent 的一张受限操作菜单</strong>。Agent 只能从菜单里请求动作，不能自行操作软件，更不能调用菜单上没有的能力。</p>
+<p>完整过程其实就是一次“请求 → 执行 → 回报”的接力：</p>
+<pre><code class="text">用户：把当前选中的角色放大 20%
+  │
+  ▼
+3D 软件（Application）──把用户消息和“工具菜单”发给──→ 远程 Agent
+                                                        │
+                                                        │ Agent 判断：
+                                                        │ 要完成任务，需要调用
+                                                        │ scale_selected_model(&#123; percent: 120 &#125;)
+                                                        ▼
+3D 软件 ←── Agent 发回“请执行这个动作”── Agent 暂停等待
+  │
+  │ 软件检查：当前用户有编辑权限吗？参数 120 合法吗？
+  │ 检查通过后，软件在应用侧真正修改模型
+  │
+  └──把结果“角色已放大 20%”发回给 Agent──────────────→
+                                                        │
+                                                        ▼
+                                      Agent：已完成，当前角色已放大 20%
+</code></pre>
+<p>协议中的 <code>tool_call</code> 就是图中的“请执行这个动作”；<code>stopReason: &quot;tool_use&quot;</code> 的意思是“我已经提出了操作请求，现在等应用把执行结果交回来”。名称虽然偏技术，但本质并不复杂：<strong>Agent 负责下指令，应用负责决定是否执行和实际执行。</strong></p>
+<p>这个“暂停等待”很重要。应用仍然握有自己业务工具的最终执行权，因此可以做参数校验、权限检查、二次确认和审计。Agent 只是提出意图，不是绕过业务边界的超级管理员。</p>
+<h3 id="Agent-侧工具：应用选择是否授权"><a href="#Agent-侧工具：应用选择是否授权" class="headerlink" title="Agent 侧工具：应用选择是否授权"></a>Agent 侧工具：应用选择是否授权</h3><p>Agent 也可以在 <code>GET /meta</code> 中公开自己支持的服务端工具，例如联网搜索、代码执行或持久记忆。应用创建会话时可选择启用哪些工具。</p>
+<p>其中 <code>trust: true</code> 是一个值得谨慎使用的开关：它表示应用信任 Agent 在服务端直接执行该工具。此时 Agent 会连续推送 <code>tool_call</code>、<code>tool_result</code> 和后续文本，应用不用参与中间往返。</p>
+<table>
+<thead>
+<tr>
+<th>工具位置</th>
+<th>谁执行</th>
+<th>是否需要应用回传</th>
+<th>典型用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>应用侧工具</td>
+<td>Application</td>
+<td>需要：提交 <code>tool</code> 结果</td>
+<td>修改文档、读取当前场景、操作企业业务数据</td>
+</tr>
+<tr>
+<td>未信任的 Agent 侧工具</td>
+<td>Agent（获准后）</td>
+<td>需要：提交许可决定</td>
+<td>用户想先确认的外部操作</td>
+</tr>
+<tr>
+<td><code>trust: true</code> 的 Agent 侧工具</td>
+<td>Agent</td>
+<td>不需要</td>
+<td>低风险的搜索、内部记忆检索</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>把 <code>trust: true</code> 当成授权策略，而不是性能优化按钮。会产生外部副作用、涉及付费或敏感数据的能力，默认不信任更稳妥。</p>
+</blockquote>
+<h2 id="协议长什么样：标准-HTTP-资源-SSE"><a href="#协议长什么样：标准-HTTP-资源-SSE" class="headerlink" title="协议长什么样：标准 HTTP 资源 + SSE"></a>协议长什么样：标准 HTTP 资源 + SSE</h2><p>AAP 当前协议版本是 <code>3</code>。服务端先用 <code>GET /meta</code> 发布可用 Agent、能力、可配置选项和可启用的服务端工具。随后客户端围绕 session 操作：</p>
+<table>
+<thead>
+<tr>
+<th>方法</th>
+<th>路径</th>
+<th>用途</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>GET</code></td>
+<td><code>/meta</code></td>
+<td>发现服务端的 Agent 与能力</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/sessions</code></td>
+<td>创建会话，但不运行 Agent</td>
+</tr>
+<tr>
+<td><code>POST</code></td>
+<td><code>/sessions/:id/turns</code></td>
+<td>发送用户消息或工具结果，并运行一轮 Agent</td>
+</tr>
+<tr>
+<td><code>GET</code></td>
+<td><code>/sessions/:id/history</code></td>
+<td>在支持时读取会话历史，用于恢复</td>
+</tr>
+<tr>
+<td><code>DELETE</code></td>
+<td><code>/sessions/:id</code></td>
+<td>删除会话和关联历史</td>
+</tr>
+</tbody></table>
+<h3 id="一次“放大模型”的完整请求流程"><a href="#一次“放大模型”的完整请求流程" class="headerlink" title="一次“放大模型”的完整请求流程"></a>一次“放大模型”的完整请求流程</h3><p>继续使用前面的 3D 建模软件。用户输入“把当前选中的角色放大 20%”后，应用与远程 Agent 的正常交互如下。示例省略了每个请求都应携带的 <code>Authorization: Bearer &lt;api-key&gt;</code>，把注意力放在流程本身。</p>
+<pre><code class="text">3D 建模软件（Application）                         远程 Agent 服务
+          │                                               │
+1. 发现   │ GET /meta                                     │
+          │──────────────────────────────────────────────&gt;│
+          │&lt;── 200 &#123; version: 3, agents: [design-agent] &#125; │
+          │                                               │
+2. 建会话 │ POST /sessions                                │
+          │ &#123; agent: design-agent,                         │
+          │   tools: [scale_selected_model] &#125;              │
+          │──────────────────────────────────────────────&gt;│
+          │&lt;──────────── 201 &#123; sessionId: &quot;sess_123&quot; &#125; ───│
+          │                                               │
+3. 发任务 │ POST /sessions/sess_123/turns                  │
+          │ &#123; stream: &quot;delta&quot;, messages: [用户指令] &#125;      │
+          │──────────────────────────────────────────────&gt;│
+          │&lt;── SSE：tool_call(scale_selected_model, 120) ─│
+          │&lt;── SSE：turn_stop(tool_use) ──────────────────│
+          │                                               │
+4. 应用执行│ 校验权限后，在自己的进程中放大模型             │
+          │                                               │
+5. 交结果 │ POST /sessions/sess_123/turns                  │
+          │ &#123; messages: [tool 结果：已放大 20%] &#125;           │
+          │──────────────────────────────────────────────&gt;│
+          │&lt;── SSE：text_delta(&quot;已完成，角色已放大 20%&quot;) ─│
+          │&lt;── SSE：turn_stop(end_turn) ──────────────────│
+</code></pre>
+<p>对应到真实 HTTP 请求，关键的第 2、3、5 步大致如下：</p>
+<pre><code class="http">POST /sessions
+Content-Type: application/json
+
+&#123;
+  &quot;agent&quot;: &#123; &quot;name&quot;: &quot;design-agent&quot; &#125;,
+  &quot;tools&quot;: [&#123;
+    &quot;name&quot;: &quot;scale_selected_model&quot;,
+    &quot;description&quot;: &quot;按百分比缩放当前选中的 3D 模型&quot;,
+    &quot;parameters&quot;: &#123;
+      &quot;type&quot;: &quot;object&quot;,
+      &quot;properties&quot;: &#123; &quot;percent&quot;: &#123; &quot;type&quot;: &quot;number&quot; &#125; &#125;,
+      &quot;required&quot;: [&quot;percent&quot;]
+    &#125;
+  &#125;]
+&#125;
+</code></pre>
+<pre><code class="http">POST /sessions/sess_123/turns
+Content-Type: application/json
+
+&#123;
+  &quot;stream&quot;: &quot;delta&quot;,
+  &quot;messages&quot;: [&#123;
+    &quot;role&quot;: &quot;user&quot;,
+    &quot;content&quot;: &quot;把当前选中的角色放大 20%&quot;
+  &#125;]
+&#125;
+</code></pre>
+<p>Agent 通过 SSE 返回的并不是“它已经改好了”，而是一张待执行的操作单：</p>
+<pre><code class="text">event: tool_call
+data: &#123;
+  &quot;toolCallId&quot;: &quot;call_001&quot;,
+  &quot;name&quot;: &quot;scale_selected_model&quot;,
+  &quot;input&quot;: &#123; &quot;percent&quot;: 120 &#125;
+&#125;
+
+event: turn_stop
+data: &#123; &quot;stopReason&quot;: &quot;tool_use&quot; &#125;
+</code></pre>
+<p>应用执行后，再把结果作为 <code>tool</code> 消息提交到同一个 <code>sessionId</code>，Agent 才会继续：</p>
+<pre><code class="json">&#123;
+  &quot;stream&quot;: &quot;delta&quot;,
+  &quot;messages&quot;: [&#123;
+    &quot;role&quot;: &quot;tool&quot;,
+    &quot;toolCallId&quot;: &quot;call_001&quot;,
+    &quot;content&quot;: &quot;当前选中的角色已按 120% 缩放&quot;
+  &#125;]
+&#125;
+</code></pre>
+<p><code>GET /sessions/:id/history</code> 不在每一轮的正常链路里，主要用于应用重启、SSE 断线等恢复场景；<code>DELETE /sessions/:id</code> 则在用户结束对话或需要清理数据时调用。</p>
+<p>请求 <code>POST /sessions/:id/turns</code> 可以指定三种返回方式：</p>
+<ul>
+<li><code>delta</code>：SSE 增量事件，适合聊天界面逐字输出。</li>
+<li><code>message</code>：仍然是 SSE，但按完整消息推送。</li>
+<li><code>none</code>：等待 Agent 完成后返回一份 JSON，适合后端服务调用。</li>
+</ul>
+<p>服务端可以保持无状态地横向扩展，因为会话历史可以存到外部数据库或缓存中，而不是绑在某条常驻连接上。这里要准确一点：<strong>HTTP 服务器无状态，不等于会话没有状态</strong>。<code>sessionId</code> 对应的历史、工具配置和 Agent 配置仍需要持久化，只是任意实例都能从共享存储恢复它们。</p>
+<h2 id="最小可运行示例：一个应用怎样接入-AAP-Agent"><a href="#最小可运行示例：一个应用怎样接入-AAP-Agent" class="headerlink" title="最小可运行示例：一个应用怎样接入 AAP Agent"></a>最小可运行示例：一个应用怎样接入 AAP Agent</h2><p>先说清这段代码的角色：<strong>它不是在实现 Agent，也不是在训练模型；它模拟的是“文档编辑器”这类业务应用。</strong> 远程 Agent 已经由 AAP 服务商部署好了，应用只需要按协议与它对话。</p>
+<p>下面代码把上一节的流程真正串起来：</p>
+<table>
+<thead>
+<tr>
+<th>代码中的步骤</th>
+<th>对应的协议动作</th>
+<th>用人话说</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>request(&quot;/meta&quot;)</code></td>
+<td>发现 Agent</td>
+<td>问远程服务：“你提供哪些 Agent？”</td>
+</tr>
+<tr>
+<td><code>POST /sessions</code></td>
+<td>创建会话</td>
+<td>选定一个 Agent，并告诉它应用有哪些可调用操作</td>
+</tr>
+<tr>
+<td><code>POST /turns</code></td>
+<td>发送用户任务</td>
+<td>把“总结当前文档”交给 Agent</td>
+</tr>
+<tr>
+<td><code>readSse()</code></td>
+<td>接收流式回应</td>
+<td>一边显示 Agent 的回答，一边监听它是否要求调用工具</td>
+</tr>
+<tr>
+<td><code>executeApplicationTool()</code></td>
+<td>应用侧执行工具</td>
+<td>Agent 要读当前文档时，应用自己读取并回传结果</td>
+</tr>
+</tbody></table>
+<p>因此，读代码时只需要抓住一条主线：<strong>应用发任务 → Agent 请求工具 → 应用执行并回传 → Agent 给最终回答。</strong></p>
+<p>代码不依赖第三方包，要求 Node.js 20+（内置 <code>fetch</code>、<code>ReadableStream</code>）。它会发现 Agent、创建会话、发送一轮消息，并处理 SSE 中的文本和工具调用。</p>
+<p>先设置服务地址和 API Key；如果服务端公开了 <code>/meta</code>，读取元数据时可以不带 Key，但这里统一带上：</p>
+<pre><code class="bash">export AAP_BASE_URL=&quot;https://api.example.com/v1&quot;
+export AAP_API_KEY=&quot;your-api-key&quot;
+node aap-client.mjs
+</code></pre>
+<pre><code class="javascript">/**
+ * 应用端代码
+ * 
+ * 它模拟一个文档编辑器如何：
+ *  连接远程 AAP Agent 服务；
+ *  创建会话、发送用户任务；
+ *  接收 Agent 的文本或工具调用请求；
+ *  在应用侧执行 get_current_document；
+ *  将结果回传给远程 Agent
+*/
+// aap-client.mjs
+
+// 1. 应用配置：远程 AAP 服务的地址和访问凭证。
+const baseUrl = process.env.AAP_BASE_URL;
+const apiKey = process.env.AAP_API_KEY;
+
+if (!baseUrl || !apiKey) &#123;
+  throw new Error(&quot;请设置 AAP_BASE_URL 和 AAP_API_KEY&quot;);
+&#125;
+
+const headers = &#123;
+  Authorization: `Bearer $&#123;apiKey&#125;`,
+  &quot;Content-Type&quot;: &quot;application/json&quot;,
+&#125;;
+
+// 2. 所有 AAP 请求都经过这里：补齐地址、认证头，并统一处理 HTTP 错误。
+async function request(path, options = &#123;&#125;) &#123;
+  const response = await fetch(`$&#123;baseUrl&#125;$&#123;path&#125;`, &#123;
+    ...options,
+    headers: &#123; ...headers, ...options.headers &#125;,
+  &#125;);
+
+  if (!response.ok) &#123;
+    throw new Error(`$&#123;options.method ?? &quot;GET&quot;&#125; $&#123;path&#125; 失败：$&#123;response.status&#125;`);
+  &#125;
+  return response;
+&#125;
+
+// 3. 这是“文档编辑器应用”自己的能力，不属于远程 Agent。
+//    真实项目中应在这里读取真实文档，并完成权限校验。
+async function executeApplicationTool(name, input) &#123;
+  if (name === &quot;get_current_document&quot;) &#123;
+    return JSON.stringify(&#123; title: &quot;方案草稿&quot;, selectedText: &quot;AAP 协议评估&quot; &#125;);
+  &#125;
+  throw new Error(`应用不支持工具：$&#123;name&#125;`);
+&#125;
+
+// 4. Agent 的流式响应会从 SSE 到达。
+//    遇到文本就显示；遇到 tool_call 就让应用执行对应工具，收集结果。
+async function readSse(response) &#123;
+  const reader = response.body
+    .pipeThrough(new TextDecoderStream())
+    .getReader();
+  let buffer = &quot;&quot;;
+  const toolResults = [];
+
+  while (true) &#123;
+    const &#123; value, done &#125; = await reader.read();
+    if (done) break;
+    buffer += value;
+
+    // SSE 事件以空行分隔；本示例只解析 AAP 所需的 event/data 字段。
+    const chunks = buffer.split(&quot;\n\n&quot;);
+    buffer = chunks.pop();
+
+    for (const chunk of chunks) &#123;
+      const event = chunk.match(/^event: (.+)$/m)?.[1];
+      const data = chunk.match(/^data: (.+)$/m)?.[1];
+      if (!event || !data) continue;
+
+      const payload = JSON.parse(data);
+      if (event === &quot;text_delta&quot;) process.stdout.write(payload.delta);
+      if (event === &quot;text&quot;) console.log(payload.text);
+      if (event === &quot;tool_call&quot;) &#123;
+        console.log(`\nAgent 请求工具：$&#123;payload.name&#125;`);
+        toolResults.push(&#123;
+          role: &quot;tool&quot;,
+          toolCallId: payload.toolCallId,
+          content: await executeApplicationTool(payload.name, payload.input),
+        &#125;);
+      &#125;
+      if (event === &quot;turn_stop&quot;) return &#123; stopReason: payload.stopReason, toolResults &#125;;
+    &#125;
+  &#125;
+
+  throw new Error(&quot;SSE 流意外结束，未收到 turn_stop&quot;);
+&#125;
+
+// 5. 发现远程服务提供的 Agent，并选用第一个。
+const meta = await (await request(&quot;/meta&quot;)).json();
+const agent = meta.agents[0];
+if (!agent) throw new Error(&quot;服务端没有可用 Agent&quot;);
+
+// 6. 创建会话，同时告诉 Agent：本应用允许它请求 get_current_document。
+const &#123; sessionId &#125; = await (await request(&quot;/sessions&quot;, &#123;
+  method: &quot;POST&quot;,
+  body: JSON.stringify(&#123;
+    agent: &#123; name: agent.name &#125;,
+    tools: [&#123;
+      name: &quot;get_current_document&quot;,
+      description: &quot;读取当前编辑器中打开文档的必要上下文&quot;,
+      parameters: &#123; type: &quot;object&quot;, properties: &#123;&#125; &#125;,
+    &#125;],
+  &#125;),
+&#125;)).json();
+
+// 7. 把用户任务交给 Agent；readSse 会实时打印它的文本或接收工具请求。
+let result = await readSse(await request(`/sessions/$&#123;sessionId&#125;/turns`, &#123;
+  method: &quot;POST&quot;,
+  body: JSON.stringify(&#123;
+    stream: &quot;delta&quot;,
+    messages: [&#123; role: &quot;user&quot;, content: &quot;总结当前文档，并给出三个改进建议。&quot; &#125;],
+  &#125;),
+&#125;));
+
+// 8. 如果 Agent 请求了应用侧工具，它会暂停。
+//    现在把第 4 步收集到的工具执行结果提交回去，让它继续完成回答。
+if (result.stopReason === &quot;tool_use&quot;) &#123;
+  result = await readSse(await request(`/sessions/$&#123;sessionId&#125;/turns`, &#123;
+    method: &quot;POST&quot;,
+    body: JSON.stringify(&#123; stream: &quot;delta&quot;, messages: result.toolResults &#125;),
+  &#125;));
+&#125;
+
+console.log(`\n\n本轮结束：$&#123;result.stopReason&#125;`);
+</code></pre>
+<p>运行时，如果 Agent 不需要读取文档，你会直接看到它输出最终回答；如果它发出 <code>get_current_document</code> 请求，终端会先输出“Agent 请求工具：get_current_document”，应用回传文档摘要后，Agent 再继续生成回答。</p>
+<p>这个示例故意把 <code>executeApplicationTool</code> 留在应用侧：协议不该替你跳过权限判断。生产环境还要补上 schema 校验、超时、工具结果大小限制、鉴权续期，以及 SSE 断线后的会话恢复。</p>
+<h2 id="AAP-与-MCP、ACP：该怎么选"><a href="#AAP-与-MCP、ACP：该怎么选" class="headerlink" title="AAP 与 MCP、ACP：该怎么选"></a>AAP 与 MCP、ACP：该怎么选</h2><p>AAP 官方把 ACP 定位为“IDE 连接本地编码 Agent”的协议；AAP 面向任何应用和远程 Agent，传输使用 HTTP + SSE。两者的目标并不冲突。</p>
+<table>
+<thead>
+<tr>
+<th>场景</th>
+<th>更合适的选择</th>
+<th>原因</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>给 Cursor、VS Code 一类 IDE 接本地编码 Agent</td>
+<td>ACP</td>
+<td>协议目标就是 IDE 与 coding agent</td>
+</tr>
+<tr>
+<td>给 Agent 接数据库、GitHub、文件系统、企业 API</td>
+<td>MCP</td>
+<td>工具和资源互操作是它的核心职责</td>
+</tr>
+<tr>
+<td>给业务后台、游戏引擎、设计软件接远程 Agent 服务</td>
+<td>AAP</td>
+<td>应用与 Agent 的职责边界最匹配</td>
+</tr>
+<tr>
+<td>自己的单一 Web 产品里调用一个固定模型</td>
+<td>直接调用模型 API</td>
+<td>引入协议层未必有收益</td>
+</tr>
+</tbody></table>
+<p>实践里三者可以叠加：应用通过 AAP 调远程 Agent；Agent 通过 MCP 连接通用工具；如果应用本身是 IDE，再在适合的边界使用 ACP。关键不是“协议越多越先进”，而是每一层的替换和复用需求是否真实存在。</p>
+<h2 id="采用前要问的三个问题"><a href="#采用前要问的三个问题" class="headerlink" title="采用前要问的三个问题"></a>采用前要问的三个问题</h2><p>第一，你真的需要“可替换 Agent”吗？如果 Agent 永远和单个产品同仓、同进程、同团队维护，直接调用 SDK 往往更低成本。AAP 的收益来自边界稳定后的复用，不来自第一天的代码量。</p>
+<p>第二，应用侧工具是否足够小且明确？不要把“执行任意 SQL”“读取整个用户库”包装成一个万能工具。领域工具应该表达具体意图，例如 <code>get_invoice_summary</code>、<code>create_draft_contract</code>，并在应用侧执行授权。</p>
+<p>第三，会话数据归谁、保存多久？AAP 提供会话接口，但不会替你解决数据保留、租户隔离、删除权和审计要求。远程 Agent 服务化之后，这些反而会成为上线前最先要厘清的边界。</p>
+<h2 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h2><ol>
+<li>AAP 连接的是 Application 与 Agent，不是替代 MCP 的工具协议。</li>
+<li>应用保留 UI、领域工具与最终执行权；Agent 专注推理循环、上下文与通用能力。</li>
+<li>应用侧工具通过 <code>tool_call</code> 停止并回传结果，服务端工具可按 <code>trust</code> 策略内联执行。</li>
+<li>AAP 基于 HTTP + SSE，使用 session 保存对话上下文，服务端可做无状态横向扩展。</li>
+<li>适合远程、可复用的 Agent 服务；单体应用调用固定模型时，直接用模型 API 往往更简单。</li>
+</ol>
+<h2 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://agentapplicationprotocol.com/overview">AAP 官方概览</a></li>
+<li><a target="_blank" rel="noopener" href="https://agentapplicationprotocol.com/endpoints">AAP Endpoints</a></li>
+<li><a target="_blank" rel="noopener" href="https://agentapplicationprotocol.com/response">AAP Response</a></li>
+<li><a target="_blank" rel="noopener" href="https://agentapplicationprotocol.com/tool-call">AAP Tool Call</a></li>
+</ul>
+</article><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/AI/">AI</a><a class="post-meta__tags" href="/tags/Agent/">Agent</a><a class="post-meta__tags" href="/tags/MCP/">MCP</a><a class="post-meta__tags" href="/tags/AAP/">AAP</a><a class="post-meta__tags" href="/tags/%E5%BC%80%E6%94%BE%E5%8D%8F%E8%AE%AE/">开放协议</a></div><div class="post_share"></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/posts/04-%E3%80%8AVite%EF%BC%9A%E4%BB%8E%E4%BD%BF%E7%94%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B%EF%BC%9A%E6%88%91%E5%86%99%E7%9A%84%E4%B8%80%E4%B8%AA%E4%B8%89%E9%98%B6%E6%AE%B5%E9%80%92%E8%BF%9B%E7%9A%84%20Vite%20%E7%B3%BB%E5%88%97/" title="《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列</div></div></a></div></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="/img/loading.gif" data-original="/img/avator.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">夜星</div><div class="author-info__description">专注全栈与AI技术的深度探索与实践，涵盖前端、后端、AI、架构设计、工程化、算法等方向的系统化技术博客</div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">254</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">553</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">13</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/XY0987"><i class="fab fa-github"></i><span>Follow Me</span></a><div class="card-info-social-icons is-center"><a class="social-icon" href="https://github.com/XY0987" target="_blank" title="Github"><i class="fab fa-github"></i></a></div></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">专注全栈与AI技术的深度探索与实践</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E5%8F%A5%E8%AF%9D%E7%9C%8B%E6%87%82-AAP"><span class="toc-number">1.</span> <span class="toc-text">一句话看懂 AAP</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%AE%83%E6%8B%86%E5%BC%80%E7%9A%84%EF%BC%8C%E5%88%B0%E5%BA%95%E6%98%AF%E5%93%AA%E4%B8%80%E5%B1%82%E8%80%A6%E5%90%88"><span class="toc-number">2.</span> <span class="toc-text">它拆开的，到底是哪一层耦合</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#AAP-%E7%9A%84%E6%A0%B8%E5%BF%83%EF%BC%9AAgent-%E8%B4%9F%E8%B4%A3%E6%80%9D%E8%80%83%EF%BC%8C%E5%BA%94%E7%94%A8%E8%B4%9F%E8%B4%A3%E5%8A%A8%E6%89%8B"><span class="toc-number">3.</span> <span class="toc-text">AAP 的核心：Agent 负责思考，应用负责动手</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BA%94%E7%94%A8%E4%BE%A7%E5%B7%A5%E5%85%B7%EF%BC%9A%E6%8A%8A%E2%80%9C%E8%83%BD%E5%81%9A%E4%BB%80%E4%B9%88%E2%80%9D%E5%91%8A%E8%AF%89-Agent"><span class="toc-number">3.1.</span> <span class="toc-text">应用侧工具：把“能做什么”告诉 Agent</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Agent-%E4%BE%A7%E5%B7%A5%E5%85%B7%EF%BC%9A%E5%BA%94%E7%94%A8%E9%80%89%E6%8B%A9%E6%98%AF%E5%90%A6%E6%8E%88%E6%9D%83"><span class="toc-number">3.2.</span> <span class="toc-text">Agent 侧工具：应用选择是否授权</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%8F%E8%AE%AE%E9%95%BF%E4%BB%80%E4%B9%88%E6%A0%B7%EF%BC%9A%E6%A0%87%E5%87%86-HTTP-%E8%B5%84%E6%BA%90-SSE"><span class="toc-number">4.</span> <span class="toc-text">协议长什么样：标准 HTTP 资源 + SSE</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E6%AC%A1%E2%80%9C%E6%94%BE%E5%A4%A7%E6%A8%A1%E5%9E%8B%E2%80%9D%E7%9A%84%E5%AE%8C%E6%95%B4%E8%AF%B7%E6%B1%82%E6%B5%81%E7%A8%8B"><span class="toc-number">4.1.</span> <span class="toc-text">一次“放大模型”的完整请求流程</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%9C%80%E5%B0%8F%E5%8F%AF%E8%BF%90%E8%A1%8C%E7%A4%BA%E4%BE%8B%EF%BC%9A%E4%B8%80%E4%B8%AA%E5%BA%94%E7%94%A8%E6%80%8E%E6%A0%B7%E6%8E%A5%E5%85%A5-AAP-Agent"><span class="toc-number">5.</span> <span class="toc-text">最小可运行示例：一个应用怎样接入 AAP Agent</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#AAP-%E4%B8%8E-MCP%E3%80%81ACP%EF%BC%9A%E8%AF%A5%E6%80%8E%E4%B9%88%E9%80%89"><span class="toc-number">6.</span> <span class="toc-text">AAP 与 MCP、ACP：该怎么选</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%87%E7%94%A8%E5%89%8D%E8%A6%81%E9%97%AE%E7%9A%84%E4%B8%89%E4%B8%AA%E9%97%AE%E9%A2%98"><span class="toc-number">7.</span> <span class="toc-text">采用前要问的三个问题</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E7%BB%93"><span class="toc-number">8.</span> <span class="toc-text">小结</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8F%82%E8%80%83%E8%B5%84%E6%96%99"><span class="toc-number">9.</span> <span class="toc-text">参考资料</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/05-Agent%20Application%20Protocol%EF%BC%88%E2%88%80-A%EF%BC%89%E5%8F%91%E5%B8%83%EF%BC%9A%E8%BF%9E%E6%8E%A5%E4%BB%BB%E6%84%8F%E5%BA%94%E7%94%A8%E4%B8%8E%E4%BB%BB%E6%84%8F%20Agent%20%E7%9A%84%E5%BC%80%E6%94%BE%E5%8D%8F%E8%AE%AE/" title="Agent Application Protocol（∀/A）发布：连接任意应用与任意 Agent 的开放协议">Agent Application Protocol（∀/A）发布：连接任意应用与任意 Agent 的开放协议</a><time datetime="2026-10-24T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-%E3%80%8AVite%EF%BC%9A%E4%BB%8E%E4%BD%BF%E7%94%A8%E5%88%B0%E7%B2%BE%E9%80%9A%E3%80%8B%EF%BC%9A%E6%88%91%E5%86%99%E7%9A%84%E4%B8%80%E4%B8%AA%E4%B8%89%E9%98%B6%E6%AE%B5%E9%80%92%E8%BF%9B%E7%9A%84%20Vite%20%E7%B3%BB%E5%88%97/" title="《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列">《Vite：从使用到精通》：我写的一个三阶段递进的 Vite 系列</a><time datetime="2026-09-20T07:30:00.000Z" title="发表于 2026 15:30:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/04-Skills%20%E5%B7%A5%E7%A8%8B%E5%8C%96%EF%BC%9A%E6%80%8E%E4%B9%88%E5%81%9A%E4%B8%80%E4%B8%AA%E5%A5%BD%20Skill%20%E4%B8%8E%E5%AE%83%E7%9A%84%E5%8F%AF%E8%A7%82%E6%B5%8B%E6%80%A7/" title="Skills 工程化：怎么做一个好 Skill 与它的可观测性">Skills 工程化：怎么做一个好 Skill 与它的可观测性</a><time datetime="2026-09-19T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Vue%203.6%20RC4%20%E5%8F%91%E5%B8%83%EF%BC%9AVapor%20Mode%20%E8%90%BD%E5%9C%B0%E4%B8%8E%E5%93%8D%E5%BA%94%E5%BC%8F%E9%87%8D%E5%86%99%E5%85%A8%E8%A7%A3/" title="Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解">Vue 3.6 RC4 发布：Vapor Mode 落地与响应式重写全解</a><time datetime="2026-08-22T02:00:00.000Z" title="发表于 2026 10:00:00">2026</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/posts/06-Source%20Map%20%E6%8A%A5%E9%94%99%E5%AE%9A%E4%BD%8D%E5%AE%9E%E6%88%98%EF%BC%9A%E4%BB%8E%E7%94%9F%E6%88%90%E3%80%81%E8%A7%A3%E6%9E%90%E5%88%B0%E8%87%AA%E5%BB%BA%E5%AE%9A%E4%BD%8D%E6%9C%8D%E5%8A%A1/" title="Source Map 报错定位实战：从生成、解析到自建定位服务">Source Map 报错定位实战：从生成、解析到自建定位服务</a><time datetime="2026-08-21T16:00:00.000Z" title="发表于 2026 00:00:00">2026</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2022 - 2026 By 夜星</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="darkmode" type="button" title="浅色和深色模式转换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside_config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><div class="js-pjax"><script>(() => {
+  const $mermaid = document.querySelectorAll('#article-container .mermaid-wrap')
+  if ($mermaid.length === 0) return
+  const runMermaid = () => {
+    window.loadMermaid = true
+    const theme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'default'
+
+    Array.from($mermaid).forEach((item, index) => {
+      const mermaidSrc = item.firstElementChild
+      const mermaidThemeConfig = '%%{init:{ \'theme\':\'' + theme + '\'}}%%\n'
+      const mermaidID = 'mermaid-' + index
+      const mermaidDefinition = mermaidThemeConfig + mermaidSrc.textContent
+
+      const renderFn = mermaid.render(mermaidID, mermaidDefinition)
+
+      const renderV10 = () => {
+        renderFn.then(({svg}) => {
+          mermaidSrc.insertAdjacentHTML('afterend', svg)
+        })
+      }
+
+      const renderV9 = svg => {
+        mermaidSrc.insertAdjacentHTML('afterend', svg)
+      }
+
+      typeof renderFn === 'string' ? renderV9(renderFn) : renderV10()
+    })
+  }
+
+  const loadMermaid = () => {
+    window.loadMermaid ? runMermaid() : getScript('https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js').then(runMermaid)
+  }
+
+  btf.addModeChange('mermaid', runMermaid)
+
+  window.pjax ? loadMermaid() : document.addEventListener('DOMContentLoaded', loadMermaid)
+})()</script></div><script src="/js/categories-order.js"></script><script src="/js/site-motto.js"></script><script src="/js/custom-post-count.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="is-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据库加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div class="no-result" id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div>
+        <style>
+            [bg-lazy] {
+                background-image: none !important;
+                background-color: #eee !important;
+            }
+        </style>
+        <script>
+            window.imageLazyLoadSetting = {
+                isSPA: false,
+                preloadRatio: 1,
+                processImages: null,
+            };
+        </script><script>window.addEventListener("load",function(){var t=/\.(gif|jpg|jpeg|tiff|png)$/i,r=/^data:image\/[a-z]+;base64,/;Array.prototype.slice.call(document.querySelectorAll("img[data-original]")).forEach(function(a){var e=a.parentNode;"A"===e.tagName&&(e.href.match(t)||e.href.match(r))&&(e.href=a.dataset.original)})});</script><script>!function(r){r.imageLazyLoadSetting.processImages=t;var e=r.imageLazyLoadSetting.isSPA,n=r.imageLazyLoadSetting.preloadRatio||1,c=a();function a(){var t=Array.prototype.slice.call(document.querySelectorAll("img[data-original]")),e=Array.prototype.slice.call(document.querySelectorAll("[bg-lazy]"));return t.concat(e)}function t(){e&&(c=a());for(var t,o=0;o<c.length;o++)0<=(t=(t=c[o]).getBoundingClientRect()).bottom&&0<=t.left&&t.top<=(r.innerHeight*n||document.documentElement.clientHeight*n)&&function(){var t,e,n,a,i=c[o];e=function(){c=c.filter(function(t){return i!==t}),r.imageLazyLoadSetting.onImageLoaded&&r.imageLazyLoadSetting.onImageLoaded(i)},(t=i).hasAttribute("bg-lazy")?(t.removeAttribute("bg-lazy"),e&&e()):(n=new Image,a=t.getAttribute("data-original"),n.onload=function(){t.src=a,t.removeAttribute("data-original"),e&&e()},t.src!==a&&(n.src=a))}()}function i(){clearTimeout(t.tId),t.tId=setTimeout(t,500)}t(),document.addEventListener("scroll",i),r.addEventListener("resize",i),r.addEventListener("orientationchange",i)}(this);</script></body></html>
